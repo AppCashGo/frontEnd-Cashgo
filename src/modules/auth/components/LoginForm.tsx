@@ -61,6 +61,8 @@ declare global {
 
 const GOOGLE_IDENTITY_SCRIPT_ID = "google-identity-services";
 const GOOGLE_IDENTITY_SCRIPT_URL = "https://accounts.google.com/gsi/client";
+const PRODUCTION_GOOGLE_CLIENT_ID =
+  "38168674827-pag1muis5p4iilp4b8ru3jb4aohfulgb.apps.googleusercontent.com";
 const PHONE_LOGIN_COUNTRY_CODE = "CO";
 
 function isEmailIdentifier(identifier: string) {
@@ -138,6 +140,16 @@ function GoogleIcon() {
   );
 }
 
+function getGoogleClientId() {
+  const configuredClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
+
+  if (configuredClientId) {
+    return configuredClientId;
+  }
+
+  return import.meta.env.PROD ? PRODUCTION_GOOGLE_CLIENT_ID : "";
+}
+
 export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
   const navigate = useNavigate();
   const loginMutation = useLoginMutation();
@@ -156,7 +168,7 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
   );
   const [providerNotice, setProviderNotice] = useState<string | null>(null);
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
+  const googleClientId = getGoogleClientId();
 
   const loginCopy =
     languageCode === "es"
