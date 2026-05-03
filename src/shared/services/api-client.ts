@@ -16,8 +16,17 @@ export class ApiError extends Error {
   }
 }
 
+const DEVELOPMENT_API_URL = "http://localhost:3000/api";
+const PRODUCTION_API_URL = "https://backend-cashgo.onrender.com/api";
+
 function getApiBaseUrl() {
-  return import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
+  const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+
+  if (configuredApiUrl) {
+    return configuredApiUrl;
+  }
+
+  return import.meta.env.DEV ? DEVELOPMENT_API_URL : PRODUCTION_API_URL;
 }
 
 function buildApiUrl(path: string) {
