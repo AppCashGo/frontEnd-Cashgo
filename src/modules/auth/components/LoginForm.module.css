@@ -15,7 +15,8 @@
 }
 
 .backButton,
-.inlineLink {
+.inlineLink,
+.inlineAction {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -178,6 +179,16 @@
   color: #175ddc;
 }
 
+.inlineAction {
+  justify-self: center;
+  color: #175ddc;
+}
+
+.inlineAction:disabled {
+  color: #8ca0bb;
+  cursor: not-allowed;
+}
+
 .phoneField,
 .field {
   display: grid;
@@ -216,6 +227,15 @@
 
 .phoneField .input {
   padding-left: 6rem;
+}
+
+.codeInput {
+  min-height: 4.25rem;
+  border-radius: 0.9rem;
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.6rem;
+  text-align: center;
 }
 
 .phonePrefix {

@@ -40,6 +40,24 @@ export type GoogleLoginPayload = {
   businessId?: string;
 };
 
+export type PhoneLoginStartPayload = {
+  countryCode: string;
+  phone: string;
+};
+
+export type PhoneLoginStartResponse = {
+  loginRequestId: number;
+  maskedPhone: string;
+  expiresInSeconds: number;
+  developmentVerificationCode?: string;
+};
+
+export type PhoneLoginVerifyPayload = {
+  loginRequestId: number;
+  verificationCode: string;
+  businessId?: string;
+};
+
 export type LoginResponse = {
   accessToken: string;
   tokenType: "Bearer";

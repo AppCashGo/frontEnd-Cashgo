@@ -4,10 +4,13 @@ import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useGoogleLoginMutation } from "@/modules/auth/hooks/use-google-login-mutation";
 import { useLoginMutation } from "@/modules/auth/hooks/use-login-mutation";
+import { useStartPhoneLoginMutation } from "@/modules/auth/hooks/use-start-phone-login-mutation";
+import { useVerifyPhoneLoginMutation } from "@/modules/auth/hooks/use-verify-phone-login-mutation";
 import {
   createLoginFormSchema,
   type LoginFormValues,
 } from "@/modules/auth/schemas/login-form-schema";
+import type { PhoneLoginStartResponse } from "@/modules/auth/types/auth-session";
 import { getModuleLandingPath } from "@/routes/module-navigation-routes";
 import { BrandLogo } from "@/shared/components/brand/BrandLogo";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
@@ -19,7 +22,11 @@ type LoginFormProps = {
   onGoToRegister: () => void;
 };
 
-type LoginStage = "choice" | "identifier" | "credentials";
+type LoginStage = "choice" | "identifier" | "verification" | "credentials";
+
+type PhoneLoginRequestState = PhoneLoginStartResponse & {
+  phone: string;
+};
 
 type GoogleCredentialResponse = {
   credential?: string;
@@ -54,6 +61,25 @@ declare global {
 
 const GOOGLE_IDENTITY_SCRIPT_ID = "google-identity-services";
 const GOOGLE_IDENTITY_SCRIPT_URL = "https://accounts.google.com/gsi/client";
+const PHONE_LOGIN_COUNTRY_CODE = "CO";
+
+function isEmailIdentifier(identifier: string) {
+  return /\S+@\S+\.\S+/.test(identifier);
+}
+
+function normalizePhoneInput(phone: string) {
+  const digits = phone.replace(/[^\d]/g, "");
+
+  if (digits.startsWith("57") && digits.length > 10) {
+    return digits.slice(2);
+  }
+
+  return digits;
+}
+
+function normalizeVerificationCode(value: string) {
+  return value.replace(/[^\d]/g, "").slice(0, 6);
+}
 
 function loadGoogleIdentityScript(): Promise<void> {
   if (window.google?.accounts?.id) {
@@ -116,10 +142,18 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
   const navigate = useNavigate();
   const loginMutation = useLoginMutation();
   const googleLoginMutation = useGoogleLoginMutation();
+  const startPhoneLoginMutation = useStartPhoneLoginMutation();
+  const verifyPhoneLoginMutation = useVerifyPhoneLoginMutation();
   const { dictionary, languageCode } = useAppTranslation();
   const [stage, setStage] = useState<LoginStage>("choice");
   const [draftIdentifier, setDraftIdentifier] = useState("");
   const [identifierError, setIdentifierError] = useState<string | null>(null);
+  const [phoneLoginRequest, setPhoneLoginRequest] =
+    useState<PhoneLoginRequestState | null>(null);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  );
   const [providerNotice, setProviderNotice] = useState<string | null>(null);
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
@@ -147,10 +181,26 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
             "Usa el celular o correo con el que registraste tu cuenta.",
           identifierPlaceholder: "Escribe tu número o correo",
           identifierContinue: "Continuar",
+          identifierInvalidPhone:
+            "Ingresa un número de celular válido para enviar el código.",
           credentialsTitle: "Confirma tu acceso",
           credentialsDescription:
             "Ingresa tu contraseña para entrar a tu negocio.",
           passwordPlaceholder: "Ingresa tu contraseña",
+          verificationTitle: "Código de verificación",
+          verificationDescription:
+            "Ingresa el código de verificación que enviamos por WhatsApp al teléfono",
+          verificationEdit: "Editar",
+          verificationHelp: "El mensaje puede tardar unos instantes.",
+          verificationPlaceholder: "Código de 6 dígitos",
+          verificationSubmit: "Entrar a Cashgo",
+          verificationPending: "Validando código...",
+          verificationResend: "Reenviar código",
+          verificationResendPending: "Enviando código...",
+          verificationRequired: "Ingresa el código de 6 dígitos.",
+          verificationFailed:
+            "No pudimos validar el código. Revisa el número y vuelve a intentarlo.",
+          developmentCode: "Código de prueba:",
           back: "Volver",
           identifierRequired: "Ingresa tu número o correo para continuar.",
           loginFailed:
@@ -177,10 +227,26 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
             "Use the phone number or email that belongs to your account.",
           identifierPlaceholder: "Enter your phone number or email",
           identifierContinue: "Continue",
+          identifierInvalidPhone:
+            "Enter a valid phone number to receive the code.",
           credentialsTitle: "Confirm your access",
           credentialsDescription:
             "Enter your password to access your business.",
           passwordPlaceholder: "Enter your password",
+          verificationTitle: "Verification code",
+          verificationDescription:
+            "Enter the verification code we sent by WhatsApp to",
+          verificationEdit: "Edit",
+          verificationHelp: "The message can take a few moments.",
+          verificationPlaceholder: "6-digit code",
+          verificationSubmit: "Enter Cashgo",
+          verificationPending: "Validating code...",
+          verificationResend: "Resend code",
+          verificationResendPending: "Sending code...",
+          verificationRequired: "Enter the 6-digit code.",
+          verificationFailed:
+            "We could not validate the code. Check the number and try again.",
+          developmentCode: "Test code:",
           back: "Back",
           identifierRequired: "Enter your phone number or email to continue.",
           loginFailed:
@@ -315,10 +381,17 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
       return;
     }
 
+    if (stage === "verification") {
+      setVerificationError(null);
+      setVerificationCode("");
+      setStage("identifier");
+      return;
+    }
+
     setStage("identifier");
   };
 
-  const handleContinueToCredentials = () => {
+  const handleContinueToCredentials = async () => {
     const normalizedIdentifier = draftIdentifier.trim();
 
     if (!normalizedIdentifier) {
@@ -328,8 +401,92 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
 
     setIdentifierError(null);
     setProviderNotice(null);
-    setValue("identifier", normalizedIdentifier, { shouldValidate: true });
-    setStage("credentials");
+
+    if (isEmailIdentifier(normalizedIdentifier)) {
+      setValue("identifier", normalizedIdentifier, { shouldValidate: true });
+      setStage("credentials");
+      return;
+    }
+
+    const normalizedPhone = normalizePhoneInput(normalizedIdentifier);
+
+    if (normalizedPhone.length < 7) {
+      setIdentifierError(loginCopy.identifierInvalidPhone);
+      return;
+    }
+
+    try {
+      const response = await startPhoneLoginMutation.mutateAsync({
+        countryCode: PHONE_LOGIN_COUNTRY_CODE,
+        phone: normalizedPhone,
+      });
+      setPhoneLoginRequest({
+        ...response,
+        phone: normalizedPhone,
+      });
+      setVerificationCode("");
+      setVerificationError(null);
+      setStage("verification");
+    } catch (error) {
+      setIdentifierError(getErrorMessage(error, loginCopy.loginFailed));
+    }
+  };
+
+  const handleResendPhoneCode = async () => {
+    if (!phoneLoginRequest) {
+      setStage("identifier");
+      return;
+    }
+
+    try {
+      const response = await startPhoneLoginMutation.mutateAsync({
+        countryCode: PHONE_LOGIN_COUNTRY_CODE,
+        phone: phoneLoginRequest.phone,
+      });
+      setPhoneLoginRequest({
+        ...response,
+        phone: phoneLoginRequest.phone,
+      });
+      setVerificationCode("");
+      setVerificationError(null);
+    } catch (error) {
+      setVerificationError(
+        getErrorMessage(error, loginCopy.verificationFailed),
+      );
+    }
+  };
+
+  const handleVerifyPhoneLogin = async () => {
+    if (!phoneLoginRequest) {
+      setStage("identifier");
+      return;
+    }
+
+    const normalizedCode = normalizeVerificationCode(verificationCode);
+
+    if (normalizedCode.length !== 6) {
+      setVerificationError(loginCopy.verificationRequired);
+      return;
+    }
+
+    try {
+      const response = await verifyPhoneLoginMutation.mutateAsync({
+        loginRequestId: phoneLoginRequest.loginRequestId,
+        verificationCode: normalizedCode,
+      });
+      navigate(
+        getModuleLandingPath(
+          languageCode,
+          response.user.businessCategory,
+          response.user.role,
+        ),
+        { replace: true },
+      );
+    } catch (error) {
+      setVerificationError(
+        getErrorMessage(error, loginCopy.verificationFailed),
+      );
+    }
   };
 
   return (
@@ -454,12 +611,121 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
 
             <button
               className={styles.primaryButton}
-              disabled={!draftIdentifier.trim()}
+              disabled={
+                !draftIdentifier.trim() || startPhoneLoginMutation.isPending
+              }
               type="button"
-              onClick={handleContinueToCredentials}
+              onClick={() => void handleContinueToCredentials()}
             >
-              {loginCopy.identifierContinue}
+              {startPhoneLoginMutation.isPending
+                ? loginCopy.verificationResendPending
+                : loginCopy.identifierContinue}
             </button>
+          </>
+        ) : null}
+
+        {stage === "verification" ? (
+          <>
+            <div className={styles.infoBanner}>
+              <span className={styles.infoIcon}>i</span>
+              <p>{loginCopy.verificationHelp}</p>
+            </div>
+
+            <BrandLogo
+              brand={dictionary.auth.brand}
+              className={styles.brandLogo}
+              size="md"
+              version="1.2.9"
+            />
+
+            <header className={styles.header}>
+              <h2 className={styles.title}>{loginCopy.verificationTitle}</h2>
+              <p className={styles.description}>
+                {loginCopy.verificationDescription}{" "}
+                <strong>{phoneLoginRequest?.maskedPhone}</strong>.{" "}
+                <button
+                  className={styles.inlineLink}
+                  type="button"
+                  onClick={() => {
+                    setVerificationError(null);
+                    setVerificationCode("");
+                    setStage("identifier");
+                  }}
+                >
+                  {loginCopy.verificationEdit}
+                </button>
+              </p>
+            </header>
+
+            {phoneLoginRequest?.developmentVerificationCode ? (
+              <div className={styles.noticeBanner} role="status">
+                {loginCopy.developmentCode}{" "}
+                <strong>{phoneLoginRequest.developmentVerificationCode}</strong>
+              </div>
+            ) : null}
+
+            <form
+              className={styles.form}
+              noValidate
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleVerifyPhoneLogin();
+              }}
+            >
+              <label className={styles.field} htmlFor="phone-login-code">
+                <span className={styles.label}>
+                  {loginCopy.verificationPlaceholder}
+                </span>
+                <input
+                  autoComplete="one-time-code"
+                  className={`${styles.input} ${styles.codeInput}`}
+                  id="phone-login-code"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  type="text"
+                  value={verificationCode}
+                  onChange={(event) => {
+                    setVerificationCode(
+                      normalizeVerificationCode(event.target.value),
+                    );
+                    if (verificationError) {
+                      setVerificationError(null);
+                    }
+                  }}
+                />
+              </label>
+
+              {verificationError ? (
+                <div className={styles.errorBanner} role="alert">
+                  {verificationError}
+                </div>
+              ) : null}
+
+              <button
+                className={styles.primaryButton}
+                disabled={
+                  verificationCode.length !== 6 ||
+                  verifyPhoneLoginMutation.isPending
+                }
+                type="submit"
+              >
+                {verifyPhoneLoginMutation.isPending
+                  ? loginCopy.verificationPending
+                  : loginCopy.verificationSubmit}
+              </button>
+
+              <button
+                className={styles.inlineAction}
+                disabled={startPhoneLoginMutation.isPending}
+                type="button"
+                onClick={() => void handleResendPhoneCode()}
+              >
+                {startPhoneLoginMutation.isPending
+                  ? loginCopy.verificationResendPending
+                  : loginCopy.verificationResend}
+              </button>
+            </form>
           </>
         ) : null}
 

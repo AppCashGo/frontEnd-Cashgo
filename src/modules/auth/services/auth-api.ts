@@ -3,6 +3,9 @@ import type {
   GoogleLoginPayload,
   LoginCredentials,
   LoginResponse,
+  PhoneLoginStartPayload,
+  PhoneLoginStartResponse,
+  PhoneLoginVerifyPayload,
   RegisterCompletePayload,
   RegisterStartPayload,
   RegisterStartResponse,
@@ -16,6 +19,20 @@ export function login(credentials: LoginCredentials) {
 
 export function loginWithGoogle(payload: GoogleLoginPayload) {
   return postJson<LoginResponse, GoogleLoginPayload>("/auth/google", payload);
+}
+
+export function startPhoneLogin(payload: PhoneLoginStartPayload) {
+  return postJson<PhoneLoginStartResponse, PhoneLoginStartPayload>(
+    "/auth/login/phone/start",
+    payload,
+  );
+}
+
+export function verifyPhoneLogin(payload: PhoneLoginVerifyPayload) {
+  return postJson<LoginResponse, PhoneLoginVerifyPayload>(
+    "/auth/login/phone/verify",
+    payload,
+  );
 }
 
 export function startRegistration(payload: RegisterStartPayload) {
