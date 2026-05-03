@@ -1,0 +1,28 @@
+.state {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.55rem;
+  min-height: 18rem;
+  padding: 1rem;
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  border-radius: 1.2rem;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 252, 0.9), rgba(255, 255, 255, 0.96)),
+    #ffffff;
+  text-align: center;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.description {
+  margin: 0;
+  max-width: 20rem;
+  color: #64748b;
+  line-height: 1.6;
+}

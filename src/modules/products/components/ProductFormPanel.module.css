@@ -1,0 +1,186 @@
+.card {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+.header {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent-dark);
+}
+
+.title {
+  margin: 0.55rem 0 0;
+  font-size: 1.45rem;
+  line-height: 1.1;
+}
+
+.description {
+  margin: 0.75rem 0 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.inlineFields {
+  display: grid;
+  gap: 1rem;
+}
+
+.label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.input,
+.textarea,
+.checkbox {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-ink);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.checkbox {
+  width: 1.1rem;
+  min-height: 1.1rem;
+  padding: 0;
+  border-radius: 6px;
+}
+
+.input:focus,
+.textarea:focus,
+.checkbox:focus {
+  outline: none;
+  border-color: rgba(196, 106, 45, 0.72);
+  box-shadow: 0 0 0 4px rgba(196, 106, 45, 0.14);
+  background: #ffffff;
+}
+
+.checkboxField {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.checkboxCopy {
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.errorMessage {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #a63f2d;
+}
+
+.errorBanner {
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(166, 63, 45, 0.14);
+  background: rgba(166, 63, 45, 0.08);
+  color: #8c3023;
+}
+
+.footer {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.helperText {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.primaryButton,
+.secondaryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, var(--color-accent), #d78943);
+  color: #fffdf8;
+}
+
+.secondaryButton {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.primaryButton:hover,
+.secondaryButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
+}
+
+@media (min-width: 720px) {
+  .card {
+    padding: 1.5rem;
+  }
+
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .inlineFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+}

@@ -1,0 +1,201 @@
+.panel {
+  display: grid;
+  gap: 1.1rem;
+  padding: 1.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: #7d839b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #1b2238;
+  font-size: 1.05rem;
+}
+
+.countPill {
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #465587;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.45rem 0.75rem;
+  white-space: nowrap;
+}
+
+.filtersBar {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.filterChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.filterChip {
+  border: 1px solid #dce0ee;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #45506b;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  min-height: 2.6rem;
+  padding: 0 0.95rem;
+}
+
+.filterChipActive {
+  background: #1f2638;
+  border-color: #1f2638;
+  color: #ffffff;
+}
+
+.searchField {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.searchLabel {
+  color: #6d7690;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.searchInput {
+  border: 1px solid #d7dceb;
+  border-radius: 1rem;
+  color: #1e2438;
+  font: inherit;
+  min-height: 3rem;
+  padding: 0.85rem 0.95rem;
+  width: 100%;
+}
+
+.searchInput:focus {
+  border-color: #b2bdf5;
+  box-shadow: 0 0 0 4px rgba(178, 189, 245, 0.16);
+  outline: none;
+}
+
+.entryList {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.entryCard {
+  align-items: center;
+  border: 1px solid #edf0f7;
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.95rem 1rem;
+}
+
+.entryCopy {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.entryMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.entryType {
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  padding: 0.3rem 0.6rem;
+}
+
+.entryTypeIncome {
+  background: #edf8ef;
+  color: #2e7b3f;
+}
+
+.entryTypeExpense {
+  background: #feeeee;
+  color: #b94a4a;
+}
+
+.entryDate {
+  color: #7d859d;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.entryReason {
+  margin: 0;
+  color: #20263b;
+  font-size: 0.96rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.entryAmount {
+  color: #29814a;
+  font-size: 1rem;
+  font-weight: 800;
+  justify-self: flex-start;
+}
+
+.entryAmountExpense {
+  color: #b94a4a;
+}
+
+.emptyState {
+  background: linear-gradient(145deg, #fbfcff 0%, #f3f5fb 100%);
+  border: 1px dashed #d8ddeb;
+  border-radius: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+  justify-items: center;
+  padding: 2rem 1.25rem;
+  text-align: center;
+}
+
+.emptyTitle {
+  color: #27314d;
+  font-size: 1rem;
+  font-weight: 800;
+  margin: 0;
+}
+
+.emptyDescription {
+  color: #74809b;
+  line-height: 1.5;
+  margin: 0;
+  max-width: 30rem;
+}
+
+@media (min-width: 768px) {
+  .filtersBar {
+    align-items: end;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+  }
+
+  .entryCard {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .entryAmount {
+    justify-self: flex-end;
+  }
+}

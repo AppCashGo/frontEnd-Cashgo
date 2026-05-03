@@ -1,0 +1,47 @@
+.card {
+  display: grid;
+  gap: 1.15rem;
+  min-height: 26rem;
+  padding: 1.3rem;
+  border-radius: 1.55rem;
+}
+
+.header {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.02rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.description {
+  margin: 0.35rem 0 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.footer {
+  width: fit-content;
+  margin: 0;
+  padding: 0.45rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.05);
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.body {
+  min-height: 18rem;
+}
+
+@media (min-width: 768px) {
+  .header {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    align-items: start;
+  }
+}

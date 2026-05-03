@@ -1,0 +1,115 @@
+import { SurfaceCard } from "@/shared/components/ui/SurfaceCard";
+import type { CashRegisterSession } from "@/modules/cash-register/types/cash-register";
+import {
+  formatCashRegisterCurrency,
+  formatCashRegisterDate,
+  getPaymentMethodLabel,
+} from "@/modules/cash-register/utils/format-cash-register";
+import { joinClassNames } from "@/shared/utils/join-class-names";
+import styles from "./CashRegisterHistoryList.module.css";
+
+type CashRegisterHistoryListProps = {
+  sessions: CashRegisterSession[];
+};
+
+export function CashRegisterHistoryList({
+  sessions,
+}: CashRegisterHistoryListProps) {
+  return (
+    <SurfaceCard className={styles.panel}>
+      <div className={styles.header}>
+        <div>
+          <p className={styles.eyebrow}>Cierres de caja</p>
+          <h3 className={styles.title}>Historial reciente del arqueo</h3>
+        </div>
+        <span className={styles.countPill}>{sessions.length} cierres</span>
+      </div>
+
+      {sessions.length > 0 ? (
+        <div className={styles.list}>
+          {sessions.map((session) => (
+            <article className={styles.card} key={session.id}>
+              <div className={styles.cardHeader}>
+                <div>
+                  <p className={styles.cardTitle}>
+                    {session.responsibleUserName ?? "Responsable no asignado"}
+                  </p>
+                  <p className={styles.cardDate}>
+                    {formatCashRegisterDate(session.openedAt)}
+                  </p>
+                </div>
+
+                <span
+                  className={joinClassNames(
+                    styles.differencePill,
+                    session.difference !== null &&
+                      session.difference < 0 &&
+                      styles.differencePillAlert,
+                    session.difference !== null &&
+                      session.difference > 0 &&
+                      styles.differencePillAccent,
+                  )}
+                >
+                  {session.difference === null
+                    ? "Sin cierre"
+                    : formatCashRegisterCurrency(session.difference)}
+                </span>
+              </div>
+
+              <div className={styles.metricsGrid}>
+                <div className={styles.metric}>
+                  <span className={styles.metricLabel}>Ventas</span>
+                  <strong>
+                    {formatCashRegisterCurrency(session.salesTotal)}
+                  </strong>
+                </div>
+                <div className={styles.metric}>
+                  <span className={styles.metricLabel}>Gastos</span>
+                  <strong>
+                    {formatCashRegisterCurrency(session.expensesTotal)}
+                  </strong>
+                </div>
+                <div className={styles.metric}>
+                  <span className={styles.metricLabel}>Esperado</span>
+                  <strong>
+                    {formatCashRegisterCurrency(session.cashExpectedTotal)}
+                  </strong>
+                </div>
+                <div className={styles.metric}>
+                  <span className={styles.metricLabel}>Contado</span>
+                  <strong>
+                    {formatCashRegisterCurrency(session.closingAmount ?? 0)}
+                  </strong>
+                </div>
+              </div>
+
+              {session.paymentMethods.length > 0 ? (
+                <div className={styles.paymentTags}>
+                  {session.paymentMethods.map((paymentMethod) => (
+                    <span
+                      className={styles.paymentTag}
+                      key={paymentMethod.method}
+                    >
+                      {getPaymentMethodLabel(paymentMethod.method)} ·{" "}
+                      {formatCashRegisterCurrency(paymentMethod.amount)}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </article>
+          ))}
+        </div>
+      ) : (
+        <div className={styles.emptyState}>
+          <p className={styles.emptyTitle}>
+            Todavía no hay cierres registrados.
+          </p>
+          <p className={styles.emptyDescription}>
+            Cuando cierres una caja, aquí quedará el histórico con la diferencia
+            y el resumen del turno.
+          </p>
+        </div>
+      )}
+    </SurfaceCard>
+  );
+}

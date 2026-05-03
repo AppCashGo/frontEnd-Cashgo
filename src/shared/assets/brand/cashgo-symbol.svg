@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Cashgo symbol</title>
+  <desc id="desc">A geometric payment and growth mark for Cashgo.</desc>
+  <defs>
+    <linearGradient id="cashgo-bg" x1="12" x2="54" y1="6" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14B8A6"/>
+      <stop offset=".48" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+    <linearGradient id="cashgo-coin" x1="23" x2="45" y1="18" y2="45" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF7CC"/>
+      <stop offset="1" stop-color="#FACC15"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="17" fill="url(#cashgo-bg)"/>
+  <path fill="#FFFFFF" fill-opacity=".16" d="M11 19c0-5 4-9 9-9h18c6 0 11 5 11 11v21c0 7-5 12-12 12H20c-5 0-9-4-9-9V19Z"/>
+  <path fill="#FFFFFF" d="M21 31c0-8 6-14 15-14 4 0 8 1 11 4l-5 7c-2-2-4-3-7-3-4 0-7 3-7 7s3 7 7 7c3 0 5-1 7-3l5 7c-3 3-7 5-12 5-8 0-14-6-14-14v-3Z"/>
+  <path fill="url(#cashgo-coin)" d="M31 28h17c3 0 5 2 5 5v2c0 3-2 5-5 5H31c-3 0-5-2-5-5v-2c0-3 2-5 5-5Z"/>
+  <circle cx="47" cy="34" r="2.6" fill="#0F172A"/>
+  <path fill="#0F172A" fill-opacity=".18" d="M18 49h29c-3 3-7 5-13 5h-8c-4 0-7-2-8-5Z"/>
+</svg>

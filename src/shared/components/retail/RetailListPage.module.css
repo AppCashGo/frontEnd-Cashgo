@@ -1,0 +1,48 @@
+.page {
+  display: grid;
+  gap: 1rem;
+}
+
+.headerRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.searchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.searchField {
+  min-width: min(100%, 21rem);
+}
+
+.metricsGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.statusPositive {
+  color: #15a34a;
+  font-weight: 800;
+}
+
+.statusNegative {
+  color: #d4493b;
+  font-weight: 800;
+}
+
+.detailLink {
+  color: #8fa0b4;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+@media (min-width: 1100px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

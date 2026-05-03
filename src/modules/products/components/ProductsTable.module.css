@@ -1,0 +1,323 @@
+.card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.toolbar {
+  display: grid;
+  gap: 1rem;
+}
+
+.copy {
+  min-width: 0;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent-dark);
+}
+
+.title {
+  margin: 0.55rem 0 0;
+  font-size: 1.5rem;
+  line-height: 1.08;
+}
+
+.description {
+  margin: 0.7rem 0 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.toolbarActions {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.searchField {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.searchLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.searchInput {
+  min-height: 3rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-ink);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: rgba(196, 106, 45, 0.72);
+  box-shadow: 0 0 0 4px rgba(196, 106, 45, 0.14);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.metaText {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.refreshingBadge {
+  margin: 0;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(196, 106, 45, 0.12);
+  color: var(--color-accent-dark);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.stateBox {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1.1rem;
+  border: 1px dashed rgba(22, 32, 42, 0.16);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.stateTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.stateDescription {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.loadingRows {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.loadingRow {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.loadingBarWide,
+.loadingBarShort {
+  display: block;
+  height: 0.82rem;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(22, 32, 42, 0.08), rgba(196, 106, 45, 0.18), rgba(22, 32, 42, 0.08));
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+}
+
+.loadingBarWide {
+  width: 100%;
+}
+
+.loadingBarShort {
+  width: 52%;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 920px;
+  border-collapse: collapse;
+}
+
+.table thead th {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  font-size: 0.82rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.row td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(22, 32, 42, 0.08);
+  vertical-align: top;
+}
+
+.rowActive {
+  background: rgba(196, 106, 45, 0.08);
+}
+
+.primaryColumn {
+  min-width: 260px;
+}
+
+.productNameBlock {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.productName {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.productCreatedAt,
+.mutedColumn {
+  color: var(--color-muted);
+}
+
+.productDescription {
+  margin: 0.55rem 0 0;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.numericColumn {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.stockMeta {
+  margin: 0.45rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 500;
+}
+
+.stockBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.42rem 0.72rem;
+  border-radius: 999px;
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+.stockBadgeHealthy {
+  background: rgba(36, 111, 88, 0.12);
+  color: #1f6f58;
+}
+
+.stockBadgeWarning {
+  background: rgba(196, 106, 45, 0.12);
+  color: var(--color-accent-dark);
+}
+
+.stockBadgeCritical {
+  background: rgba(166, 63, 45, 0.12);
+  color: #8c3023;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton,
+.dangerButton,
+.ghostDangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.8rem;
+  padding: 0.7rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, var(--color-accent), #d78943);
+  color: #fffdf8;
+}
+
+.secondaryButton {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.dangerButton {
+  background: #8c3023;
+  color: #fff7f3;
+}
+
+.ghostDangerButton {
+  background: rgba(166, 63, 45, 0.08);
+  color: #8c3023;
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.dangerButton:hover,
+.ghostDangerButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled,
+.ghostDangerButton:disabled {
+  cursor: wait;
+  opacity: 0.7;
+  transform: none;
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (min-width: 720px) {
+  .card {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 960px) {
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .toolbarActions {
+    width: min(100%, 360px);
+  }
+}

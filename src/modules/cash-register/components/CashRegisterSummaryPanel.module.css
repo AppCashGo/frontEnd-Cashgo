@@ -1,0 +1,131 @@
+.panel {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: #7b819b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #1b2238;
+  font-size: 1.05rem;
+}
+
+.differencePill {
+  border-radius: 999px;
+  background: #edf3e8;
+  color: #376041;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.45rem 0.75rem;
+  white-space: nowrap;
+}
+
+.differencePillAlert {
+  background: #fdeaea;
+  color: #ac4545;
+}
+
+.differencePillAccent {
+  background: #f3f0ff;
+  color: #5d4ab2;
+}
+
+.metaGrid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metaItem {
+  border: 1px solid #ebedf6;
+  border-radius: 1rem;
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem;
+}
+
+.metaLabel {
+  color: #7f869f;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.metaValue {
+  color: #1c2237;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.metricsStack,
+.paymentList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.metricRow,
+.paymentRow {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.metricRow span,
+.paymentRow span {
+  color: #4f5772;
+  font-size: 0.92rem;
+}
+
+.metricRow strong,
+.paymentRow strong {
+  color: #1d2337;
+  font-size: 0.94rem;
+}
+
+.metricRowStrong {
+  border-top: 1px solid #eceef5;
+  padding-top: 0.75rem;
+}
+
+.paymentBlock {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.paymentHeader {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.paymentTitle {
+  color: #1b2238;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.paymentHint,
+.emptyCopy {
+  color: #76809b;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  margin: 0;
+}

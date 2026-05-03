@@ -1,0 +1,146 @@
+.page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
+  padding: 1.4rem;
+  border-radius: 1.5rem;
+  border: 1px solid rgba(22, 32, 42, 0.08);
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(243, 236, 140, 0.52),
+      transparent 38%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(196, 106, 45, 0.12),
+      transparent 30%
+    ),
+    rgba(255, 251, 224, 0.88);
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-accent-dark);
+}
+
+.title {
+  margin: 0.65rem 0 0;
+  font-size: clamp(1.9rem, 4vw, 2.85rem);
+  line-height: 1.02;
+  color: var(--color-ink);
+}
+
+.description {
+  margin: 0.85rem 0 0;
+  max-width: 40rem;
+  color: var(--color-muted);
+  line-height: 1.75;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.heroButton,
+.heroGhostButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 1.15rem;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.heroButton {
+  border: none;
+  background: var(--color-ink);
+  color: #fffdf8;
+}
+
+.heroGhostButton {
+  border: 1px solid rgba(22, 32, 42, 0.12);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--color-ink);
+}
+
+.metricsGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.drawerColumn {
+  display: grid;
+}
+
+.restrictedCard {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1.5rem;
+}
+
+.restrictedEyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent-dark);
+}
+
+.restrictedTitle {
+  margin: 0;
+  font-size: 1.45rem;
+  color: var(--color-ink);
+}
+
+.restrictedDescription {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+@media (min-width: 720px) {
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1080px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+
+  .metricsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .workspace {
+    grid-template-columns: minmax(0, 1.45fr) minmax(23rem, 0.9fr);
+    align-items: start;
+  }
+
+  .drawerColumn {
+    position: sticky;
+    top: 1rem;
+  }
+}

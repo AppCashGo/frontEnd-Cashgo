@@ -1,0 +1,150 @@
+.column {
+  display: grid;
+  gap: 1rem;
+}
+
+.panel {
+  display: grid;
+  gap: 1.25rem;
+  padding: 1.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  color: #7a7f96;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #191d31;
+  font-size: 1.05rem;
+  line-height: 1.4;
+}
+
+.statusPill,
+.metricChip {
+  border-radius: 999px;
+  background: #f5f6cc;
+  color: #565200;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+  white-space: nowrap;
+}
+
+.metricChip {
+  background: #eef1fb;
+  color: #3b4a73;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.inlineFields {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.label {
+  color: #363d55;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.input,
+.select,
+.textarea {
+  appearance: none;
+  border: 1px solid #d7dceb;
+  border-radius: 1rem;
+  color: #1c2138;
+  font: inherit;
+  padding: 0.85rem 0.95rem;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease;
+  width: 100%;
+}
+
+.textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: #aeb9f3;
+  box-shadow: 0 0 0 4px rgba(173, 185, 243, 0.18);
+  outline: none;
+}
+
+.primaryButton,
+.secondaryButton {
+  border: none;
+  border-radius: 1rem;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  min-height: 3rem;
+  padding: 0.85rem 1rem;
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    opacity 150ms ease;
+}
+
+.primaryButton {
+  background: #202537;
+  box-shadow: 0 16px 35px rgba(32, 37, 55, 0.16);
+  color: #ffffff;
+}
+
+.secondaryButton {
+  background: #eef1fb;
+  color: #223158;
+}
+
+.primaryButton:hover,
+.secondaryButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.errorMessage {
+  margin: 0;
+  color: #c05454;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .inlineFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

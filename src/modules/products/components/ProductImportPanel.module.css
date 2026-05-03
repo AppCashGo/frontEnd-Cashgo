@@ -1,0 +1,271 @@
+.card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.header {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow,
+.previewEyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent-dark);
+}
+
+.title {
+  margin: 0.55rem 0 0;
+  font-size: 1.45rem;
+  line-height: 1.1;
+}
+
+.description {
+  margin: 0.75rem 0 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.headerActions,
+.dropzoneActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.dropzone {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px dashed rgba(196, 106, 45, 0.38);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top right, rgba(196, 106, 45, 0.18), transparent 26%),
+    rgba(255, 250, 243, 0.72);
+}
+
+.dropzoneTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.dropzoneDescription {
+  margin: 0.45rem 0 0;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.fileInput {
+  display: none;
+}
+
+.tipGrid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tipCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(22, 32, 42, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--color-muted);
+}
+
+.issueBox {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: 18px;
+  border: 1px solid rgba(166, 63, 45, 0.16);
+  background: rgba(166, 63, 45, 0.08);
+  color: #8c3023;
+}
+
+.issueTitle {
+  margin: 0;
+  font-weight: 700;
+}
+
+.issueList {
+  margin: 0;
+  padding-left: 1rem;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.previewSection {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.previewHeader {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.previewTitle {
+  margin: 0.5rem 0 0;
+  font-size: 1.08rem;
+}
+
+.previewTableWrapper {
+  overflow-x: auto;
+}
+
+.previewTable {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+}
+
+.previewTable th,
+.previewTable td {
+  padding: 0.8rem 0.85rem;
+  border-bottom: 1px solid rgba(22, 32, 42, 0.08);
+  text-align: left;
+  vertical-align: top;
+}
+
+.previewTable th {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.productCell {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.productCell span {
+  color: var(--color-muted);
+}
+
+.previewFootnote,
+.submitError {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.resultBox {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid rgba(31, 111, 88, 0.16);
+  border-radius: 18px;
+  background: rgba(36, 111, 88, 0.08);
+}
+
+.resultSummary {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.resultSummary > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.resultValue {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #1f6f58;
+}
+
+.resultLabel {
+  color: var(--color-muted);
+}
+
+.resultList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.resultItem {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.primaryButton {
+  background: linear-gradient(135deg, var(--color-accent), #d78943);
+  color: #fffdf8;
+}
+
+.secondaryButton,
+.ghostButton {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.ghostButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.ghostButton:hover {
+  transform: translateY(-1px);
+}
+
+.primaryButton:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+}
+
+@media (min-width: 720px) {
+  .card {
+    padding: 1.5rem;
+  }
+
+  .tipGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .previewHeader {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+  }
+}
+
+@media (min-width: 980px) {
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+}

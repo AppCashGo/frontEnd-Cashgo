@@ -1,0 +1,59 @@
+.shell {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  opacity: 0;
+  visibility: hidden;
+  border: 0;
+  background: rgba(9, 18, 28, 0.42);
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
+}
+
+.backdropVisible {
+  opacity: 1;
+  visibility: visible;
+}
+
+.content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.main {
+  flex: 1;
+  padding: 0.85rem 1rem 1rem;
+}
+
+.mainInner {
+  width: min(100%, 1480px);
+  margin: 0 auto;
+}
+
+@media (min-width: 992px) {
+  .shell {
+    display: grid;
+    grid-template-columns: 328px 1fr;
+  }
+
+  .shellCollapsed {
+    grid-template-columns: 92px 1fr;
+  }
+
+  .backdrop {
+    display: none;
+  }
+
+  .main {
+    padding: 1rem 1.35rem 1.35rem;
+  }
+}

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">Cashgo app icon</title>
+  <desc id="desc">Cashgo application icon with a payment mark.</desc>
+  <defs>
+    <linearGradient id="app-bg" x1="20" x2="108" y1="14" y2="114" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0D9488"/>
+      <stop offset=".48" stop-color="#2563EB"/>
+      <stop offset="1" stop-color="#FB923C"/>
+    </linearGradient>
+    <linearGradient id="app-card" x1="38" x2="99" y1="40" y2="82" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#DFF7F4"/>
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="31" fill="url(#app-bg)"/>
+  <path fill="#FFFFFF" fill-opacity=".18" d="M23 39c0-12 10-22 22-22h34c15 0 27 12 27 27v42c0 15-12 27-27 27H45c-12 0-22-10-22-22V39Z"/>
+  <path fill="#FFFFFF" d="M40 62c0-17 13-29 31-29 9 0 17 3 23 9L84 56c-4-4-8-6-14-6-9 0-15 6-15 15s6 15 15 15c6 0 10-2 14-6l10 14c-6 6-14 9-24 9-17 0-30-12-30-30v-5Z"/>
+  <path fill="url(#app-card)" d="M62 58h34c7 0 12 5 12 12v4c0 7-5 12-12 12H62c-7 0-12-5-12-12v-4c0-7 5-12 12-12Z"/>
+  <circle cx="95" cy="72" r="5.5" fill="#0F172A"/>
+  <path fill="#0F172A" fill-opacity=".18" d="M35 98h59c-8 8-16 12-29 12H51c-8 0-14-5-16-12Z"/>
+</svg>

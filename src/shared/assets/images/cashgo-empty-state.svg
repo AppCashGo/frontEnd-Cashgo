@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 240" role="img" aria-labelledby="title desc">
+  <title id="title">Cashgo empty state</title>
+  <desc id="desc">A receipt, a product box and a payment card for empty operational screens.</desc>
+  <rect x="38" y="26" width="284" height="188" rx="30" fill="#F8FAFC"/>
+  <rect x="70" y="52" width="112" height="146" rx="18" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="3"/>
+  <path d="M88 78h72M88 104h58M88 130h72M88 156h42" stroke="#64748B" stroke-width="9" stroke-linecap="round"/>
+  <path d="M70 181l15 12 15-12 15 12 15-12 15 12 15-12 22 17v10H70v-27Z" fill="#E2E8F0"/>
+  <rect x="195" y="75" width="92" height="74" rx="18" fill="#CCFBF1"/>
+  <path d="M195 98h92M221 75v74" stroke="#14B8A6" stroke-width="7" stroke-linecap="round"/>
+  <rect x="187" y="152" width="108" height="38" rx="14" fill="#2563EB"/>
+  <circle cx="268" cy="171" r="8" fill="#FACC15"/>
+  <path d="M207 171h35" stroke="#BFDBFE" stroke-width="7" stroke-linecap="round"/>
+</svg>

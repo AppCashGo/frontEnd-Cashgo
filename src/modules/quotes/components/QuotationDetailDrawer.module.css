@@ -1,0 +1,146 @@
+.layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.emptyText {
+  margin: 0;
+  color: #607084;
+  line-height: 1.6;
+}
+
+.actions,
+.footerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.summaryGrid,
+.notesGrid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.summaryCard,
+.totalsCard,
+.noteCard {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1rem;
+  border: 1px solid rgba(192, 204, 218, 0.92);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.summaryLabel {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.32rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.statusSuccess {
+  background: #dcf7e8;
+  color: #0d7d3b;
+}
+
+.statusInfo {
+  background: #e8f0fd;
+  color: #2662c8;
+}
+
+.statusDanger {
+  background: #ffe1de;
+  color: #c03f34;
+}
+
+.statusMuted,
+.statusDraft {
+  background: #eef3f8;
+  color: #445264;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.tableSection {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.tableScroller {
+  overflow-x: auto;
+  border: 1px solid rgba(192, 204, 218, 0.92);
+  border-radius: 1rem;
+}
+
+.table {
+  width: 100%;
+  min-width: 38rem;
+  border-collapse: collapse;
+}
+
+.table thead th {
+  padding: 0.85rem 0.95rem;
+  background: #f5f8fb;
+  color: #617186;
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.table tbody td {
+  padding: 0.85rem 0.95rem;
+  border-top: 1px solid rgba(230, 236, 243, 0.95);
+  vertical-align: top;
+}
+
+.itemCell {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.itemCell span {
+  color: #64748b;
+  font-size: 0.84rem;
+}
+
+.totalsCard {
+  gap: 0.6rem;
+}
+
+.totalsCard > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  color: #1f2937;
+}
+
+.noteCard p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+  .summaryGrid,
+  .notesGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

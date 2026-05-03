@@ -1,0 +1,206 @@
+.page {
+  display: grid;
+  gap: 1rem;
+}
+
+.headerRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.titleBlock {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.title {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 1.95rem;
+  font-weight: 900;
+}
+
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  color: #64748b;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.actionsGroup {
+  position: relative;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  display: grid;
+  min-width: 16rem;
+  padding: 0.5rem;
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1.25rem 2rem rgba(15, 23, 42, 0.12);
+}
+
+.dropdownButton {
+  display: flex;
+  align-items: center;
+  min-height: 2.9rem;
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.8rem;
+  color: #1f2a37;
+  font-weight: 700;
+}
+
+.dropdownButtonMuted {
+  color: #8a98aa;
+}
+
+.filtersBlock {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.chipsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.chip,
+.chipActive {
+  min-height: 2.2rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.chip {
+  border: 1px solid rgba(190, 202, 218, 0.96);
+  background: #ffffff;
+  color: #5f6d80;
+}
+
+.chipActive {
+  border: 1px solid #ffd22f;
+  background: #fff2be;
+  color: #1f2a37;
+}
+
+.content {
+  position: relative;
+}
+
+.emptyPanel {
+  min-height: 32rem;
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.categoryDrawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 35;
+  width: min(100vw, 23rem);
+  padding: 1.25rem;
+  border-left: 1px solid rgba(192, 204, 218, 0.96);
+  background: #ffffff;
+  box-shadow: -1.1rem 0 2rem rgba(15, 23, 42, 0.1);
+}
+
+.drawerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.createDrawer {
+  width: min(100vw, 30rem);
+  height: 100vh;
+  padding: 1rem;
+  overflow-y: auto;
+  border-left: 1px solid rgba(192, 204, 218, 0.96);
+  background: #ffffff;
+  box-shadow: -1.1rem 0 2rem rgba(15, 23, 42, 0.1);
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.drawerTitle {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.drawerClose {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: #1f2a37;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.drawerStack {
+  display: grid;
+  gap: 1rem;
+}
+
+.productsGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.productCard {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+}
+
+.productName {
+  margin: 0;
+  color: #1f2a37;
+  font-weight: 800;
+}
+
+.productMeta {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+@media (min-width: 1100px) {
+  .productsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

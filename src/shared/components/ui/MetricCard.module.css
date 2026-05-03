@@ -1,0 +1,86 @@
+.card {
+  display: grid;
+  gap: 0.7rem;
+  min-height: 9.75rem;
+  padding: 1.2rem;
+  border-radius: 1.4rem;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96),
+      rgba(247, 245, 241, 0.9)
+    ),
+    #ffffff;
+  box-shadow: 0 1rem 2.2rem rgba(15, 23, 42, 0.06);
+}
+
+.cardAccent {
+  border-color: rgba(196, 106, 45, 0.18);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(196, 106, 45, 0.12),
+      transparent 38%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.96),
+      rgba(255, 248, 241, 0.88)
+    ),
+    #ffffff;
+}
+
+.cardSuccess {
+  border-color: rgba(31, 122, 84, 0.14);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(31, 122, 84, 0.1),
+      transparent 40%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(244, 253, 248, 0.96),
+      rgba(233, 250, 241, 0.88)
+    ),
+    #ffffff;
+}
+
+.cardAlert {
+  border-color: rgba(166, 63, 45, 0.14);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(166, 63, 45, 0.1),
+      transparent 36%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 250, 248, 0.96),
+      rgba(255, 242, 238, 0.88)
+    ),
+    #ffffff;
+}
+
+.label {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-accent-dark);
+}
+
+.value {
+  margin: 0;
+  font-size: clamp(1.65rem, 4vw, 2.3rem);
+  font-weight: 800;
+  line-height: 1.05;
+  color: var(--color-ink);
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.6;
+}

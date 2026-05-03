@@ -1,0 +1,276 @@
+.surface {
+  border: 1px solid rgba(192, 204, 218, 0.9);
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 0.8rem 2rem rgba(18, 27, 38, 0.04);
+}
+
+.actionRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+
+.buttonDark,
+.buttonSuccess,
+.buttonDanger,
+.buttonOutline,
+.buttonMuted {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.buttonDark {
+  background: #1f2a37;
+  color: #ffffff;
+}
+
+.buttonSuccess {
+  background: #17a34a;
+  color: #ffffff;
+}
+
+.buttonDanger {
+  background: #d4493b;
+  color: #ffffff;
+}
+
+.buttonOutline {
+  border: 2px solid #1f2a37;
+  background: #ffffff;
+  color: #1f2a37;
+}
+
+.buttonMuted {
+  border: 1px solid rgba(192, 204, 218, 0.95);
+  background: #f4f7fb;
+  color: #6f7d8d;
+}
+
+.premiumBanner {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.2rem;
+  border-radius: 0.95rem;
+  background: #1e75d8;
+  color: #ffffff;
+}
+
+.premiumTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.premiumDescription {
+  margin: 0;
+  font-size: 0.93rem;
+  line-height: 1.45;
+}
+
+.premiumLink {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #ffffff;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.filtersRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.searchField,
+.selectField,
+.dateField {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3rem;
+  padding: 0 1rem;
+  border: 1px solid rgba(184, 197, 213, 0.98);
+  border-radius: 0.9rem;
+  background: #ffffff;
+  color: #516072;
+}
+
+.searchField {
+  min-width: min(100%, 21rem);
+}
+
+.selectField,
+.dateField {
+  min-width: 11rem;
+}
+
+.input,
+.select {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #334155;
+  font: inherit;
+}
+
+.input:focus,
+.select:focus {
+  outline: none;
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.summaryCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(192, 204, 218, 0.9);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.summaryLabel {
+  margin: 0;
+  color: #6d7a8d;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.summaryValue {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 1.65rem;
+  font-weight: 900;
+}
+
+.summaryHint {
+  margin: 0;
+  color: #5f6d80;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.tableCard {
+  border: 1px solid rgba(192, 204, 218, 0.9);
+  border-radius: 1rem;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem 0.8rem;
+}
+
+.tableTitle {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 1.02rem;
+  font-weight: 800;
+}
+
+.tableAction {
+  color: #1f2a37;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.tableScroller {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 42rem;
+  border-collapse: collapse;
+}
+
+.table thead th {
+  padding: 0.95rem 1rem;
+  background: #f5f8fb;
+  color: #617186;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.table tbody td {
+  padding: 0.95rem 1rem;
+  border-top: 1px solid rgba(230, 236, 243, 0.95);
+  color: #263445;
+  vertical-align: top;
+}
+
+.emptyState {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 2.6rem 1.2rem;
+  text-align: center;
+}
+
+.emptyIcon {
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 999px;
+  background: radial-gradient(circle at 68% 34%, #ffffff 0, #ffffff 1rem, transparent 1.05rem),
+    linear-gradient(180deg, #ffe46a 0%, #ffcd1e 100%);
+  box-shadow: 0 1rem 2rem rgba(255, 208, 43, 0.2);
+}
+
+.emptyTitle {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.emptyDescription {
+  margin: 0;
+  max-width: 34rem;
+  color: #5f6d80;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.tabs {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(192, 204, 218, 0.92);
+}
+
+.tabButton {
+  padding: 0.9rem 0;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  color: #607084;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tabButtonActive {
+  border-bottom-color: #1f2a37;
+  color: #1f2a37;
+}
+
+@media (min-width: 992px) {
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

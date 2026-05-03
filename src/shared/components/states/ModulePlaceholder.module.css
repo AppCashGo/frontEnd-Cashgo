@@ -1,0 +1,119 @@
+.page {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.hero {
+  display: grid;
+  gap: 1.5rem;
+  align-items: center;
+  padding: 2rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem;
+  background:
+    linear-gradient(135deg, rgba(20, 184, 166, 0.1) 0%, transparent 42%),
+    rgba(255, 255, 255, 0.9);
+  box-shadow: var(--shadow-sm);
+}
+
+.heroCopy {
+  display: grid;
+  gap: 1rem;
+}
+
+.heroImage {
+  width: min(100%, 18rem);
+  justify-self: center;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.35rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid rgba(20, 184, 166, 0.28);
+  background: rgba(20, 184, 166, 0.08);
+  color: #0f766e;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 1rem 0 0;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1;
+}
+
+.description {
+  max-width: 56ch;
+  margin: 1rem 0 0;
+  color: var(--color-muted);
+  line-height: 1.75;
+}
+
+.actions {
+  margin-top: 1.5rem;
+}
+
+.primaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0.68rem 1rem;
+  border-radius: 0.8rem;
+  background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: grid;
+  gap: 0.7rem;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-sm);
+}
+
+.cardIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  border-radius: 0.75rem;
+  background: #e0f2fe;
+  color: #075985;
+}
+
+.cardIcon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.cardLabel {
+  margin: 0;
+  font-weight: 700;
+}
+
+.cardText {
+  margin: 0.6rem 0 0;
+  color: var(--color-muted);
+  line-height: 1.65;
+}
+
+@media (min-width: 820px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}

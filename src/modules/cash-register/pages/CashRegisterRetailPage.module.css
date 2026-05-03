@@ -1,0 +1,95 @@
+.page {
+  display: grid;
+  gap: 1rem;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.35rem;
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  border-radius: 0.9rem;
+  background: #ffffff;
+}
+
+.tab,
+.tabActive {
+  min-height: 2.8rem;
+  border-radius: 0.8rem;
+  font-weight: 800;
+}
+
+.tab {
+  border: 0;
+  background: transparent;
+  color: #64748b;
+}
+
+.tabActive {
+  border: 0;
+  background: #1f2a37;
+  color: #ffffff;
+}
+
+.filtersRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.metricsGrid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.tablePanel {
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem 0.85rem;
+}
+
+.tableTitle {
+  color: #1f2a37;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.tableMeta {
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.emptyPanel {
+  padding: 1.8rem;
+}
+
+@media (min-width: 1100px) {
+  .metricsGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .workspace {
+    grid-template-columns: minmax(0, 1.3fr) minmax(21rem, 25rem);
+    align-items: start;
+  }
+}

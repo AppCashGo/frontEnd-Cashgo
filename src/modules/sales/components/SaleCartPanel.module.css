@@ -1,0 +1,367 @@
+.card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.header {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent-dark);
+}
+
+.title {
+  margin: 0.55rem 0 0;
+  font-size: 1.45rem;
+  line-height: 1.08;
+}
+
+.description {
+  margin: 0.7rem 0 0;
+  color: var(--color-muted);
+  line-height: 1.7;
+}
+
+.secondaryButton,
+.primaryButton,
+.removeButton,
+.quantityButton,
+.paymentModeButton,
+.paymentModeButtonActive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.secondaryButton,
+.paymentModeButton {
+  min-height: 2.9rem;
+  padding: 0.72rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.paymentModeButtonActive {
+  min-height: 2.9rem;
+  padding: 0.72rem 1rem;
+  border-radius: 999px;
+  background: rgba(196, 106, 45, 0.14);
+  border-color: rgba(196, 106, 45, 0.2);
+  color: var(--color-accent-dark);
+}
+
+.primaryButton {
+  min-height: 3.15rem;
+  padding: 0.82rem 1rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--color-accent), #d78943);
+  color: #fffdf8;
+}
+
+.secondaryButton:hover,
+.primaryButton:hover,
+.removeButton:hover,
+.quantityButton:hover,
+.paymentModeButton:hover,
+.paymentModeButtonActive:hover {
+  transform: translateY(-1px);
+}
+
+.secondaryButton:disabled,
+.primaryButton:disabled,
+.quantityButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+}
+
+.statusRow {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.statusCard,
+.successBanner,
+.errorBanner,
+.warningBanner,
+.emptyState {
+  display: grid;
+  gap: 0.55rem;
+  padding: 1rem;
+  border-radius: 20px;
+}
+
+.statusCard {
+  border: 1px solid rgba(22, 32, 42, 0.08);
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.statusLabel {
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.statusValue {
+  font-size: 1rem;
+  color: var(--color-ink);
+}
+
+.successBanner {
+  border: 1px solid rgba(36, 111, 88, 0.14);
+  background: rgba(36, 111, 88, 0.08);
+}
+
+.successTitle,
+.emptyTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.successDescription,
+.emptyDescription {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--color-muted);
+}
+
+.errorBanner {
+  border: 1px solid rgba(166, 63, 45, 0.14);
+  background: rgba(166, 63, 45, 0.08);
+  color: #8c3023;
+}
+
+.warningBanner {
+  border: 1px solid rgba(196, 106, 45, 0.14);
+  background: rgba(196, 106, 45, 0.08);
+  color: var(--color-accent-dark);
+  line-height: 1.6;
+}
+
+.emptyState {
+  border: 1px dashed rgba(22, 32, 42, 0.16);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.cartList {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.cartItem {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid rgba(22, 32, 42, 0.08);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.cartItemCopy {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.cartItemHeading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.cartItemName {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.15;
+}
+
+.cartItemMeta {
+  margin: 0;
+  color: var(--color-muted);
+}
+
+.removeButton {
+  padding: 0;
+  background: transparent;
+  color: #8c3023;
+}
+
+.cartItemFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.quantityControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.quantityButton {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  border-color: var(--color-border);
+  color: var(--color-ink);
+}
+
+.quantityValue {
+  min-width: 1.5rem;
+  text-align: center;
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
+.lineTotal {
+  font-size: 1rem;
+  color: var(--color-ink);
+}
+
+.checkoutGrid {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.inlineFields {
+  display: grid;
+  gap: 1rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.input,
+.textarea,
+.balanceBox {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-ink);
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.balanceBox {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 700;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: rgba(196, 106, 45, 0.72);
+  box-shadow: 0 0 0 4px rgba(196, 106, 45, 0.14);
+  background: #ffffff;
+}
+
+.helperText {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.paymentModeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.footer {
+  display: grid;
+  gap: 1rem;
+  padding-top: 0.35rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.summaryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.summaryLabel {
+  color: var(--color-muted);
+}
+
+.summaryValue,
+.totalValue {
+  color: var(--color-ink);
+}
+
+.totalValue {
+  font-size: 1.2rem;
+}
+
+@media (min-width: 720px) {
+  .card {
+    padding: 1.5rem;
+  }
+
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .statusRow,
+  .inlineFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1120px) {
+  .card {
+    position: sticky;
+    top: 1rem;
+  }
+}

@@ -1,0 +1,162 @@
+.card {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.2rem;
+  color: #8a7a24;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #1f2534;
+  font-size: 1.06rem;
+  font-weight: 700;
+}
+
+.description,
+.formDescription {
+  margin: 0.45rem 0 0;
+  color: #667085;
+  line-height: 1.55;
+}
+
+.categoryList {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.categoryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid #eceff5;
+  border-radius: 1rem;
+  padding: 0.9rem 1rem;
+  background: #fbfcff;
+}
+
+.categoryName {
+  margin: 0;
+  color: #1f2534;
+  font-weight: 700;
+}
+
+.categoryMeta {
+  margin: 0.2rem 0 0;
+  color: #77829b;
+  font-size: 0.82rem;
+}
+
+.categoryColor {
+  border-radius: 999px;
+  background: #f4f6fb;
+  color: #5a657d;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.form {
+  display: grid;
+  gap: 0.85rem;
+  border-top: 1px solid #edf0f6;
+  padding-top: 1rem;
+}
+
+.formHeader {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.formTitle {
+  margin: 0;
+  color: #1f2534;
+  font-weight: 700;
+}
+
+.inlineFields {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.label {
+  color: #5a657d;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.input,
+.colorInput {
+  width: 100%;
+  border: 1px solid #d8dcea;
+  background: #fbfcff;
+  color: #1f2534;
+  border-radius: 1rem;
+  font: inherit;
+}
+
+.input {
+  min-height: 2.95rem;
+  padding: 0.8rem 0.95rem;
+}
+
+.colorInput {
+  min-height: 2.95rem;
+  padding: 0.35rem;
+}
+
+.input:focus,
+.colorInput:focus {
+  outline: none;
+  border-color: #f1d625;
+  box-shadow: 0 0 0 3px rgba(241, 214, 37, 0.22);
+}
+
+.errorMessage {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.8rem;
+}
+
+.errorBanner {
+  border-radius: 1rem;
+  background: #fee2e2;
+  color: #b42318;
+  padding: 0.8rem 0.95rem;
+  line-height: 1.5;
+}
+
+.primaryButton {
+  border: none;
+  background: #232838;
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 0.78rem 1.05rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+@media (min-width: 720px) {
+  .inlineFields {
+    grid-template-columns: minmax(0, 1fr) 8.5rem;
+    align-items: end;
+  }
+}

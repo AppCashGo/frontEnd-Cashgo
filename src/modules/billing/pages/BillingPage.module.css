@@ -1,0 +1,175 @@
+.page {
+  display: grid;
+  gap: 1rem;
+}
+
+.hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.heroCopy {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.title {
+  margin: 0;
+  color: #1f2a37;
+  font-size: clamp(2rem, 2vw + 1.4rem, 2.6rem);
+  font-weight: 900;
+}
+
+.description {
+  margin: 0;
+  max-width: 48rem;
+  color: #607084;
+  line-height: 1.6;
+}
+
+.heroActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.configurationStrip {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.configurationCard {
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(192, 204, 218, 0.9);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.configurationLabel {
+  margin: 0;
+  color: #6d7a8d;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.configurationValue {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 0.96rem;
+  font-weight: 900;
+}
+
+.metricsGrid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.filtersRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.searchField {
+  flex: 1 1 18rem;
+}
+
+.selectField,
+.dateField {
+  min-width: 12rem;
+}
+
+.tableSection {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.28rem 0.68rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: #eef3f8;
+  color: #445264;
+}
+
+.statusPaid,
+.statusApproved {
+  background: #dcf7e8;
+  color: #0d7d3b;
+}
+
+.statusPartial {
+  background: #fff0d7;
+  color: #ad6c00;
+}
+
+.statusPending {
+  background: #e8f0fd;
+  color: #2662c8;
+}
+
+.statusOverdue,
+.statusRejected {
+  background: #ffe1de;
+  color: #c03f34;
+}
+
+.statusCancelled {
+  background: #eceff4;
+  color: #607084;
+}
+
+.statusDraft {
+  background: #eef3f8;
+  color: #445264;
+}
+
+.documentCell {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.documentNumber {
+  font-weight: 900;
+}
+
+.documentMeta {
+  color: #607084;
+  font-size: 0.82rem;
+}
+
+.actionButton {
+  border: 0;
+  background: transparent;
+  color: #1f2a37;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.errorBanner {
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  background: #ffe8e5;
+  color: #c03f34;
+  font-weight: 700;
+}
+
+@media (min-width: 900px) {
+  .metricsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .configurationStrip {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

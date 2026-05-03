@@ -1,0 +1,175 @@
+.card {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #8d5b2f;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.3;
+  color: #111827;
+}
+
+.statusPill,
+.statusPillActive {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0.48rem 0.8rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.statusPill {
+  background: #f2f4f7;
+  color: #475467;
+}
+
+.statusPillActive {
+  background: #eef4ff;
+  color: #1e5fcf;
+}
+
+.loadingState,
+.emptyState,
+.feedbackCard {
+  display: grid;
+  gap: 0.45rem;
+  border-radius: 1rem;
+  padding: 1rem 1.05rem;
+}
+
+.loadingState,
+.emptyState {
+  background: #f8fafc;
+  border: 1px dashed #d6dbe5;
+}
+
+.feedbackCard {
+  background: #fff4f7;
+  border: 1px solid #f5c2d1;
+}
+
+.loadingTitle,
+.emptyTitle,
+.feedbackTitle {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.loadingDescription,
+.emptyDescription,
+.feedbackDescription {
+  margin: 0;
+  color: #667085;
+  line-height: 1.55;
+}
+
+.feedbackButton {
+  justify-self: start;
+  border: none;
+  border-radius: 999px;
+  background: #b42346;
+  color: #ffffff;
+  padding: 0.72rem 0.95rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.summaryCard {
+  display: grid;
+  gap: 0.3rem;
+  border-radius: 1.2rem;
+  padding: 1.1rem;
+  background:
+    radial-gradient(circle at top right, rgba(36, 87, 184, 0.12), transparent 36%),
+    linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+  border: 1px solid rgba(36, 87, 184, 0.16);
+}
+
+.summaryLabel {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1e5fcf;
+}
+
+.summaryValue {
+  font-size: clamp(1.7rem, 4vw, 2.3rem);
+  line-height: 1;
+  color: #111827;
+}
+
+.summaryHint {
+  margin: 0;
+  color: #667085;
+  line-height: 1.6;
+}
+
+.detailsGrid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.detailBlock {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  background: #fbfcfe;
+  border: 1px solid #e7edf5;
+}
+
+.detailLabel {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #667085;
+}
+
+.detailValue {
+  color: #111827;
+  line-height: 1.45;
+}
+
+@media (min-width: 720px) {
+  .card {
+    padding: 1.25rem;
+  }
+
+  .summaryGrid,
+  .detailsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

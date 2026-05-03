@@ -1,0 +1,369 @@
+.page {
+  display: grid;
+  gap: 1rem;
+  color: #15202b;
+}
+
+.header,
+.headerActions,
+.workspace,
+.columnHeader,
+.deliveryCardHeader,
+.cardActions,
+.panelHeader,
+.quantityControl,
+.cartItem {
+  display: flex;
+  align-items: center;
+}
+
+.header {
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0 1rem;
+  border-bottom: 1px solid #dbe3ef;
+}
+
+.header h2,
+.columnHeader h3,
+.panelHeader h3 {
+  margin: 0;
+}
+
+.header h2 {
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.eyebrow {
+  margin: 0 0 0.2rem;
+  color: #667085;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.headerActions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.cashRegisterPill,
+.successButton,
+.dangerButton,
+.primaryAction,
+.cardActions button,
+.productList button,
+.dangerTextButton {
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.cashRegisterPill,
+.successButton,
+.dangerButton {
+  min-height: 2.5rem;
+  padding: 0.65rem 1rem;
+  color: #ffffff;
+  text-align: center;
+}
+
+.cashRegisterPill {
+  background: #162231;
+}
+
+.successButton {
+  background: #24945c;
+}
+
+.dangerButton {
+  background: #bf3f35;
+}
+
+.feedback {
+  padding: 0.85rem 1rem;
+  border: 1px solid #c8e4d4;
+  border-radius: 8px;
+  background: #f0fbf4;
+  color: #1f6f44;
+  font-weight: 700;
+}
+
+.workspace {
+  align-items: stretch;
+  gap: 1rem;
+}
+
+.board {
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.column,
+.formPanel {
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.column {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 36rem;
+}
+
+.columnHeader {
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-bottom: 1px solid #e5ebf4;
+}
+
+.columnHeader span,
+.deliveryCard span,
+.cartItem span {
+  color: #667085;
+  font-size: 0.86rem;
+}
+
+.columnHeader strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  min-height: 2rem;
+  border-radius: 8px;
+  background: #fff0b8;
+}
+
+.orderList {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+}
+
+.deliveryCard {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid #e1e7f0;
+  border-radius: 8px;
+  background: #fbfcfe;
+  padding: 0.85rem;
+}
+
+.deliveryCardHeader {
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.deliveryCardHeader div,
+.cartItem div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.deliveryMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.deliveryMeta span {
+  border-radius: 8px;
+  background: #eef2f7;
+  padding: 0.2rem 0.5rem;
+  font-weight: 700;
+}
+
+.itemSummary {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding-left: 1rem;
+  color: #354052;
+}
+
+.cardActions {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cardActions button {
+  min-height: 2.2rem;
+  border: 1px solid #172536;
+  background: #172536;
+  color: #ffffff;
+  padding: 0.45rem 0.65rem;
+}
+
+.dangerTextButton {
+  border: 0;
+  background: transparent;
+  color: #b8423a;
+  text-decoration: underline;
+}
+
+.emptyColumn {
+  border: 1px dashed #cfd8e6;
+  border-radius: 8px;
+  color: #667085;
+  padding: 1rem;
+  text-align: center;
+}
+
+.formPanel {
+  display: grid;
+  align-content: start;
+  flex: 0 0 25rem;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.panelHeader {
+  justify-content: space-between;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+  color: #263244;
+  font-weight: 800;
+}
+
+.field input,
+.field select,
+.field textarea,
+.productPicker input {
+  width: 100%;
+  border: 1px solid #cfd8e6;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #15202b;
+  padding: 0.75rem 0.85rem;
+  outline: none;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.twoColumns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.productPicker,
+.cartList {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.productList {
+  display: grid;
+  gap: 0.45rem;
+  max-height: 14rem;
+  overflow: auto;
+}
+
+.productList button {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border: 1px solid #e1e7f0;
+  background: #ffffff;
+  color: #15202b;
+  padding: 0.65rem;
+  text-align: left;
+}
+
+.cartList {
+  max-height: 14rem;
+  overflow: auto;
+}
+
+.cartItem {
+  justify-content: space-between;
+  gap: 0.6rem;
+  border: 1px solid #e1e7f0;
+  border-radius: 8px;
+  padding: 0.65rem;
+}
+
+.quantityControl {
+  border: 1px solid #d7deea;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.quantityControl button {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  background: #f6f8fb;
+  font-weight: 900;
+}
+
+.quantityControl span {
+  min-width: 2rem;
+  text-align: center;
+  font-weight: 900;
+}
+
+.totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.4rem 0.75rem;
+  border: 1px solid #e1e7f0;
+  border-radius: 8px;
+  padding: 0.85rem;
+}
+
+.totals span {
+  color: #667085;
+}
+
+.primaryAction {
+  min-height: 3rem;
+  border: 0;
+  background: #172536;
+  color: #ffffff;
+  padding: 0.75rem 1rem;
+}
+
+@media (max-width: 1180px) {
+  .workspace {
+    display: grid;
+  }
+
+  .formPanel {
+    flex-basis: auto;
+  }
+}
+
+@media (max-width: 920px) {
+  .board {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .header,
+  .headerActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .board,
+  .twoColumns {
+    grid-template-columns: 1fr;
+  }
+}

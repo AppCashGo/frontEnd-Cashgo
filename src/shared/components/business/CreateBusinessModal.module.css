@@ -1,0 +1,213 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 65;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(16, 24, 40, 0.42);
+}
+
+.drawer {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  width: min(100vw, 24.5rem);
+  height: 100vh;
+  background: #ffffff;
+  border-left: 1px solid rgba(198, 208, 220, 0.96);
+  box-shadow: -1.4rem 0 2.6rem rgba(15, 23, 42, 0.14);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.15rem 0.9rem;
+}
+
+.headerCopy {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.title {
+  margin: 0;
+  color: #1e293b;
+  font-size: 1.52rem;
+  font-weight: 900;
+}
+
+.requiredHint {
+  margin: 0;
+  color: #66758c;
+  line-height: 1.5;
+}
+
+.requiredHint {
+  font-size: 0.82rem;
+}
+
+.closeButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 1.15rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.form {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+}
+
+.formBody {
+  display: grid;
+  gap: 0.9rem;
+  min-height: 0;
+  padding: 0 1.15rem 1rem;
+  overflow-y: auto;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.label {
+  color: #22304b;
+  font-size: 0.94rem;
+  font-weight: 800;
+}
+
+.requiredMark {
+  color: #d74646;
+}
+
+.input,
+.categoryButton,
+.phoneField {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid #ccd6e3;
+  border-radius: 0.95rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+}
+
+.input,
+.phoneInput {
+  padding: 0.85rem 0.95rem;
+}
+
+.categoryButton {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 0.95rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fieldSuffix {
+  color: #607086;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.phoneField {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  overflow: hidden;
+}
+
+.phonePrefix {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: 0 0.82rem;
+  border-right: 1px solid #dde5ef;
+  color: #415066;
+  font-weight: 700;
+}
+
+.phoneFlag {
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.phoneInput {
+  min-width: 0;
+  min-height: 3rem;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.errorMessage {
+  margin: -0.2rem 0 0;
+  color: #c13f3f;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.errorBanner {
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(193, 63, 63, 0.18);
+  border-radius: 0.95rem;
+  background: rgba(193, 63, 63, 0.08);
+  color: #992f2f;
+  line-height: 1.5;
+}
+
+.footer {
+  display: grid;
+  padding: 1rem 1.15rem 1.3rem;
+  border-top: 1px solid rgba(210, 219, 231, 0.9);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), #ffffff 48%);
+}
+
+.primaryButton {
+  width: 100%;
+  min-height: 3.1rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 1rem;
+  background: #1f2433;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primaryButton:disabled {
+  background: #dce4ef;
+  color: #91a0b5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .drawer {
+    width: 100vw;
+  }
+
+  .header,
+  .formBody,
+  .footer {
+    padding-inline: 1rem;
+  }
+}

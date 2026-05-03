@@ -1,0 +1,37 @@
+.page {
+  display: grid;
+  place-items: center;
+  min-height: 68vh;
+}
+
+.card {
+  display: grid;
+  justify-items: center;
+  gap: 1rem;
+  width: min(100%, 42rem);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+}
+
+.device {
+  width: 5rem;
+  height: 5rem;
+  border-radius: 1.6rem;
+  background: linear-gradient(180deg, #8fe07e 0%, #34a853 100%);
+  box-shadow: 0 1rem 2.2rem rgba(52, 168, 83, 0.22);
+}
+
+.title {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.description {
+  margin: 0;
+  max-width: 32rem;
+  color: #5f6d80;
+  line-height: 1.65;
+}
+

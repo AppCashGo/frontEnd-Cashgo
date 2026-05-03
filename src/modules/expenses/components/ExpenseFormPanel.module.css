@@ -1,0 +1,155 @@
+.card {
+  display: grid;
+  gap: 1rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.2rem;
+  color: #8a7a24;
+  font-size: 0.73rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #1f2534;
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.description {
+  margin: 0.45rem 0 0;
+  color: #667085;
+  line-height: 1.55;
+}
+
+.secondaryButton,
+.primaryButton {
+  border-radius: 999px;
+  padding: 0.78rem 1.05rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.secondaryButton {
+  border: 1px solid #d7dbe8;
+  background: #ffffff;
+  color: #48526a;
+}
+
+.primaryButton {
+  border: none;
+  background: #232838;
+  color: #ffffff;
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.form {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.42rem;
+}
+
+.label {
+  color: #5a657d;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  border: 1px solid #d8dcea;
+  background: #fbfcff;
+  color: #1f2534;
+  border-radius: 1rem;
+  padding: 0.8rem 0.95rem;
+  font: inherit;
+}
+
+.input,
+.select {
+  min-height: 2.95rem;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: #f1d625;
+  box-shadow: 0 0 0 3px rgba(241, 214, 37, 0.22);
+}
+
+.inlineFields {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.helperBanner,
+.errorBanner {
+  border-radius: 1rem;
+  padding: 0.85rem 0.95rem;
+  line-height: 1.5;
+}
+
+.helperBanner {
+  background: #fff9cf;
+  color: #5f5419;
+}
+
+.errorBanner {
+  background: #fee2e2;
+  color: #b42318;
+}
+
+.errorMessage {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.8rem;
+}
+
+.footer {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.helperText {
+  margin: 0;
+  color: #667085;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+@media (min-width: 720px) {
+  .inlineFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footer {
+    align-items: center;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}

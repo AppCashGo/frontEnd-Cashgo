@@ -1,0 +1,237 @@
+.card {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.header {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #5c6b80;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1d2731;
+}
+
+.description {
+  margin: 0.55rem 0 0;
+  color: #5c6b80;
+  line-height: 1.55;
+}
+
+.summaryCard,
+.feedbackCard,
+.noticeCard {
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+}
+
+.summaryCard {
+  background: #f7f9fc;
+  border: 1px solid #dbe4ef;
+}
+
+.summaryLabel,
+.feedbackTitle,
+.noticeTitle {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1d2731;
+}
+
+.summaryValue {
+  margin: 0.25rem 0 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1d2731;
+}
+
+.summaryHint,
+.feedbackDescription,
+.noticeDescription {
+  margin: 0.45rem 0 0;
+  color: #5c6b80;
+  line-height: 1.5;
+}
+
+.feedbackCard {
+  border: 1px solid #fecaca;
+  background: #fff1f2;
+}
+
+.noticeCard {
+  border: 1px solid #c7d2fe;
+  background: #eef2ff;
+}
+
+.feedbackButton {
+  margin-top: 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: #1d2731;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 0.75rem 1rem;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.toggleField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #dbe4ef;
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.toggleCopy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.toggleLabel {
+  font-weight: 700;
+  color: #1d2731;
+}
+
+.toggleDescription {
+  color: #5c6b80;
+  line-height: 1.45;
+}
+
+.toggleShell {
+  position: relative;
+  width: 3.25rem;
+  min-width: 3.25rem;
+  height: 2rem;
+}
+
+.toggleInput {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+}
+
+.toggleTrack {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #d6deea;
+  transition: background-color 0.2s ease;
+}
+
+.toggleTrack::after {
+  content: '';
+  position: absolute;
+  top: 0.2rem;
+  left: 0.2rem;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.16);
+  transition: transform 0.2s ease;
+}
+
+.toggleInput:checked + .toggleTrack {
+  background: #22c55e;
+}
+
+.toggleInput:checked + .toggleTrack::after {
+  transform: translateX(1.25rem);
+}
+
+.toggleInput:disabled + .toggleTrack {
+  opacity: 0.6;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.label {
+  font-weight: 700;
+  color: #1d2731;
+}
+
+.input {
+  width: 100%;
+  border: 1px solid #cfd8e3;
+  border-radius: 0.95rem;
+  padding: 0.95rem 1rem;
+  font: inherit;
+  color: #1d2731;
+  background: #ffffff;
+}
+
+.input:disabled {
+  background: #f7f9fc;
+  color: #8a97aa;
+}
+
+.helper,
+.helperText {
+  margin: 0;
+  color: #5c6b80;
+  line-height: 1.45;
+}
+
+.errorMessage,
+.errorBanner {
+  color: #b91c1c;
+}
+
+.errorBanner {
+  border: 1px solid #fecaca;
+  border-radius: 0.95rem;
+  background: #fff1f2;
+  padding: 0.85rem 1rem;
+}
+
+.footer {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.primaryButton {
+  border: 0;
+  border-radius: 999px;
+  background: #1d2731;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 0.95rem 1.15rem;
+}
+
+.primaryButton:disabled,
+.feedbackButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (min-width: 960px) {
+  .header {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    align-items: start;
+  }
+}

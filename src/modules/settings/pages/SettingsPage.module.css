@@ -1,0 +1,166 @@
+.page {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.hero {
+  display: grid;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: 1.8rem;
+  background:
+    radial-gradient(circle at top right, rgba(99, 102, 241, 0.16), transparent 32%),
+    radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.18), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(244, 247, 251, 0.96));
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1.4rem 2.6rem rgba(15, 23, 42, 0.08);
+}
+
+.heroCopy {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #4f46e5;
+}
+
+.title {
+  margin: 0;
+  max-width: 44rem;
+  font-size: clamp(1.8rem, 4vw, 2.7rem);
+  line-height: 1.04;
+  color: #0f172a;
+}
+
+.description {
+  margin: 0;
+  max-width: 42rem;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.heroActions {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.heroStatusCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border-radius: 1.2rem;
+  background: rgba(15, 23, 42, 0.04);
+  border: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.heroStatusLabel {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.heroStatusValue {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.heroStatusHint {
+  margin: 0;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.heroButton {
+  justify-self: start;
+  min-height: 3rem;
+  padding: 0 1.15rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #4338ca, #0ea5e9);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1rem 2rem rgba(67, 56, 202, 0.2);
+}
+
+.metricsGrid {
+  display: grid;
+  gap: 0.95rem;
+}
+
+.workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.primaryColumn {
+  display: grid;
+  gap: 1rem;
+}
+
+.restrictedCard {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1.6rem;
+  border: 1px solid rgba(245, 158, 11, 0.18);
+  background:
+    radial-gradient(circle at top right, rgba(245, 158, 11, 0.16), transparent 36%),
+    rgba(255, 251, 235, 0.98);
+}
+
+.restrictedEyebrow {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #b45309;
+}
+
+.restrictedTitle {
+  margin: 0;
+  font-size: clamp(1.45rem, 3vw, 2rem);
+  line-height: 1.15;
+  color: #78350f;
+}
+
+.restrictedDescription {
+  margin: 0;
+  max-width: 42rem;
+  line-height: 1.7;
+  color: #92400e;
+}
+
+@media (min-width: 768px) {
+  .hero {
+    grid-template-columns: minmax(0, 1.2fr) minmax(16rem, 0.8fr);
+    align-items: end;
+  }
+
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1180px) {
+  .workspace {
+    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    align-items: start;
+  }
+
+  .metricsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

@@ -1,0 +1,331 @@
+.page {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(255, 211, 75, 0.28),
+      transparent 26%
+    ),
+    linear-gradient(180deg, #fffdf7 0%, #f7f9fc 100%);
+}
+
+.card {
+  width: min(1080px, 100%);
+  margin: 0 auto;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 28px;
+  box-shadow: 0 24px 72px rgba(24, 33, 47, 0.08);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+}
+
+.eyebrow {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #60758b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  line-height: 1;
+  color: #18212f;
+}
+
+.subtitle {
+  max-width: 600px;
+  margin: 14px 0 0;
+  color: #5b6b80;
+  font-size: 1rem;
+}
+
+.statusPill {
+  padding: 10px 16px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #1d63d8;
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.errorBanner,
+.successBanner,
+.warningBanner,
+.mutedBanner {
+  margin-top: 24px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-weight: 600;
+}
+
+.errorBanner {
+  background: #fff2f0;
+  color: #c7473b;
+}
+
+.successBanner {
+  background: #eef9f2;
+  color: #1d7f4f;
+}
+
+.warningBanner {
+  background: #fff7e7;
+  color: #996600;
+}
+
+.mutedBanner {
+  background: #f1f5f9;
+  color: #526377;
+}
+
+.metaGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 28px;
+}
+
+.metaCard,
+.noteCard {
+  padding: 18px;
+  border: 1px solid #d9e2ec;
+  border-radius: 20px;
+  background: #fbfcfe;
+}
+
+.metaCard span,
+.noteCard h3 {
+  display: block;
+  margin-bottom: 8px;
+  color: #60758b;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.metaCard strong {
+  display: block;
+  color: #18212f;
+  font-size: 1rem;
+}
+
+.metaCard small {
+  display: block;
+  margin-top: 6px;
+  color: #5b6b80;
+}
+
+.tableSection {
+  margin-top: 28px;
+}
+
+.sectionTitle {
+  margin: 0 0 12px;
+  color: #18212f;
+  font-size: 1.2rem;
+}
+
+.tableScroller {
+  overflow-x: auto;
+  border: 1px solid #e1e7ef;
+  border-radius: 22px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.table thead th {
+  padding: 14px 16px;
+  background: #f5f8fc;
+  color: #60758b;
+  text-align: left;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.table tbody td {
+  padding: 16px;
+  border-top: 1px solid #edf1f5;
+  color: #18212f;
+  vertical-align: top;
+}
+
+.itemCell {
+  display: grid;
+  gap: 4px;
+}
+
+.itemCell span {
+  color: #60758b;
+  font-size: 0.92rem;
+}
+
+.summaryPanel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.summaryPanel > div {
+  padding: 18px;
+  border-radius: 20px;
+  background: #f8fafc;
+  border: 1px solid #e1e7ef;
+}
+
+.summaryPanel span {
+  display: block;
+  margin-bottom: 8px;
+  color: #60758b;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.summaryPanel strong {
+  color: #18212f;
+  font-size: 1.15rem;
+}
+
+.totalBlock {
+  background: linear-gradient(135deg, #17212f 0%, #26384f 100%) !important;
+}
+
+.totalBlock span,
+.totalBlock strong {
+  color: #ffffff;
+}
+
+.notesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.noteCard p {
+  margin: 0;
+  color: #243446;
+  line-height: 1.55;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-top: 28px;
+}
+
+.footerActions {
+  display: flex;
+  gap: 12px;
+}
+
+.buttonPrimary,
+.buttonSecondary,
+.buttonDanger {
+  min-height: 48px;
+  padding: 0 20px;
+  border-radius: 16px;
+  font-weight: 700;
+  font-size: 0.98rem;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.buttonPrimary {
+  border: none;
+  color: #ffffff;
+  background: #17212f;
+  box-shadow: 0 16px 30px rgba(23, 33, 47, 0.18);
+}
+
+.buttonSecondary {
+  border: 1px solid #c9d4e0;
+  color: #18212f;
+  background: #ffffff;
+}
+
+.buttonDanger {
+  border: 1px solid #f0b4ad;
+  color: #b94c40;
+  background: #fff5f3;
+}
+
+.buttonPrimary:disabled,
+.buttonSecondary:disabled,
+.buttonDanger:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.emptyState {
+  min-height: 320px;
+  display: grid;
+  place-items: center;
+  color: #60758b;
+  font-size: 1rem;
+  text-align: center;
+}
+
+@media (max-width: 960px) {
+  .card {
+    padding: 24px;
+  }
+
+  .metaGrid,
+  .summaryPanel,
+  .notesGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 20px 12px;
+  }
+
+  .card {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .header,
+  .footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .statusPill {
+    align-self: flex-start;
+  }
+
+  .metaGrid,
+  .summaryPanel,
+  .notesGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .footerActions {
+    flex-direction: column;
+  }
+}

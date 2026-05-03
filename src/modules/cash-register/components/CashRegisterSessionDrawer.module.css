@@ -1,0 +1,127 @@
+.sections,
+.form {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.inlineFields {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.label {
+  color: #22304b;
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid #ccd6e3;
+  border-radius: 0.95rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+}
+
+.textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.summaryBox,
+.summaryCard {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  border: 1px solid rgba(203, 213, 225, 0.92);
+  border-radius: 1rem;
+  background: #f8fafc;
+}
+
+.summaryLabel {
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.summaryValue {
+  color: #1f2937;
+  font-size: 1.15rem;
+  font-weight: 900;
+}
+
+.summaryMeta {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.metricsGrid {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.35rem;
+}
+
+.metric {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.metric span {
+  color: #64748b;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.metric strong {
+  color: #1f2937;
+  font-size: 1rem;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.errorMessage {
+  margin: 0;
+  color: #c13f3f;
+  font-size: 0.84rem;
+}
+
+.footerButton {
+  width: 100%;
+  min-height: 3.1rem;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 1rem;
+  background: #1f2433;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.footerButton:disabled {
+  background: #dce4ef;
+  color: #91a0b5;
+  cursor: not-allowed;
+}
+
+@media (min-width: 560px) {
+  .inlineFields,
+  .metricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

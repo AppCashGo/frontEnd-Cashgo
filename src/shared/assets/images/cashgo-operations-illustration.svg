@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" role="img" aria-labelledby="title desc">
+  <title id="title">Cashgo operations dashboard</title>
+  <desc id="desc">A point of sale dashboard with inventory, sales and cash register panels.</desc>
+  <defs>
+    <linearGradient id="screen-bg" x1="96" x2="611" y1="77" y2="421" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EFF6FF"/>
+    </linearGradient>
+    <linearGradient id="phone-bg" x1="97" x2="193" y1="223" y2="420" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F766E"/>
+      <stop offset="1" stop-color="#2563EB"/>
+    </linearGradient>
+    <linearGradient id="terminal-bg" x1="522" x2="645" y1="282" y2="422" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#172554"/>
+      <stop offset="1" stop-color="#0F172A"/>
+    </linearGradient>
+  </defs>
+  <rect x="49" y="35" width="622" height="438" rx="42" fill="#F8FAFC"/>
+  <rect x="78" y="63" width="564" height="338" rx="24" fill="#CBD5E1"/>
+  <rect x="88" y="73" width="544" height="318" rx="18" fill="url(#screen-bg)"/>
+  <rect x="88" y="73" width="544" height="48" rx="18" fill="#0F172A"/>
+  <circle cx="118" cy="97" r="7" fill="#F97316"/>
+  <circle cx="142" cy="97" r="7" fill="#FACC15"/>
+  <circle cx="166" cy="97" r="7" fill="#14B8A6"/>
+  <rect x="197" y="91" width="126" height="12" rx="6" fill="#64748B"/>
+  <rect x="107" y="141" width="116" height="224" rx="16" fill="#E2E8F0"/>
+  <rect x="130" y="163" width="70" height="9" rx="4.5" fill="#64748B"/>
+  <rect x="127" y="193" width="74" height="36" rx="10" fill="#FFFFFF"/>
+  <rect x="127" y="243" width="74" height="36" rx="10" fill="#FFFFFF"/>
+  <rect x="127" y="293" width="74" height="36" rx="10" fill="#FFFFFF"/>
+  <rect x="250" y="145" width="103" height="74" rx="16" fill="#CCFBF1"/>
+  <rect x="272" y="168" width="48" height="11" rx="5.5" fill="#0F766E"/>
+  <rect x="272" y="188" width="62" height="11" rx="5.5" fill="#14B8A6"/>
+  <rect x="370" y="145" width="103" height="74" rx="16" fill="#DBEAFE"/>
+  <rect x="392" y="168" width="48" height="11" rx="5.5" fill="#1D4ED8"/>
+  <rect x="392" y="188" width="62" height="11" rx="5.5" fill="#60A5FA"/>
+  <rect x="490" y="145" width="103" height="74" rx="16" fill="#FFEDD5"/>
+  <rect x="512" y="168" width="48" height="11" rx="5.5" fill="#C2410C"/>
+  <rect x="512" y="188" width="62" height="11" rx="5.5" fill="#FB923C"/>
+  <rect x="250" y="240" width="343" height="119" rx="18" fill="#FFFFFF"/>
+  <rect x="274" y="263" width="92" height="11" rx="5.5" fill="#334155"/>
+  <rect x="274" y="295" width="295" height="10" rx="5" fill="#E2E8F0"/>
+  <rect x="274" y="323" width="239" height="10" rx="5" fill="#E2E8F0"/>
+  <rect x="493" y="273" width="54" height="54" rx="16" fill="#14B8A6"/>
+  <path d="M506 303h28M520 289v28" stroke="#FFFFFF" stroke-width="7" stroke-linecap="round"/>
+  <rect x="91" y="217" width="118" height="218" rx="26" fill="#0F172A"/>
+  <rect x="104" y="235" width="92" height="178" rx="18" fill="url(#phone-bg)"/>
+  <rect x="120" y="259" width="59" height="10" rx="5" fill="#DFF7F4"/>
+  <rect x="120" y="288" width="59" height="48" rx="14" fill="#FFFFFF" fill-opacity=".94"/>
+  <rect x="120" y="349" width="59" height="11" rx="5.5" fill="#99F6E4"/>
+  <rect x="120" y="374" width="44" height="11" rx="5.5" fill="#BFDBFE"/>
+  <rect x="518" y="280" width="129" height="165" rx="24" fill="url(#terminal-bg)"/>
+  <rect x="541" y="307" width="83" height="45" rx="12" fill="#E0F2FE"/>
+  <rect x="550" y="374" width="24" height="18" rx="6" fill="#475569"/>
+  <rect x="588" y="374" width="24" height="18" rx="6" fill="#475569"/>
+  <rect x="550" y="405" width="62" height="14" rx="7" fill="#14B8A6"/>
+  <path d="M311 429h98l18 38H293l18-38Z" fill="#CBD5E1"/>
+  <rect x="251" y="462" width="221" height="20" rx="10" fill="#94A3B8"/>
+</svg>

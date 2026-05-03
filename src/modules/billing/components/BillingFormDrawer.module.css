@@ -1,0 +1,215 @@
+.section {
+  display: grid;
+  gap: 1rem;
+}
+
+.section + .section {
+  padding-top: 1rem;
+  border-top: 1px solid rgba(226, 232, 240, 0.94);
+}
+
+.sectionTitle {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.fieldGrid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.fieldLabel {
+  color: #243244;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.input,
+.select,
+.textarea {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid rgba(186, 198, 212, 0.95);
+  border-radius: 0.95rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+}
+
+.textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: 2px solid rgba(37, 99, 235, 0.18);
+  border-color: #6f9be7;
+}
+
+.checkboxCard {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(186, 198, 212, 0.95);
+  border-radius: 1rem;
+  background: #fbfdff;
+}
+
+.checkboxCard input {
+  margin-top: 0.15rem;
+}
+
+.checkboxCopy {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.checkboxTitle {
+  color: #1f2937;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.checkboxDescription {
+  color: #607084;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.summaryGrid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.summaryCard {
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(216, 224, 234, 0.92);
+  border-radius: 1rem;
+  background: #f9fbfd;
+}
+
+.summaryLabel {
+  margin: 0;
+  color: #607084;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.summaryValue {
+  margin: 0.3rem 0 0;
+  color: #1f2a37;
+  font-size: 0.94rem;
+  font-weight: 900;
+}
+
+.list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.optionCard {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.95rem 1rem;
+  border: 1px solid rgba(186, 198, 212, 0.95);
+  border-radius: 1rem;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 160ms ease, box-shadow 160ms ease,
+    background 160ms ease;
+}
+
+.optionCardSelected {
+  border-color: #1f2a37;
+  background: #f8fbff;
+  box-shadow: 0 0.85rem 1.8rem rgba(15, 23, 42, 0.08);
+}
+
+.optionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.optionTitle {
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.96rem;
+  font-weight: 900;
+}
+
+.optionSubtitle {
+  margin: 0.15rem 0 0;
+  color: #607084;
+  font-size: 0.82rem;
+}
+
+.optionMeta {
+  display: grid;
+  gap: 0.18rem;
+  color: #526173;
+  font-size: 0.82rem;
+}
+
+.emptyState {
+  display: grid;
+  gap: 0.4rem;
+  padding: 1.1rem 1rem;
+  border: 1px dashed rgba(186, 198, 212, 0.95);
+  border-radius: 1rem;
+  color: #607084;
+}
+
+.emptyTitle {
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.emptyDescription {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.55;
+}
+
+.errorBanner {
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.95rem;
+  background: #ffe8e5;
+  color: #c03f34;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.errorMessage {
+  margin: 0;
+  color: #c03f34;
+  font-size: 0.78rem;
+}
+
+.footerActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .summaryGrid,
+  .footerActions {
+    grid-template-columns: 1fr;
+  }
+}

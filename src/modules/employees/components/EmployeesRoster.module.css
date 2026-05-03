@@ -1,0 +1,277 @@
+.card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+
+.header {
+  display: grid;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent-dark);
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--color-ink);
+}
+
+.description {
+  margin: 0.55rem 0 0;
+  color: var(--color-muted);
+  line-height: 1.65;
+}
+
+.headerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.refreshingLabel {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--color-accent-dark);
+}
+
+.primaryButton,
+.feedbackButton,
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.85rem;
+  padding: 0 1rem;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryButton {
+  border: none;
+  background: linear-gradient(135deg, var(--color-accent), #d78943);
+  color: #fffdf8;
+}
+
+.feedbackButton,
+.deleteButton {
+  border: 1px solid rgba(166, 63, 45, 0.16);
+  background: rgba(255, 255, 255, 0.85);
+  color: #8c3023;
+}
+
+.searchField {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.searchLabel {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #475569;
+}
+
+.searchInput {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0 0.95rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.88);
+  color: var(--color-ink);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: rgba(196, 106, 45, 0.45);
+  box-shadow: 0 0 0 0.25rem rgba(196, 106, 45, 0.12);
+}
+
+.feedbackCard,
+.loadingState,
+.emptyState {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: 1rem;
+}
+
+.feedbackCard {
+  border: 1px solid rgba(239, 68, 68, 0.16);
+  background: rgba(254, 242, 242, 0.92);
+}
+
+.loadingState,
+.emptyState {
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  background: rgba(248, 250, 252, 0.92);
+}
+
+.feedbackTitle,
+.loadingTitle,
+.emptyTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.feedbackTitle {
+  color: #991b1b;
+}
+
+.feedbackDescription,
+.loadingDescription,
+.emptyDescription {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.feedbackDescription {
+  color: #7f1d1d;
+}
+
+.list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.tableHeader {
+  display: none;
+}
+
+.employeeRow {
+  display: grid;
+  gap: 0.9rem;
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid rgba(22, 32, 42, 0.08);
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.92);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.employeeRow:hover {
+  transform: translateY(-1px);
+  border-color: rgba(196, 106, 45, 0.22);
+  box-shadow: 0 1rem 1.8rem rgba(22, 32, 42, 0.07);
+}
+
+.employeeRowActive {
+  border-color: rgba(196, 106, 45, 0.35);
+  box-shadow: 0 0 0 0.22rem rgba(196, 106, 45, 0.12);
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(196, 106, 45, 0.12),
+      transparent 40%
+    ),
+    rgba(255, 255, 255, 0.96);
+}
+
+.primaryCell,
+.secondaryCell,
+.roleCell,
+.statusCell,
+.actionsCell {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.employeeName,
+.employeePhone {
+  margin: 0;
+  font-weight: 800;
+  color: var(--color-ink);
+}
+
+.employeeMeta {
+  margin: 0;
+  color: var(--color-muted);
+  line-height: 1.55;
+  word-break: break-word;
+}
+
+.rolePill,
+.statusPill {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 2rem;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.8rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.rolePill {
+  background: rgba(22, 32, 42, 0.06);
+  color: var(--color-ink);
+}
+
+.statusPillSuccess {
+  background: rgba(31, 122, 84, 0.14);
+  color: #166946;
+}
+
+.statusPillAccent {
+  background: rgba(196, 106, 45, 0.14);
+  color: var(--color-accent-dark);
+}
+
+.statusPillAlert {
+  background: rgba(166, 63, 45, 0.14);
+  color: #8c3023;
+}
+
+@media (min-width: 920px) {
+  .card {
+    padding: 1.5rem;
+  }
+
+  .header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .tableHeader,
+  .employeeRow {
+    grid-template-columns:
+      minmax(0, 1.35fr)
+      minmax(0, 1.15fr)
+      minmax(0, 0.95fr)
+      minmax(0, 0.8fr)
+      auto;
+    align-items: center;
+  }
+
+  .tableHeader {
+    display: grid;
+    padding: 0 0.85rem;
+    color: var(--color-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .actionsCell {
+    justify-items: end;
+  }
+}

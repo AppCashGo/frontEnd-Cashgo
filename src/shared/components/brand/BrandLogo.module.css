@@ -1,0 +1,94 @@
+.logo {
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, auto);
+  align-items: center;
+  gap: 0.72rem;
+  min-width: 0;
+}
+
+.markOnly {
+  grid-template-columns: auto;
+}
+
+.mark {
+  display: block;
+  width: var(--brand-mark-size);
+  height: var(--brand-mark-size);
+  flex: 0 0 auto;
+  filter: drop-shadow(0 0.8rem 1.3rem rgba(37, 99, 235, 0.18));
+}
+
+.copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.wordmarkRow {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.wordmark {
+  color: #111827;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.tagline {
+  margin: 0;
+  color: #64748b;
+  font-size: var(--brand-tagline-size);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.version {
+  padding: 0.16rem 0.42rem;
+  border-radius: 0.45rem;
+  background: #e0f2fe;
+  color: #075985;
+  font-size: 0.72rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.sm {
+  --brand-mark-size: 2.45rem;
+  --brand-wordmark-size: 1.12rem;
+  --brand-tagline-size: 0.72rem;
+}
+
+.md {
+  --brand-mark-size: 3rem;
+  --brand-wordmark-size: 1.75rem;
+  --brand-tagline-size: 0.82rem;
+}
+
+.lg {
+  --brand-mark-size: 3.8rem;
+  --brand-wordmark-size: clamp(2.25rem, 4vw, 3.35rem);
+  --brand-tagline-size: 0.94rem;
+}
+
+.wordmark {
+  font-size: var(--brand-wordmark-size);
+}
+
+@media (max-width: 420px) {
+  .logo {
+    gap: 0.58rem;
+  }
+
+  .md {
+    --brand-mark-size: 2.65rem;
+    --brand-wordmark-size: 1.5rem;
+  }
+
+  .lg {
+    --brand-mark-size: 3.1rem;
+    --brand-wordmark-size: 2.1rem;
+  }
+}

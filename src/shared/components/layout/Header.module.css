@@ -1,0 +1,47 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(248, 250, 252, 0.96);
+  border-bottom: 1px solid rgba(31, 41, 55, 0.08);
+  backdrop-filter: blur(18px);
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 3.15rem;
+  padding: 0.35rem 1rem;
+}
+
+.toolbarUtilities {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.languageField {
+  width: min(100%, 12rem);
+}
+
+.languageField label {
+  gap: 0.2rem;
+}
+
+.languageField span {
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
+.languageField select {
+  min-height: 2.15rem;
+  border-radius: 8px;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.88rem;
+}
+
+@media (min-width: 992px) {
+  .toolbar {
+    padding-inline: 1.25rem;
+  }
+}
