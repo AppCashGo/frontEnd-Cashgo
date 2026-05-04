@@ -36,8 +36,8 @@ import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import styles from './RetailSalesWorkspace.module.css'
-import { useNavigate } from 'react-router-dom'
 
 type RetailStep = 'CATALOG' | 'PAYMENT'
 type RetailSettlement = 'PAID' | 'CREDIT'
@@ -682,6 +682,7 @@ function SaleSuccessDrawer({ sale, onClose }: SaleSuccessDrawerProps) {
 
 export function RetailSalesWorkspace() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [searchValue, setSearchValue] = useState('')
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [saleStep, setSaleStep] = useState<RetailStep>('CATALOG')
@@ -817,6 +818,27 @@ export function RetailSalesWorkspace() {
       setSaleStep('CATALOG')
     }
   }, [cartItems.length, saleStep])
+
+  useEffect(() => {
+    const saleMode = searchParams.get('sale')
+
+    if (saleMode !== 'products' && saleMode !== 'free') {
+      return
+    }
+
+    if (saleMode === 'products') {
+      setSaleStep('CATALOG')
+      setQuickSaleDrawerOpen(false)
+    } else {
+      clearCheckoutFeedback()
+      setChangeModalOpen(false)
+      setQuickSaleDrawerOpen(true)
+    }
+
+    const nextSearchParams = new URLSearchParams(searchParams)
+    nextSearchParams.delete('sale')
+    setSearchParams(nextSearchParams, { replace: true })
+  }, [clearCheckoutFeedback, searchParams, setSearchParams])
 
   useEffect(() => {
     if (
