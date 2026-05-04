@@ -57,15 +57,27 @@ export type DeliveryOrderStatus =
   | 'DELIVERED'
   | 'CANCELLED'
 
+export type DeliveryOrderSource =
+  | 'PHONE'
+  | 'WHATSAPP'
+  | 'INSTAGRAM'
+  | 'ON_SITE'
+  | 'RAPPI'
+  | 'DIDI_FOOD'
+  | 'OWN_DELIVERY'
+
 export type DeliveryOrder = {
   id: string
   status: DeliveryOrderStatus
+  source: DeliveryOrderSource
   customerId: string
   customerName: string
   phone: string
   address: string
   paymentMethod: SalePaymentMethod
   deliveryFee: number
+  discountAmount: number
+  tipAmount: number
   notes: string
   items: RestaurantOrderItem[]
   createdAt: string
