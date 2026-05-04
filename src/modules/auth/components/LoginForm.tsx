@@ -61,7 +61,7 @@ declare global {
 
 const GOOGLE_IDENTITY_SCRIPT_ID = "google-identity-services";
 const GOOGLE_IDENTITY_SCRIPT_URL = "https://accounts.google.com/gsi/client";
-const PRODUCTION_GOOGLE_CLIENT_ID =
+const DEFAULT_GOOGLE_CLIENT_ID =
   "38168674827-pag1muis5p4iilp4b8ru3jb4aohfulgb.apps.googleusercontent.com";
 const PHONE_LOGIN_COUNTRY_CODE = "CO";
 
@@ -147,7 +147,7 @@ function getGoogleClientId() {
     return configuredClientId;
   }
 
-  return import.meta.env.PROD ? PRODUCTION_GOOGLE_CLIENT_ID : "";
+  return DEFAULT_GOOGLE_CLIENT_ID;
 }
 
 export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
