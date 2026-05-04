@@ -9,15 +9,42 @@
 
 .toolbar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   min-height: 3.15rem;
   padding: 0.35rem 1rem;
+}
+
+.mobileMenuButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(33, 43, 58, 0.14);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #253247;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 0.45rem 1rem rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+}
+
+.mobileMenuIcon {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
 }
 
 .toolbarUtilities {
   display: flex;
   align-items: center;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .languageField {
@@ -42,6 +69,25 @@
 
 @media (min-width: 992px) {
   .toolbar {
+    justify-content: flex-end;
     padding-inline: 1.25rem;
+  }
+
+  .mobileMenuButton {
+    display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .toolbar {
+    padding-inline: 0.75rem;
+  }
+
+  .mobileMenuButton span {
+    display: none;
+  }
+
+  .languageField {
+    width: min(58vw, 11rem);
   }
 }
