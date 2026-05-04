@@ -9,7 +9,15 @@ export function Header() {
   const { dictionary, translationId, setLanguagePreference } =
     useAppTranslation();
   const { data: translations = [] } = useTranslationsQuery();
-  const { isMobileSidebarOpen, toggleMobileSidebar } = useAppUiStore();
+  const {
+    isMobileSidebarOpen,
+    isSidebarCollapsed,
+    toggleMobileSidebar,
+    toggleSidebarCollapse,
+  } = useAppUiStore();
+  const sidebarToggleLabel = isSidebarCollapsed
+    ? dictionary.layout.header.expandSidebar
+    : dictionary.layout.header.collapseSidebar;
 
   return (
     <header className={styles.header}>
@@ -24,6 +32,21 @@ export function Header() {
         >
           <AppIcon className={styles.mobileMenuIcon} name="menu" />
           <span>{dictionary.layout.header.menu}</span>
+        </button>
+
+        <button
+          aria-controls="app-sidebar"
+          aria-expanded={!isSidebarCollapsed}
+          aria-label={sidebarToggleLabel}
+          className={styles.desktopSidebarButton}
+          type="button"
+          onClick={toggleSidebarCollapse}
+        >
+          <AppIcon
+            className={styles.sidebarToggleIcon}
+            name={isSidebarCollapsed ? "panelOpen" : "panelClose"}
+          />
+          <span>{sidebarToggleLabel}</span>
         </button>
 
         {translations.length > 0 ? (

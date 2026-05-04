@@ -16,7 +16,8 @@
   padding: 0.35rem 1rem;
 }
 
-.mobileMenuButton {
+.mobileMenuButton,
+.desktopSidebarButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -34,7 +35,12 @@
   cursor: pointer;
 }
 
-.mobileMenuIcon {
+.desktopSidebarButton {
+  display: none;
+}
+
+.mobileMenuIcon,
+.sidebarToggleIcon {
   width: 1rem;
   height: 1rem;
   flex: 0 0 auto;
@@ -69,12 +75,16 @@
 
 @media (min-width: 992px) {
   .toolbar {
-    justify-content: flex-end;
+    justify-content: space-between;
     padding-inline: 1.25rem;
   }
 
   .mobileMenuButton {
     display: none;
+  }
+
+  .desktopSidebarButton {
+    display: inline-flex;
   }
 }
 
@@ -83,7 +93,8 @@
     padding-inline: 0.75rem;
   }
 
-  .mobileMenuButton span {
+  .mobileMenuButton span,
+  .desktopSidebarButton span {
     display: none;
   }
 
