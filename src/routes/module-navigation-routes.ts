@@ -132,6 +132,7 @@ const visibleSegmentsByPreset: Record<BusinessNavigationPreset, string[]> = {
     routeSegments.reports,
     routeSegments.products,
     routeSegments.inventory,
+    routeSegments.quotes,
     routeSegments.expenses,
     routeSegments.employees,
     routeSegments.customers,

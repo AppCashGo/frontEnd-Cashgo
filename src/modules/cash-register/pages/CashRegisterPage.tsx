@@ -33,6 +33,7 @@ import { useSuppliersQuery } from "@/modules/suppliers/hooks/use-suppliers-query
 import { routePaths } from "@/routes/route-paths";
 import { AppIcon } from "@/shared/components/icons/AppIcon";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
+import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import styles from "./CashRegisterRetailPage.module.css";
@@ -616,10 +617,14 @@ function ReportsDrawer({
 
 export function CashRegisterPage() {
   const navigate = useNavigate();
+  const navigationPreset = useBusinessNavigationPreset();
+  const isRestaurantPreset = navigationPreset === "restaurant";
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<CashRegisterTab>("transactions");
   const [activeLedgerTab, setActiveLedgerTab] = useState<LedgerTab>("income");
-  const [periodOption, setPeriodOption] = useState<PeriodOption>("weekly");
+  const [periodOption, setPeriodOption] = useState<PeriodOption>(() =>
+    isRestaurantPreset ? "daily" : "weekly",
+  );
   const [selectedDate, setSelectedDate] = useState(() => toDateInputValue(new Date()));
   const [searchValue, setSearchValue] = useState("");
   const [isSessionDrawerOpen, setSessionDrawerOpen] = useState(false);
@@ -900,7 +905,27 @@ export function CashRegisterPage() {
   }
 
   return (
-    <div className={styles.page}>
+    <div
+      className={joinClassNames(
+        styles.page,
+        isRestaurantPreset && styles.pageRestaurant,
+      )}
+    >
+      {isRestaurantPreset ? (
+        <section className={styles.planBanner} aria-label="Plan Pro">
+          <span className={styles.planBannerIcon}>
+            <AppIcon name="cash" />
+          </span>
+          <p>
+            Compra el <strong>Plan Pro</strong>, disfruta de todos los beneficios
+            y lleva tu negocio al siguiente nivel.
+          </p>
+          <button className={styles.planBannerButton} type="button">
+            Conocer mas
+          </button>
+        </section>
+      ) : null}
+
       <div className={styles.topBar}>
         <h1 className={styles.pageTitle}>Movimientos</h1>
 
