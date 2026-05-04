@@ -9,6 +9,9 @@ import styles from "./CashRegisterRetailTransactionsTable.module.css";
 
 type CashRegisterRetailTransactionsTableProps = {
   transactions: MovementLedgerItem[];
+  emptyDescription?: string;
+  emptyActionLabel?: string;
+  onEmptyAction?: () => void;
 };
 
 function getStatusLabel(status: string) {
@@ -85,6 +88,9 @@ function getValueLabel(transaction: MovementLedgerItem) {
 }
 
 export function CashRegisterRetailTransactionsTable({
+  emptyActionLabel,
+  emptyDescription,
+  onEmptyAction,
   transactions,
 }: CashRegisterRetailTransactionsTableProps) {
   if (transactions.length === 0) {
@@ -93,10 +99,18 @@ export function CashRegisterRetailTransactionsTable({
         <p className={styles.emptyTitle}>
           Aún no tienes registros creados en esta fecha.
         </p>
-        <p className={styles.emptyDescription}>
-          Abre la caja o registra movimientos para empezar a construir el
-          reporte del turno.
-        </p>
+        {emptyDescription ? (
+          <p className={styles.emptyDescription}>{emptyDescription}</p>
+        ) : null}
+        {emptyActionLabel && onEmptyAction ? (
+          <button
+            className={styles.emptyActionButton}
+            type="button"
+            onClick={onEmptyAction}
+          >
+            {emptyActionLabel}
+          </button>
+        ) : null}
       </div>
     );
   }

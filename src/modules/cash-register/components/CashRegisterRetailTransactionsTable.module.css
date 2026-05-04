@@ -125,3 +125,20 @@
   color: #64748b;
   line-height: 1.55;
 }
+
+.emptyActionButton {
+  min-height: 3.05rem;
+  padding: 0.75rem 1.45rem;
+  border: 0;
+  border-radius: 0.62rem;
+  background: #172033;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 0.55rem 1.2rem rgba(23, 32, 51, 0.16);
+}
+
+.emptyActionButton:hover {
+  transform: translateY(-1px);
+}

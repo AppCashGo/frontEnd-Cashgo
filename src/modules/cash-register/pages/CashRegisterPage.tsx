@@ -622,9 +622,7 @@ export function CashRegisterPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<CashRegisterTab>("transactions");
   const [activeLedgerTab, setActiveLedgerTab] = useState<LedgerTab>("income");
-  const [periodOption, setPeriodOption] = useState<PeriodOption>(() =>
-    isRestaurantPreset ? "daily" : "weekly",
-  );
+  const [periodOption, setPeriodOption] = useState<PeriodOption>("daily");
   const [selectedDate, setSelectedDate] = useState(() => toDateInputValue(new Date()));
   const [searchValue, setSearchValue] = useState("");
   const [isSessionDrawerOpen, setSessionDrawerOpen] = useState(false);
@@ -904,6 +902,15 @@ export function CashRegisterPage() {
     setSelectedSuppliers((currentValues) => toggleArrayValue(currentValues, itemId));
   }
 
+  function openReportsDrawer() {
+    setReportStep("menu");
+    setReportDrawerOpen(true);
+  }
+
+  const emptyTransactionsDescription = isRestaurantPreset
+    ? 'Empieza agregando uno con las acciones de "Nueva venta" y "Nuevo gasto"'
+    : undefined;
+
   return (
     <div
       className={joinClassNames(
@@ -911,20 +918,18 @@ export function CashRegisterPage() {
         isRestaurantPreset && styles.pageRestaurant,
       )}
     >
-      {isRestaurantPreset ? (
-        <section className={styles.planBanner} aria-label="Plan Pro">
-          <span className={styles.planBannerIcon}>
-            <AppIcon name="cash" />
-          </span>
-          <p>
-            Compra el <strong>Plan Pro</strong>, disfruta de todos los beneficios
-            y lleva tu negocio al siguiente nivel.
-          </p>
-          <button className={styles.planBannerButton} type="button">
-            Conocer mas
-          </button>
-        </section>
-      ) : null}
+      <section className={styles.planBanner} aria-label="Plan Pro">
+        <span className={styles.planBannerIcon}>
+          <AppIcon name="cash" />
+        </span>
+        <p>
+          Compra el <strong>Plan Pro</strong>, disfruta de todos los beneficios
+          y lleva tu negocio al siguiente nivel.
+        </p>
+        <button className={styles.planBannerButton} type="button">
+          Conocer más
+        </button>
+      </section>
 
       <div className={styles.topBar}>
         <h1 className={styles.pageTitle}>Movimientos</h1>
@@ -942,61 +947,74 @@ export function CashRegisterPage() {
             {currentSession ? "Caja abierta" : "Abrir caja"}
           </button>
 
-          <div className={styles.saleMenuWrapper}>
-            <button
-              className={styles.saleButton}
-              type="button"
-              onClick={() => setSaleMenuOpen((isOpen) => !isOpen)}
-            >
-              Nueva venta
-              <span aria-hidden="true">{isSaleMenuOpen ? "⌃" : "⌄"}</span>
-            </button>
+          {isRestaurantPreset ? (
+            <>
+              <div className={styles.saleMenuWrapper}>
+                <button
+                  className={styles.saleButton}
+                  type="button"
+                  onClick={() => setSaleMenuOpen((isOpen) => !isOpen)}
+                >
+                  Nueva venta
+                  <span aria-hidden="true">{isSaleMenuOpen ? "⌃" : "⌄"}</span>
+                </button>
 
-            {isSaleMenuOpen ? (
-              <div className={styles.saleMenu}>
-                <button
-                  className={styles.saleMenuItem}
-                  type="button"
-                  onClick={() => {
-                    setSaleMenuOpen(false);
-                    navigate(`${routePaths.sales}?sale=products`);
-                  }}
-                >
-                  <span className={styles.saleMenuIcon}>
-                    <AppIcon name="sales" />
-                  </span>
-                  <span>
-                    <strong>Venta de productos</strong>
-                    <small>Registra una venta seleccionando productos de tu inventario.</small>
-                  </span>
-                </button>
-                <button
-                  className={styles.saleMenuItem}
-                  type="button"
-                  onClick={() => {
-                    setSaleMenuOpen(false);
-                    navigate(`${routePaths.sales}?sale=free`);
-                  }}
-                >
-                  <span className={styles.saleMenuIcon}>
-                    <AppIcon name="money" />
-                  </span>
-                  <span>
-                    <strong>Venta libre</strong>
-                    <small>Registra un ingreso sin seleccionar productos.</small>
-                  </span>
-                </button>
+                {isSaleMenuOpen ? (
+                  <div className={styles.saleMenu}>
+                    <button
+                      className={styles.saleMenuItem}
+                      type="button"
+                      onClick={() => {
+                        setSaleMenuOpen(false);
+                        navigate(`${routePaths.sales}?sale=products`);
+                      }}
+                    >
+                      <span className={styles.saleMenuIcon}>
+                        <AppIcon name="sales" />
+                      </span>
+                      <span>
+                        <strong>Venta de productos</strong>
+                        <small>Registra una venta seleccionando productos de tu inventario.</small>
+                      </span>
+                    </button>
+                    <button
+                      className={styles.saleMenuItem}
+                      type="button"
+                      onClick={() => {
+                        setSaleMenuOpen(false);
+                        navigate(`${routePaths.sales}?sale=free`);
+                      }}
+                    >
+                      <span className={styles.saleMenuIcon}>
+                        <AppIcon name="money" />
+                      </span>
+                      <span>
+                        <strong>Venta libre</strong>
+                        <small>Registra un ingreso sin seleccionar productos.</small>
+                      </span>
+                    </button>
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
 
-          <button
-            className={styles.expenseButton}
-            type="button"
-            onClick={() => navigate(routePaths.expenses)}
-          >
-            Nuevo gasto
-          </button>
+              <button
+                className={styles.expenseButton}
+                type="button"
+                onClick={() => navigate(routePaths.expenses)}
+              >
+                Nuevo gasto
+              </button>
+            </>
+          ) : (
+            <button
+              className={styles.topReportButton}
+              type="button"
+              onClick={openReportsDrawer}
+            >
+              <AppIcon name="reports" />
+              Descargar reporte
+            </button>
+          )}
         </div>
       </div>
 
@@ -1062,16 +1080,15 @@ export function CashRegisterPage() {
             />
           </label>
 
-          <button
-            className={styles.reportButton}
-            type="button"
-            onClick={() => {
-              setReportStep("menu");
-              setReportDrawerOpen(true);
-            }}
-          >
-            ⇩ Descargar reporte
-          </button>
+          {isRestaurantPreset ? (
+            <button
+              className={styles.reportButton}
+              type="button"
+              onClick={openReportsDrawer}
+            >
+              ⇩ Descargar reporte
+            </button>
+          ) : null}
         </div>
 
         {activeTab === "transactions" ? (
@@ -1137,10 +1154,32 @@ export function CashRegisterPage() {
                       : movementsOverview?.payablesTotal ?? 0,
                   )}
                 />
-                <CashRegisterRetailTransactionsTable transactions={visibleTransactions} />
+                <CashRegisterRetailTransactionsTable
+                  emptyActionLabel={
+                    isRestaurantPreset ? undefined : "Crear un movimiento"
+                  }
+                  emptyDescription={emptyTransactionsDescription}
+                  transactions={visibleTransactions}
+                  onEmptyAction={
+                    isRestaurantPreset
+                      ? undefined
+                      : () => setSessionDrawerOpen(true)
+                  }
+                />
               </div>
             ) : (
-              <CashRegisterRetailTransactionsTable transactions={visibleTransactions} />
+              <CashRegisterRetailTransactionsTable
+                emptyActionLabel={
+                  isRestaurantPreset ? undefined : "Crear un movimiento"
+                }
+                emptyDescription={emptyTransactionsDescription}
+                transactions={visibleTransactions}
+                onEmptyAction={
+                  isRestaurantPreset
+                    ? undefined
+                    : () => setSessionDrawerOpen(true)
+                }
+              />
             )}
           </>
         ) : (

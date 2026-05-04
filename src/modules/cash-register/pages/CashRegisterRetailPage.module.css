@@ -65,11 +65,7 @@
   display: grid;
   gap: 0.95rem;
   padding: 1rem clamp(1rem, 2vw, 1.8rem);
-  border-bottom: 1px solid #dbe3ee;
-}
-
-.pageRestaurant .topBar {
-  border-bottom-color: #20945a;
+  border-bottom: 1px solid #20945a;
 }
 
 .pageTitle {
@@ -87,7 +83,8 @@
 
 .cashButton,
 .saleButton,
-.expenseButton {
+.expenseButton,
+.topReportButton {
   min-height: 2.65rem;
   display: inline-flex;
   align-items: center;
@@ -144,9 +141,23 @@
   box-shadow: 0 0.45rem 1rem rgba(201, 66, 54, 0.16);
 }
 
+.topReportButton {
+  border: 2px solid #172033;
+  background: #ffffff;
+  color: #172033;
+  box-shadow: none;
+}
+
+.topReportButton svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: #ffc400;
+}
+
 .cashButton:hover,
 .saleButton:hover,
-.expenseButton:hover {
+.expenseButton:hover,
+.topReportButton:hover {
   transform: translateY(-1px);
 }
 
@@ -695,7 +706,8 @@
 
   .cashButton,
   .saleButton,
-  .expenseButton {
+  .expenseButton,
+  .topReportButton {
     min-width: 8.8rem;
   }
 
@@ -735,7 +747,8 @@
 
   .cashButton,
   .saleButton,
-  .expenseButton {
+  .expenseButton,
+  .topReportButton {
     width: 100%;
   }
 
