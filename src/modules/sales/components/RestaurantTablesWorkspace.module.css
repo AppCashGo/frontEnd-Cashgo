@@ -935,12 +935,43 @@
     align-items: stretch;
   }
 
-  .headerActions,
   .header,
   .zoneBar,
   .configToolbar,
   .configTitleGroup {
     flex-direction: column;
+  }
+
+  .header {
+    gap: 0.8rem;
+    padding-block: 0.45rem 0.85rem;
+  }
+
+  .header h2 {
+    font-size: clamp(2rem, 11vw, 3rem);
+    line-height: 1;
+  }
+
+  .headerActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 0.55rem;
+  }
+
+  .headerActions .cashRegisterPill,
+  .headerActions .successButton,
+  .headerActions .dangerButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.6rem 0.7rem;
+    font-size: 0.95rem;
+    line-height: 1.1;
+    text-decoration: none;
+    white-space: normal;
   }
 
   .searchInput {
@@ -962,5 +993,19 @@
 
   .tableArrow {
     display: none;
+  }
+}
+
+@media (max-width: 420px) {
+  .headerActions {
+    gap: 0.45rem;
+  }
+
+  .headerActions .cashRegisterPill,
+  .headerActions .successButton,
+  .headerActions .dangerButton {
+    min-height: 2.55rem;
+    padding-inline: 0.55rem;
+    font-size: 0.88rem;
   }
 }
