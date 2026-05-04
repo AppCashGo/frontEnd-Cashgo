@@ -23,6 +23,10 @@
     rgba(255, 251, 224, 0.88);
 }
 
+.hero > * {
+  min-width: 0;
+}
+
 .eyebrow {
   margin: 0;
   font-size: 0.8rem;
@@ -37,6 +41,7 @@
   font-size: clamp(1.9rem, 4vw, 2.85rem);
   line-height: 1.02;
   color: var(--color-ink);
+  overflow-wrap: anywhere;
 }
 
 .description {
@@ -62,6 +67,7 @@
   border-radius: 999px;
   font: inherit;
   font-weight: 700;
+  text-align: center;
   cursor: pointer;
 }
 
@@ -142,5 +148,17 @@
   .drawerColumn {
     position: sticky;
     top: 1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    padding: 1rem;
+  }
+
+  .heroActions,
+  .heroButton,
+  .heroGhostButton {
+    width: 100%;
   }
 }

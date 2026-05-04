@@ -18,6 +18,7 @@
   border-bottom: 1px solid #b7d3f4;
   background: #d7eaff;
   color: #172033;
+  min-width: 0;
 }
 
 .planBannerIcon {
@@ -41,6 +42,7 @@
   margin: 0;
   font-weight: 900;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .planBanner strong {
@@ -66,6 +68,7 @@
   gap: 0.95rem;
   padding: 1rem clamp(1rem, 2vw, 1.8rem);
   border-bottom: 1px solid #20945a;
+  min-width: 0;
 }
 
 .pageTitle {
@@ -73,12 +76,14 @@
   color: #172033;
   font-size: clamp(1.65rem, 3vw, 2rem);
   font-weight: 900;
+  overflow-wrap: anywhere;
 }
 
 .topActions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
+  min-width: 0;
 }
 
 .cashButton,
@@ -98,6 +103,8 @@
   font-size: 0.9rem;
   font-weight: 900;
   line-height: 1.1;
+  text-align: center;
+  white-space: normal;
   cursor: pointer;
   transition:
     transform 160ms ease,
@@ -257,6 +264,7 @@
 .filtersBar {
   display: grid;
   gap: 0.7rem;
+  min-width: 0;
 }
 
 .filterButton,
@@ -702,6 +710,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
+    flex-wrap: wrap;
   }
 
   .cashButton,
@@ -741,6 +750,15 @@
 }
 
 @media (max-width: 520px) {
+  .planBanner {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .planBannerIcon {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
   .topActions {
     grid-template-columns: 1fr;
   }

@@ -19,6 +19,7 @@
 .heroCopy {
   display: grid;
   gap: 0.65rem;
+  min-width: 0;
 }
 
 .eyebrow {
@@ -36,6 +37,7 @@
   font-size: clamp(1.8rem, 4.8vw, 2.9rem);
   line-height: 1.02;
   color: #111827;
+  overflow-wrap: anywhere;
 }
 
 .description {
@@ -62,6 +64,7 @@
   padding: 0.78rem 1rem;
   border: 1px solid transparent;
   font-weight: 700;
+  text-align: center;
   cursor: pointer;
   transition:
     transform 0.2s ease,
@@ -124,5 +127,17 @@
   .secondaryColumn {
     position: sticky;
     top: 1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .hero {
+    padding: 1rem;
+  }
+
+  .heroActions,
+  .heroButton,
+  .heroGhostButton {
+    width: 100%;
   }
 }

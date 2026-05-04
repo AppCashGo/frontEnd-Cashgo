@@ -9,7 +9,7 @@
 
 .drawer {
   width: min(100vw, 31rem);
-  height: 100vh;
+  height: 100dvh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   background: #ffffff;
@@ -28,6 +28,7 @@
 .headerCopy {
   display: grid;
   gap: 0.45rem;
+  min-width: 0;
 }
 
 .title {
@@ -47,6 +48,7 @@
 .closeButton {
   width: 2rem;
   height: 2rem;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -74,5 +76,6 @@
 @media (max-width: 640px) {
   .drawer {
     width: 100vw;
+    border-left: 0;
   }
 }

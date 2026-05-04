@@ -31,6 +31,7 @@
 
 .main {
   flex: 1;
+  min-width: 0;
   padding: 0.85rem 1rem 1rem;
 }
 
@@ -55,5 +56,11 @@
 
   .main {
     padding: 1rem 1.35rem 1.35rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .main {
+    padding: 0.75rem 0.75rem 1rem;
   }
 }

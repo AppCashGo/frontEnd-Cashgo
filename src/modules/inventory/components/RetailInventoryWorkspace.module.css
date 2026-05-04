@@ -9,11 +9,13 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  min-width: 0;
 }
 
 .titleBlock {
   display: grid;
   gap: 0.3rem;
+  min-width: 0;
 }
 
 .title {
@@ -21,6 +23,7 @@
   color: #1f2a37;
   font-size: 2rem;
   font-weight: 900;
+  overflow-wrap: anywhere;
 }
 
 .metaRow {
@@ -36,6 +39,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  min-width: 0;
 }
 
 .dropdownGroup,
@@ -52,6 +56,7 @@
   border-radius: 1rem;
   background: #1e74d8;
   color: #ffffff;
+  min-width: 0;
 }
 
 .bannerCopy {
@@ -69,6 +74,7 @@
   margin: 0;
   font-size: 0.92rem;
   line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .bannerLink {
@@ -173,6 +179,8 @@
   background: #ffffff;
   color: #1f2a37;
   font-weight: 800;
+  min-width: 0;
+  text-align: center;
 }
 
 .tableActions {
@@ -811,5 +819,44 @@
 
   .table {
     min-width: 46rem;
+  }
+}
+
+@media (max-width: 760px) {
+  .headerActions {
+    width: 100%;
+  }
+
+  .headerActions > *,
+  .catalogButton {
+    flex: 1 1 12rem;
+  }
+
+  .banner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bannerLink,
+  .bannerClose {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 520px) {
+  .title {
+    font-size: clamp(1.55rem, 9vw, 2rem);
+    line-height: 1.08;
+  }
+
+  .headerActions > *,
+  .catalogButton,
+  .tableActions,
+  .iconButtonWrap {
+    width: 100%;
+  }
+
+  .tableActions {
+    flex-wrap: wrap;
   }
 }

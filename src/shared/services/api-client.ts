@@ -1,3 +1,4 @@
+import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
 import {
   clearAuthSession,
   getAuthAccessToken,
@@ -41,31 +42,48 @@ function isLocalApiUrl(url: string) {
   }
 }
 
-function buildApiUrl(path: string) {
-  return `${getApiBaseUrl()}${path.startsWith("/") ? path : `/${path}`}`;
-}
+const apiClient = axios.create({
+  baseURL: getApiBaseUrl(),
+});
 
-async function parseResponse<TResponse>(
-  response: Response,
-): Promise<TResponse> {
-  const contentType = response.headers.get("content-type") ?? "";
-  const isJsonResponse = contentType.includes("application/json");
-
-  const payload = isJsonResponse
-    ? ((await response.json()) as unknown)
-    : await response.text();
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      clearAuthSession();
-    }
-
-    const message = extractErrorMessage(payload) ?? response.statusText;
-
-    throw new ApiError(message, response.status, payload);
+async function parseBlobErrorPayload(payload: unknown) {
+  if (!(payload instanceof Blob)) {
+    return payload;
   }
 
-  return payload as TResponse;
+  const contentType = payload.type;
+  const text = await payload.text();
+
+  if (contentType.includes("application/json")) {
+    try {
+      return JSON.parse(text) as unknown;
+    } catch {
+      return text;
+    }
+  }
+
+  return text;
+}
+
+async function toApiError(error: unknown) {
+  if (!axios.isAxiosError(error)) {
+    return error;
+  }
+
+  const axiosError = error as AxiosError;
+  const status = axiosError.response?.status ?? 0;
+  const payload = await parseBlobErrorPayload(axiosError.response?.data);
+
+  if (status === 401) {
+    clearAuthSession();
+  }
+
+  const message =
+    extractErrorMessage(payload) ??
+    axiosError.response?.statusText ??
+    axiosError.message;
+
+  return new ApiError(message, status, payload);
 }
 
 function extractErrorMessage(payload: unknown) {
@@ -99,18 +117,16 @@ type BlobRequestOptions = JsonRequestOptions & {
   accept?: string;
 };
 
-async function requestJson<TResponse, TBody = undefined>(
-  method: "GET" | "POST" | "PATCH" | "DELETE",
-  path: string,
-  body?: TBody,
+function buildHeaders(
   options?: JsonRequestOptions,
+  contentType?: "application/json",
 ) {
   const headers: Record<string, string> = {
     Accept: "application/json",
   };
 
-  if (body !== undefined) {
-    headers["Content-Type"] = "application/json";
+  if (contentType) {
+    headers["Content-Type"] = contentType;
   }
 
   const accessToken = options?.accessToken ?? getAuthAccessToken();
@@ -124,17 +140,32 @@ async function requestJson<TResponse, TBody = undefined>(
     headers["X-Business-Id"] = businessId;
   }
 
-  const response = await fetch(buildApiUrl(path), {
-    method,
-    headers,
-    ...(body !== undefined
-      ? {
-          body: JSON.stringify(body),
-        }
-      : {}),
-  });
+  return headers;
+}
 
-  return parseResponse<TResponse>(response);
+async function requestJson<TResponse, TBody = undefined>(
+  method: "GET" | "POST" | "PATCH" | "DELETE",
+  path: string,
+  body?: TBody,
+  options?: JsonRequestOptions,
+) {
+  const requestConfig: AxiosRequestConfig<TBody> = {
+    data: body,
+    headers: buildHeaders(
+      options,
+      body !== undefined ? "application/json" : undefined,
+    ),
+    method,
+    url: path,
+  };
+
+  try {
+    const response = await apiClient.request<TResponse>(requestConfig);
+
+    return response.data;
+  } catch (error) {
+    throw await toApiError(error);
+  }
 }
 
 export function getJson<TResponse>(path: string, options?: JsonRequestOptions) {
@@ -168,46 +199,29 @@ export async function getBlob(
   path: string,
   options?: BlobRequestOptions,
 ): Promise<{ blob: Blob; filename: string | null }> {
-  const headers: Record<string, string> = {
-    Accept: options?.accept ?? "*/*",
-  };
+  try {
+    const response = await apiClient.get<Blob>(path, {
+      headers: {
+        ...buildHeaders(options),
+        Accept: options?.accept ?? "*/*",
+      },
+      responseType: "blob",
+    });
 
-  const accessToken = options?.accessToken ?? getAuthAccessToken();
-  const businessId = options?.businessId ?? getAuthBusinessId();
+    const contentDisposition = response.headers["content-disposition"];
+    const filename = getFilenameFromContentDisposition(contentDisposition);
 
-  if (accessToken) {
-    headers.Authorization = `Bearer ${accessToken}`;
+    return {
+      blob: response.data,
+      filename,
+    };
+  } catch (error) {
+    throw await toApiError(error);
   }
+}
 
-  if (businessId) {
-    headers["X-Business-Id"] = businessId;
-  }
-
-  const response = await fetch(buildApiUrl(path), {
-    method: "GET",
-    headers,
-  });
-
-  if (!response.ok) {
-    if (response.status === 401) {
-      clearAuthSession();
-    }
-
-    const contentType = response.headers.get("content-type") ?? "";
-    const payload = contentType.includes("application/json")
-      ? ((await response.json()) as unknown)
-      : await response.text();
-    const message = extractErrorMessage(payload) ?? response.statusText;
-
-    throw new ApiError(message, response.status, payload);
-  }
-
-  const blob = await response.blob();
-  const contentDisposition = response.headers.get("content-disposition");
+function getFilenameFromContentDisposition(contentDisposition?: string) {
   const filenameMatch = contentDisposition?.match(/filename="?([^"]+)"?/);
 
-  return {
-    blob,
-    filename: filenameMatch?.[1] ?? null,
-  };
+  return filenameMatch?.[1] ?? null;
 }
