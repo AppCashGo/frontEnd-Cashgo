@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
 import { useEmployeesQuery } from '@/modules/employees/hooks/use-employees-query'
@@ -120,6 +120,7 @@ function createSaleNotes(input: {
 }
 
 export function RestaurantTablesWorkspace() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const currentUser = useAuthSessionStore((state) => state.user)
   const businessId = currentUser?.businessId
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
@@ -209,6 +210,26 @@ export function RestaurantTablesWorkspace() {
 
     return [...options.entries()].map(([id, name]) => ({ id, name }))
   }, [currentUser, employeesQuery.data])
+
+  useEffect(() => {
+    const saleMode = searchParams.get('sale')
+
+    if (saleMode !== 'products' && saleMode !== 'free') {
+      return
+    }
+
+    if (saleMode === 'products') {
+      setIsCounterSaleOpen(true)
+    } else {
+      setIsFreeSaleOpen(true)
+    }
+
+    setOperationError(null)
+
+    const nextSearchParams = new URLSearchParams(searchParams)
+    nextSearchParams.delete('sale')
+    setSearchParams(nextSearchParams, { replace: true })
+  }, [searchParams, setSearchParams])
 
   useEffect(() => {
     const storedWorkspace = readRestaurantWorkspace(businessId)

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   CashRegisterAssignee,
   CashRegisterEntryType,
@@ -51,7 +51,6 @@ export function CashRegisterSessionDrawer({
     getInitialAssigneeId(assignees, currentSession),
   );
   const [openingAmount, setOpeningAmount] = useState("0");
-  const [openingNote, setOpeningNote] = useState("");
   const [entryType, setEntryType] = useState<CashRegisterEntryType>("INCOME");
   const [entryAmount, setEntryAmount] = useState("");
   const [entryReason, setEntryReason] = useState("");
@@ -81,12 +80,7 @@ export function CashRegisterSessionDrawer({
   const drawerTitle = currentSession ? "Caja activa" : "Abrir caja";
   const drawerDescription = currentSession
     ? "Consulta el turno actual, registra movimientos rápidos y cierra la caja cuando termines el arqueo."
-    : "Asigna un responsable, define el monto inicial y deja lista la caja del turno.";
-  const selectedAssignee = useMemo(
-    () => assignees.find((assignee) => assignee.id === assigneeId) ?? null,
-    [assigneeId, assignees],
-  );
-
+    : undefined;
   async function handleOpenSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
@@ -95,10 +89,8 @@ export function CashRegisterSessionDrawer({
       await onOpenSession({
         responsibleUserId: assigneeId || undefined,
         openingAmount: Number(openingAmount),
-        openingNote: openingNote.trim() || undefined,
       });
       setOpeningAmount("0");
-      setOpeningNote("");
       onClose();
     } catch (error) {
       setErrorMessage(
@@ -166,7 +158,7 @@ export function CashRegisterSessionDrawer({
             form="open-cash-register-form"
             type="submit"
           >
-            {isSubmitting ? "Abriendo..." : "Abrir caja"}
+            {isSubmitting ? "Abriendo..." : "Empezar turno"}
           </button>
         ) : undefined
       }
@@ -179,7 +171,7 @@ export function CashRegisterSessionDrawer({
           onSubmit={handleOpenSubmit}
         >
           <label className={styles.field}>
-            <span className={styles.label}>Responsable del turno</span>
+            <span className={styles.label}>Empleado encargado</span>
             <select
               className={styles.select}
               value={assigneeId}
@@ -194,39 +186,20 @@ export function CashRegisterSessionDrawer({
           </label>
 
           <label className={styles.field}>
-            <span className={styles.label}>Monto inicial</span>
+            <span className={styles.label}>
+              ¿Con cuánto dinero empiezas el turno? *
+            </span>
             <input
               className={styles.input}
               inputMode="decimal"
               min="0"
-              placeholder="0.00"
+              placeholder="$ 0"
               step="0.01"
               type="number"
               value={openingAmount}
               onChange={(event) => setOpeningAmount(event.target.value)}
             />
           </label>
-
-          <label className={styles.field}>
-            <span className={styles.label}>Nota de apertura</span>
-            <textarea
-              className={styles.textarea}
-              placeholder="Ej. caja principal del turno de la mañana."
-              rows={4}
-              value={openingNote}
-              onChange={(event) => setOpeningNote(event.target.value)}
-            />
-          </label>
-
-          {selectedAssignee ? (
-            <div className={styles.summaryBox}>
-              <span className={styles.summaryLabel}>
-                Responsable seleccionado
-              </span>
-              <strong>{selectedAssignee.name}</strong>
-              <span>{selectedAssignee.role}</span>
-            </div>
-          ) : null}
 
           {errorMessage ? (
             <p className={styles.errorMessage}>{errorMessage}</p>
