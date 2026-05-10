@@ -29,7 +29,10 @@
 .uploadIcon,
 .catalogIcon,
 .warningIcon,
-.closeIcon {
+.closeIcon,
+.chevronIcon,
+.searchIcon,
+.plusIcon {
   width: 1.5rem;
   height: 1.5rem;
   stroke: currentColor;
@@ -167,6 +170,156 @@
   outline: none;
   border-color: #7aa6f7;
   box-shadow: 0 0 0 3px rgba(122, 166, 247, 0.16);
+}
+
+.categorySelect {
+  position: relative;
+  width: 100%;
+}
+
+.categoryTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.3rem;
+  border: 1px solid #b9c7d8;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font-size: 1rem;
+  line-height: 1.35;
+  padding: 0.95rem 1rem;
+  text-align: left;
+}
+
+.categoryTriggerOpen,
+.categoryTrigger:focus-visible {
+  outline: none;
+  border-color: #111827;
+  box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.08);
+}
+
+.categoryTriggerOpen .chevronIcon {
+  transform: rotate(180deg);
+}
+
+.categoryValue,
+.categoryPlaceholder {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categoryPlaceholder {
+  color: #718096;
+}
+
+.categoryMenu {
+  position: absolute;
+  inset-inline: 0;
+  top: calc(100% + 0.5rem);
+  z-index: 30;
+  overflow: hidden;
+  border: 1px solid #111827;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  box-shadow: 0 1.1rem 2rem rgba(15, 23, 42, 0.14);
+}
+
+.categorySearch,
+.categoryProductSearch {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 3.2rem;
+  border-bottom: 1px solid #111827;
+  color: #64748b;
+  padding: 0 0.85rem;
+}
+
+.categorySearchInput,
+.categoryProductSearchInput {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #1f2a37;
+  font-size: 1rem;
+  outline: none;
+}
+
+.categorySearchClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #1f2a37;
+}
+
+.categorySearchClear .closeIcon {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.categoryOptions {
+  display: grid;
+  max-height: 13rem;
+  overflow-y: auto;
+}
+
+.categoryOption,
+.categoryOptionActive {
+  border: 0;
+  background: #ffffff;
+  color: #1f2a37;
+  font-size: 1rem;
+  padding: 0.95rem 1rem;
+  text-align: left;
+}
+
+.categoryOption:hover,
+.categoryOption:focus-visible {
+  outline: none;
+  background: #f4f7fb;
+}
+
+.categoryOptionActive {
+  background: #8b5cf6;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.categoryCreateButton {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 3.8rem;
+  border: 0;
+  border-top: 1px solid #111827;
+  background: #ffffff;
+  color: #1f2a37;
+  font-size: 1.05rem;
+  font-weight: 800;
+  padding: 0.9rem 1rem;
+  text-align: left;
+}
+
+.categoryCreateButton:hover,
+.categoryCreateButton:focus-visible {
+  outline: none;
+  background: #f8fafc;
+}
+
+.categoryCreateButton .plusIcon {
+  width: 1.7rem;
+  height: 1.7rem;
 }
 
 .gridTwo {
@@ -367,6 +520,164 @@
   color: #1f2a37;
 }
 
+.categoryDrawerBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+.categoryDrawer {
+  display: flex;
+  flex-direction: column;
+  width: min(100vw, 34rem);
+  height: 100vh;
+  border-left: 1px solid rgba(192, 204, 218, 0.96);
+  background: #ffffff;
+  box-shadow: -1.1rem 0 2rem rgba(15, 23, 42, 0.12);
+}
+
+.categoryDrawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.5rem;
+  padding: 1.2rem 1.5rem;
+}
+
+.categoryDrawerTitle {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 1.45rem;
+  font-weight: 900;
+}
+
+.categoryDrawerClose {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.categoryDrawerClose .closeIcon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.categoryDrawerBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0.5rem 1.5rem 1rem;
+}
+
+.categoryVisibilityCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  border: 1px solid #12945c;
+  border-radius: 0.95rem;
+  background: #ffffff;
+  color: #1f2a37;
+  padding: 1rem;
+  text-align: left;
+}
+
+.categoryVisibilityCopy {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.categoryVisibilityCopy strong {
+  font-size: 1.05rem;
+}
+
+.categoryVisibilityCopy span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #334155;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.categoryProductSearch {
+  min-height: 3.3rem;
+  border: 1px solid #b9c7d8;
+  border-radius: 0.9rem;
+}
+
+.categoryProductList {
+  display: grid;
+  gap: 0.15rem;
+  min-height: 8rem;
+}
+
+.categoryProductRow {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 3rem;
+  padding: 0.45rem 0.2rem;
+}
+
+.categoryProductRow input {
+  width: 1.2rem;
+  height: 1.2rem;
+  accent-color: #12945c;
+}
+
+.categoryProductName {
+  min-width: 0;
+  overflow: hidden;
+  color: #1f2a37;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.categoryProductPrice {
+  color: #334155;
+  font-weight: 800;
+}
+
+.categoryDrawerFooter {
+  padding: 1rem 1.5rem 1.35rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, #ffffff 24%);
+}
+
+.categoryDrawerSubmit {
+  width: 100%;
+  min-height: 3.6rem;
+  border: 0;
+  border-radius: 0.95rem;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.categoryDrawerSubmit:disabled {
+  background: #cfd7e3;
+  color: #7e8da1;
+  cursor: not-allowed;
+}
+
 .confirmBackdrop {
   position: fixed;
   inset: 0;
@@ -473,6 +784,25 @@
   .toggleCard {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .categoryMenu {
+    position: static;
+    margin-top: 0.5rem;
+  }
+
+  .categoryDrawer {
+    width: 100vw;
+  }
+
+  .categoryVisibilityCard {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .categoryVisibilityCard .toggleTrack,
+  .categoryVisibilityCard .toggleTrackActive {
+    grid-column: 1 / -1;
+    justify-self: end;
   }
 
   .footer {

@@ -18,9 +18,13 @@ import {
   type RetailProductCreateValues,
 } from "@/modules/inventory/schemas/retail-product-create-schema";
 import { inventoryTaxOptions } from "@/modules/inventory/constants/inventory-tax-options";
-import { useInventoryCategoriesQuery } from "@/modules/inventory/hooks/use-inventory-query";
+import {
+  useCreateInventoryCategoryMutation,
+  useInventoryCategoriesQuery,
+} from "@/modules/inventory/hooks/use-inventory-query";
 import { getInventoryCopy } from "@/modules/inventory/i18n/inventory-copy";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
+import { formatCurrency } from "@/shared/utils/format-currency";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "./RetailProductCreateWorkspace.module.css";
 
@@ -87,6 +91,32 @@ function CloseIcon() {
   return (
     <svg aria-hidden="true" className={styles.closeIcon} viewBox="0 0 24 24">
       <path d="M6 6 18 18M18 6 6 18" />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.chevronIcon} viewBox="0 0 24 24">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+function SearchIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.searchIcon} viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m16.5 16.5 4 4" />
+    </svg>
+  );
+}
+
+function PlusIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.plusIcon} viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v8M8 12h8" />
     </svg>
   );
 }
@@ -213,6 +243,282 @@ function ConfirmSwitchDrawer({
   );
 }
 
+type CategorySelectorCategory = {
+  id: string;
+  name: string;
+};
+
+function CategorySelector({
+  categories,
+  filteredCategories,
+  selectedCategoryId,
+  selectedCategoryName,
+  isOpen,
+  searchTerm,
+  label,
+  placeholder,
+  searchPlaceholder,
+  uncategorizedLabel,
+  addCategoryLabel,
+  onCreateCategory,
+  onSearchChange,
+  onSelectCategory,
+  onToggleOpen,
+}: {
+  categories: CategorySelectorCategory[];
+  filteredCategories: CategorySelectorCategory[];
+  selectedCategoryId: string;
+  selectedCategoryName?: string;
+  isOpen: boolean;
+  searchTerm: string;
+  label: string;
+  placeholder: string;
+  searchPlaceholder: string;
+  uncategorizedLabel: string;
+  addCategoryLabel: string;
+  onCreateCategory: () => void;
+  onSearchChange: (value: string) => void;
+  onSelectCategory: (categoryId: string) => void;
+  onToggleOpen: () => void;
+}) {
+  return (
+    <div className={styles.field}>
+      <span className={styles.label}>{label}</span>
+
+      <div className={styles.categorySelect}>
+        <button
+          aria-expanded={isOpen}
+          className={
+            isOpen
+              ? `${styles.categoryTrigger} ${styles.categoryTriggerOpen}`
+              : styles.categoryTrigger
+          }
+          type="button"
+          onClick={onToggleOpen}
+        >
+          <span
+            className={
+              selectedCategoryName
+                ? styles.categoryValue
+                : styles.categoryPlaceholder
+            }
+          >
+            {selectedCategoryName ?? placeholder}
+          </span>
+          <ChevronIcon />
+        </button>
+
+        {isOpen ? (
+          <div className={styles.categoryMenu}>
+            <label className={styles.categorySearch}>
+              <SearchIcon />
+              <input
+                autoFocus
+                className={styles.categorySearchInput}
+                placeholder={searchPlaceholder}
+                type="search"
+                value={searchTerm}
+                onChange={(event) => onSearchChange(event.target.value)}
+              />
+              {searchTerm ? (
+                <button
+                  aria-label="Limpiar busqueda"
+                  className={styles.categorySearchClear}
+                  type="button"
+                  onClick={() => onSearchChange("")}
+                >
+                  <CloseIcon />
+                </button>
+              ) : null}
+            </label>
+
+            <div className={styles.categoryOptions}>
+              <button
+                className={
+                  selectedCategoryId === ""
+                    ? styles.categoryOptionActive
+                    : styles.categoryOption
+                }
+                type="button"
+                onClick={() => onSelectCategory("")}
+              >
+                {uncategorizedLabel}
+              </button>
+
+              {(searchTerm ? filteredCategories : categories).map((category) => (
+                <button
+                  className={
+                    selectedCategoryId === category.id
+                      ? styles.categoryOptionActive
+                      : styles.categoryOption
+                  }
+                  key={category.id}
+                  type="button"
+                  onClick={() => onSelectCategory(category.id)}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
+
+            <button
+              className={styles.categoryCreateButton}
+              type="button"
+              onClick={onCreateCategory}
+            >
+              <PlusIcon />
+              <span>{addCategoryLabel}</span>
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function CategoryCreateDrawer({
+  copy,
+  errorMessage,
+  isSubmitting,
+  isVisibleInCatalog,
+  name,
+  productSearchTerm,
+  products,
+  selectedProductIds,
+  onClose,
+  onNameChange,
+  onProductSearchChange,
+  onSubmit,
+  onToggleProduct,
+  onToggleVisibility,
+}: {
+  copy: ReturnType<typeof getInventoryCopy>;
+  errorMessage: string | null;
+  isSubmitting: boolean;
+  isVisibleInCatalog: boolean;
+  name: string;
+  productSearchTerm: string;
+  products: Product[];
+  selectedProductIds: string[];
+  onClose: () => void;
+  onNameChange: (value: string) => void;
+  onProductSearchChange: (value: string) => void;
+  onSubmit: () => void;
+  onToggleProduct: (productId: string) => void;
+  onToggleVisibility: () => void;
+}) {
+  const canSubmit = name.trim().length >= 2 && !isSubmitting;
+
+  return (
+    <div
+      className={styles.categoryDrawerBackdrop}
+      role="presentation"
+      onClick={onClose}
+    >
+      <aside
+        aria-label={copy.createCategorySubmit}
+        aria-modal="true"
+        className={styles.categoryDrawer}
+        role="dialog"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <header className={styles.categoryDrawerHeader}>
+          <h3 className={styles.categoryDrawerTitle}>{copy.categories}</h3>
+          <button
+            aria-label="Cerrar"
+            className={styles.categoryDrawerClose}
+            type="button"
+            onClick={onClose}
+          >
+            <CloseIcon />
+          </button>
+        </header>
+
+        <div className={styles.categoryDrawerBody}>
+          <label className={styles.field}>
+            <span className={styles.label}>
+              {copy.categoryName}
+              <span className={styles.required}>*</span>
+            </span>
+            <input
+              className={styles.input}
+              placeholder={copy.categoryNamePlaceholder}
+              type="text"
+              value={name}
+              onChange={(event) => onNameChange(event.target.value)}
+            />
+          </label>
+
+          <button
+            className={styles.categoryVisibilityCard}
+            type="button"
+            onClick={onToggleVisibility}
+          >
+            <CatalogIcon />
+            <span className={styles.categoryVisibilityCopy}>
+              <strong>{copy.showInStore}</strong>
+              <span>{copy.showInStoreHint}</span>
+            </span>
+            <span
+              className={
+                isVisibleInCatalog
+                  ? styles.toggleTrackActive
+                  : styles.toggleTrack
+              }
+            >
+              <span className={styles.toggleThumb} />
+            </span>
+          </button>
+
+          <label className={styles.categoryProductSearch}>
+            <SearchIcon />
+            <input
+              className={styles.categoryProductSearchInput}
+              placeholder={copy.searchProduct}
+              type="search"
+              value={productSearchTerm}
+              onChange={(event) => onProductSearchChange(event.target.value)}
+            />
+          </label>
+
+          <div className={styles.categoryProductList}>
+            {products.map((product) => (
+              <label className={styles.categoryProductRow} key={product.id}>
+                <input
+                  checked={selectedProductIds.includes(product.id)}
+                  type="checkbox"
+                  onChange={() => onToggleProduct(product.id)}
+                />
+                <span className={styles.categoryProductName}>
+                  {product.name}
+                </span>
+                <span className={styles.categoryProductPrice}>
+                  {formatCurrency(product.price)}
+                </span>
+              </label>
+            ))}
+          </div>
+
+          {errorMessage ? (
+            <p className={styles.error}>{errorMessage}</p>
+          ) : null}
+        </div>
+
+        <footer className={styles.categoryDrawerFooter}>
+          <button
+            className={styles.categoryDrawerSubmit}
+            disabled={!canSubmit}
+            type="button"
+            onClick={onSubmit}
+          >
+            {copy.createCategorySubmit}
+          </button>
+        </footer>
+      </aside>
+    </div>
+  );
+}
+
 export function RetailProductCreateWorkspace({
   onBack,
   onTabChange,
@@ -223,6 +529,7 @@ export function RetailProductCreateWorkspace({
   const copy = getInventoryCopy(languageCode);
   const categoriesQuery = useInventoryCategoriesQuery();
   const productsQuery = useProductsQuery();
+  const createCategoryMutation = useCreateInventoryCategoryMutation();
   const createProductMutation = useCreateProductMutation();
   const updateProductMutation = useUpdateProductMutation();
   const deleteProductMutation = useDeleteProductMutation();
@@ -246,11 +553,25 @@ export function RetailProductCreateWorkspace({
   const [saleUnit, setSaleUnit] = useState<ProductUnit>("UNIT");
   const [confirmSwitchState, setConfirmSwitchState] =
     useState<ConfirmSwitchState>(null);
+  const [isCategorySelectorOpen, setIsCategorySelectorOpen] = useState(false);
+  const [categorySearchTerm, setCategorySearchTerm] = useState("");
+  const [isCategoryCreateDrawerOpen, setIsCategoryCreateDrawerOpen] =
+    useState(false);
+  const [categoryDraftName, setCategoryDraftName] = useState("");
+  const [isCategoryVisibleInCatalog, setIsCategoryVisibleInCatalog] =
+    useState(true);
+  const [categoryProductSearchTerm, setCategoryProductSearchTerm] =
+    useState("");
+  const [categoryProductIds, setCategoryProductIds] = useState<string[]>([]);
+  const [categoryCreateError, setCategoryCreateError] = useState<string | null>(
+    null,
+  );
   const {
     register,
     handleSubmit,
     watch,
     reset,
+    setValue,
     setError,
     formState: { errors, isValid, isSubmitting },
   } = useForm<RetailProductCreateValues>({
@@ -259,6 +580,34 @@ export function RetailProductCreateWorkspace({
     mode: "onChange",
   });
   const isVisibleInCatalog = watch("isVisibleInCatalog");
+  const selectedCategoryId = watch("categoryId") ?? "";
+  const selectedCategory = useMemo(
+    () =>
+      categories.find((category) => category.id === selectedCategoryId) ?? null,
+    [categories, selectedCategoryId],
+  );
+  const filteredCategories = useMemo(() => {
+    const normalizedSearchTerm = categorySearchTerm.trim().toLowerCase();
+
+    if (!normalizedSearchTerm) {
+      return categories;
+    }
+
+    return categories.filter((category) =>
+      category.name.toLowerCase().includes(normalizedSearchTerm),
+    );
+  }, [categories, categorySearchTerm]);
+  const categoryDrawerProducts = useMemo(() => {
+    const normalizedSearchTerm = categoryProductSearchTerm.trim().toLowerCase();
+
+    return products
+      .filter((product) =>
+        normalizedSearchTerm
+          ? product.name.toLowerCase().includes(normalizedSearchTerm)
+          : true,
+      )
+      .slice(0, 20);
+  }, [categoryProductSearchTerm, products]);
 
   useEffect(() => {
     const nextValues = getDefaultValues(currentProduct);
@@ -274,6 +623,94 @@ export function RetailProductCreateWorkspace({
   useEffect(() => {
     onTabChange?.(activeTab);
   }, [activeTab, onTabChange]);
+
+  function handleSelectCategory(categoryId: string) {
+    setValue("categoryId", categoryId, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    setIsCategorySelectorOpen(false);
+    setCategorySearchTerm("");
+  }
+
+  function handleOpenCreateCategoryFromSelector() {
+    setCategoryDraftName(categorySearchTerm.trim());
+    setCategoryProductIds(isEditMode && productId ? [productId] : []);
+    setCategoryProductSearchTerm("");
+    setCategoryCreateError(null);
+    setIsCategorySelectorOpen(false);
+    setIsCategoryVisibleInCatalog(true);
+    setIsCategoryCreateDrawerOpen(true);
+  }
+
+  function handleCloseCategoryCreateDrawer() {
+    setIsCategoryCreateDrawerOpen(false);
+    setCategoryDraftName("");
+    setCategoryProductIds([]);
+    setCategoryProductSearchTerm("");
+    setCategoryCreateError(null);
+    setIsCategoryVisibleInCatalog(true);
+  }
+
+  function handleToggleCategoryProduct(productIdToToggle: string) {
+    setCategoryProductIds((currentProductIds) =>
+      currentProductIds.includes(productIdToToggle)
+        ? currentProductIds.filter((currentId) => currentId !== productIdToToggle)
+        : [...currentProductIds, productIdToToggle],
+    );
+  }
+
+  async function handleCreateCategory() {
+    const name = categoryDraftName.trim();
+
+    if (name.length < 2) {
+      setCategoryCreateError(copy.categoryNameRequired);
+      return;
+    }
+
+    try {
+      const createdCategory = await createCategoryMutation.mutateAsync({
+        name,
+        isVisibleInCatalog: isCategoryVisibleInCatalog,
+        productIds: categoryProductIds,
+      });
+
+      setValue("categoryId", createdCategory.id, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      handleCloseCategoryCreateDrawer();
+    } catch (error) {
+      setCategoryCreateError(getErrorMessage(error, copy.categoryCreateError));
+    }
+  }
+
+  function renderCategorySelector() {
+    return (
+      <>
+        <input type="hidden" {...register("categoryId")} />
+        <CategorySelector
+          addCategoryLabel={copy.addCategory}
+          categories={categories}
+          filteredCategories={filteredCategories}
+          isOpen={isCategorySelectorOpen}
+          label="Categoria"
+          placeholder={copy.selectOption}
+          searchPlaceholder={copy.searchCategory}
+          searchTerm={categorySearchTerm}
+          selectedCategoryId={selectedCategoryId}
+          selectedCategoryName={selectedCategory?.name}
+          uncategorizedLabel={copy.uncategorized}
+          onCreateCategory={handleOpenCreateCategoryFromSelector}
+          onSearchChange={setCategorySearchTerm}
+          onSelectCategory={handleSelectCategory}
+          onToggleOpen={() =>
+            setIsCategorySelectorOpen((currentIsOpen) => !currentIsOpen)
+          }
+        />
+      </>
+    );
+  }
 
   function handleRequestTabChange(targetTab: RetailProductCreateWorkspaceTab) {
     if (targetTab === activeTab) {
@@ -672,20 +1109,7 @@ export function RetailProductCreateWorkspace({
                 <div className={styles.card}>
                   <h3 className={styles.cardTitle}>Informacion adicional</h3>
 
-                  <label className={styles.field}>
-                    <span className={styles.label}>Categoria</span>
-                    <select
-                      className={styles.select}
-                      {...register("categoryId")}
-                    >
-                      <option value="">{copy.selectOption}</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+                  {renderCategorySelector()}
 
                   <label className={styles.toggleCard}>
                     <div className={styles.toggleCopy}>
@@ -744,17 +1168,7 @@ export function RetailProductCreateWorkspace({
               <div className={styles.card}>
                 <h3 className={styles.cardTitle}>Informacion adicional</h3>
 
-                <label className={styles.field}>
-                  <span className={styles.label}>Categoria</span>
-                  <select className={styles.select} {...register("categoryId")}>
-                    <option value="">{copy.selectOption}</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                {renderCategorySelector()}
 
                 <label className={styles.toggleCard}>
                   <div className={styles.toggleCopy}>
@@ -899,6 +1313,34 @@ export function RetailProductCreateWorkspace({
             setActiveTab(confirmSwitchState.targetTab);
             setConfirmSwitchState(null);
           }}
+        />
+      ) : null}
+
+      {isCategoryCreateDrawerOpen ? (
+        <CategoryCreateDrawer
+          copy={copy}
+          errorMessage={categoryCreateError}
+          isSubmitting={createCategoryMutation.isPending}
+          isVisibleInCatalog={isCategoryVisibleInCatalog}
+          name={categoryDraftName}
+          productSearchTerm={categoryProductSearchTerm}
+          products={categoryDrawerProducts}
+          selectedProductIds={categoryProductIds}
+          onClose={handleCloseCategoryCreateDrawer}
+          onNameChange={(value) => {
+            setCategoryDraftName(value);
+            setCategoryCreateError(null);
+          }}
+          onProductSearchChange={setCategoryProductSearchTerm}
+          onSubmit={() => {
+            void handleCreateCategory();
+          }}
+          onToggleProduct={handleToggleCategoryProduct}
+          onToggleVisibility={() =>
+            setIsCategoryVisibleInCatalog(
+              (currentIsVisible) => !currentIsVisible,
+            )
+          }
         />
       ) : null}
     </>
