@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { invalidateCashRegisterQueries } from '@/modules/cash-register/hooks/use-cash-register-query'
 import {
   createExpense,
   createExpenseCategory,
@@ -14,6 +15,17 @@ import type {
 
 export const expensesQueryKey = ['expenses'] as const
 export const expenseCategoriesQueryKey = ['expense-categories'] as const
+
+function invalidateExpenseFlowQueries(
+  queryClient: ReturnType<typeof useQueryClient>,
+) {
+  return Promise.all([
+    invalidateCashRegisterQueries(queryClient),
+    queryClient.invalidateQueries({
+      queryKey: expensesQueryKey,
+    }),
+  ])
+}
 
 export function useExpensesQuery() {
   return useQuery({
@@ -35,9 +47,7 @@ export function useCreateExpenseMutation() {
   return useMutation({
     mutationFn: (input: ExpenseMutationInput) => createExpense(input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: expensesQueryKey,
-      })
+      await invalidateExpenseFlowQueries(queryClient)
     },
   })
 }
@@ -54,9 +64,7 @@ export function useUpdateExpenseMutation() {
       input: ExpenseMutationInput
     }) => updateExpense(expenseId, input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: expensesQueryKey,
-      })
+      await invalidateExpenseFlowQueries(queryClient)
     },
   })
 }
@@ -67,9 +75,7 @@ export function useDeleteExpenseMutation() {
   return useMutation({
     mutationFn: (expenseId: string) => deleteExpense(expenseId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: expensesQueryKey,
-      })
+      await invalidateExpenseFlowQueries(queryClient)
     },
   })
 }

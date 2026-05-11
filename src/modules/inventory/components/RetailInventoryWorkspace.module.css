@@ -414,6 +414,54 @@
   font-weight: 700;
 }
 
+.inlineEditBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.35rem;
+  min-width: 7rem;
+  max-width: 10rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid rgba(184, 197, 213, 0.98);
+  border-radius: 0.85rem;
+  background: #ffffff;
+  color: #223040;
+  cursor: text;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inlineEditBox:focus-within {
+  border-color: #1e74d8;
+  box-shadow: 0 0 0 3px rgba(30, 116, 216, 0.14);
+}
+
+.inlineCurrencyPrefix {
+  flex: 0 0 auto;
+  color: #223040;
+  font-weight: 800;
+}
+
+.inlineEditInput {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: #223040;
+  font: inherit;
+  font-weight: 800;
+}
+
+.inlineEditInput:focus {
+  outline: none;
+}
+
+.inlineEditInput:disabled {
+  color: #8492a6;
+  cursor: progress;
+}
+
 .valueBoxWarning {
   border-color: #f2c94c;
   background: #fff9e6;

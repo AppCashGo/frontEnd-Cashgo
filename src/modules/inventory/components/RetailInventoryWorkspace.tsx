@@ -5,7 +5,10 @@ import {
   RetailProductCreateWorkspace,
   type RetailProductCreateWorkspaceTab,
 } from '@/modules/inventory/components/RetailProductCreateWorkspace'
-import { useProductsQuery } from '@/modules/products/hooks/use-products-query'
+import {
+  useProductsQuery,
+  useUpdateProductMutation,
+} from '@/modules/products/hooks/use-products-query'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
 import {
   useCreateInventoryCategoryMutation,
@@ -23,7 +26,10 @@ import type {
   InventoryProductCategory,
   InventoryProductCategoryInput,
 } from '@/modules/inventory/types/inventory'
-import type { Product } from '@/modules/products/types/product'
+import type {
+  Product,
+  ProductMutationInput,
+} from '@/modules/products/types/product'
 import {
   useBusinessSettingsQuery,
   useUpdateBusinessSettingsMutation,
@@ -44,6 +50,12 @@ type FeedbackMessage = {
   tone: FeedbackTone
   text: string
 }
+
+type InlineProductField = 'price' | 'cost' | 'stock'
+
+type InlineProductDraft = Record<InlineProductField, string>
+
+type InlineProductDrafts = Record<string, InlineProductDraft>
 
 type CategoryEditorState = {
   id: string | null
@@ -116,6 +128,91 @@ function parsePositiveNumber(value: string) {
   const parsedValue = Number(normalizedValue)
 
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 0
+}
+
+function formatEditableNumber(value: number) {
+  const roundedValue = Math.round((value + Number.EPSILON) * 100) / 100
+
+  return Number.isInteger(roundedValue)
+    ? roundedValue.toString()
+    : roundedValue.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')
+}
+
+function parseEditableDecimal(value: string) {
+  const cleanedValue = value.trim().replace(/\$/g, '').replace(/\s/g, '')
+
+  if (cleanedValue.length === 0) {
+    return Number.NaN
+  }
+
+  const hasComma = cleanedValue.includes(',')
+  const hasDot = cleanedValue.includes('.')
+  const lastCommaIndex = cleanedValue.lastIndexOf(',')
+  const lastDotIndex = cleanedValue.lastIndexOf('.')
+  let normalizedValue = cleanedValue
+
+  if (hasComma && hasDot) {
+    normalizedValue =
+      lastCommaIndex > lastDotIndex
+        ? cleanedValue.replace(/\./g, '').replace(',', '.')
+        : cleanedValue.replace(/,/g, '')
+  } else if (hasComma) {
+    normalizedValue = cleanedValue.replace(',', '.')
+  } else if (hasDot) {
+    const decimalSegment = cleanedValue.slice(lastDotIndex + 1)
+    const dotSegments = cleanedValue.split('.')
+    const looksLikeThousands =
+      dotSegments.length > 1 &&
+      decimalSegment.length === 3 &&
+      dotSegments.slice(1).every((segment) => segment.length === 3)
+
+    normalizedValue = looksLikeThousands
+      ? cleanedValue.replace(/\./g, '')
+      : cleanedValue
+  }
+
+  const parsedValue = Number(normalizedValue)
+
+  return Number.isFinite(parsedValue) && parsedValue >= 0
+    ? parsedValue
+    : Number.NaN
+}
+
+function parseEditableStock(value: string) {
+  const parsedValue = parseEditableDecimal(value)
+
+  return Number.isFinite(parsedValue) ? Math.floor(parsedValue) : Number.NaN
+}
+
+function createInlineProductDraft(product: Product): InlineProductDraft {
+  return {
+    price: formatEditableNumber(product.price),
+    cost: formatEditableNumber(product.cost),
+    stock: product.stock.toString(),
+  }
+}
+
+function createProductUpdateInput(
+  product: Product,
+  overrides: Partial<Pick<ProductMutationInput, InlineProductField>>,
+): ProductMutationInput {
+  return {
+    barcode: product.barcode ?? undefined,
+    categoryId: product.categoryId,
+    cost: product.cost,
+    description: product.description ?? undefined,
+    isActive: product.isActive,
+    isVisibleInCatalog: product.isVisibleInCatalog,
+    minStock: product.minStock,
+    name: product.name,
+    price: product.price,
+    sku: product.sku ?? undefined,
+    stock: product.stock,
+    taxLabel: product.taxLabel ?? undefined,
+    taxRate: product.taxRate,
+    unit: product.unit,
+    ...overrides,
+  }
 }
 
 function normalizePhone(value: string) {
@@ -240,6 +337,7 @@ export function RetailInventoryWorkspace() {
   const deleteCategoryMutation = useDeleteInventoryCategoryMutation()
   const updateCategoryMutation = useUpdateInventoryCategoryMutation()
   const updateProductTaxesMutation = useUpdateInventoryProductTaxesMutation()
+  const updateProductMutation = useUpdateProductMutation()
   const registerPurchaseMutation = useRegisterInventoryPurchaseMutation()
   const businessSettingsQuery = useBusinessSettingsQuery()
   const updateBusinessSettingsMutation = useUpdateBusinessSettingsMutation()
@@ -255,6 +353,10 @@ export function RetailInventoryWorkspace() {
   )
   const [isPremiumBannerVisible, setPremiumBannerVisible] = useState(true)
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(
+    null,
+  )
+  const [productDrafts, setProductDrafts] = useState<InlineProductDrafts>({})
+  const [savingProductField, setSavingProductField] = useState<string | null>(
     null,
   )
   const [searchTerm, setSearchTerm] = useState('')
@@ -301,6 +403,14 @@ export function RetailInventoryWorkspace() {
   useEffect(() => {
     setShareCatalogPhone(businessSettings?.phone ?? '')
   }, [businessSettings?.phone])
+
+  useEffect(() => {
+    setProductDrafts(
+      Object.fromEntries(
+        products.map((product) => [product.id, createInlineProductDraft(product)]),
+      ),
+    )
+  }, [products])
 
   const categoryNameById = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
@@ -453,6 +563,121 @@ export function RetailInventoryWorkspace() {
         ? currentState.productIds.filter((currentProductId) => currentProductId !== productId)
         : [...currentState.productIds, productId],
     }))
+  }
+
+  function handleProductDraftChange(
+    productId: string,
+    field: InlineProductField,
+    value: string,
+  ) {
+    setProductDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [productId]: {
+        ...(currentDrafts[productId] ?? {
+          price: '',
+          cost: '',
+          stock: '',
+        }),
+        [field]: value,
+      },
+    }))
+  }
+
+  function resetProductDraftField(product: Product, field: InlineProductField) {
+    const nextDraft = createInlineProductDraft(product)
+
+    setProductDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [product.id]: {
+        ...(currentDrafts[product.id] ?? nextDraft),
+        [field]: nextDraft[field],
+      },
+    }))
+  }
+
+  async function handleCommitProductDraft(
+    product: Product,
+    field: InlineProductField,
+  ) {
+    const currentDraft = productDrafts[product.id] ?? createInlineProductDraft(product)
+    const parsedValue =
+      field === 'stock'
+        ? parseEditableStock(currentDraft[field])
+        : parseEditableDecimal(currentDraft[field])
+
+    if (!Number.isFinite(parsedValue)) {
+      resetProductDraftField(product, field)
+      setFeedbackMessage({
+        tone: 'error',
+        text: 'Ingresa un valor válido para actualizar el producto.',
+      })
+      return
+    }
+
+    const normalizedValue =
+      field === 'stock'
+        ? Math.max(0, Math.floor(parsedValue))
+        : Math.round((parsedValue + Number.EPSILON) * 100) / 100
+    const currentValue = product[field]
+
+    setProductDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [product.id]: {
+        ...currentDraft,
+        [field]: formatEditableNumber(normalizedValue),
+      },
+    }))
+
+    if (Math.abs(currentValue - normalizedValue) < 0.005) {
+      return
+    }
+
+    const mutationKey = `${product.id}:${field}`
+    setSavingProductField(mutationKey)
+    resetFeedback()
+
+    try {
+      await updateProductMutation.mutateAsync({
+        productId: product.id,
+        input: createProductUpdateInput(product, {
+          [field]: normalizedValue,
+        }),
+      })
+      setFeedbackMessage({
+        tone: 'success',
+        text: 'Producto actualizado.',
+      })
+    } catch (error) {
+      resetProductDraftField(product, field)
+      setFeedbackMessage({
+        tone: 'error',
+        text: getErrorMessage(error, 'No fue posible actualizar el producto.'),
+      })
+    } finally {
+      setSavingProductField((currentKey) =>
+        currentKey === mutationKey ? null : currentKey,
+      )
+    }
+  }
+
+  function handleInlineProductKeyDown(
+    event: KeyboardEvent<HTMLInputElement>,
+    product: Product,
+    field: InlineProductField,
+  ) {
+    event.stopPropagation()
+
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      event.currentTarget.blur()
+      return
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      resetProductDraftField(product, field)
+      event.currentTarget.blur()
+    }
   }
 
   async function handleSaveCategory() {
@@ -960,6 +1185,8 @@ export function RetailInventoryWorkspace() {
             </thead>
             <tbody>
               {visibleProducts.map((product) => {
+                const productDraft =
+                  productDrafts[product.id] ?? createInlineProductDraft(product)
                 const gain = product.price - product.cost
                 const margin =
                   product.price > 0
@@ -990,25 +1217,99 @@ export function RetailInventoryWorkspace() {
                       </div>
                     </td>
                     <td>
-                      <span className={styles.valueBox}>
-                        {formatCurrency(product.price)}
-                      </span>
+                      <label
+                        className={styles.inlineEditBox}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <span className={styles.inlineCurrencyPrefix}>$</span>
+                        <input
+                          aria-label={`Precio de ${product.name}`}
+                          className={styles.inlineEditInput}
+                          disabled={savingProductField === `${product.id}:price`}
+                          inputMode="decimal"
+                          type="text"
+                          value={productDraft.price}
+                          onBlur={() => {
+                            void handleCommitProductDraft(product, 'price')
+                          }}
+                          onChange={(event) =>
+                            handleProductDraftChange(
+                              product.id,
+                              'price',
+                              event.target.value,
+                            )
+                          }
+                          onFocus={(event) => event.stopPropagation()}
+                          onKeyDown={(event) =>
+                            handleInlineProductKeyDown(event, product, 'price')
+                          }
+                        />
+                      </label>
                     </td>
                     <td>
-                      <span className={styles.valueBox}>
-                        {formatCurrency(product.cost)}
-                      </span>
+                      <label
+                        className={styles.inlineEditBox}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <span className={styles.inlineCurrencyPrefix}>$</span>
+                        <input
+                          aria-label={`Costo de ${product.name}`}
+                          className={styles.inlineEditInput}
+                          disabled={savingProductField === `${product.id}:cost`}
+                          inputMode="decimal"
+                          type="text"
+                          value={productDraft.cost}
+                          onBlur={() => {
+                            void handleCommitProductDraft(product, 'cost')
+                          }}
+                          onChange={(event) =>
+                            handleProductDraftChange(
+                              product.id,
+                              'cost',
+                              event.target.value,
+                            )
+                          }
+                          onFocus={(event) => event.stopPropagation()}
+                          onKeyDown={(event) =>
+                            handleInlineProductKeyDown(event, product, 'cost')
+                          }
+                        />
+                      </label>
                     </td>
                     <td>
-                      <span
+                      <label
                         className={
                           isLowStock
-                            ? `${styles.valueBox} ${styles.valueBoxWarning}`
-                            : styles.valueBox
+                            ? `${styles.inlineEditBox} ${styles.valueBoxWarning}`
+                            : styles.inlineEditBox
                         }
+                        onClick={(event) => event.stopPropagation()}
                       >
-                        {product.stock.toString()}
-                      </span>
+                        <input
+                          aria-label={`Cantidad disponible de ${product.name}`}
+                          className={styles.inlineEditInput}
+                          disabled={savingProductField === `${product.id}:stock`}
+                          inputMode="numeric"
+                          min="0"
+                          step="1"
+                          type="text"
+                          value={productDraft.stock}
+                          onBlur={() => {
+                            void handleCommitProductDraft(product, 'stock')
+                          }}
+                          onChange={(event) =>
+                            handleProductDraftChange(
+                              product.id,
+                              'stock',
+                              event.target.value,
+                            )
+                          }
+                          onFocus={(event) => event.stopPropagation()}
+                          onKeyDown={(event) =>
+                            handleInlineProductKeyDown(event, product, 'stock')
+                          }
+                        />
+                      </label>
                     </td>
                     <td>
                       <div className={styles.gainCell}>

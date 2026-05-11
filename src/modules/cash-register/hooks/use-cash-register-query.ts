@@ -31,7 +31,7 @@ export const cashRegisterAssigneesQueryKey = [
 ] as const;
 export const movementsOverviewQueryKey = ["movements", "overview"] as const;
 
-function invalidateCashRegisterQueries(
+export function invalidateCashRegisterQueries(
   queryClient: ReturnType<typeof useQueryClient>,
 ) {
   return Promise.all([

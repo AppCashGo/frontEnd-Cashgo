@@ -48,6 +48,11 @@ type RetailPaymentOption =
   | 'OTHER'
   | 'NEQUI'
   | 'DAVIPLATA'
+type CatalogPaymentSplit = {
+  id: string
+  amountInput: string
+  paymentOption: RetailPaymentOption
+}
 type ProductSortOption =
   | 'NAME_ASC'
   | 'NAME_DESC'
@@ -119,6 +124,7 @@ const paymentOptions: Array<{
 ]
 
 const paymentSplitOptions = ['1', '2', '3', '4', '5', '6', 'Otro'] as const
+type PaymentSplitOption = (typeof paymentSplitOptions)[number]
 const defaultSortOption: ProductSortOption = 'NAME_ASC'
 
 const productSortSections: Array<{
@@ -259,7 +265,7 @@ function sortProductsForRetail(
 }
 
 function parseAmountInput(value: string) {
-  const normalizedValue = value.replace(',', '.')
+  const normalizedValue = value.replace(/\$/g, '').replace(/\s/g, '').replace(',', '.')
   const parsedValue = Number(normalizedValue)
 
   return Number.isFinite(parsedValue) ? Math.max(parsedValue, 0) : 0
@@ -277,10 +283,65 @@ function formatEditableNumber(value: number) {
   return value.toFixed(2).replace(/\.?0+$/, '')
 }
 
+function escapeReceiptHtml(value: string | number) {
+  return String(value).replace(/[&<>"']/g, (character) => {
+    const replacements: Record<string, string> = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }
+
+    return replacements[character] ?? character
+  })
+}
+
+function getPaymentSplitNumber(option: PaymentSplitOption) {
+  if (option === 'Otro') {
+    return 1
+  }
+
+  return Number(option)
+}
+
+function splitPaymentAmount(totalAmount: number, paymentCount: number) {
+  const safePaymentCount = Math.max(paymentCount, 1)
+  const totalCents = Math.round(Math.max(totalAmount, 0) * 100)
+  const baseCents = Math.floor(totalCents / safePaymentCount)
+  const remainderCents = totalCents - baseCents * safePaymentCount
+
+  return Array.from({ length: safePaymentCount }, (_, index) => {
+    const amountCents =
+      index === safePaymentCount - 1
+        ? baseCents + remainderCents
+        : baseCents
+
+    return amountCents / 100
+  })
+}
+
+function createCatalogPaymentSplits(
+  paymentCount: number,
+  totalAmount: number,
+  currentSplits: CatalogPaymentSplit[] = [],
+  fallbackPaymentOption: RetailPaymentOption = 'CASH',
+): CatalogPaymentSplit[] {
+  return splitPaymentAmount(totalAmount, paymentCount).map((amount, index) => ({
+    id: currentSplits[index]?.id ?? `catalog-payment-${index + 1}`,
+    amountInput: formatEditableNumber(amount),
+    paymentOption: currentSplits[index]?.paymentOption ?? fallbackPaymentOption,
+  }))
+}
+
 function normalizeOptionalText(value: string) {
   const trimmedValue = value.trim()
 
   return trimmedValue.length > 0 ? trimmedValue : undefined
+}
+
+function getPaymentOptionLabel(option: RetailPaymentOption) {
+  return paymentOptions.find((paymentOption) => paymentOption.value === option)?.label ?? 'Efectivo'
 }
 
 function mapRetailPaymentOptionToSaleMethod(
@@ -429,18 +490,33 @@ function ExpenseDrawerIcon() {
   )
 }
 
+function PrinterIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.footerUtilityIcon} viewBox="0 0 24 24">
+      <path d="M7 8V3h10v5" />
+      <path d="M6 17H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2" />
+      <path d="M7 14h10v7H7z" />
+      <path d="M17 12h.01" />
+    </svg>
+  )
+}
+
 type ChangeCalculatorModalProps = {
   saleTotal: number
   amountTenderedInput: string
+  isSubmitting?: boolean
   onAmountTenderedChange: (value: string) => void
   onClose: () => void
+  onConfirm: () => void
 }
 
 function ChangeCalculatorModal({
   saleTotal,
   amountTenderedInput,
+  isSubmitting = false,
   onAmountTenderedChange,
   onClose,
+  onConfirm,
 }: ChangeCalculatorModalProps) {
   const amountTendered = parseAmountInput(amountTenderedInput)
   const changeTotal = Math.max(amountTendered - saleTotal, 0)
@@ -491,8 +567,13 @@ function ChangeCalculatorModal({
           <strong>{formatCurrency(changeTotal)}</strong>
         </div>
 
-        <button className={styles.modalConfirmButton} type="button" onClick={onClose}>
-          Confirmar
+        <button
+          className={styles.modalConfirmButton}
+          disabled={isSubmitting}
+          type="button"
+          onClick={onConfirm}
+        >
+          {isSubmitting ? 'Creando venta...' : 'Confirmar'}
         </button>
       </div>
     </div>
@@ -693,9 +774,12 @@ export function RetailSalesWorkspace() {
   const [discountAmountInput, setDiscountAmountInput] = useState('0')
   const [saleDate, setSaleDate] = useState(getTodayDateInput)
   const [paymentSplitCount, setPaymentSplitCount] =
-    useState<(typeof paymentSplitOptions)[number]>('1')
+    useState<PaymentSplitOption>('1')
   const [paymentOption, setPaymentOption] =
     useState<RetailPaymentOption>('CASH')
+  const [paymentSplits, setPaymentSplits] = useState<CatalogPaymentSplit[]>(() =>
+    createCatalogPaymentSplits(1, 0),
+  )
   const [receiptNote, setReceiptNote] = useState('')
   const [isQuickSaleDrawerOpen, setQuickSaleDrawerOpen] = useState(false)
   const [isQuickExpenseDrawerOpen, setQuickExpenseDrawerOpen] = useState(false)
@@ -810,6 +894,47 @@ export function RetailSalesWorkspace() {
   )
   const totalAmount = cartFinancials.total
   const paymentMethod = mapRetailPaymentOptionToSaleMethod(paymentOption)
+  const selectedPaymentSplitCount = getPaymentSplitNumber(paymentSplitCount)
+  const usesSplitPayments =
+    settlement === 'PAID' && selectedPaymentSplitCount > 1
+  const splitPaymentRows = useMemo(
+    () => paymentSplits.slice(0, selectedPaymentSplitCount),
+    [paymentSplits, selectedPaymentSplitCount],
+  )
+  const splitPaymentTotal = useMemo(
+    () =>
+      splitPaymentRows.reduce(
+        (totalPaid, paymentSplit) =>
+          totalPaid + parseAmountInput(paymentSplit.amountInput),
+        0,
+      ),
+    [splitPaymentRows],
+  )
+  const splitPaymentDifference = totalAmount - splitPaymentTotal
+  const areSplitPaymentsBalanced = Math.abs(splitPaymentDifference) < 0.01
+  const hasCashCatalogPayment =
+    settlement === 'PAID' &&
+    (usesSplitPayments
+      ? splitPaymentRows.some(
+          (paymentSplit) =>
+            paymentSplit.paymentOption === 'CASH' &&
+            parseAmountInput(paymentSplit.amountInput) > 0,
+        )
+      : paymentOption === 'CASH')
+  const cashCatalogPaymentTotal =
+    settlement === 'PAID'
+      ? usesSplitPayments
+        ? splitPaymentRows
+            .filter((paymentSplit) => paymentSplit.paymentOption === 'CASH')
+            .reduce(
+              (cashTotal, paymentSplit) =>
+                cashTotal + parseAmountInput(paymentSplit.amountInput),
+              0,
+            )
+        : paymentOption === 'CASH'
+          ? totalAmount
+          : 0
+      : 0
   const quickSaleAmount = parseAmountInput(quickSaleForm.amountInput)
   const quickExpenseAmount = parseAmountInput(quickExpenseForm.amountInput)
 
@@ -879,6 +1004,21 @@ export function RetailSalesWorkspace() {
     }
   }, [cartFinancials.grossSubtotal, discountAmountInput, discountOpen])
 
+  useEffect(() => {
+    if (settlement !== 'PAID') {
+      return
+    }
+
+    setPaymentSplits((currentSplits) =>
+      createCatalogPaymentSplits(
+        selectedPaymentSplitCount,
+        totalAmount,
+        currentSplits,
+        paymentOption,
+      ),
+    )
+  }, [paymentOption, selectedPaymentSplitCount, settlement, totalAmount])
+
   function resetPaymentStep() {
     setSelectedCustomerId('')
     setSettlement('PAID')
@@ -888,6 +1028,7 @@ export function RetailSalesWorkspace() {
     setSaleDate(getTodayDateInput())
     setPaymentSplitCount('1')
     setPaymentOption('CASH')
+    setPaymentSplits(createCatalogPaymentSplits(1, 0))
     setReceiptNote('')
     setPaymentDetailsOpen(true)
     setChangeModalOpen(false)
@@ -917,6 +1058,56 @@ export function RetailSalesWorkspace() {
     setDiscountPercentInput(formatEditableNumber(nextPercent))
   }
 
+  function handlePaymentSplitCountChange(option: PaymentSplitOption) {
+    setPaymentSplitCount(option)
+    setPaymentSplits((currentSplits) =>
+      createCatalogPaymentSplits(
+        getPaymentSplitNumber(option),
+        totalAmount,
+        currentSplits,
+        paymentOption,
+      ),
+    )
+  }
+
+  function handlePaymentSplitAmountChange(splitId: string, value: string) {
+    setPaymentSplits((currentSplits) =>
+      currentSplits.map((paymentSplit) =>
+        paymentSplit.id === splitId
+          ? { ...paymentSplit, amountInput: value }
+          : paymentSplit,
+      ),
+    )
+  }
+
+  function handlePaymentSplitAmountBlur(splitId: string) {
+    setPaymentSplits((currentSplits) =>
+      currentSplits.map((paymentSplit) =>
+        paymentSplit.id === splitId
+          ? {
+              ...paymentSplit,
+              amountInput: formatEditableNumber(
+                parseAmountInput(paymentSplit.amountInput),
+              ),
+            }
+          : paymentSplit,
+      ),
+    )
+  }
+
+  function handlePaymentSplitMethodChange(
+    splitId: string,
+    nextPaymentOption: RetailPaymentOption,
+  ) {
+    setPaymentSplits((currentSplits) =>
+      currentSplits.map((paymentSplit) =>
+        paymentSplit.id === splitId
+          ? { ...paymentSplit, paymentOption: nextPaymentOption }
+          : paymentSplit,
+      ),
+    )
+  }
+
   function handleOpenQuickSaleDrawer() {
     clearCheckoutFeedback()
     setChangeModalOpen(false)
@@ -933,6 +1124,161 @@ export function RetailSalesWorkspace() {
     navigate(`${routePaths.inventory}?create=manual&returnTo=sales`)
   }
 
+  function handlePrintCurrentOrder() {
+    if (cartItems.length === 0 || totalAmount <= 0) {
+      markCheckoutError('Agrega productos antes de imprimir la prefactura.')
+      return
+    }
+
+    const printWindow = window.open('', '_blank', 'width=420,height=720')
+
+    if (!printWindow) {
+      markCheckoutError('No pudimos abrir la ventana de impresión.')
+      return
+    }
+
+    const selectedCustomer = customers.find(
+      (customer) => customer.id === selectedCustomerId,
+    )
+    const customerName = selectedCustomer?.name ?? 'Consumidor final'
+    const paymentRows =
+      settlement === 'CREDIT'
+        ? '<p><strong>Estado:</strong> A crédito</p>'
+        : usesSplitPayments
+          ? splitPaymentRows
+              .map(
+                (paymentSplit) =>
+                  `<p>${escapeReceiptHtml(getPaymentOptionLabel(paymentSplit.paymentOption))}: ${escapeReceiptHtml(formatCurrency(parseAmountInput(paymentSplit.amountInput)))}</p>`,
+              )
+              .join('')
+          : `<p>${escapeReceiptHtml(getPaymentOptionLabel(paymentOption))}: ${escapeReceiptHtml(formatCurrency(totalAmount))}</p>`
+    const itemRows = cartItems
+      .map((item) => {
+        const lineTotal = item.product.price * item.quantity
+
+        return `
+          <tr>
+            <td>
+              <strong>${escapeReceiptHtml(item.product.name)}</strong>
+              <span>${escapeReceiptHtml(item.quantity)} x ${escapeReceiptHtml(formatCurrency(item.product.price))}</span>
+            </td>
+            <td>${escapeReceiptHtml(formatCurrency(lineTotal))}</td>
+          </tr>
+        `
+      })
+      .join('')
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="es">
+        <head>
+          <meta charset="utf-8" />
+          <title>Prefactura</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 24px;
+              color: #172331;
+              font-family: Arial, sans-serif;
+            }
+            h1 {
+              margin: 0 0 8px;
+              font-size: 24px;
+            }
+            p {
+              margin: 4px 0;
+            }
+            table {
+              width: 100%;
+              margin: 20px 0;
+              border-collapse: collapse;
+            }
+            td {
+              padding: 10px 0;
+              border-bottom: 1px solid #d8e0ea;
+              vertical-align: top;
+            }
+            td:last-child {
+              text-align: right;
+              font-weight: 700;
+            }
+            span {
+              display: block;
+              margin-top: 4px;
+              color: #607089;
+              font-size: 13px;
+            }
+            .summary {
+              margin-top: 18px;
+              padding-top: 14px;
+              border-top: 2px solid #172331;
+            }
+            .summary-row {
+              display: flex;
+              justify-content: space-between;
+              gap: 16px;
+              margin: 8px 0;
+            }
+            .total {
+              font-size: 20px;
+              font-weight: 800;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Prefactura</h1>
+          <p><strong>Fecha:</strong> ${escapeReceiptHtml(saleDate)}</p>
+          <p><strong>Cliente:</strong> ${escapeReceiptHtml(customerName)}</p>
+          <table>
+            <tbody>${itemRows}</tbody>
+          </table>
+          <div class="summary">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <strong>${escapeReceiptHtml(formatCurrency(cartFinancials.grossSubtotal))}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Descuento</span>
+              <strong>${escapeReceiptHtml(formatCurrency(discountTotal))}</strong>
+            </div>
+            <div class="summary-row">
+              <span>Impuestos</span>
+              <strong>${escapeReceiptHtml(formatCurrency(cartFinancials.totalTaxes))}</strong>
+            </div>
+            <div class="summary-row total">
+              <span>Total</span>
+              <strong>${escapeReceiptHtml(formatCurrency(totalAmount))}</strong>
+            </div>
+          </div>
+          <section>
+            <h2>Pago</h2>
+            ${paymentRows}
+          </section>
+          ${
+            receiptNote.trim().length > 0
+              ? `<p><strong>Nota:</strong> ${escapeReceiptHtml(receiptNote)}</p>`
+              : ''
+          }
+        </body>
+      </html>
+    `)
+    printWindow.document.close()
+    printWindow.focus()
+    window.setTimeout(() => {
+      printWindow.print()
+    }, 200)
+  }
+
+  function handleCatalogSaleSubmit() {
+    if (settlement === 'PAID' && hasCashCatalogPayment) {
+      setAmountTenderedInput(formatEditableNumber(cashCatalogPaymentTotal))
+      setChangeModalOpen(true)
+      return
+    }
+
+    void handleCreateCatalogSale()
+  }
+
   async function handleCreateCatalogSale() {
     if (cartItems.length === 0) {
       return
@@ -943,6 +1289,38 @@ export function RetailSalesWorkspace() {
     if (settlement === 'CREDIT' && selectedCustomerId.trim().length === 0) {
       markCheckoutError(
         'Selecciona un cliente antes de registrar una venta a crédito.',
+      )
+      return
+    }
+
+    const paidPayments = usesSplitPayments
+      ? splitPaymentRows.map((paymentSplit) => ({
+          method: mapRetailPaymentOptionToSaleMethod(paymentSplit.paymentOption),
+          amount: parseAmountInput(paymentSplit.amountInput),
+        }))
+      : [
+          {
+            method: paymentMethod,
+            amount: totalAmount,
+          },
+        ]
+
+    if (
+      settlement === 'PAID' &&
+      usesSplitPayments &&
+      paidPayments.some((payment) => payment.amount <= 0)
+    ) {
+      markCheckoutError('Todos los pagos deben tener un monto mayor a cero.')
+      return
+    }
+
+    if (
+      settlement === 'PAID' &&
+      usesSplitPayments &&
+      !areSplitPaymentsBalanced
+    ) {
+      markCheckoutError(
+        `Los pagos deben sumar exactamente ${formatCurrency(totalAmount)}.`,
       )
       return
     }
@@ -971,15 +1349,7 @@ export function RetailSalesWorkspace() {
         discountTotal,
         notes: normalizeOptionalText(receiptNote),
         dueDate: settlement === 'CREDIT' ? saleDate : undefined,
-        payments:
-          settlement === 'PAID'
-            ? [
-                {
-                  method: paymentMethod,
-                  amount: totalAmount,
-                },
-              ]
-            : [],
+        payments: settlement === 'PAID' ? paidPayments : [],
       })
 
       completeSale(sale)
@@ -1406,7 +1776,8 @@ export function RetailSalesWorkspace() {
                       type="button"
                       onClick={() => setDiscountOpen(true)}
                     >
-                      Agregar un descuento
+                      <span aria-hidden="true">%</span>
+                      <span>Agregar un descuento</span>
                     </button>
                   ) : (
                     <div className={styles.discountCard}>
@@ -1465,7 +1836,7 @@ export function RetailSalesWorkspace() {
                                   : styles.splitButton
                               }
                               type="button"
-                              onClick={() => setPaymentSplitCount(option)}
+                              onClick={() => handlePaymentSplitCountChange(option)}
                             >
                               {option}
                             </button>
@@ -1473,13 +1844,91 @@ export function RetailSalesWorkspace() {
                         </div>
                       </div>
 
-                      <div className={styles.fieldGroup}>
-                        <p className={styles.helperTitle}>Selecciona el método de pago*</p>
-                        <PaymentMethodSelector
-                          value={paymentOption}
-                          onChange={setPaymentOption}
-                        />
-                      </div>
+                      {usesSplitPayments ? (
+                        <div className={styles.paymentSplitFields}>
+                          {splitPaymentRows.map((paymentSplit) => (
+                            <div className={styles.paymentSplitItem} key={paymentSplit.id}>
+                              <label className={styles.splitField}>
+                                <span>Monto a pagar</span>
+                                <span className={styles.splitAmountInputWrapper}>
+                                  <span aria-hidden="true">$</span>
+                                  <input
+                                    className={styles.splitAmountInput}
+                                    inputMode="decimal"
+                                    type="text"
+                                    value={paymentSplit.amountInput}
+                                    onBlur={() =>
+                                      handlePaymentSplitAmountBlur(paymentSplit.id)
+                                    }
+                                    onChange={(event) =>
+                                      handlePaymentSplitAmountChange(
+                                        paymentSplit.id,
+                                        event.target.value,
+                                      )
+                                    }
+                                  />
+                                </span>
+                              </label>
+
+                              <label className={styles.splitField}>
+                                <span>Método de pago</span>
+                                <select
+                                  className={styles.splitSelect}
+                                  value={paymentSplit.paymentOption}
+                                  onChange={(event) =>
+                                    handlePaymentSplitMethodChange(
+                                      paymentSplit.id,
+                                      event.target.value as RetailPaymentOption,
+                                    )
+                                  }
+                                >
+                                  {paymentOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                              </label>
+                            </div>
+                          ))}
+
+                          <div
+                            className={
+                              areSplitPaymentsBalanced
+                                ? styles.paymentSplitStatus
+                                : styles.paymentSplitStatusError
+                            }
+                          >
+                            <span className={styles.paymentSplitStatusIcon}>
+                              {areSplitPaymentsBalanced ? '✓' : '!'}
+                            </span>
+                            <div>
+                              <strong>
+                                {areSplitPaymentsBalanced
+                                  ? 'Los pagos suman el total de la orden:'
+                                  : 'Los pagos aún no suman el total de la orden:'}
+                              </strong>
+                              <p>
+                                {areSplitPaymentsBalanced
+                                  ? formatCurrency(splitPaymentTotal)
+                                  : `Diferencia ${formatCurrency(
+                                      Math.abs(splitPaymentDifference),
+                                    )}`}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={styles.fieldGroup}>
+                          <p className={styles.helperTitle}>
+                            Selecciona el método de pago*
+                          </p>
+                          <PaymentMethodSelector
+                            value={paymentOption}
+                            onChange={setPaymentOption}
+                          />
+                        </div>
+                      )}
                     </>
                   ) : null}
 
@@ -1565,16 +2014,15 @@ export function RetailSalesWorkspace() {
                   </div>
 
                   <div className={styles.paymentFooterActions}>
-                    {settlement === 'PAID' && paymentOption === 'CASH' ? (
-                      <button
-                        aria-label="Calcular cambio"
-                        className={styles.footerUtilityButton}
-                        type="button"
-                        onClick={() => setChangeModalOpen(true)}
-                      >
-                        $
-                      </button>
-                    ) : null}
+                    <button
+                      aria-label="Imprimir prefactura"
+                      className={styles.footerUtilityButton}
+                      disabled={cartItems.length === 0 || totalAmount <= 0}
+                      type="button"
+                      onClick={handlePrintCurrentOrder}
+                    >
+                      <PrinterIcon />
+                    </button>
 
                     <button
                       className={styles.continueButton}
@@ -1583,12 +2031,13 @@ export function RetailSalesWorkspace() {
                         cartItems.length === 0 ||
                         totalAmount <= 0 ||
                         (settlement === 'CREDIT' &&
-                          selectedCustomerId.trim().length === 0)
+                          selectedCustomerId.trim().length === 0) ||
+                        (settlement === 'PAID' &&
+                          usesSplitPayments &&
+                          !areSplitPaymentsBalanced)
                       }
                       type="button"
-                      onClick={() => {
-                        void handleCreateCatalogSale()
-                      }}
+                      onClick={handleCatalogSaleSubmit}
                     >
                       <span className={styles.continueBadge}>{totalItems.toString()}</span>
                       <span className={styles.continueText}>Crear venta</span>
@@ -1988,10 +2437,14 @@ export function RetailSalesWorkspace() {
 
       {isChangeModalOpen ? (
         <ChangeCalculatorModal
-          saleTotal={totalAmount}
+          saleTotal={cashCatalogPaymentTotal > 0 ? cashCatalogPaymentTotal : totalAmount}
           amountTenderedInput={amountTenderedInput}
+          isSubmitting={createSaleMutation.isPending}
           onAmountTenderedChange={setAmountTenderedInput}
           onClose={() => setChangeModalOpen(false)}
+          onConfirm={() => {
+            void handleCreateCatalogSale()
+          }}
         />
       ) : null}
     </>

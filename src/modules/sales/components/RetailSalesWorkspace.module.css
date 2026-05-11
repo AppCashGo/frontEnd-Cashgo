@@ -433,8 +433,25 @@
   cursor: pointer;
 }
 
+.footerUtilityButton:disabled {
+  border-color: #c5d0de;
+  color: #93a1b4;
+  cursor: not-allowed;
+}
+
+.footerUtilityIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .continueButton:disabled,
-.primaryActionButton:disabled {
+.primaryActionButton:disabled,
+.modalConfirmButton:disabled {
   background: #dce4ef;
   color: #93a1b4;
   cursor: not-allowed;
@@ -567,6 +584,9 @@
 }
 
 .linkButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   justify-self: start;
   padding: 0;
   border: 0;
@@ -643,6 +663,112 @@
   border-color: #ffd22f;
   background: #ffd95c;
   color: #1f2a37;
+}
+
+.paymentSplitFields {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.paymentSplitItem {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.15fr);
+  gap: 0.75rem;
+}
+
+.splitField {
+  display: grid;
+  gap: 0.45rem;
+  color: #1f2a37;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.splitAmountInputWrapper,
+.splitSelect {
+  min-height: 3rem;
+  border: 1px solid #c5d0de;
+  border-radius: 0.85rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+  font-weight: 800;
+}
+
+.splitAmountInputWrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0 0.8rem;
+}
+
+.splitAmountInput {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+}
+
+.splitAmountInput:focus {
+  outline: 0;
+}
+
+.splitSelect {
+  width: 100%;
+  padding: 0 0.85rem;
+  appearance: auto;
+}
+
+.splitAmountInputWrapper:focus-within,
+.splitSelect:focus {
+  outline: 2px solid rgba(31, 36, 51, 0.16);
+  outline-offset: 0;
+}
+
+.paymentSplitStatus,
+.paymentSplitStatusError {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border-radius: 0.8rem;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.paymentSplitStatus {
+  border: 1px solid #16a56f;
+  background: #cff7e7;
+  color: #075f3e;
+}
+
+.paymentSplitStatusError {
+  border: 1px solid #e58a7f;
+  background: #fff1f0;
+  color: #9b2f28;
+}
+
+.paymentSplitStatus p,
+.paymentSplitStatusError p {
+  margin: 0.2rem 0 0;
+  font-weight: 900;
+}
+
+.paymentSplitStatusIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 900;
 }
 
 .paymentMethodsGrid {
