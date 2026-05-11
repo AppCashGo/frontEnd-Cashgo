@@ -28,7 +28,7 @@ import {
   useBusinessSettingsQuery,
   useUpdateBusinessSettingsMutation,
 } from '@/modules/settings/hooks/use-settings-query'
-import { routePaths } from '@/routes/route-paths'
+import { routePaths, routeSegments } from '@/routes/route-paths'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
@@ -288,6 +288,8 @@ export function RetailInventoryWorkspace() {
   )
   const productId = searchParams.get('productId')
   const rawTab = searchParams.get('tab')
+  const productWorkspaceReturnPath =
+    searchParams.get('returnTo') === routeSegments.sales ? routePaths.sales : null
   const productWorkspaceTab: RetailProductCreateWorkspaceTab =
     rawTab === 'variants' || rawTab === 'measures' ? rawTab : 'basic'
   const isManualCreateDrawerOpen = searchParams.get('create') === 'manual'
@@ -372,6 +374,7 @@ export function RetailInventoryWorkspace() {
       nextParams.set('create', 'manual')
       nextParams.delete('productId')
       nextParams.delete('tab')
+      nextParams.delete('returnTo')
       return nextParams
     })
   }
@@ -380,6 +383,7 @@ export function RetailInventoryWorkspace() {
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams)
       nextParams.delete('create')
+      nextParams.delete('returnTo')
       nextParams.set('productId', nextProductId)
       nextParams.set('tab', 'basic')
       return nextParams
@@ -402,11 +406,17 @@ export function RetailInventoryWorkspace() {
   }
 
   function handleCloseProductWorkspace() {
+    if (productWorkspaceReturnPath) {
+      navigate(productWorkspaceReturnPath, { replace: true })
+      return
+    }
+
     setSearchParams((currentParams) => {
       const nextParams = new URLSearchParams(currentParams)
       nextParams.delete('create')
       nextParams.delete('productId')
       nextParams.delete('tab')
+      nextParams.delete('returnTo')
       return nextParams
     })
   }

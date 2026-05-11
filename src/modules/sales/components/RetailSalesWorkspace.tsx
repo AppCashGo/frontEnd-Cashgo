@@ -930,7 +930,7 @@ export function RetailSalesWorkspace() {
   }
 
   function handleGoToCreateProduct() {
-    navigate(`${routePaths.inventory}?create=manual`)
+    navigate(`${routePaths.inventory}?create=manual&returnTo=sales`)
   }
 
   async function handleCreateCatalogSale() {
