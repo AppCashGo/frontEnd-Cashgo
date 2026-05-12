@@ -20,3 +20,10 @@ export type CustomerPurchaseHistoryItem = {
 export type CustomerDetail = CustomerSummary & {
   purchaseHistory: CustomerPurchaseHistoryItem[]
 }
+
+export type CustomerMutationInput = {
+  name: string
+  email?: string
+  phone?: string
+  balance?: number
+}

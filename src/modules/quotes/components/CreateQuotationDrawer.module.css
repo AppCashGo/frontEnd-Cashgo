@@ -495,6 +495,93 @@
   color: #1f2937;
 }
 
+.customerFieldHeader {
+  align-items: center;
+}
+
+.customerFieldHeader > span {
+  min-width: 0;
+}
+
+.customerCreateButton {
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0 0.15rem;
+  border: 0;
+  background: transparent;
+  color: #1f2937;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.customerCreateBox {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid #c8d2df;
+  border-radius: 0.5rem;
+  background: #f8fafc;
+}
+
+.customerCreateBox strong {
+  color: #1f2937;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.customerCreateGrid {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.customerCreateGrid label {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.customerCreateGrid label span {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.customerCreateActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.customerCreateSecondary,
+.customerCreatePrimary {
+  min-height: 2.35rem;
+  padding: 0 0.85rem;
+  border-radius: 0.45rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.customerCreateSecondary {
+  border: 1px solid #c8d2df;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.customerCreatePrimary {
+  border: 0;
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.customerCreatePrimary:disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
 .discountLink {
   justify-self: start;
   border: 0;
@@ -719,5 +806,9 @@
 
   .discountBox {
     grid-template-columns: 1fr;
+  }
+
+  .customerCreateActions {
+    flex-direction: column-reverse;
   }
 }

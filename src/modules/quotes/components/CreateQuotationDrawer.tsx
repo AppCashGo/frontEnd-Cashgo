@@ -16,6 +16,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
+import { useCreateCustomerMutation } from "@/modules/customers/hooks/use-customers-query";
 import { useInventoryCategoriesQuery } from "@/modules/inventory/hooks/use-inventory-query";
 import { downloadQuotationDocument } from "@/modules/quotes/services/quotations-api";
 import { getQuotesCopy } from "@/modules/quotes/i18n/quotes-copy";
@@ -63,10 +64,20 @@ type CreateQuotationDrawerProps = {
 
 type QuotationStep = "catalog" | "details" | "success";
 type ExpirationOption = "week" | "fifteenDays" | "month" | "never";
+type CustomerDraft = {
+  name: string;
+  phone: string;
+  email: string;
+};
 
 const allCategoriesId = "ALL";
 const noCategoryId = "NONE";
 const receiptWindowFeatures = "width=840,height=960,noopener,noreferrer";
+const emptyCustomerDraft: CustomerDraft = {
+  name: "",
+  phone: "",
+  email: "",
+};
 
 function roundMoney(value: number) {
   return Math.round((Number.isFinite(value) ? value : 0) * 100) / 100;
@@ -137,7 +148,7 @@ function getDefaultValues(
   }
 
   return {
-    customerId: quotation.customer?.id ?? "",
+    customerId: quotation.customer?.id ? String(quotation.customer.id) : "",
     validUntil: toDateInputValue(quotation.validUntil),
     notes: quotation.notes ?? "",
     terms: quotation.terms ?? "",
@@ -348,6 +359,7 @@ export function CreateQuotationDrawer({
   const copy = getQuotesCopy(languageCode);
   const navigate = useNavigate();
   const categoriesQuery = useInventoryCategoriesQuery();
+  const createCustomerMutation = useCreateCustomerMutation();
   const formId = quotation ? "edit-quotation-form" : "create-quotation-form";
   const isEditing = quotation !== null;
   const [mode, setMode] = useState<QuotationCreationMode>(initialMode);
@@ -361,6 +373,12 @@ export function CreateQuotationDrawer({
   const [showDiscount, setShowDiscount] = useState(false);
   const [discountPercent, setDiscountPercent] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [isCustomerFormOpen, setIsCustomerFormOpen] = useState(false);
+  const [customerDraft, setCustomerDraft] =
+    useState<CustomerDraft>(emptyCustomerDraft);
+  const [customerCreateError, setCustomerCreateError] = useState<string | null>(
+    null,
+  );
   const [createdQuotation, setCreatedQuotation] =
     useState<QuotationDetail | null>(null);
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase());
@@ -457,6 +475,9 @@ export function CreateQuotationDrawer({
     setShowDiscount(false);
     setDiscountPercent(0);
     setDiscountAmount(0);
+    setIsCustomerFormOpen(false);
+    setCustomerDraft(emptyCustomerDraft);
+    setCustomerCreateError(null);
     setCreatedQuotation(null);
     reset(getDefaultValues(quotation, nextMode, copy.freeItemName));
   }, [copy.freeItemName, initialMode, isOpen, quotation, reset]);
@@ -464,6 +485,9 @@ export function CreateQuotationDrawer({
   function handleClose() {
     reset(getDefaultValues(quotation, mode, copy.freeItemName));
     setSearchValue("");
+    setIsCustomerFormOpen(false);
+    setCustomerDraft(emptyCustomerDraft);
+    setCustomerCreateError(null);
     setCreatedQuotation(null);
     onClose();
   }
@@ -556,6 +580,35 @@ export function CreateQuotationDrawer({
 
     setDiscountAmount(nextAmount);
     setDiscountPercent(nextPercent);
+  }
+
+  async function handleCreateCustomer() {
+    const name = normalizeOptionalText(customerDraft.name);
+
+    if (!name || name.length < 2) {
+      setCustomerCreateError(copy.customerCreateRequired);
+      return;
+    }
+
+    setCustomerCreateError(null);
+
+    try {
+      const createdCustomer = await createCustomerMutation.mutateAsync({
+        name,
+        phone: normalizeOptionalText(customerDraft.phone),
+        email: normalizeOptionalText(customerDraft.email),
+      });
+
+      setValue("customerId", String(createdCustomer.id), {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      clearErrors("customerId");
+      setCustomerDraft(emptyCustomerDraft);
+      setIsCustomerFormOpen(false);
+    } catch (error) {
+      setCustomerCreateError(getErrorMessage(error, copy.actionError));
+    }
   }
 
   function buildDraftReceiptHtml() {
@@ -1050,8 +1103,21 @@ export function CreateQuotationDrawer({
                   ) : null}
                 </div>
 
-                <label className={styles.field}>
-                  <span>{copy.customerLabel} *</span>
+                <div className={styles.field}>
+                  <span className={styles.customerFieldHeader}>
+                    <span>{copy.customerLabel} *</span>
+                    <button
+                      className={styles.customerCreateButton}
+                      type="button"
+                      onClick={() => {
+                        setIsCustomerFormOpen((current) => !current);
+                        setCustomerCreateError(null);
+                      }}
+                    >
+                      <Plus size={15} strokeWidth={2.6} />
+                      {copy.createCustomer}
+                    </button>
+                  </span>
                   <select
                     className={styles.input}
                     {...register("customerId", {
@@ -1070,7 +1136,89 @@ export function CreateQuotationDrawer({
                       {errors.customerId.message}
                     </small>
                   ) : null}
-                </label>
+
+                  {isCustomerFormOpen ? (
+                    <div className={styles.customerCreateBox}>
+                      <strong>{copy.newCustomerTitle}</strong>
+                      <div className={styles.customerCreateGrid}>
+                        <label>
+                          <span>{copy.customerName} *</span>
+                          <input
+                            className={styles.input}
+                            type="text"
+                            value={customerDraft.name}
+                            placeholder={copy.customerNamePlaceholder}
+                            onChange={(event) => {
+                              setCustomerDraft((current) => ({
+                                ...current,
+                                name: event.target.value,
+                              }));
+                              setCustomerCreateError(null);
+                            }}
+                          />
+                        </label>
+                        <label>
+                          <span>{copy.customerPhone}</span>
+                          <input
+                            className={styles.input}
+                            type="tel"
+                            value={customerDraft.phone}
+                            placeholder={copy.customerPhonePlaceholder}
+                            onChange={(event) =>
+                              setCustomerDraft((current) => ({
+                                ...current,
+                                phone: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+                        <label>
+                          <span>{copy.customerEmail}</span>
+                          <input
+                            className={styles.input}
+                            type="email"
+                            value={customerDraft.email}
+                            placeholder={copy.customerEmailPlaceholder}
+                            onChange={(event) =>
+                              setCustomerDraft((current) => ({
+                                ...current,
+                                email: event.target.value,
+                              }))
+                            }
+                          />
+                        </label>
+                      </div>
+                      {customerCreateError ? (
+                        <small className={styles.errorMessage}>
+                          {customerCreateError}
+                        </small>
+                      ) : null}
+                      <div className={styles.customerCreateActions}>
+                        <button
+                          className={styles.customerCreateSecondary}
+                          type="button"
+                          onClick={() => {
+                            setIsCustomerFormOpen(false);
+                            setCustomerDraft(emptyCustomerDraft);
+                            setCustomerCreateError(null);
+                          }}
+                        >
+                          {copy.cancelAction}
+                        </button>
+                        <button
+                          className={styles.customerCreatePrimary}
+                          disabled={createCustomerMutation.isPending}
+                          type="button"
+                          onClick={() => void handleCreateCustomer()}
+                        >
+                          {createCustomerMutation.isPending
+                            ? copy.updating
+                            : copy.saveCustomer}
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
 
                 {showDiscount ? (
                   <div className={styles.discountBox}>
