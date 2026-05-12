@@ -34,6 +34,7 @@ import { routePaths } from "@/routes/route-paths";
 import { AppIcon } from "@/shared/components/icons/AppIcon";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
+import { toDateInputValue } from "@/shared/utils/date-input";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import styles from "./CashRegisterRetailPage.module.css";
@@ -81,15 +82,6 @@ const ledgerTabs: Array<{ id: LedgerTab; label: string }> = [
   { id: "receivables", label: "Por cobrar" },
   { id: "payables", label: "Por pagar" },
 ];
-
-function toDateInputValue(value: string | Date) {
-  const date = new Date(value);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
 
 function addDays(date: Date, days: number) {
   const nextDate = new Date(date);

@@ -183,13 +183,14 @@ export function QuotesPage() {
 
       setSelectedQuotationId(updatedQuotation.id);
       closeCreateDrawer();
-      return;
+      return updatedQuotation;
     }
 
     const createdQuotation = await createMutation.mutateAsync(input);
 
     setSelectedQuotationId(createdQuotation.id);
     closeCreateDrawer();
+    return createdQuotation;
   }
 
   async function handleDeleteQuotation() {

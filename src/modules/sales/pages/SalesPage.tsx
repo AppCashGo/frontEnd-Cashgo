@@ -18,6 +18,7 @@ import { useSaleCart } from '@/modules/sales/hooks/use-sale-cart'
 import type { SalePaymentMethod } from '@/modules/sales/types/sale'
 import { routePaths } from '@/routes/route-paths'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
+import { getTodayDateInput } from '@/shared/utils/date-input'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './SalesPage.module.css'
@@ -73,10 +74,6 @@ function normalizeOptionalText(value: string) {
   const trimmedValue = value.trim()
 
   return trimmedValue.length > 0 ? trimmedValue : undefined
-}
-
-function getTodayDateInput() {
-  return new Date().toISOString().slice(0, 10)
 }
 
 function StandardSalesPage() {

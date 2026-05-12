@@ -34,6 +34,7 @@ import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-
 import { routePaths } from '@/routes/route-paths'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
+import { getTodayDateInput } from '@/shared/utils/date-input'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -170,10 +171,6 @@ const productSortSections: Array<{
     ],
   },
 ]
-
-function getTodayDateInput() {
-  return new Date().toISOString().slice(0, 10)
-}
 
 function createDefaultQuickSaleState(): QuickSaleFormState {
   return {
