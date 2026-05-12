@@ -62,6 +62,8 @@ const dictionary = {
     view: "Ver detalle",
     createTitle: "Nueva cotización",
     editTitle: "Editar cotización",
+    backToQuotes: "Volver a cotizaciones",
+    loadingCreate: "Preparando nueva cotización...",
     drawerDescription:
       "Agrega productos o servicios, define su vigencia y guarda una propuesta lista para compartir.",
     createWithProductsTitle: "Cotizar productos",
@@ -236,6 +238,8 @@ const dictionary = {
     view: "View details",
     createTitle: "New quote",
     editTitle: "Edit quote",
+    backToQuotes: "Back to quotes",
+    loadingCreate: "Preparing new quote...",
     drawerDescription:
       "Add products or services, define validity, and save a proposal ready to share.",
     createWithProductsTitle: "Quote products",

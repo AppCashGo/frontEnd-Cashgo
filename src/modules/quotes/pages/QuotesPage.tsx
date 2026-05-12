@@ -1,10 +1,7 @@
 import { useDeferredValue, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ConvertQuotationDrawer } from "@/modules/quotes/components/ConvertQuotationDrawer";
-import {
-  CreateQuotationDrawer,
-  type QuotationCreationMode,
-} from "@/modules/quotes/components/CreateQuotationDrawer";
-import { CreateQuotationModeDrawer } from "@/modules/quotes/components/CreateQuotationModeDrawer";
+import { QuotationFormWorkspace } from "@/modules/quotes/components/QuotationFormWorkspace";
 import { QuotationDetailDrawer } from "@/modules/quotes/components/QuotationDetailDrawer";
 import {
   getQuotesCopy,
@@ -14,7 +11,6 @@ import {
   useAcceptQuotationMutation,
   useCancelQuotationMutation,
   useConvertQuotationMutation,
-  useCreateQuotationMutation,
   useDeleteQuotationMutation,
   useDownloadQuotationDocumentMutation,
   useQuotationDetailQuery,
@@ -39,6 +35,7 @@ import {
 import { useCurrentCashRegisterQuery } from "@/modules/cash-register/hooks/use-cash-register-query";
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
 import { useProductsQuery } from "@/modules/products/hooks/use-products-query";
+import { routePaths } from "@/routes/route-paths";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import { RetailPremiumBanner } from "@/shared/components/retail/RetailPremiumBanner";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
@@ -89,6 +86,7 @@ function downloadBlobFile(blob: Blob, filename: string) {
 
 export function QuotesPage() {
   const { languageCode } = useAppTranslation();
+  const navigate = useNavigate();
   const copy = getQuotesCopy(languageCode);
   const [searchValue, setSearchValue] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
@@ -97,10 +95,7 @@ export function QuotesPage() {
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(
     null,
   );
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isModeDrawerOpen, setIsModeDrawerOpen] = useState(false);
-  const [creationMode, setCreationMode] =
-    useState<QuotationCreationMode>("products");
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingQuotation, setEditingQuotation] =
     useState<QuotationDetail | null>(null);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
@@ -119,7 +114,6 @@ export function QuotesPage() {
   const customersQuery = useCustomersQuery();
   const productsQuery = useProductsQuery();
   const currentCashRegisterQuery = useCurrentCashRegisterQuery();
-  const createMutation = useCreateQuotationMutation();
   const updateMutation = useUpdateQuotationMutation();
   const deleteMutation = useDeleteQuotationMutation();
   const sendMutation = useSendQuotationMutation();
@@ -134,7 +128,6 @@ export function QuotesPage() {
   const selectedQuotation = detailQuery.data ?? null;
   const currentCashRegister = currentCashRegisterQuery.data ?? null;
   const isWorking =
-    createMutation.isPending ||
     updateMutation.isPending ||
     deleteMutation.isPending ||
     sendMutation.isPending ||
@@ -158,11 +151,9 @@ export function QuotesPage() {
     setActionError(null);
   }
 
-  function openCreateDrawer() {
+  function openCreatePage() {
     clearActionError();
-    setEditingQuotation(null);
-    setCreationMode("products");
-    setIsModeDrawerOpen(true);
+    navigate(routePaths.quoteNew);
   }
 
   function openEditDrawer() {
@@ -172,40 +163,29 @@ export function QuotesPage() {
 
     clearActionError();
     setEditingQuotation(selectedQuotation);
-    setCreationMode("products");
-    setIsFormOpen(true);
+    setIsEditOpen(true);
   }
 
-  function closeCreateDrawer() {
-    setIsFormOpen(false);
+  function closeEditDrawer() {
+    setIsEditOpen(false);
     setEditingQuotation(null);
   }
 
-  function handleSelectCreationMode(mode: QuotationCreationMode) {
-    setCreationMode(mode);
-    setIsModeDrawerOpen(false);
-    setIsFormOpen(true);
-  }
-
-  async function handleCreateOrUpdateQuotation(input: CreateQuotationInput) {
+  async function handleUpdateQuotation(input: CreateQuotationInput) {
     clearActionError();
 
-    if (editingQuotation) {
-      const updatedQuotation = await updateMutation.mutateAsync({
-        quotationId: editingQuotation.id,
-        input,
-      });
-
-      setSelectedQuotationId(updatedQuotation.id);
-      closeCreateDrawer();
-      return updatedQuotation;
+    if (!editingQuotation) {
+      throw new Error(copy.actionError);
     }
 
-    const createdQuotation = await createMutation.mutateAsync(input);
+    const updatedQuotation = await updateMutation.mutateAsync({
+      quotationId: editingQuotation.id,
+      input,
+    });
 
-    setSelectedQuotationId(createdQuotation.id);
-    closeCreateDrawer();
-    return createdQuotation;
+    setSelectedQuotationId(updatedQuotation.id);
+    closeEditDrawer();
+    return updatedQuotation;
   }
 
   async function handleDeleteQuotation() {
@@ -380,7 +360,7 @@ export function QuotesPage() {
           <button
             className={retailStyles.buttonDark}
             type="button"
-            onClick={openCreateDrawer}
+            onClick={openCreatePage}
           >
             {copy.createButton}
           </button>
@@ -541,23 +521,16 @@ export function QuotesPage() {
         </div>
       </section>
 
-      <CreateQuotationDrawer
+      <QuotationFormWorkspace
         customers={customers}
-        initialMode={creationMode}
-        isOpen={isFormOpen}
-        isSubmitting={createMutation.isPending || updateMutation.isPending}
+        initialMode="products"
+        isOpen={isEditOpen}
+        isSubmitting={updateMutation.isPending}
         languageCode={languageCode}
         products={products}
         quotation={editingQuotation}
-        onClose={closeCreateDrawer}
-        onSubmit={handleCreateOrUpdateQuotation}
-      />
-
-      <CreateQuotationModeDrawer
-        isOpen={isModeDrawerOpen}
-        languageCode={languageCode}
-        onClose={() => setIsModeDrawerOpen(false)}
-        onSelectMode={handleSelectCreationMode}
+        onClose={closeEditDrawer}
+        onSubmit={handleUpdateQuotation}
       />
 
       <QuotationDetailDrawer

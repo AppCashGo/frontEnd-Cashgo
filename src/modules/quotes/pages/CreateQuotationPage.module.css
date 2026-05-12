@@ -1,0 +1,138 @@
+.page {
+  display: grid;
+  gap: 1rem;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.backButton {
+  min-height: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.85rem;
+  border: 1px solid #c8d2df;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #1f2937;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.modeHero {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.modeHero h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: clamp(1.7rem, 2vw + 1rem, 2.35rem);
+  font-weight: 900;
+}
+
+.modeHero p {
+  max-width: 44rem;
+  margin: 0;
+  color: #607084;
+  line-height: 1.55;
+}
+
+.modeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.modeCard {
+  min-height: 9rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.2rem;
+  border: 1px solid #c8d2df;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #1f2937;
+  text-decoration: none;
+}
+
+.modeCard:hover,
+.modeCard:focus-visible {
+  border-color: #1f2937;
+  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.1);
+  outline: none;
+}
+
+.modeIcon {
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.6rem;
+  background: #f1f5f9;
+  color: #1f2937;
+}
+
+.modeCopy {
+  min-width: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+
+.modeCopy strong {
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.modeCopy span {
+  color: #607084;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.feedbackPanel {
+  min-height: 18rem;
+  display: grid;
+  place-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  border: 1px solid #d8e0ea;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #607084;
+  text-align: center;
+}
+
+.feedbackPanel strong {
+  color: #1f2937;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.errorBanner {
+  padding: 0.95rem 1rem;
+  border-radius: 0.75rem;
+  background: #ffe8e5;
+  color: #c03f34;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .modeGrid {
+    grid-template-columns: 1fr;
+  }
+}

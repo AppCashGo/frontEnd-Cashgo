@@ -12,6 +12,63 @@
   background: #ffffff;
 }
 
+.pageShell {
+  min-height: calc(100dvh - 8rem);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid #d8e0ea;
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.pageHeader {
+  min-height: 4.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border-bottom: 1px solid #e5ebf3;
+  background: #ffffff;
+}
+
+.pageHeader div {
+  min-width: 0;
+  display: grid;
+  gap: 0.18rem;
+}
+
+.pageHeader span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.pageHeader h2 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.pageCloseButton {
+  min-height: 2.35rem;
+  padding: 0 0.85rem;
+  border: 1px solid #c8d2df;
+  border-radius: 0.5rem;
+  background: #ffffff;
+  color: #1f2937;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.pageBody {
+  min-height: 0;
+  overflow: hidden;
+  background: #ffffff;
+}
+
 .workspace {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(22rem, 27vw);
@@ -775,6 +832,15 @@
 }
 
 @media (max-width: 640px) {
+  .pageShell {
+    min-height: calc(100dvh - 6.5rem);
+    border-radius: 0.5rem;
+  }
+
+  .pageHeader {
+    align-items: flex-start;
+  }
+
   .catalogArea,
   .sideContent,
   .sideHeader,

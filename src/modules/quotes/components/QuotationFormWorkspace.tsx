@@ -46,18 +46,21 @@ import {
   toDateInputValue as toLocalDateInputValue,
 } from "@/shared/utils/date-input";
 import { joinClassNames } from "@/shared/utils/join-class-names";
-import styles from "./CreateQuotationDrawer.module.css";
+import styles from "./QuotationFormWorkspace.module.css";
 
 export type QuotationCreationMode = "products" | "free";
 
-type CreateQuotationDrawerProps = {
+type QuotationFormPresentation = "drawer" | "page";
+
+type QuotationFormWorkspaceProps = {
   languageCode: AppLanguageCode;
   customers: CustomerSummary[];
   products: Product[];
   quotation: QuotationDetail | null;
-  isOpen: boolean;
+  isOpen?: boolean;
   isSubmitting: boolean;
   initialMode?: QuotationCreationMode;
+  presentation?: QuotationFormPresentation;
   onClose: () => void;
   onSubmit: (input: CreateQuotationInput) => Promise<QuotationDetail>;
 };
@@ -345,17 +348,18 @@ function getProductCategoryId(product: Product) {
   return product.categoryId ?? noCategoryId;
 }
 
-export function CreateQuotationDrawer({
+export function QuotationFormWorkspace({
   languageCode,
   customers,
   products,
   quotation,
-  isOpen,
+  isOpen = true,
   isSubmitting,
   initialMode = "products",
+  presentation = "drawer",
   onClose,
   onSubmit,
-}: CreateQuotationDrawerProps) {
+}: QuotationFormWorkspaceProps) {
   const copy = getQuotesCopy(languageCode);
   const navigate = useNavigate();
   const categoriesQuery = useInventoryCategoriesQuery();
@@ -884,6 +888,55 @@ export function CreateQuotationDrawer({
   }
 
   if (step === "success" && createdQuotation) {
+    const successContent = (
+      <section className={styles.successPanel}>
+        <CheckCircle2
+          aria-hidden="true"
+          className={styles.successIcon}
+          size={62}
+          strokeWidth={2.4}
+        />
+        <h3>{copy.successTitle}</h3>
+        <p>{copy.successDescription}</p>
+
+        <div className={styles.receiptCard}>
+          <strong>{copy.receiptTitle}</strong>
+          <span>{copy.receiptDescription}</span>
+          <button type="button" onClick={handlePrintCreatedReceipt}>
+            <Printer size={18} strokeWidth={2.4} />
+            {copy.printReceipt}
+          </button>
+          <button type="button" onClick={() => void handleDownloadCreatedReceipt()}>
+            {copy.downloadReceipt}
+          </button>
+          <button type="button" onClick={() => void handleShareCreatedReceipt()}>
+            {copy.shareReceipt}
+          </button>
+        </div>
+      </section>
+    );
+
+    if (presentation === "page") {
+      return (
+        <section className={styles.pageShell}>
+          <header className={styles.pageHeader}>
+            <div>
+              <span>{copy.createTitle}</span>
+              <h2>{copy.successTitle}</h2>
+            </div>
+            <button
+              className={styles.pageCloseButton}
+              type="button"
+              onClick={handleClose}
+            >
+              {copy.backToQuotes}
+            </button>
+          </header>
+          <div className={styles.pageBody}>{successContent}</div>
+        </section>
+      );
+    }
+
     return (
       <CashRegisterRetailDrawer
         bodyClassName={styles.successBody}
@@ -891,52 +944,18 @@ export function CreateQuotationDrawer({
         title={copy.createTitle}
         onClose={handleClose}
       >
-        <section className={styles.successPanel}>
-          <CheckCircle2
-            aria-hidden="true"
-            className={styles.successIcon}
-            size={62}
-            strokeWidth={2.4}
-          />
-          <h3>{copy.successTitle}</h3>
-          <p>{copy.successDescription}</p>
-
-          <div className={styles.receiptCard}>
-            <strong>{copy.receiptTitle}</strong>
-            <span>{copy.receiptDescription}</span>
-            <button type="button" onClick={handlePrintCreatedReceipt}>
-              <Printer size={18} strokeWidth={2.4} />
-              {copy.printReceipt}
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleDownloadCreatedReceipt()}
-            >
-              {copy.downloadReceipt}
-            </button>
-            <button type="button" onClick={() => void handleShareCreatedReceipt()}>
-              {copy.shareReceipt}
-            </button>
-          </div>
-        </section>
+        {successContent}
       </CashRegisterRetailDrawer>
     );
   }
 
-  return (
-    <CashRegisterRetailDrawer
-      bodyClassName={styles.workspaceBody}
-      isOpen={isOpen}
-      panelClassName={styles.workspacePanel}
-      title={quotation ? copy.editTitle : copy.createTitle}
-      onClose={handleClose}
+  const workspaceContent = (
+    <form
+      id={formId}
+      className={styles.workspace}
+      noValidate
+      onSubmit={submitQuotation}
     >
-      <form
-        id={formId}
-        className={styles.workspace}
-        noValidate
-        onSubmit={submitQuotation}
-      >
         <section className={styles.catalogArea}>
           {mode === "products" ? (
             <>
@@ -1332,7 +1351,43 @@ export function CreateQuotationDrawer({
             </>
           )}
         </aside>
-      </form>
+    </form>
+  );
+
+  if (presentation === "page") {
+    return (
+      <section className={styles.pageShell}>
+        <header className={styles.pageHeader}>
+          <div>
+            <span>
+              {mode === "free"
+                ? copy.createFreeTitle
+                : copy.createWithProductsTitle}
+            </span>
+            <h2>{copy.createTitle}</h2>
+          </div>
+          <button
+            className={styles.pageCloseButton}
+            type="button"
+            onClick={handleClose}
+          >
+            {copy.cancelAction}
+          </button>
+        </header>
+        <div className={styles.pageBody}>{workspaceContent}</div>
+      </section>
+    );
+  }
+
+  return (
+    <CashRegisterRetailDrawer
+      bodyClassName={styles.workspaceBody}
+      isOpen={isOpen}
+      panelClassName={styles.workspacePanel}
+      title={quotation ? copy.editTitle : copy.createTitle}
+      onClose={handleClose}
+    >
+      {workspaceContent}
     </CashRegisterRetailDrawer>
   );
 }

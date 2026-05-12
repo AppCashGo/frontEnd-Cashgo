@@ -89,6 +89,12 @@ const QuotesPage = lazy(() =>
   })),
 );
 
+const CreateQuotationPage = lazy(() =>
+  import("@/modules/quotes/pages/CreateQuotationPage").then((module) => ({
+    default: module.CreateQuotationPage,
+  })),
+);
+
 const PublicQuotationPage = lazy(() =>
   import("@/modules/quotes/pages/PublicQuotationPage").then((module) => ({
     default: module.PublicQuotationPage,
@@ -243,6 +249,24 @@ export const appRouter = createBrowserRouter([
               <QuotesPage />,
               "Cargando cotizaciones",
               "Preparando seguimiento comercial y cotizaciones.",
+            ),
+          },
+          {
+            path: `${routeSegments.quotes}/new`,
+            element: withModuleRouteSuspense(
+              routeSegments.quotes,
+              <CreateQuotationPage />,
+              "Cargando nueva cotización",
+              "Preparando el flujo de creación de cotizaciones.",
+            ),
+          },
+          {
+            path: `${routeSegments.quotes}/new/:mode`,
+            element: withModuleRouteSuspense(
+              routeSegments.quotes,
+              <CreateQuotationPage />,
+              "Cargando nueva cotización",
+              "Preparando el flujo de creación de cotizaciones.",
             ),
           },
           {
