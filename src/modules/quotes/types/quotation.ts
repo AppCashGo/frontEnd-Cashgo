@@ -23,6 +23,7 @@ export type QuotationCustomer = {
 export type QuotationItem = {
   id: string;
   productId: string | null;
+  productCode: string | null;
   name: string;
   description: string | null;
   quantity: number;

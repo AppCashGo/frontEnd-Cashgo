@@ -123,7 +123,11 @@ export function getQuotationConceptLabel(
   },
   languageCode: AppLanguageCode,
 ) {
-  const firstItemName = quotation.concept ?? quotation.items?.[0]?.name;
+  if (quotation.concept) {
+    return quotation.concept;
+  }
+
+  const firstItemName = quotation.items?.[0]?.name;
 
   if (!firstItemName) {
     return languageCode === "en" ? "No concept" : "Sin concepto";

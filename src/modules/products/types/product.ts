@@ -12,9 +12,24 @@ export const productUnits = [
 
 export type ProductUnit = (typeof productUnits)[number];
 
+export type ProductType = "BASIC" | "VARIANT_PARENT" | "VARIANT";
+
+export type ProductVariantInput = {
+  name: string;
+  sku?: string;
+  barcode?: string;
+  cost: number;
+  price: number;
+  stock: number;
+  minStock?: number;
+};
+
 export type Product = {
   id: string;
   categoryId: string | null;
+  parentProductId: string | null;
+  productType: ProductType;
+  variantName: string | null;
   name: string;
   description: string | null;
   sku: string | null;
@@ -47,6 +62,7 @@ export type ProductMutationInput = {
   unit?: ProductUnit;
   isActive?: boolean;
   isVisibleInCatalog?: boolean;
+  variants?: ProductVariantInput[];
 };
 
 export type ProductImportRowInput = ProductMutationInput & {

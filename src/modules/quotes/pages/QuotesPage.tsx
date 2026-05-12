@@ -1,6 +1,10 @@
 import { useDeferredValue, useMemo, useState } from "react";
 import { ConvertQuotationDrawer } from "@/modules/quotes/components/ConvertQuotationDrawer";
-import { CreateQuotationDrawer } from "@/modules/quotes/components/CreateQuotationDrawer";
+import {
+  CreateQuotationDrawer,
+  type QuotationCreationMode,
+} from "@/modules/quotes/components/CreateQuotationDrawer";
+import { CreateQuotationModeDrawer } from "@/modules/quotes/components/CreateQuotationModeDrawer";
 import { QuotationDetailDrawer } from "@/modules/quotes/components/QuotationDetailDrawer";
 import {
   getQuotesCopy,
@@ -94,6 +98,9 @@ export function QuotesPage() {
     null,
   );
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isModeDrawerOpen, setIsModeDrawerOpen] = useState(false);
+  const [creationMode, setCreationMode] =
+    useState<QuotationCreationMode>("products");
   const [editingQuotation, setEditingQuotation] =
     useState<QuotationDetail | null>(null);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
@@ -154,7 +161,8 @@ export function QuotesPage() {
   function openCreateDrawer() {
     clearActionError();
     setEditingQuotation(null);
-    setIsFormOpen(true);
+    setCreationMode("products");
+    setIsModeDrawerOpen(true);
   }
 
   function openEditDrawer() {
@@ -164,12 +172,19 @@ export function QuotesPage() {
 
     clearActionError();
     setEditingQuotation(selectedQuotation);
+    setCreationMode("products");
     setIsFormOpen(true);
   }
 
   function closeCreateDrawer() {
     setIsFormOpen(false);
     setEditingQuotation(null);
+  }
+
+  function handleSelectCreationMode(mode: QuotationCreationMode) {
+    setCreationMode(mode);
+    setIsModeDrawerOpen(false);
+    setIsFormOpen(true);
   }
 
   async function handleCreateOrUpdateQuotation(input: CreateQuotationInput) {
@@ -296,7 +311,7 @@ export function QuotesPage() {
 
       downloadBlobFile(
         blob,
-        filename ?? `${selectedQuotation.fullNumber.toLowerCase()}.html`,
+        filename ?? `${selectedQuotation.fullNumber.toLowerCase()}.pdf`,
       );
     } catch (error) {
       setActionError(getErrorMessage(error, copy.actionError));
@@ -322,7 +337,10 @@ export function QuotesPage() {
         languageCode,
         publicUrl,
       );
-      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+      const customerPhone = quotationForShare.customer?.phone?.replace(/\D/g, "");
+      const whatsappUrl = customerPhone
+        ? `https://wa.me/${customerPhone}?text=${encodeURIComponent(text)}`
+        : `https://wa.me/?text=${encodeURIComponent(text)}`;
 
       window.open(whatsappUrl, "_blank", "noopener,noreferrer");
     } catch (error) {
@@ -525,6 +543,7 @@ export function QuotesPage() {
 
       <CreateQuotationDrawer
         customers={customers}
+        initialMode={creationMode}
         isOpen={isFormOpen}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
         languageCode={languageCode}
@@ -532,6 +551,13 @@ export function QuotesPage() {
         quotation={editingQuotation}
         onClose={closeCreateDrawer}
         onSubmit={handleCreateOrUpdateQuotation}
+      />
+
+      <CreateQuotationModeDrawer
+        isOpen={isModeDrawerOpen}
+        languageCode={languageCode}
+        onClose={() => setIsModeDrawerOpen(false)}
+        onSelectMode={handleSelectCreationMode}
       />
 
       <QuotationDetailDrawer

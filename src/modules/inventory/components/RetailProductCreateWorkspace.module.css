@@ -520,6 +520,52 @@
   color: #1f2a37;
 }
 
+.variantRows {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.variantEmpty {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed #c8d4e3;
+  border-radius: 0.85rem;
+  color: #63758d;
+  background: #f8fafc;
+}
+
+.variantRow {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid #d7e0ec;
+  border-radius: 0.95rem;
+  background: #ffffff;
+}
+
+.variantRowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.variantRemoveButton {
+  min-height: 2.35rem;
+  border: 1px solid #f2b8b5;
+  border-radius: 0.75rem;
+  background: #fff4f3;
+  color: #c2413a;
+  font-weight: 800;
+  padding: 0.45rem 0.75rem;
+}
+
+.variantGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
 .categoryDrawerBackdrop {
   position: fixed;
   inset: 0;
@@ -778,6 +824,10 @@
   }
 
   .gridTwo {
+    grid-template-columns: 1fr;
+  }
+
+  .variantGrid {
     grid-template-columns: 1fr;
   }
 

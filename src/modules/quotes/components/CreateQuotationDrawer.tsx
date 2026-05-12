@@ -17,6 +17,7 @@ import { useFieldArray, useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
 import { useInventoryCategoriesQuery } from "@/modules/inventory/hooks/use-inventory-query";
+import { downloadQuotationDocument } from "@/modules/quotes/services/quotations-api";
 import { getQuotesCopy } from "@/modules/quotes/i18n/quotes-copy";
 import {
   getQuotationFormSchema,
@@ -214,8 +215,7 @@ function openPrintableDocument(html: string) {
   printWindow.print();
 }
 
-function downloadHtmlFile(html: string, filename: string) {
-  const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+function downloadBlobFile(blob: Blob, filename: string) {
   const downloadUrl = URL.createObjectURL(blob);
   const linkElement = document.createElement("a");
 
@@ -610,14 +610,18 @@ export function CreateQuotationDrawer({
     openPrintableDocument(buildCreatedReceiptHtml(createdQuotation));
   }
 
-  function handleDownloadCreatedReceipt() {
+  async function handleDownloadCreatedReceipt() {
     if (!createdQuotation) {
       return;
     }
 
-    downloadHtmlFile(
-      buildCreatedReceiptHtml(createdQuotation),
-      `${createdQuotation.fullNumber.toLowerCase()}.html`,
+    const { blob, filename } = await downloadQuotationDocument(
+      createdQuotation.id,
+    );
+
+    downloadBlobFile(
+      blob,
+      filename ?? `${createdQuotation.fullNumber.toLowerCase()}.pdf`,
     );
   }
 
@@ -851,7 +855,10 @@ export function CreateQuotationDrawer({
               <Printer size={18} strokeWidth={2.4} />
               {copy.printReceipt}
             </button>
-            <button type="button" onClick={handleDownloadCreatedReceipt}>
+            <button
+              type="button"
+              onClick={() => void handleDownloadCreatedReceipt()}
+            >
               {copy.downloadReceipt}
             </button>
             <button type="button" onClick={() => void handleShareCreatedReceipt()}>

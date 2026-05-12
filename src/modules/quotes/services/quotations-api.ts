@@ -109,7 +109,7 @@ export function convertQuotationToSale(
 
 export function downloadQuotationDocument(quotationId: string) {
   return getBlob(`/quotations/${quotationId}/pdf`, {
-    accept: "text/html",
+    accept: "application/pdf",
   });
 }
 
@@ -143,7 +143,7 @@ export function rejectPublicQuotation(publicToken: string) {
 
 export function downloadPublicQuotationDocument(publicToken: string) {
   return getBlob(`/quotations/public/${publicToken}/pdf`, {
-    accept: "text/html",
+    accept: "application/pdf",
     ...publicRequestOptions,
   });
 }

@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useFieldArray, useForm } from "react-hook-form";
 import {
   useCreateProductMutation,
   useDeleteProductMutation,
@@ -135,6 +135,7 @@ function getDefaultValues(product?: Product | null): RetailProductCreateValues {
       description: "",
       taxOptionId: "ninguno",
       isVisibleInCatalog: true,
+      variants: [],
     };
   }
 
@@ -157,6 +158,7 @@ function getDefaultValues(product?: Product | null): RetailProductCreateValues {
     description: product.description ?? "",
     taxOptionId: matchingTaxOption.id,
     isVisibleInCatalog: product.isVisibleInCatalog,
+    variants: [],
   };
 }
 
@@ -567,6 +569,7 @@ export function RetailProductCreateWorkspace({
     null,
   );
   const {
+    control,
     register,
     handleSubmit,
     watch,
@@ -578,6 +581,14 @@ export function RetailProductCreateWorkspace({
     resolver: zodResolver(retailProductCreateSchema),
     defaultValues: getDefaultValues(),
     mode: "onChange",
+  });
+  const {
+    fields: variantFields,
+    append: appendVariant,
+    remove: removeVariant,
+  } = useFieldArray({
+    control,
+    name: "variants",
   });
   const isVisibleInCatalog = watch("isVisibleInCatalog");
   const selectedCategoryId = watch("categoryId") ?? "";
@@ -739,17 +750,41 @@ export function RetailProductCreateWorkspace({
   }
 
   async function handlePersistProduct(values: RetailProductCreateValues) {
+    const normalizedVariants = (values.variants ?? []).map((variant) => ({
+      name: variant.name.trim(),
+      sku: normalizeOptionalText(variant.sku),
+      barcode: normalizeOptionalText(variant.barcode),
+      stock: variant.stock,
+      minStock: variant.minStock,
+      price: variant.price,
+      cost: variant.cost,
+    }));
+
+    if (activeTab === "variants" && normalizedVariants.length === 0) {
+      setError("root", {
+        message: "Agrega al menos una variante para crear este producto.",
+      });
+      return;
+    }
+
     const selectedTaxOption =
       inventoryTaxOptions.find((option) => option.id === values.taxOptionId) ??
       inventoryTaxOptions[inventoryTaxOptions.length - 1];
+    const firstVariant = normalizedVariants[0];
 
     const input: ProductMutationInput = {
       barcode: normalizeOptionalText(values.barcode),
       name: values.name.trim(),
-      stock: values.stock,
-      minStock: values.minStock,
-      price: values.price,
-      cost: values.cost,
+      stock:
+        activeTab === "variants"
+          ? normalizedVariants.reduce(
+              (total, variant) => total + variant.stock,
+              0,
+            )
+          : values.stock,
+      minStock: activeTab === "variants" ? 0 : values.minStock,
+      price: activeTab === "variants" ? (firstVariant?.price ?? 0) : values.price,
+      cost: activeTab === "variants" ? (firstVariant?.cost ?? 0) : values.cost,
       unit: saleUnit,
       categoryId: normalizeOptionalRelationId(values.categoryId),
       description: normalizeOptionalText(values.description),
@@ -757,6 +792,7 @@ export function RetailProductCreateWorkspace({
         selectedTaxOption.rate > 0 ? selectedTaxOption.label : undefined,
       taxRate: selectedTaxOption.rate,
       isVisibleInCatalog: values.isVisibleInCatalog,
+      variants: activeTab === "variants" ? normalizedVariants : undefined,
     };
 
     try {
@@ -1092,8 +1128,18 @@ export function RetailProductCreateWorkspace({
                   <div className={styles.variantsActions}>
                     <button
                       className={styles.variantPrimaryButton}
-                      disabled
                       type="button"
+                      onClick={() =>
+                        appendVariant({
+                          name: "",
+                          sku: "",
+                          barcode: "",
+                          stock: 0,
+                          minStock: 0,
+                          price: 0,
+                          cost: 0,
+                        })
+                      }
                     >
                       {copy.addVariant}
                     </button>
@@ -1103,6 +1149,124 @@ export function RetailProductCreateWorkspace({
                     >
                       {copy.variantsHelp}
                     </button>
+                  </div>
+
+                  <div className={styles.variantRows}>
+                    {variantFields.length === 0 ? (
+                      <p className={styles.variantEmpty}>
+                        {copy.variantsEmpty}
+                      </p>
+                    ) : (
+                      variantFields.map((field, index) => (
+                        <article className={styles.variantRow} key={field.id}>
+                          <div className={styles.variantRowHeader}>
+                            <strong>
+                              {copy.variantLabel} {index + 1}
+                            </strong>
+                            <button
+                              className={styles.variantRemoveButton}
+                              type="button"
+                              onClick={() => removeVariant(index)}
+                            >
+                              {copy.removeVariant}
+                            </button>
+                          </div>
+
+                          <div className={styles.variantGrid}>
+                            <label className={styles.field}>
+                              <span className={styles.label}>
+                                {copy.variantName}
+                                <span className={styles.required}>*</span>
+                              </span>
+                              <input
+                                className={styles.input}
+                                placeholder={copy.variantNamePlaceholder}
+                                type="text"
+                                {...register(`variants.${index}.name` as const)}
+                              />
+                              {errors.variants?.[index]?.name ? (
+                                <p className={styles.error}>
+                                  {errors.variants[index]?.name?.message}
+                                </p>
+                              ) : null}
+                            </label>
+
+                            <label className={styles.field}>
+                              <span className={styles.label}>SKU</span>
+                              <input
+                                className={styles.input}
+                                type="text"
+                                {...register(`variants.${index}.sku` as const)}
+                              />
+                            </label>
+
+                            <label className={styles.field}>
+                              <span className={styles.label}>Codigo</span>
+                              <input
+                                className={styles.input}
+                                type="text"
+                                {...register(
+                                  `variants.${index}.barcode` as const,
+                                )}
+                              />
+                            </label>
+
+                            <label className={styles.field}>
+                              <span className={styles.label}>
+                                {copy.availableQuantityUnit}
+                              </span>
+                              <input
+                                className={styles.input}
+                                min="0"
+                                type="number"
+                                {...register(`variants.${index}.stock` as const)}
+                              />
+                            </label>
+
+                            <label className={styles.field}>
+                              <span className={styles.label}>
+                                Cantidad minima
+                              </span>
+                              <input
+                                className={styles.input}
+                                min="0"
+                                type="number"
+                                {...register(
+                                  `variants.${index}.minStock` as const,
+                                )}
+                              />
+                            </label>
+
+                            <label className={styles.field}>
+                              <span className={styles.label}>
+                                Precio de venta
+                                <span className={styles.required}>*</span>
+                              </span>
+                              <input
+                                className={styles.input}
+                                min="0"
+                                step="0.01"
+                                type="number"
+                                {...register(`variants.${index}.price` as const)}
+                              />
+                            </label>
+
+                            <label className={styles.field}>
+                              <span className={styles.label}>
+                                Costo de compra
+                              </span>
+                              <input
+                                className={styles.input}
+                                min="0"
+                                step="0.01"
+                                type="number"
+                                {...register(`variants.${index}.cost` as const)}
+                              />
+                            </label>
+                          </div>
+                        </article>
+                      ))
+                    )}
                   </div>
                 </div>
 

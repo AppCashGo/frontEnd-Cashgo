@@ -81,7 +81,7 @@ export function PublicQuotationPage() {
 
       downloadBlobFile(
         blob,
-        filename ?? `${quotation.fullNumber.toLowerCase()}.html`,
+        filename ?? `${quotation.fullNumber.toLowerCase()}.pdf`,
       );
     } catch (error) {
       setActionError(getErrorMessage(error, copy.publicResponseError));

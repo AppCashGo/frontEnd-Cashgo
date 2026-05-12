@@ -6,21 +6,21 @@ const statusLabelMap: Record<
   Record<QuotationStatus, string>
 > = {
   es: {
-    DRAFT: "Borrador",
+    DRAFT: "Creada",
     SENT: "Enviada",
     ACCEPTED: "Aceptada",
     REJECTED: "Rechazada",
     EXPIRED: "Vencida",
-    CONVERTED: "Convertida",
+    CONVERTED: "Vendida",
     CANCELLED: "Cancelada",
   },
   en: {
-    DRAFT: "Draft",
+    DRAFT: "Created",
     SENT: "Sent",
     ACCEPTED: "Accepted",
     REJECTED: "Rejected",
     EXPIRED: "Expired",
-    CONVERTED: "Converted",
+    CONVERTED: "Sold",
     CANCELLED: "Cancelled",
   },
 };

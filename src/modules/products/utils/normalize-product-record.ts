@@ -4,10 +4,11 @@ import { normalizeNumber } from "@/shared/utils/normalize-number";
 
 export type ProductApiRecord = Omit<
   Product,
-  "id" | "categoryId" | "price" | "cost"
+  "id" | "categoryId" | "parentProductId" | "price" | "cost"
 > & {
   id: number | string;
   categoryId: number | string | null;
+  parentProductId?: number | string | null;
   cost: number | string;
   price: number | string;
   taxRate: number | string;
@@ -18,6 +19,9 @@ export function normalizeProductRecord(record: ProductApiRecord): Product {
     ...record,
     id: normalizeId(record.id),
     categoryId: normalizeOptionalId(record.categoryId),
+    parentProductId: normalizeOptionalId(record.parentProductId ?? null),
+    productType: record.productType ?? "BASIC",
+    variantName: record.variantName ?? null,
     description: record.description ?? null,
     sku: record.sku ?? null,
     barcode: record.barcode ?? null,
