@@ -43,7 +43,13 @@
   align-items: start;
 }
 
-.catalogColumn,
+.catalogColumn {
+  display: grid;
+  align-content: start;
+  gap: 1rem;
+  min-width: 0;
+}
+
 .checkoutColumn {
   min-width: 0;
 }
@@ -83,7 +89,6 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  margin-bottom: 0.85rem;
 }
 
 .iconButton {
@@ -105,7 +110,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 0.65rem;
-  margin-bottom: 1rem;
 }
 
 .filterChip,
@@ -266,9 +270,14 @@
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 0;
+  overflow: hidden;
   border: 1px solid rgba(192, 204, 218, 0.96);
   border-radius: 1rem;
   background: #ffffff;
+}
+
+.paymentPanel {
+  grid-template-rows: minmax(0, 1fr) auto;
 }
 
 .panelHeader {
@@ -309,6 +318,7 @@
   min-height: 0;
   padding: 1rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .cartList {
@@ -1377,17 +1387,30 @@
 }
 
 @media (min-width: 1100px) {
+  .page {
+    min-height: 100vh;
+  }
+
   .workspace {
-    grid-template-columns: minmax(0, 1fr) minmax(27rem, 0.48fr);
+    grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.48fr);
+    gap: 0;
+    align-items: stretch;
+    min-height: 100vh;
+  }
+
+  .catalogColumn {
+    padding: 1rem 1rem 1rem 0;
   }
 
   .checkoutColumn {
     position: sticky;
-    top: 1rem;
-    height: calc(100vh - 2rem);
-    align-self: start;
-    padding-left: 1rem;
+    top: 0;
+    height: 100vh;
+    align-self: stretch;
+    padding: 1rem;
+    overflow: hidden;
     border-left: 1px solid rgba(192, 204, 218, 0.96);
+    background: #ffffff;
     grid-template-rows: auto minmax(0, 1fr);
   }
 }

@@ -127,6 +127,7 @@ const paymentOptions: Array<{
 const paymentSplitOptions = ['1', '2', '3', '4', '5', '6', 'Otro'] as const
 type PaymentSplitOption = (typeof paymentSplitOptions)[number]
 const defaultSortOption: ProductSortOption = 'NAME_ASC'
+let cashRegisterAudioContext: AudioContext | null = null
 
 const productSortSections: Array<{
   title: string
@@ -338,7 +339,111 @@ function normalizeOptionalText(value: string) {
 }
 
 function getPaymentOptionLabel(option: RetailPaymentOption) {
-  return paymentOptions.find((paymentOption) => paymentOption.value === option)?.label ?? 'Efectivo'
+  return (
+    paymentOptions.find((paymentOption) => paymentOption.value === option)?.label ??
+    'Efectivo'
+  )
+}
+
+function getCashRegisterAudioContext() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  const audioWindow = window as Window & {
+    webkitAudioContext?: typeof AudioContext
+  }
+  const AudioContextConstructor =
+    (typeof AudioContext !== 'undefined' ? AudioContext : undefined) ??
+    audioWindow.webkitAudioContext
+
+  if (!AudioContextConstructor) {
+    return null
+  }
+
+  if (!cashRegisterAudioContext || cashRegisterAudioContext.state === 'closed') {
+    cashRegisterAudioContext = new AudioContextConstructor()
+  }
+
+  return cashRegisterAudioContext
+}
+
+function scheduleCashRegisterTone(
+  audioContext: AudioContext,
+  startTime: number,
+  frequency: number,
+  duration: number,
+  type: OscillatorType,
+  volume: number,
+) {
+  const oscillator = audioContext.createOscillator()
+  const gain = audioContext.createGain()
+
+  oscillator.type = type
+  oscillator.frequency.setValueAtTime(frequency, startTime)
+  gain.gain.setValueAtTime(0.0001, startTime)
+  gain.gain.exponentialRampToValueAtTime(volume, startTime + 0.01)
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration)
+
+  oscillator.connect(gain)
+  gain.connect(audioContext.destination)
+  oscillator.start(startTime)
+  oscillator.stop(startTime + duration + 0.03)
+}
+
+function prepareCashRegisterSound() {
+  const audioContext = getCashRegisterAudioContext()
+
+  if (!audioContext || audioContext.state !== 'suspended') {
+    return
+  }
+
+  void audioContext.resume().catch(() => undefined)
+}
+
+function playCashRegisterSound() {
+  const audioContext = getCashRegisterAudioContext()
+
+  if (!audioContext) {
+    return
+  }
+
+  const playSequence = () => {
+    const startTime = audioContext.currentTime + 0.02
+
+    scheduleCashRegisterTone(audioContext, startTime, 1568, 0.09, 'triangle', 0.08)
+    scheduleCashRegisterTone(
+      audioContext,
+      startTime + 0.08,
+      2093,
+      0.11,
+      'triangle',
+      0.07,
+    )
+    scheduleCashRegisterTone(
+      audioContext,
+      startTime + 0.18,
+      2637,
+      0.13,
+      'sine',
+      0.05,
+    )
+    scheduleCashRegisterTone(
+      audioContext,
+      startTime + 0.28,
+      130,
+      0.08,
+      'square',
+      0.045,
+    )
+  }
+
+  if (audioContext.state === 'suspended') {
+    void audioContext.resume().then(playSequence).catch(() => undefined)
+    return
+  }
+
+  playSequence()
 }
 
 function mapRetailPaymentOptionToSaleMethod(
@@ -1267,6 +1372,8 @@ export function RetailSalesWorkspace() {
   }
 
   function handleCatalogSaleSubmit() {
+    prepareCashRegisterSound()
+
     if (settlement === 'PAID' && hasCashCatalogPayment) {
       setAmountTenderedInput(formatEditableNumber(cashCatalogPaymentTotal))
       setChangeModalOpen(true)
@@ -1350,6 +1457,7 @@ export function RetailSalesWorkspace() {
       })
 
       completeSale(sale)
+      playCashRegisterSound()
       resetPaymentStep()
       setSaleStep('CATALOG')
     } catch (error) {
@@ -1405,6 +1513,7 @@ export function RetailSalesWorkspace() {
       })
 
       completeSale(sale)
+      playCashRegisterSound()
       setQuickSaleDrawerOpen(false)
       setQuickSaleForm(createDefaultQuickSaleState())
     } catch (error) {
@@ -1473,20 +1582,6 @@ export function RetailSalesWorkspace() {
   return (
     <>
       <div className={styles.page}>
-        <div className={styles.headerRow}>
-          <h1 className={styles.pageTitle}>Nueva venta</h1>
-
-          <div className={styles.actionsRow}>
-            <button
-              className={retailStyles.buttonDark}
-              type="button"
-              onClick={() => setCashRegisterDrawerOpen(true)}
-            >
-              Abrir caja
-            </button>
-          </div>
-        </div>
-
         {checkoutErrorMessage ? (
           <div className={styles.feedbackBanner} role="alert">
             {checkoutErrorMessage}
@@ -1495,6 +1590,20 @@ export function RetailSalesWorkspace() {
 
         <div className={styles.workspace}>
           <section className={styles.catalogColumn}>
+            <div className={styles.headerRow}>
+              <h1 className={styles.pageTitle}>Nueva venta</h1>
+
+              <div className={styles.actionsRow}>
+                <button
+                  className={retailStyles.buttonDark}
+                  type="button"
+                  onClick={() => setCashRegisterDrawerOpen(true)}
+                >
+                  Abrir caja
+                </button>
+              </div>
+            </div>
+
             <div className={styles.toolbar}>
               <button
                 className={styles.iconButton}
@@ -1720,7 +1829,7 @@ export function RetailSalesWorkspace() {
                 </div>
               </section>
             ) : (
-              <section className={styles.checkoutPanel}>
+              <section className={`${styles.checkoutPanel} ${styles.paymentPanel}`}>
                 <div className={styles.panelBody}>
                   <div className={styles.paymentHeader}>
                     <button
@@ -2243,6 +2352,7 @@ export function RetailSalesWorkspace() {
               }
               type="button"
               onClick={() => {
+                prepareCashRegisterSound()
                 void handleCreateQuickSale()
               }}
             >
@@ -2461,6 +2571,7 @@ export function RetailSalesWorkspace() {
           onAmountTenderedChange={setAmountTenderedInput}
           onClose={() => setChangeModalOpen(false)}
           onConfirm={() => {
+            prepareCashRegisterSound()
             void handleCreateCatalogSale()
           }}
         />
