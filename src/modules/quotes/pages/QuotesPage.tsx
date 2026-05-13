@@ -1,6 +1,7 @@
-import { useDeferredValue, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { ConvertQuotationDrawer } from "@/modules/quotes/components/ConvertQuotationDrawer";
+import { QuotationCreatedDrawer } from "@/modules/quotes/components/QuotationCreatedDrawer";
 import { QuotationFormWorkspace } from "@/modules/quotes/components/QuotationFormWorkspace";
 import { QuotationDetailDrawer } from "@/modules/quotes/components/QuotationDetailDrawer";
 import {
@@ -54,6 +55,10 @@ const statusFilters: QuotationStatusFilter[] = [
   "CANCELLED",
 ];
 
+type QuotesLocationState = {
+  createdQuotationId?: string;
+};
+
 function getStatusClassName(status: QuotationStatusFilter) {
   if (status === "ACCEPTED" || status === "CONVERTED") {
     return styles.statusSuccess;
@@ -87,12 +92,16 @@ function downloadBlobFile(blob: Blob, filename: string) {
 export function QuotesPage() {
   const { languageCode } = useAppTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const copy = getQuotesCopy(languageCode);
   const [searchValue, setSearchValue] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [selectedStatus, setSelectedStatus] =
     useState<QuotationStatusFilter>("ALL");
   const [selectedQuotationId, setSelectedQuotationId] = useState<string | null>(
+    null,
+  );
+  const [createdQuotationId, setCreatedQuotationId] = useState<string | null>(
     null,
   );
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -111,6 +120,7 @@ export function QuotesPage() {
   );
   const quotationsQuery = useQuotationsQuery(filters);
   const detailQuery = useQuotationDetailQuery(selectedQuotationId);
+  const createdDetailQuery = useQuotationDetailQuery(createdQuotationId);
   const customersQuery = useCustomersQuery();
   const productsQuery = useProductsQuery();
   const currentCashRegisterQuery = useCurrentCashRegisterQuery();
@@ -126,6 +136,7 @@ export function QuotesPage() {
   const customers = customersQuery.data ?? [];
   const products = productsQuery.data ?? [];
   const selectedQuotation = detailQuery.data ?? null;
+  const createdQuotation = createdDetailQuery.data ?? null;
   const currentCashRegister = currentCashRegisterQuery.data ?? null;
   const isWorking =
     updateMutation.isPending ||
@@ -146,6 +157,20 @@ export function QuotesPage() {
     customersQuery.error ??
     productsQuery.error ??
     currentCashRegisterQuery.error;
+
+  useEffect(() => {
+    const locationState = location.state as QuotesLocationState | null;
+
+    if (!locationState?.createdQuotationId) {
+      return;
+    }
+
+    setActionError(null);
+    setSelectedQuotationId(null);
+    setIsConvertOpen(false);
+    setCreatedQuotationId(locationState.createdQuotationId);
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   function clearActionError() {
     setActionError(null);
@@ -169,6 +194,10 @@ export function QuotesPage() {
   function closeEditDrawer() {
     setIsEditOpen(false);
     setEditingQuotation(null);
+  }
+
+  function closeCreatedDrawer() {
+    setCreatedQuotationId(null);
   }
 
   async function handleUpdateQuotation(input: CreateQuotationInput) {
@@ -303,12 +332,16 @@ export function QuotesPage() {
       return;
     }
 
+    await shareQuotation(selectedQuotation);
+  }
+
+  async function shareQuotation(quotation: QuotationDetail) {
     try {
       clearActionError();
       const quotationForShare =
-        selectedQuotation.status === "DRAFT" || !selectedQuotation.publicToken
-          ? await sendMutation.mutateAsync(selectedQuotation.id)
-          : selectedQuotation;
+        quotation.status === "DRAFT" || !quotation.publicToken
+          ? await sendMutation.mutateAsync(quotation.id)
+          : quotation;
       const publicUrl = quotationForShare.publicToken
         ? buildPublicQuotationUrl(quotationForShare.publicToken)
         : null;
@@ -326,6 +359,66 @@ export function QuotesPage() {
     } catch (error) {
       setActionError(getErrorMessage(error, copy.actionError));
     }
+  }
+
+  async function handlePrintCreatedQuotation() {
+    if (!createdQuotation) {
+      return;
+    }
+
+    try {
+      clearActionError();
+      const { blob } = await downloadMutation.mutateAsync(createdQuotation.id);
+      const printableUrl = URL.createObjectURL(blob);
+      const printWindow = window.open(
+        printableUrl,
+        "_blank",
+        "width=840,height=960",
+      );
+
+      if (printWindow) {
+        printWindow.addEventListener(
+          "load",
+          () => {
+            printWindow.focus();
+            printWindow.print();
+          },
+          { once: true },
+        );
+      }
+
+      window.setTimeout(() => URL.revokeObjectURL(printableUrl), 60_000);
+    } catch (error) {
+      setActionError(getErrorMessage(error, copy.actionError));
+    }
+  }
+
+  async function handleDownloadCreatedQuotation() {
+    if (!createdQuotation) {
+      return;
+    }
+
+    try {
+      clearActionError();
+      const { blob, filename } = await downloadMutation.mutateAsync(
+        createdQuotation.id,
+      );
+
+      downloadBlobFile(
+        blob,
+        filename ?? `${createdQuotation.fullNumber.toLowerCase()}.pdf`,
+      );
+    } catch (error) {
+      setActionError(getErrorMessage(error, copy.actionError));
+    }
+  }
+
+  async function handleShareCreatedQuotation() {
+    if (!createdQuotation) {
+      return;
+    }
+
+    await shareQuotation(createdQuotation);
   }
 
   async function handleConvertQuotation(input: ConvertQuotationToSaleInput) {
@@ -531,6 +624,18 @@ export function QuotesPage() {
         quotation={editingQuotation}
         onClose={closeEditDrawer}
         onSubmit={handleUpdateQuotation}
+      />
+
+      <QuotationCreatedDrawer
+        isLoading={createdDetailQuery.isPending}
+        isOpen={createdQuotationId !== null}
+        isWorking={isWorking}
+        languageCode={languageCode}
+        quotation={createdQuotation}
+        onClose={closeCreatedDrawer}
+        onDownload={() => void handleDownloadCreatedQuotation()}
+        onPrint={() => void handlePrintCreatedQuotation()}
+        onShare={() => void handleShareCreatedQuotation()}
       />
 
       <QuotationDetailDrawer

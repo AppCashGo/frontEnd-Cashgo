@@ -114,6 +114,11 @@ export function CreateQuotationPage() {
         presentation="page"
         products={products}
         quotation={null}
+        onCreated={(quotation) =>
+          navigate(routePaths.quotes, {
+            state: { createdQuotationId: quotation.id },
+          })
+        }
         onClose={() => navigate(routePaths.quotes)}
         onSubmit={handleCreateQuotation}
       />

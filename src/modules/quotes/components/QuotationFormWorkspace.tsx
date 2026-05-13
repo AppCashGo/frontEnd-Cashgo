@@ -61,6 +61,7 @@ type QuotationFormWorkspaceProps = {
   isSubmitting: boolean;
   initialMode?: QuotationCreationMode;
   presentation?: QuotationFormPresentation;
+  onCreated?: (quotation: QuotationDetail) => void;
   onClose: () => void;
   onSubmit: (input: CreateQuotationInput) => Promise<QuotationDetail>;
 };
@@ -357,6 +358,7 @@ export function QuotationFormWorkspace({
   isSubmitting,
   initialMode = "products",
   presentation = "drawer",
+  onCreated,
   onClose,
   onSubmit,
 }: QuotationFormWorkspaceProps) {
@@ -733,6 +735,11 @@ export function QuotationFormWorkspace({
       });
 
       if (isEditing) {
+        return;
+      }
+
+      if (onCreated) {
+        onCreated(savedQuotation);
         return;
       }
 
