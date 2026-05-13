@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
+import { Crown } from 'lucide-react'
 import { downloadBillingReceipt } from '@/modules/billing/services/billing-api'
 import { CashRegisterSessionDrawer } from '@/modules/cash-register/components/CashRegisterSessionDrawer'
 import {
@@ -34,6 +35,7 @@ import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-
 import { routePaths } from '@/routes/route-paths'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
+import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { getTodayDateInput } from '@/shared/utils/date-input'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
@@ -1630,7 +1632,37 @@ export function RetailSalesWorkspace() {
 
   return (
     <>
-      <div className={styles.page}>
+      <RetailPageLayout
+        bodyVariant="flush"
+        title="Nueva venta"
+        actions={
+          <>
+            <button
+              className={`${retailStyles.buttonDark} ${styles.headerCashButton}`}
+              type="button"
+              onClick={() => setCashRegisterDrawerOpen(true)}
+            >
+              <Crown />
+              Abrir caja
+            </button>
+            <span className={styles.headerActionDivider} aria-hidden="true" />
+            <button
+              className={styles.quickSaleButton}
+              type="button"
+              onClick={handleOpenQuickSaleDrawer}
+            >
+              Nueva venta libre
+            </button>
+            <button
+              className={styles.quickExpenseButton}
+              type="button"
+              onClick={handleOpenQuickExpenseDrawer}
+            >
+              Nuevo gasto
+            </button>
+          </>
+        }
+      >
         {checkoutErrorMessage ? (
           <div className={styles.feedbackBanner} role="alert">
             {checkoutErrorMessage}
@@ -1639,20 +1671,6 @@ export function RetailSalesWorkspace() {
 
         <div className={styles.workspace}>
           <section className={styles.catalogColumn}>
-            <div className={styles.headerRow}>
-              <h1 className={styles.pageTitle}>Nueva venta</h1>
-
-              <div className={styles.actionsRow}>
-                <button
-                  className={retailStyles.buttonDark}
-                  type="button"
-                  onClick={() => setCashRegisterDrawerOpen(true)}
-                >
-                  Abrir caja
-                </button>
-              </div>
-            </div>
-
             <div className={styles.toolbar}>
               <button
                 className={styles.iconButton}
@@ -1761,23 +1779,6 @@ export function RetailSalesWorkspace() {
           </section>
 
           <aside className={styles.checkoutColumn}>
-            <div className={styles.quickActionsPanel}>
-              <button
-                className={styles.quickSaleButton}
-                type="button"
-                onClick={handleOpenQuickSaleDrawer}
-              >
-                Nueva venta libre
-              </button>
-              <button
-                className={styles.quickExpenseButton}
-                type="button"
-                onClick={handleOpenQuickExpenseDrawer}
-              >
-                Nuevo gasto
-              </button>
-            </div>
-
             {saleStep === 'CATALOG' ? (
               <section className={styles.checkoutPanel}>
                 <div className={styles.panelHeader}>
@@ -2226,7 +2227,7 @@ export function RetailSalesWorkspace() {
             )}
           </aside>
         </div>
-      </div>
+      </RetailPageLayout>
 
       {isSortDrawerOpen ? (
         <ProductSortDrawer

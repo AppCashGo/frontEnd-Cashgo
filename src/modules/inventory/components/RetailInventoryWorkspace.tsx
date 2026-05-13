@@ -38,6 +38,7 @@ import { routePaths, routeSegments } from '@/routes/route-paths'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
+import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './RetailInventoryWorkspace.module.css'
@@ -963,21 +964,20 @@ export function RetailInventoryWorkspace() {
   }
 
   return (
-    <div className={styles.page}>
-      <section className={styles.headerRow}>
-        <div className={styles.titleBlock}>
-          <h2 className={styles.title}>{copy.title}</h2>
-          <div className={styles.metaRow}>
-            <span>
-              {copy.totalReferences} {products.length.toString()}
-            </span>
-            <span>
-              {copy.totalInventoryCost} {formatCurrency(totalInventoryCost)}
-            </span>
-          </div>
-        </div>
-
-        <div className={styles.headerActions}>
+    <RetailPageLayout
+      title={copy.title}
+      meta={
+        <>
+          <span>
+            {copy.totalReferences} {products.length.toString()}
+          </span>
+          <span>
+            {copy.totalInventoryCost} {formatCurrency(totalInventoryCost)}
+          </span>
+        </>
+      }
+      actions={
+        <>
           <button
             className={retailStyles.buttonOutline}
             type="button"
@@ -1019,8 +1019,9 @@ export function RetailInventoryWorkspace() {
               </div>
             ) : null}
           </div>
-        </div>
-      </section>
+        </>
+      }
+    >
 
       {feedbackMessage ? (
         <div
@@ -1869,6 +1870,6 @@ export function RetailInventoryWorkspace() {
         </DrawerShell>
       ) : null}
 
-    </div>
+    </RetailPageLayout>
   )
 }

@@ -16,15 +16,15 @@
 }
 
 .sidebarRetail .scrollArea {
-  gap: 1rem;
-  padding-inline: 0;
+  gap: 1.7rem;
+  padding: 2rem 1.25rem calc(1.4rem + env(safe-area-inset-bottom));
 }
 
 .sidebarRetail .brandBlock,
 .sidebarRetail .businessCard,
 .sidebarRetail .navigation,
 .sidebarRetail .sidebarFooter {
-  padding-inline: 0.95rem;
+  padding-inline: 0;
 }
 
 .scrollArea {
@@ -396,16 +396,51 @@
   width: 1.65rem;
   height: 1.65rem;
   border-radius: 0.55rem;
+  background: transparent;
+}
+
+.sidebarRetail .navItem {
+  border-radius: 0.45rem;
+  padding: 0.82rem 1rem;
+}
+
+.sidebarRetail .navItemActive {
+  background: #fbffc0;
+}
+
+.sidebarRetail .navItemActive::before {
+  inset: 0 auto 0 -1.25rem;
+  width: 0.28rem;
+  border-radius: 0;
+  background: #f2df00;
+}
+
+.sidebarRetail .navItem:hover {
+  background: #fbffc0;
+  transform: none;
+}
+
+.sidebarRetail .navItemActive .shortLabel {
+  background: transparent;
 }
 
 .sidebarRetail .label {
-  font-size: 0.98rem;
+  color: #4b5770;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.sidebarRetail .navItemActive .label {
+  color: #1f2a37;
+  font-weight: 900;
 }
 
 .sidebarRetail .featureBadge {
   min-height: 1.15rem;
   padding-inline: 0.45rem;
   font-size: 0.58rem;
+  background: #5a3df0;
+  color: #fff200;
 }
 
 .navChildren {

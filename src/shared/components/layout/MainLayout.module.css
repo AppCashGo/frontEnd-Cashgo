@@ -29,6 +29,10 @@
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
 }
 
+.contentRetail {
+  background: #ffffff;
+}
+
 .main {
   flex: 1;
   min-width: 0;
@@ -40,10 +44,24 @@
   margin: 0 auto;
 }
 
+.mainRetail {
+  padding: 0;
+}
+
+.mainInnerRetail {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
 @media (min-width: 992px) {
   .shell {
     display: grid;
     grid-template-columns: 328px 1fr;
+  }
+
+  .shellRetail {
+    grid-template-columns: 24rem 1fr;
   }
 
   .shellCollapsed {

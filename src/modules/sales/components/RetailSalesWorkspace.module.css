@@ -28,6 +28,23 @@
   min-width: 0;
 }
 
+.headerCashButton {
+  min-width: 12.5rem;
+  min-height: 3.55rem;
+}
+
+.headerCashButton svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: #f2df00;
+}
+
+.headerActionDivider {
+  width: 1px;
+  height: 3.9rem;
+  background: rgba(192, 204, 218, 0.96);
+}
+
 .feedbackBanner {
   padding: 0.95rem 1rem;
   border: 1px solid rgba(193, 63, 63, 0.16);
@@ -1454,14 +1471,10 @@
 }
 
 @media (min-width: 1100px) {
-  .page {
-    --sales-sticky-offset: 1rem;
-    --sales-workspace-height: calc(100vh - 2.35rem);
-    --sales-workspace-height: calc(100dvh - 2.35rem);
-    min-height: 0;
-  }
-
   .workspace {
+    --sales-sticky-offset: 1rem;
+    --sales-workspace-height: calc(100vh - 6.35rem);
+    --sales-workspace-height: calc(100dvh - 6.35rem);
     grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.48fr);
     gap: 0;
     align-items: stretch;
@@ -1474,20 +1487,20 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 1rem 1rem 1rem 0;
+    padding: 1.75rem clamp(1.4rem, 2.2vw, 2rem) 1.75rem;
   }
 
   .checkoutColumn {
     position: sticky;
-    top: var(--sales-sticky-offset);
+    top: 0;
     height: 100%;
     max-height: 100%;
     align-self: stretch;
-    padding: 1rem;
+    padding: 1.75rem 1.5rem;
     overflow: hidden;
     border-left: 1px solid rgba(192, 204, 218, 0.96);
     background: #ffffff;
-    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
   }
 }
 
@@ -1513,6 +1526,10 @@
 
   .quickActionsPanel {
     grid-template-columns: 1fr;
+  }
+
+  .headerActionDivider {
+    display: none;
   }
 
   .toolbar {

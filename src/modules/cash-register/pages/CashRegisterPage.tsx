@@ -41,6 +41,7 @@ import { useEmployeesQuery } from "@/modules/employees/hooks/use-employees-query
 import { useSuppliersQuery } from "@/modules/suppliers/hooks/use-suppliers-query";
 import { AppIcon } from "@/shared/components/icons/AppIcon";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
+import { RetailPageLayout } from "@/shared/components/retail/RetailPageLayout";
 import { toDateInputValue } from "@/shared/utils/date-input";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import { joinClassNames } from "@/shared/utils/join-class-names";
@@ -918,11 +919,13 @@ export function CashRegisterPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <div className={styles.topBar}>
-        <h1 className={styles.pageTitle}>Movimientos</h1>
-
-        <div className={styles.topActions}>
+    <>
+      <RetailPageLayout
+        accent="success"
+        bodyVariant="flush"
+        title="Movimientos"
+        actions={
+          <>
           <button
             className={joinClassNames(
               styles.cashButton,
@@ -943,8 +946,9 @@ export function CashRegisterPage() {
             <Crown />
             Descargar reporte
           </button>
-        </div>
-      </div>
+          </>
+        }
+      >
 
       <section className={styles.workspace}>
         <div className={styles.segmentedTabs}>
@@ -1125,6 +1129,7 @@ export function CashRegisterPage() {
           </>
         )}
       </section>
+      </RetailPageLayout>
 
       <CashRegisterSessionDrawer
         assignees={assigneesQuery.data ?? []}
@@ -1203,6 +1208,6 @@ export function CashRegisterPage() {
         onPrintReport={() => window.print()}
         onSelectStep={setReportStep}
       />
-    </div>
+    </>
   );
 }
