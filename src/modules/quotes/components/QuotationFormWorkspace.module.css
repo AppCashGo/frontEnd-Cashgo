@@ -246,6 +246,8 @@
   background: #f1f5f9;
   color: #94a3b8;
   font-weight: 900;
+  object-fit: cover;
+  overflow: hidden;
 }
 
 .productCard strong {

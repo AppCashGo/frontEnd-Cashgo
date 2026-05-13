@@ -1205,7 +1205,15 @@ export function RetailInventoryWorkspace() {
                   >
                     <td>
                       <div className={styles.productCell}>
-                        <span className={styles.productAvatar}>t</span>
+                        {product.imageUrls[0] ? (
+                          <img
+                            alt=""
+                            className={styles.productAvatarImage}
+                            src={product.imageUrls[0]}
+                          />
+                        ) : (
+                          <span className={styles.productAvatar}>t</span>
+                        )}
                         <div className={styles.productCopy}>
                           <p className={styles.productName}>{product.name}</p>
                           <p className={styles.productMeta}>

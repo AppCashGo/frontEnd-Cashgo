@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
   useCreateProductMutation,
@@ -42,6 +42,14 @@ type ConfirmSwitchState = {
   description: string;
   targetTab: RetailProductCreateWorkspaceTab;
 } | null;
+
+type ProductImageMenuState = {
+  index: number;
+} | null;
+
+const MAX_PRODUCT_IMAGES = 3;
+const MAX_PRODUCT_IMAGE_BYTES = 2 * 1024 * 1024;
+const PRODUCT_IMAGE_MAX_SIZE = 500;
 
 function normalizeOptionalText(value?: string) {
   const trimmedValue = value?.trim();
@@ -119,6 +127,92 @@ function PlusIcon() {
       <path d="M12 8v8M8 12h8" />
     </svg>
   );
+}
+
+function EyeIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.menuIcon} viewBox="0 0 24 24">
+      <path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  );
+}
+
+function ImageIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.menuIcon} viewBox="0 0 24 24">
+      <rect height="15" rx="2" width="18" x="3" y="5" />
+      <path d="m7 17 4.5-4.5 3.5 3.5 2-2 3 3" />
+      <circle cx="8.5" cy="9.5" r="1.5" />
+    </svg>
+  );
+}
+
+function PencilIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.pencilIcon} viewBox="0 0 24 24">
+      <path d="m4 20 4.6-1L19 8.6 15.4 5 5 15.4 4 20Z" />
+      <path d="m14 6 4 4" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.menuIcon} viewBox="0 0 24 24">
+      <path d="M4 7h16" />
+      <path d="M10 11v6M14 11v6" />
+      <path d="M6 7l1 14h10l1-14" />
+      <path d="M9 7V4h6v3" />
+    </svg>
+  );
+}
+
+function loadImageFromObjectUrl(url: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("No pudimos leer la imagen."));
+    image.src = url;
+  });
+}
+
+async function resizeProductImage(file: File) {
+  if (!file.type.startsWith("image/")) {
+    throw new Error("Selecciona un archivo de imagen válido.");
+  }
+
+  if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
+    throw new Error("Cada imagen debe pesar máximo 2MB.");
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+
+  try {
+    const image = await loadImageFromObjectUrl(objectUrl);
+    const ratio = Math.min(
+      PRODUCT_IMAGE_MAX_SIZE / image.naturalWidth,
+      PRODUCT_IMAGE_MAX_SIZE / image.naturalHeight,
+      1,
+    );
+    const width = Math.max(1, Math.round(image.naturalWidth * ratio));
+    const height = Math.max(1, Math.round(image.naturalHeight * ratio));
+    const canvas = document.createElement("canvas");
+    const context = canvas.getContext("2d");
+
+    if (!context) {
+      throw new Error("No pudimos preparar la imagen.");
+    }
+
+    canvas.width = width;
+    canvas.height = height;
+    context.drawImage(image, 0, 0, width, height);
+
+    return canvas.toDataURL("image/webp", 0.84);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 function getDefaultValues(product?: Product | null): RetailProductCreateValues {
@@ -347,20 +441,22 @@ function CategorySelector({
                 {uncategorizedLabel}
               </button>
 
-              {(searchTerm ? filteredCategories : categories).map((category) => (
-                <button
-                  className={
-                    selectedCategoryId === category.id
-                      ? styles.categoryOptionActive
-                      : styles.categoryOption
-                  }
-                  key={category.id}
-                  type="button"
-                  onClick={() => onSelectCategory(category.id)}
-                >
-                  {category.name}
-                </button>
-              ))}
+              {(searchTerm ? filteredCategories : categories).map(
+                (category) => (
+                  <button
+                    className={
+                      selectedCategoryId === category.id
+                        ? styles.categoryOptionActive
+                        : styles.categoryOption
+                    }
+                    key={category.id}
+                    type="button"
+                    onClick={() => onSelectCategory(category.id)}
+                  >
+                    {category.name}
+                  </button>
+                ),
+              )}
             </div>
 
             <button
@@ -501,9 +597,7 @@ function CategoryCreateDrawer({
             ))}
           </div>
 
-          {errorMessage ? (
-            <p className={styles.error}>{errorMessage}</p>
-          ) : null}
+          {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
         </div>
 
         <footer className={styles.categoryDrawerFooter}>
@@ -516,6 +610,82 @@ function CategoryCreateDrawer({
             {copy.createCategorySubmit}
           </button>
         </footer>
+      </aside>
+    </div>
+  );
+}
+
+function ProductImagePreviewDialog({
+  images,
+  selectedIndex,
+  onClose,
+  onSelect,
+}: {
+  images: string[];
+  selectedIndex: number;
+  onClose: () => void;
+  onSelect: (index: number) => void;
+}) {
+  const currentImage = images[selectedIndex];
+  const canGoBack = selectedIndex > 0;
+  const canGoForward = selectedIndex < images.length - 1;
+
+  if (!currentImage) {
+    return null;
+  }
+
+  return (
+    <div
+      className={styles.imagePreviewBackdrop}
+      role="presentation"
+      onClick={onClose}
+    >
+      <aside
+        aria-label="Vista previa de imagen"
+        aria-modal="true"
+        className={styles.imagePreviewDialog}
+        role="dialog"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          aria-label="Cerrar vista previa"
+          className={styles.imagePreviewClose}
+          type="button"
+          onClick={onClose}
+        >
+          <CloseIcon />
+        </button>
+
+        <div className={styles.imagePreviewFrame}>
+          <img
+            alt={`Imagen ${selectedIndex + 1} del producto`}
+            className={styles.imagePreviewMedia}
+            src={currentImage}
+          />
+        </div>
+
+        {images.length > 1 ? (
+          <div className={styles.imagePreviewActions}>
+            <button
+              disabled={!canGoBack}
+              type="button"
+              onClick={() => onSelect(selectedIndex - 1)}
+            >
+              Anterior
+            </button>
+            <button
+              disabled={!canGoForward}
+              type="button"
+              onClick={() => onSelect(selectedIndex + 1)}
+            >
+              Siguiente
+            </button>
+          </div>
+        ) : null}
+
+        <span className={styles.imagePreviewCounter}>
+          {selectedIndex + 1} de {images.length}
+        </span>
       </aside>
     </div>
   );
@@ -566,6 +736,19 @@ export function RetailProductCreateWorkspace({
     useState("");
   const [categoryProductIds, setCategoryProductIds] = useState<string[]>([]);
   const [categoryCreateError, setCategoryCreateError] = useState<string | null>(
+    null,
+  );
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [productImages, setProductImages] = useState<string[]>([]);
+  const [productImageError, setProductImageError] = useState<string | null>(
+    null,
+  );
+  const [imageReplaceIndex, setImageReplaceIndex] = useState<number | null>(
+    null,
+  );
+  const [imageMenuState, setImageMenuState] =
+    useState<ProductImageMenuState>(null);
+  const [previewImageIndex, setPreviewImageIndex] = useState<number | null>(
     null,
   );
   const {
@@ -623,6 +806,10 @@ export function RetailProductCreateWorkspace({
   useEffect(() => {
     const nextValues = getDefaultValues(currentProduct);
     reset(nextValues);
+    setProductImages(currentProduct?.imageUrls ?? []);
+    setProductImageError(null);
+    setImageMenuState(null);
+    setPreviewImageIndex(null);
     setPurchaseUnit(currentProduct?.unit ?? "UNIT");
     setSaleUnit(currentProduct?.unit ?? "UNIT");
   }, [currentProduct, reset]);
@@ -666,7 +853,9 @@ export function RetailProductCreateWorkspace({
   function handleToggleCategoryProduct(productIdToToggle: string) {
     setCategoryProductIds((currentProductIds) =>
       currentProductIds.includes(productIdToToggle)
-        ? currentProductIds.filter((currentId) => currentId !== productIdToToggle)
+        ? currentProductIds.filter(
+            (currentId) => currentId !== productIdToToggle,
+          )
         : [...currentProductIds, productIdToToggle],
     );
   }
@@ -694,6 +883,201 @@ export function RetailProductCreateWorkspace({
     } catch (error) {
       setCategoryCreateError(getErrorMessage(error, copy.categoryCreateError));
     }
+  }
+
+  function requestProductImageUpload(replaceIndex?: number) {
+    setProductImageError(null);
+    setImageMenuState(null);
+    setImageReplaceIndex(
+      typeof replaceIndex === "number" ? replaceIndex : null,
+    );
+    imageInputRef.current?.click();
+  }
+
+  async function handleProductImageFiles(
+    files: File[],
+    replaceIndex: number | null,
+  ) {
+    if (files.length === 0) {
+      return;
+    }
+
+    const availableSlots =
+      replaceIndex === null ? MAX_PRODUCT_IMAGES - productImages.length : 1;
+
+    if (availableSlots <= 0) {
+      setProductImageError("Solo puedes cargar hasta 3 imágenes.");
+      return;
+    }
+
+    const filesToProcess = files.slice(0, availableSlots);
+
+    try {
+      const optimizedImages = await Promise.all(
+        filesToProcess.map((file) => resizeProductImage(file)),
+      );
+
+      setProductImages((currentImages) => {
+        if (replaceIndex !== null) {
+          const replacementImage = optimizedImages[0];
+
+          if (!replacementImage || !currentImages[replaceIndex]) {
+            return currentImages;
+          }
+
+          const nextImages = [...currentImages];
+          nextImages[replaceIndex] = replacementImage;
+
+          return nextImages;
+        }
+
+        return [...currentImages, ...optimizedImages].slice(
+          0,
+          MAX_PRODUCT_IMAGES,
+        );
+      });
+
+      setProductImageError(
+        files.length > availableSlots
+          ? "Solo se cargaron las primeras imágenes permitidas."
+          : null,
+      );
+    } catch (error) {
+      setProductImageError(
+        getErrorMessage(error, "No pudimos cargar la imagen."),
+      );
+    }
+  }
+
+  function handleProductImageInputChange(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFiles = Array.from(event.target.files ?? []);
+
+    void handleProductImageFiles(selectedFiles, imageReplaceIndex);
+    event.target.value = "";
+  }
+
+  function handleRemoveProductImage(index: number) {
+    setProductImages((currentImages) =>
+      currentImages.filter((_, currentIndex) => currentIndex !== index),
+    );
+    setImageMenuState(null);
+    setProductImageError(null);
+    setPreviewImageIndex(null);
+  }
+
+  function handleOpenProductImagePreview(index: number) {
+    setImageMenuState(null);
+    setPreviewImageIndex(index);
+  }
+
+  function renderProductImageUploader() {
+    const remainingImages = MAX_PRODUCT_IMAGES - productImages.length;
+    const addImagesLabel =
+      remainingImages === 1
+        ? "Añade 1 imagen más"
+        : `Añade ${remainingImages} imágenes más`;
+
+    return (
+      <div className={styles.imageUploader}>
+        {productImages.length === 0 ? (
+          <button
+            className={styles.uploadPanel}
+            type="button"
+            onClick={() => requestProductImageUpload()}
+          >
+            <UploadIcon />
+            <strong>Carga hasta 3 imágenes</strong>
+            <p>
+              Recomendamos: Tamaño de 500 x 500 px, formato PNG y peso máximo
+              2MB.
+            </p>
+          </button>
+        ) : (
+          <div className={styles.imageGallery}>
+            {productImages.map((imageUrl, index) => (
+              <article
+                className={
+                  index === 0 ? styles.imageTileCover : styles.imageTile
+                }
+                key={`${imageUrl}-${index}`}
+              >
+                <button
+                  aria-label={`Ver imagen ${index + 1}`}
+                  className={styles.imagePreviewButton}
+                  type="button"
+                  onClick={() => handleOpenProductImagePreview(index)}
+                >
+                  <img
+                    alt={`Imagen ${index + 1} del producto`}
+                    className={styles.productImage}
+                    src={imageUrl}
+                  />
+                </button>
+
+                {index === 0 ? (
+                  <span className={styles.coverBadge}>Portada</span>
+                ) : null}
+
+                <button
+                  aria-label={`Editar imagen ${index + 1}`}
+                  className={styles.imageEditButton}
+                  type="button"
+                  onClick={() =>
+                    setImageMenuState((currentMenuState) =>
+                      currentMenuState?.index === index ? null : { index },
+                    )
+                  }
+                >
+                  <PencilIcon />
+                </button>
+
+                {imageMenuState?.index === index ? (
+                  <div className={styles.imageMenu}>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenProductImagePreview(index)}
+                    >
+                      <EyeIcon />
+                      <span>Ver imagen</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => requestProductImageUpload(index)}
+                    >
+                      <ImageIcon />
+                      <span>Cargar imagen</span>
+                    </button>
+                    <button
+                      className={styles.imageMenuDanger}
+                      type="button"
+                      onClick={() => handleRemoveProductImage(index)}
+                    >
+                      <TrashIcon />
+                      <span>Eliminar imagen</span>
+                    </button>
+                  </div>
+                ) : null}
+              </article>
+            ))}
+
+            {remainingImages > 0 ? (
+              <button
+                className={styles.addImageTile}
+                type="button"
+                onClick={() => requestProductImageUpload()}
+              >
+                <PlusIcon />
+                <span>{addImagesLabel}</span>
+              </button>
+            ) : null}
+          </div>
+        )}
+
+        {productImageError ? (
+          <p className={styles.imageError}>{productImageError}</p>
+        ) : null}
+      </div>
+    );
   }
 
   function renderCategorySelector() {
@@ -783,7 +1167,8 @@ export function RetailProductCreateWorkspace({
             )
           : values.stock,
       minStock: activeTab === "variants" ? 0 : values.minStock,
-      price: activeTab === "variants" ? (firstVariant?.price ?? 0) : values.price,
+      price:
+        activeTab === "variants" ? (firstVariant?.price ?? 0) : values.price,
       cost: activeTab === "variants" ? (firstVariant?.cost ?? 0) : values.cost,
       unit: saleUnit,
       categoryId: normalizeOptionalRelationId(values.categoryId),
@@ -792,6 +1177,7 @@ export function RetailProductCreateWorkspace({
         selectedTaxOption.rate > 0 ? selectedTaxOption.label : undefined,
       taxRate: selectedTaxOption.rate,
       isVisibleInCatalog: values.isVisibleInCatalog,
+      imageUrls: productImages,
       variants: activeTab === "variants" ? normalizedVariants : undefined,
     };
 
@@ -896,19 +1282,21 @@ export function RetailProductCreateWorkspace({
           noValidate
           onSubmit={handleSubmit(handlePersistProduct)}
         >
+          <input
+            ref={imageInputRef}
+            accept="image/png,image/jpeg,image/webp"
+            className={styles.imageInput}
+            multiple={imageReplaceIndex === null}
+            type="file"
+            onChange={handleProductImageInputChange}
+          />
+
           {(activeTab === "basic" || activeTab === "measures") && (
             <section className={styles.column}>
               <div className={styles.card}>
                 <h3 className={styles.cardTitle}>Datos del producto</h3>
 
-                <div className={styles.uploadPanel}>
-                  <UploadIcon />
-                  <strong>Carga hasta 3 imagenes</strong>
-                  <p>
-                    Recomendamos: Tamano de 500 x 500 px, formato PNG y peso
-                    maximo 2MB.
-                  </p>
-                </div>
+                {renderProductImageUploader()}
 
                 <label className={styles.field}>
                   <span className={styles.label}>Codigo</span>
@@ -1089,14 +1477,7 @@ export function RetailProductCreateWorkspace({
                 <div className={styles.card}>
                   <h3 className={styles.cardTitle}>Datos del producto</h3>
 
-                  <div className={styles.uploadPanel}>
-                    <UploadIcon />
-                    <strong>Carga hasta 3 imagenes</strong>
-                    <p>
-                      Recomendamos: Tamano de 500 x 500 px, formato PNG y peso
-                      maximo 2MB.
-                    </p>
-                  </div>
+                  {renderProductImageUploader()}
 
                   <label className={styles.field}>
                     <span className={styles.label}>
@@ -1219,7 +1600,9 @@ export function RetailProductCreateWorkspace({
                                 className={styles.input}
                                 min="0"
                                 type="number"
-                                {...register(`variants.${index}.stock` as const)}
+                                {...register(
+                                  `variants.${index}.stock` as const,
+                                )}
                               />
                             </label>
 
@@ -1247,7 +1630,9 @@ export function RetailProductCreateWorkspace({
                                 min="0"
                                 step="0.01"
                                 type="number"
-                                {...register(`variants.${index}.price` as const)}
+                                {...register(
+                                  `variants.${index}.price` as const,
+                                )}
                               />
                             </label>
 
@@ -1505,6 +1890,15 @@ export function RetailProductCreateWorkspace({
               (currentIsVisible) => !currentIsVisible,
             )
           }
+        />
+      ) : null}
+
+      {previewImageIndex !== null ? (
+        <ProductImagePreviewDialog
+          images={productImages}
+          selectedIndex={previewImageIndex}
+          onClose={() => setPreviewImageIndex(null)}
+          onSelect={setPreviewImageIndex}
         />
       ) : null}
     </>

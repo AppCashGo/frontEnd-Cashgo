@@ -774,9 +774,17 @@ export function QuotationFormWorkspace({
             {selectedQuantity}
           </span>
         ) : null}
-        <span className={styles.productImage} aria-hidden="true">
-          t.
-        </span>
+        {product.imageUrls[0] ? (
+          <img
+            alt=""
+            className={styles.productImage}
+            src={product.imageUrls[0]}
+          />
+        ) : (
+          <span className={styles.productImage} aria-hidden="true">
+            t.
+          </span>
+        )}
         <strong>{formatQuotationCurrency(product.price, languageCode)}</strong>
         <span>{product.name}</span>
         <small>

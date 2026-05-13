@@ -1587,10 +1587,20 @@ export function RetailSalesWorkspace() {
                       </span>
                     ) : null}
 
-                    <div className={styles.productPreview}>
-                      <span className={styles.productPreviewMark}>
-                        {product.name.slice(0, 1).toUpperCase()}
-                      </span>
+                    <div
+                      className={
+                        product.imageUrls[0]
+                          ? `${styles.productPreview} ${styles.productPreviewWithImage}`
+                          : styles.productPreview
+                      }
+                    >
+                      {product.imageUrls[0] ? (
+                        <img alt="" src={product.imageUrls[0]} />
+                      ) : (
+                        <span className={styles.productPreviewMark}>
+                          {product.name.slice(0, 1).toUpperCase()}
+                        </span>
+                      )}
                     </div>
 
                     <p className={styles.productPrice}>

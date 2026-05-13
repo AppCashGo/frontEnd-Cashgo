@@ -30,6 +30,7 @@ export type Product = {
   parentProductId: string | null;
   productType: ProductType;
   variantName: string | null;
+  imageUrls: string[];
   name: string;
   description: string | null;
   sku: string | null;
@@ -62,6 +63,7 @@ export type ProductMutationInput = {
   unit?: ProductUnit;
   isActive?: boolean;
   isVisibleInCatalog?: boolean;
+  imageUrls?: string[];
   variants?: ProductVariantInput[];
 };
 

@@ -174,6 +174,18 @@
   background: linear-gradient(180deg, #edd2ff 0%, #f8eaff 100%);
 }
 
+.productPreviewWithImage {
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.productPreviewWithImage img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
 .productPreviewMark {
   color: #c892ea;
   font-size: 4rem;

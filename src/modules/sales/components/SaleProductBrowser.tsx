@@ -194,10 +194,16 @@ export function SaleProductBrowser({
                 <div
                   className={joinClassNames(
                     styles.productVisual,
-                    getProductCardToneClass(product),
+                    product.imageUrls[0]
+                      ? styles.productVisualPhoto
+                      : getProductCardToneClass(product),
                   )}
                 >
-                  <span>{getProductMonogram(product)}</span>
+                  {product.imageUrls[0] ? (
+                    <img alt="" src={product.imageUrls[0]} />
+                  ) : (
+                    <span>{getProductMonogram(product)}</span>
+                  )}
                 </div>
 
                 <div className={styles.productHeader}>

@@ -32,7 +32,9 @@
 .closeIcon,
 .chevronIcon,
 .searchIcon,
-.plusIcon {
+.plusIcon,
+.menuIcon,
+.pencilIcon {
   width: 1.5rem;
   height: 1.5rem;
   stroke: currentColor;
@@ -97,6 +99,16 @@
   font-weight: 700;
 }
 
+.imageInput {
+  display: none;
+}
+
+.imageUploader {
+  position: relative;
+  display: grid;
+  gap: 0.65rem;
+}
+
 .uploadPanel {
   display: flex;
   flex-direction: column;
@@ -110,6 +122,8 @@
   text-align: center;
   color: #2563eb;
   padding: 1.5rem;
+  cursor: pointer;
+  font: inherit;
 }
 
 .uploadPanel strong {
@@ -121,6 +135,155 @@
   max-width: 32rem;
   font-size: 0.92rem;
   color: #2563eb;
+}
+
+.imageGallery {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.95rem;
+}
+
+.imageTile,
+.imageTileCover {
+  position: relative;
+  flex: 0 0 auto;
+  width: 8.25rem;
+  height: 8.25rem;
+  border: 1px solid #d3dce8;
+  border-radius: 0.7rem;
+  background: #ffffff;
+  box-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.06);
+}
+
+.imageTileCover {
+  width: 9.75rem;
+  height: 9.75rem;
+}
+
+.imagePreviewButton {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 0;
+  border-radius: inherit;
+  background: #ffffff;
+  padding: 0;
+  cursor: pointer;
+}
+
+.productImage {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.coverBadge {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  border-radius: 0 0 0.7rem 0.7rem;
+  background: #1f2937;
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.imageEditButton {
+  position: absolute;
+  right: -0.55rem;
+  bottom: 0.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 1px solid #d6deea;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1f2937;
+  cursor: pointer;
+  box-shadow: 0 0.35rem 0.9rem rgba(15, 23, 42, 0.16);
+}
+
+.imageEditButton .pencilIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.imageMenu {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  left: min(7rem, 100%);
+  z-index: 30;
+  display: grid;
+  min-width: 13.5rem;
+  padding: 0.6rem;
+  border-radius: 0.7rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.16);
+}
+
+.imageMenu button {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.8rem;
+  border: 0;
+  border-radius: 0.55rem;
+  background: transparent;
+  color: #1f2937;
+  font-size: 0.95rem;
+  padding: 0.7rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.imageMenu button:hover,
+.imageMenu button:focus-visible {
+  outline: none;
+  background: #f4f7fb;
+}
+
+.imageMenuDanger {
+  color: #c2413a !important;
+}
+
+.addImageTile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 8.25rem;
+  height: 8.25rem;
+  border: 1px dashed #6d5dfc;
+  border-radius: 0.85rem;
+  background: #dfe7ff;
+  color: #5847e8;
+  font-size: 1rem;
+  font-weight: 800;
+  line-height: 1.35;
+  padding: 0.9rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.addImageTile .plusIcon {
+  width: 2.25rem;
+  height: 2.25rem;
+  stroke-width: 2.4;
+}
+
+.imageError {
+  margin: 0;
+  color: #c2413a;
+  font-size: 0.9rem;
 }
 
 .field {
@@ -804,6 +967,90 @@
   color: #1f2a37;
 }
 
+.imagePreviewBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(5px);
+  padding: 1.25rem;
+}
+
+.imagePreviewDialog {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  width: min(100%, 31rem);
+  justify-items: center;
+}
+
+.imagePreviewClose {
+  position: absolute;
+  top: -0.85rem;
+  right: -0.85rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.15rem;
+  height: 2.15rem;
+  border: 0;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.imagePreviewClose .closeIcon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.imagePreviewFrame {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.24);
+}
+
+.imagePreviewMedia {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
+}
+
+.imagePreviewActions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.imagePreviewActions button {
+  min-height: 2.45rem;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0.55rem 1rem;
+}
+
+.imagePreviewActions button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.imagePreviewCounter {
+  color: #ffffff;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
 @media (max-width: 1200px) {
   .form {
     grid-template-columns: 1fr;
@@ -857,5 +1104,20 @@
 
   .footer {
     flex-direction: column;
+  }
+
+  .imageMenu {
+    left: 0;
+  }
+
+  .imageTile,
+  .addImageTile {
+    width: 7.35rem;
+    height: 7.35rem;
+  }
+
+  .imageTileCover {
+    width: 8.75rem;
+    height: 8.75rem;
   }
 }

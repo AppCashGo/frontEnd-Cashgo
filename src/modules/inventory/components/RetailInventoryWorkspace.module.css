@@ -232,7 +232,7 @@
 }
 
 .tooltipBubble::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   top: 100%;
@@ -382,6 +382,14 @@
   color: #b9c3d0;
   font-size: 1.5rem;
   font-weight: 900;
+}
+
+.productAvatarImage {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  background: #f0f4fa;
+  object-fit: cover;
 }
 
 .productCopy {

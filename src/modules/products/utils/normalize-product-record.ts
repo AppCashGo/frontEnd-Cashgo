@@ -9,10 +9,20 @@ export type ProductApiRecord = Omit<
   id: number | string;
   categoryId: number | string | null;
   parentProductId?: number | string | null;
+  imageUrls?: unknown;
   cost: number | string;
   price: number | string;
   taxRate: number | string;
 };
+
+function normalizeProductImageUrls(imageUrls: unknown) {
+  return Array.isArray(imageUrls)
+    ? imageUrls.filter(
+        (imageUrl): imageUrl is string =>
+          typeof imageUrl === "string" && imageUrl.trim().length > 0,
+      )
+    : [];
+}
 
 export function normalizeProductRecord(record: ProductApiRecord): Product {
   return {
@@ -22,6 +32,7 @@ export function normalizeProductRecord(record: ProductApiRecord): Product {
     parentProductId: normalizeOptionalId(record.parentProductId ?? null),
     productType: record.productType ?? "BASIC",
     variantName: record.variantName ?? null,
+    imageUrls: normalizeProductImageUrls(record.imageUrls),
     description: record.description ?? null,
     sku: record.sku ?? null,
     barcode: record.barcode ?? null,
