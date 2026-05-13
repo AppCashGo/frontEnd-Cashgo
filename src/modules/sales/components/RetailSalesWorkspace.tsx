@@ -1484,20 +1484,6 @@ export function RetailSalesWorkspace() {
             >
               Abrir caja
             </button>
-            <button
-              className={retailStyles.buttonSuccess}
-              type="button"
-              onClick={handleOpenQuickSaleDrawer}
-            >
-              Nueva venta libre
-            </button>
-            <button
-              className={retailStyles.buttonDanger}
-              type="button"
-              onClick={handleOpenQuickExpenseDrawer}
-            >
-              Nuevo gasto
-            </button>
           </div>
         </div>
 
@@ -1617,6 +1603,23 @@ export function RetailSalesWorkspace() {
           </section>
 
           <aside className={styles.checkoutColumn}>
+            <div className={styles.quickActionsPanel}>
+              <button
+                className={styles.quickSaleButton}
+                type="button"
+                onClick={handleOpenQuickSaleDrawer}
+              >
+                Nueva venta libre
+              </button>
+              <button
+                className={styles.quickExpenseButton}
+                type="button"
+                onClick={handleOpenQuickExpenseDrawer}
+              >
+                Nuevo gasto
+              </button>
+            </div>
+
             {saleStep === 'CATALOG' ? (
               <section className={styles.checkoutPanel}>
                 <div className={styles.panelHeader}>
@@ -1643,9 +1646,17 @@ export function RetailSalesWorkspace() {
                         <article className={styles.cartItem} key={item.product.id}>
                           <div className={styles.cartItemHead}>
                             <div className={styles.cartItemCopy}>
-                              <div className={styles.cartAvatar}>
-                                {item.product.name.slice(0, 1).toUpperCase()}
-                              </div>
+                              {item.product.imageUrls[0] ? (
+                                <img
+                                  alt=""
+                                  className={styles.cartAvatarImage}
+                                  src={item.product.imageUrls[0]}
+                                />
+                              ) : (
+                                <div className={styles.cartAvatar}>
+                                  {item.product.name.slice(0, 1).toUpperCase()}
+                                </div>
+                              )}
                               <div>
                                 <p className={styles.cartItemName}>{item.product.name}</p>
                               </div>

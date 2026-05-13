@@ -48,6 +48,37 @@
   min-width: 0;
 }
 
+.checkoutColumn {
+  display: grid;
+  gap: 1rem;
+}
+
+.quickActionsPanel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.quickSaleButton,
+.quickExpenseButton {
+  min-height: 3.6rem;
+  border: 0;
+  border-radius: 1rem;
+  color: #ffffff;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.quickSaleButton {
+  background: #15995b;
+}
+
+.quickExpenseButton {
+  background: #d23b32;
+}
+
 .toolbar {
   display: flex;
   align-items: center;
@@ -97,6 +128,7 @@
 
 .productsGrid {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
   gap: 1rem;
 }
 
@@ -233,7 +265,7 @@
 .checkoutPanel {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  min-height: 100%;
+  min-height: 0;
   border: 1px solid rgba(192, 204, 218, 0.96);
   border-radius: 1rem;
   background: #ffffff;
@@ -314,6 +346,15 @@
   background: #eef2f7;
   color: #7b8aa1;
   font-weight: 900;
+}
+
+.cartAvatarImage {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.9rem;
+  background: #eef2f7;
+  object-fit: cover;
+  flex: 0 0 auto;
 }
 
 .cartItemName {
@@ -1337,19 +1378,21 @@
 
 @media (min-width: 1100px) {
   .workspace {
-    grid-template-columns: minmax(0, 1.6fr) minmax(22rem, 0.82fr);
+    grid-template-columns: minmax(0, 1fr) minmax(27rem, 0.48fr);
   }
 
-  .productsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .checkoutColumn {
+    position: sticky;
+    top: 1rem;
+    height: calc(100vh - 2rem);
+    align-self: start;
+    padding-left: 1rem;
+    border-left: 1px solid rgba(192, 204, 218, 0.96);
+    grid-template-rows: auto minmax(0, 1fr);
   }
 }
 
 @media (min-width: 1380px) {
-  .productsGrid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .paymentMethodsGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1367,6 +1410,10 @@
 
   .actionsRow > * {
     flex: 1 1 12rem;
+  }
+
+  .quickActionsPanel {
+    grid-template-columns: 1fr;
   }
 
   .toolbar {
