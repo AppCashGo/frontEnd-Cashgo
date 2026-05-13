@@ -1388,8 +1388,9 @@
 
 @media (min-width: 1100px) {
   .page {
-    --sales-workspace-height: calc(100vh - 5.65rem);
-    --sales-workspace-height: calc(100dvh - 5.65rem);
+    --sales-sticky-offset: 4.95rem;
+    --sales-workspace-height: calc(100vh - 6.75rem);
+    --sales-workspace-height: calc(100dvh - 6.75rem);
     min-height: 0;
   }
 
@@ -1397,18 +1398,23 @@
     grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.48fr);
     gap: 0;
     align-items: stretch;
-    min-height: var(--sales-workspace-height);
+    height: var(--sales-workspace-height);
+    min-height: 0;
   }
 
   .catalogColumn {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 1rem 1rem 1rem 0;
   }
 
   .checkoutColumn {
     position: sticky;
-    top: 5.65rem;
-    height: var(--sales-workspace-height);
-    max-height: var(--sales-workspace-height);
+    top: var(--sales-sticky-offset);
+    height: 100%;
+    max-height: 100%;
     align-self: stretch;
     padding: 1rem;
     overflow: hidden;
