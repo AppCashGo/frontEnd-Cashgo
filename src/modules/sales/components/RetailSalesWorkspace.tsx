@@ -938,7 +938,7 @@ export function RetailSalesWorkspace() {
   const [isSortDrawerOpen, setSortDrawerOpen] = useState(false)
   const [isChangeModalOpen, setChangeModalOpen] = useState(false)
   const [sortOption, setSortOption] = useState<ProductSortOption>(defaultSortOption)
-  const [paymentDetailsOpen, setPaymentDetailsOpen] = useState(true)
+  const [paymentDetailsOpen, setPaymentDetailsOpen] = useState(false)
   const [amountTenderedInput, setAmountTenderedInput] = useState('')
   const [quickSaleForm, setQuickSaleForm] = useState<QuickSaleFormState>(
     createDefaultQuickSaleState,
