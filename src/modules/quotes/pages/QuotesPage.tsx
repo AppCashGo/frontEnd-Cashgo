@@ -2,27 +2,21 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ConvertQuotationDrawer } from "@/modules/quotes/components/ConvertQuotationDrawer";
 import { QuotationCreatedDrawer } from "@/modules/quotes/components/QuotationCreatedDrawer";
-import { QuotationFormWorkspace } from "@/modules/quotes/components/QuotationFormWorkspace";
 import { QuotationDetailDrawer } from "@/modules/quotes/components/QuotationDetailDrawer";
 import {
   getQuotesCopy,
   getQuotationStatusLabel,
 } from "@/modules/quotes/i18n/quotes-copy";
 import {
-  useAcceptQuotationMutation,
-  useCancelQuotationMutation,
   useConvertQuotationMutation,
   useDeleteQuotationMutation,
   useDownloadQuotationDocumentMutation,
   useQuotationDetailQuery,
   useQuotationsQuery,
-  useRejectQuotationMutation,
   useSendQuotationMutation,
-  useUpdateQuotationMutation,
 } from "@/modules/quotes/hooks/use-quotations-query";
 import type {
   ConvertQuotationToSaleInput,
-  CreateQuotationInput,
   QuotationDetail,
   QuotationStatusFilter,
 } from "@/modules/quotes/types/quotation";
@@ -35,7 +29,6 @@ import {
 } from "@/modules/quotes/utils/quotation-utils";
 import { useCurrentCashRegisterQuery } from "@/modules/cash-register/hooks/use-cash-register-query";
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
-import { useProductsQuery } from "@/modules/products/hooks/use-products-query";
 import { routePaths } from "@/routes/route-paths";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import { RetailPremiumBanner } from "@/shared/components/retail/RetailPremiumBanner";
@@ -104,9 +97,6 @@ export function QuotesPage() {
   const [createdQuotationId, setCreatedQuotationId] = useState<string | null>(
     null,
   );
-  const [isEditOpen, setIsEditOpen] = useState(false);
-  const [editingQuotation, setEditingQuotation] =
-    useState<QuotationDetail | null>(null);
   const [isConvertOpen, setIsConvertOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const deferredSearchValue = useDeferredValue(searchValue.trim());
@@ -122,40 +112,28 @@ export function QuotesPage() {
   const detailQuery = useQuotationDetailQuery(selectedQuotationId);
   const createdDetailQuery = useQuotationDetailQuery(createdQuotationId);
   const customersQuery = useCustomersQuery();
-  const productsQuery = useProductsQuery();
   const currentCashRegisterQuery = useCurrentCashRegisterQuery();
-  const updateMutation = useUpdateQuotationMutation();
   const deleteMutation = useDeleteQuotationMutation();
   const sendMutation = useSendQuotationMutation();
-  const acceptMutation = useAcceptQuotationMutation();
-  const rejectMutation = useRejectQuotationMutation();
-  const cancelMutation = useCancelQuotationMutation();
   const convertMutation = useConvertQuotationMutation();
   const downloadMutation = useDownloadQuotationDocumentMutation();
   const quotations = quotationsQuery.data ?? [];
   const customers = customersQuery.data ?? [];
-  const products = productsQuery.data ?? [];
   const selectedQuotation = detailQuery.data ?? null;
   const createdQuotation = createdDetailQuery.data ?? null;
   const currentCashRegister = currentCashRegisterQuery.data ?? null;
   const isWorking =
-    updateMutation.isPending ||
     deleteMutation.isPending ||
     sendMutation.isPending ||
-    acceptMutation.isPending ||
-    rejectMutation.isPending ||
-    cancelMutation.isPending ||
     convertMutation.isPending ||
     downloadMutation.isPending;
   const hasLoadError =
     quotationsQuery.isError ||
     customersQuery.isError ||
-    productsQuery.isError ||
     currentCashRegisterQuery.isError;
   const loadError =
     quotationsQuery.error ??
     customersQuery.error ??
-    productsQuery.error ??
     currentCashRegisterQuery.error;
 
   useEffect(() => {
@@ -181,40 +159,8 @@ export function QuotesPage() {
     navigate(routePaths.quoteNew);
   }
 
-  function openEditDrawer() {
-    if (!selectedQuotation) {
-      return;
-    }
-
-    clearActionError();
-    setEditingQuotation(selectedQuotation);
-    setIsEditOpen(true);
-  }
-
-  function closeEditDrawer() {
-    setIsEditOpen(false);
-    setEditingQuotation(null);
-  }
-
   function closeCreatedDrawer() {
     setCreatedQuotationId(null);
-  }
-
-  async function handleUpdateQuotation(input: CreateQuotationInput) {
-    clearActionError();
-
-    if (!editingQuotation) {
-      throw new Error(copy.actionError);
-    }
-
-    const updatedQuotation = await updateMutation.mutateAsync({
-      quotationId: editingQuotation.id,
-      input,
-    });
-
-    setSelectedQuotationId(updatedQuotation.id);
-    closeEditDrawer();
-    return updatedQuotation;
   }
 
   async function handleDeleteQuotation() {
@@ -241,71 +187,6 @@ export function QuotesPage() {
     }
   }
 
-  async function handleChangeStatus(
-    action: () => Promise<unknown>,
-    fallbackMessage: string,
-  ) {
-    try {
-      clearActionError();
-      await action();
-    } catch (error) {
-      setActionError(getErrorMessage(error, fallbackMessage));
-    }
-  }
-
-  async function handleSendQuotation() {
-    if (!selectedQuotation) {
-      return;
-    }
-
-    await handleChangeStatus(
-      () => sendMutation.mutateAsync(selectedQuotation.id),
-      copy.actionError,
-    );
-  }
-
-  async function handleAcceptQuotation() {
-    if (!selectedQuotation) {
-      return;
-    }
-
-    await handleChangeStatus(
-      () => acceptMutation.mutateAsync(selectedQuotation.id),
-      copy.actionError,
-    );
-  }
-
-  async function handleRejectQuotation() {
-    if (!selectedQuotation) {
-      return;
-    }
-
-    await handleChangeStatus(
-      () => rejectMutation.mutateAsync(selectedQuotation.id),
-      copy.actionError,
-    );
-  }
-
-  async function handleCancelQuotation() {
-    if (!selectedQuotation) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      languageCode === "en"
-        ? "Cancel this quote?"
-        : "¿Cancelar esta cotización?",
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    await handleChangeStatus(
-      () => cancelMutation.mutateAsync(selectedQuotation.id),
-      copy.actionError,
-    );
-  }
 
   async function handleDownloadQuotation() {
     if (!selectedQuotation) {
@@ -325,14 +206,6 @@ export function QuotesPage() {
     } catch (error) {
       setActionError(getErrorMessage(error, copy.actionError));
     }
-  }
-
-  async function handleShareQuotation() {
-    if (!selectedQuotation) {
-      return;
-    }
-
-    await shareQuotation(selectedQuotation);
   }
 
   async function shareQuotation(quotation: QuotationDetail) {
@@ -361,14 +234,10 @@ export function QuotesPage() {
     }
   }
 
-  async function handlePrintCreatedQuotation() {
-    if (!createdQuotation) {
-      return;
-    }
-
+  async function printQuotationDocument(quotation: QuotationDetail) {
     try {
       clearActionError();
-      const { blob } = await downloadMutation.mutateAsync(createdQuotation.id);
+      const { blob } = await downloadMutation.mutateAsync(quotation.id);
       const printableUrl = URL.createObjectURL(blob);
       const printWindow = window.open(
         printableUrl,
@@ -391,6 +260,22 @@ export function QuotesPage() {
     } catch (error) {
       setActionError(getErrorMessage(error, copy.actionError));
     }
+  }
+
+  async function handlePrintQuotation() {
+    if (!selectedQuotation) {
+      return;
+    }
+
+    await printQuotationDocument(selectedQuotation);
+  }
+
+  async function handlePrintCreatedQuotation() {
+    if (!createdQuotation) {
+      return;
+    }
+
+    await printQuotationDocument(createdQuotation);
   }
 
   async function handleDownloadCreatedQuotation() {
@@ -614,18 +499,6 @@ export function QuotesPage() {
         </div>
       </section>
 
-      <QuotationFormWorkspace
-        customers={customers}
-        initialMode="products"
-        isOpen={isEditOpen}
-        isSubmitting={updateMutation.isPending}
-        languageCode={languageCode}
-        products={products}
-        quotation={editingQuotation}
-        onClose={closeEditDrawer}
-        onSubmit={handleUpdateQuotation}
-      />
-
       <QuotationCreatedDrawer
         isLoading={createdDetailQuery.isPending}
         isOpen={createdQuotationId !== null}
@@ -644,8 +517,6 @@ export function QuotesPage() {
         isWorking={isWorking}
         languageCode={languageCode}
         quotation={selectedQuotation}
-        onAccept={handleAcceptQuotation}
-        onCancel={handleCancelQuotation}
         onClose={() => {
           clearActionError();
           setSelectedQuotationId(null);
@@ -657,10 +528,7 @@ export function QuotesPage() {
         }}
         onDelete={handleDeleteQuotation}
         onDownload={handleDownloadQuotation}
-        onEdit={openEditDrawer}
-        onReject={handleRejectQuotation}
-        onSend={handleSendQuotation}
-        onShare={() => void handleShareQuotation()}
+        onPrint={handlePrintQuotation}
       />
 
       <ConvertQuotationDrawer

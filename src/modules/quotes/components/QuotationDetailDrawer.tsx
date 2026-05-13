@@ -1,12 +1,22 @@
-import { getQuotesCopy, getQuotationStatusLabel } from "@/modules/quotes/i18n/quotes-copy";
+import {
+  CalendarDays,
+  CircleDollarSign,
+  Download,
+  FileText,
+  Package,
+  Percent,
+  Printer,
+  ReceiptText,
+  UserRound,
+  UsersRound,
+} from "lucide-react";
+import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
+import { getQuotesCopy } from "@/modules/quotes/i18n/quotes-copy";
 import type { QuotationDetail } from "@/modules/quotes/types/quotation";
 import {
   formatQuotationCurrency,
   formatQuotationDate,
-  formatQuotationDateTime,
 } from "@/modules/quotes/utils/quotation-utils";
-import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
-import retailStyles from "@/shared/components/retail/RetailUI.module.css";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import styles from "./QuotationDetailDrawer.module.css";
 
@@ -17,35 +27,50 @@ type QuotationDetailDrawerProps = {
   isLoading: boolean;
   isWorking: boolean;
   onClose: () => void;
-  onEdit: () => void;
   onDelete: () => Promise<void>;
-  onSend: () => Promise<void>;
-  onAccept: () => Promise<void>;
-  onReject: () => Promise<void>;
-  onCancel: () => Promise<void>;
   onConvert: () => void;
   onDownload: () => Promise<void>;
-  onShare: () => void;
+  onPrint: () => Promise<void>;
 };
 
-function getStatusClassName(status: QuotationDetail["status"]) {
-  if (status === "ACCEPTED" || status === "CONVERTED") {
-    return styles.statusSuccess;
+function getDiscountPercentage(quotation: QuotationDetail) {
+  const baseTotal = quotation.subtotal + quotation.discountTotal;
+
+  if (baseTotal <= 0) {
+    return 0;
   }
 
-  if (status === "SENT") {
-    return styles.statusInfo;
+  return Math.round((quotation.discountTotal / baseTotal) * 100);
+}
+
+function formatDrawerDateTime(value: string, languageCode: AppLanguageCode) {
+  const date = new Date(value);
+  const locale = languageCode === "en" ? "en-US" : "es-CO";
+  const time = new Intl.DateTimeFormat(locale, {
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(date);
+  const day = new Intl.DateTimeFormat(locale, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(date);
+
+  return `${time} | ${day}`;
+}
+
+function formatUnits(quantity: number, languageCode: AppLanguageCode) {
+  const normalizedQuantity = Number(quantity) || 0;
+
+  if (languageCode === "en") {
+    return `${normalizedQuantity} ${
+      normalizedQuantity === 1 ? "unit" : "units"
+    }`;
   }
 
-  if (status === "REJECTED" || status === "CANCELLED") {
-    return styles.statusDanger;
-  }
-
-  if (status === "EXPIRED") {
-    return styles.statusMuted;
-  }
-
-  return styles.statusDraft;
+  return `${normalizedQuantity} ${
+    normalizedQuantity === 1 ? "Unidad" : "Unidades"
+  }`;
 }
 
 export function QuotationDetailDrawer({
@@ -55,54 +80,66 @@ export function QuotationDetailDrawer({
   isLoading,
   isWorking,
   onClose,
-  onEdit,
   onDelete,
-  onSend,
-  onAccept,
-  onReject,
-  onCancel,
   onConvert,
   onDownload,
-  onShare,
+  onPrint,
 }: QuotationDetailDrawerProps) {
   const copy = getQuotesCopy(languageCode);
-  const canEdit =
-    quotation &&
-    quotation.status !== "CONVERTED" &&
-    quotation.status !== "CANCELLED";
   const canDelete =
     quotation &&
     (quotation.status === "DRAFT" || quotation.status === "REJECTED");
+  const discountPercentage = quotation ? getDiscountPercentage(quotation) : 0;
 
   return (
     <CashRegisterRetailDrawer
-      description={copy.detailDescription}
+      bodyClassName={styles.body}
       footer={
         quotation ? (
           <div className={styles.footerActions}>
-            <button
-              className={retailStyles.buttonOutline}
-              disabled={isWorking}
-              type="button"
-              onClick={onClose}
-            >
-              {copy.cancelAction}
-            </button>
+            <div className={styles.documentActions}>
+              <button disabled={isWorking} type="button" onClick={() => void onPrint()}>
+                <Printer size={18} strokeWidth={2.4} />
+                {copy.detailPrint}
+              </button>
+              <button
+                disabled={isWorking}
+                type="button"
+                onClick={() => void onDownload()}
+              >
+                <Download size={18} strokeWidth={2.4} />
+                {copy.detailDownload}
+              </button>
+            </div>
+
             {quotation.canConvert ? (
               <button
-                className={retailStyles.buttonDark}
+                className={styles.convertButton}
                 disabled={isWorking}
                 type="button"
                 onClick={onConvert}
               >
+                <ReceiptText size={17} strokeWidth={2.4} />
                 {copy.detailConvert}
+              </button>
+            ) : null}
+
+            {canDelete ? (
+              <button
+                className={styles.deleteButton}
+                disabled={isWorking}
+                type="button"
+                onClick={() => void onDelete()}
+              >
+                {copy.detailDelete}
               </button>
             ) : null}
           </div>
         ) : undefined
       }
+      footerClassName={styles.drawerFooter}
       isOpen={isOpen}
-      title={quotation?.fullNumber ?? copy.detailTitle}
+      title={copy.detailTitle}
       onClose={onClose}
     >
       {isLoading ? (
@@ -113,182 +150,110 @@ export function QuotationDetailDrawer({
         <p className={styles.emptyText}>{copy.detailMissing}</p>
       ) : (
         <div className={styles.layout}>
-          <section className={styles.actions}>
-            <button
-              className={retailStyles.buttonOutline}
-              disabled={isWorking}
-              type="button"
-              onClick={() => void onDownload()}
-            >
-              {copy.detailDownload}
-            </button>
-            <button
-              className={retailStyles.buttonOutline}
-              disabled={isWorking}
-              type="button"
-              onClick={onShare}
-            >
-              {copy.detailShare}
-            </button>
-            {canEdit ? (
-              <button
-                className={retailStyles.buttonOutline}
-                disabled={isWorking}
-                type="button"
-                onClick={onEdit}
-              >
-                {copy.detailEdit}
-              </button>
-            ) : null}
-            {quotation.status === "DRAFT" ? (
-              <button
-                className={retailStyles.buttonDark}
-                disabled={isWorking}
-                type="button"
-                onClick={() => void onSend()}
-              >
-                {copy.detailSend}
-              </button>
-            ) : null}
-            {quotation.status === "SENT" ? (
-              <>
-                <button
-                  className={retailStyles.buttonSuccess}
-                  disabled={isWorking}
-                  type="button"
-                  onClick={() => void onAccept()}
-                >
-                  {copy.detailAccept}
-                </button>
-                <button
-                  className={retailStyles.buttonDanger}
-                  disabled={isWorking}
-                  type="button"
-                  onClick={() => void onReject()}
-                >
-                  {copy.detailReject}
-                </button>
-              </>
-            ) : null}
-            {quotation.status !== "CONVERTED" && quotation.status !== "CANCELLED" ? (
-              <button
-                className={retailStyles.buttonDanger}
-                disabled={isWorking}
-                type="button"
-                onClick={() => void onCancel()}
-              >
-                {copy.detailCancel}
-              </button>
-            ) : null}
-            {canDelete ? (
-              <button
-                className={retailStyles.buttonDanger}
-                disabled={isWorking}
-                type="button"
-                onClick={() => void onDelete()}
-              >
-                {copy.detailDelete}
-              </button>
-            ) : null}
-          </section>
-
-          <section className={styles.summaryGrid}>
-            <div className={styles.summaryCard}>
-              <span className={styles.summaryLabel}>{copy.columns.status}</span>
-              <span
-                className={`${styles.statusPill} ${getStatusClassName(
-                  quotation.status,
-                )}`}
-              >
-                {getQuotationStatusLabel(quotation.status, languageCode)}
+          <section className={styles.headerBlock}>
+            <div className={styles.infoBlock}>
+              <strong>{copy.detailValidity}</strong>
+              <span className={styles.iconLine}>
+                <CalendarDays size={17} strokeWidth={2.3} />
+                {formatQuotationDate(quotation.validUntil, languageCode)}
               </span>
             </div>
-            <div className={styles.summaryCard}>
-              <span className={styles.summaryLabel}>{copy.detailCustomer}</span>
-              <strong>{quotation.customer?.name ?? copy.noCustomer}</strong>
+
+            <div className={styles.infoBlock}>
+              <strong>{copy.conceptLabel}</strong>
+              <span>{quotation.concept ?? copy.noConcept}</span>
             </div>
-            <div className={styles.summaryCard}>
-              <span className={styles.summaryLabel}>{copy.detailCreator}</span>
-              <strong>{quotation.creatorName ?? "—"}</strong>
-            </div>
-            <div className={styles.summaryCard}>
-              <span className={styles.summaryLabel}>{copy.detailValidity}</span>
-              <strong>{formatQuotationDate(quotation.validUntil, languageCode)}</strong>
-            </div>
-            <div className={styles.summaryCard}>
-              <span className={styles.summaryLabel}>{copy.detailCreatedAt}</span>
-              <strong>{formatQuotationDateTime(quotation.createdAt, languageCode)}</strong>
-            </div>
-            <div className={styles.summaryCard}>
-              <span className={styles.summaryLabel}>{copy.detailConvertedSale}</span>
-              <strong>{quotation.convertedSaleNumber ?? "—"}</strong>
+
+            <div className={styles.totalBlock}>
+              <strong>{copy.grandTotal}</strong>
+              <span>{formatQuotationCurrency(quotation.total, languageCode)}</span>
             </div>
           </section>
 
-          <section className={styles.tableSection}>
-            <h4 className={styles.sectionTitle}>{copy.detailItems}</h4>
-            <div className={styles.tableScroller}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>{copy.itemName}</th>
-                    <th>{copy.itemQuantity}</th>
-                    <th>{copy.itemUnitPrice}</th>
-                    <th>{copy.itemDiscount}</th>
-                    <th>{copy.taxesTotal}</th>
-                    <th>{copy.itemTotal}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {quotation.items.map((item) => (
-                    <tr key={item.id}>
-                      <td>
-                        <div className={styles.itemCell}>
-                          <strong>{item.name}</strong>
-                          {item.description ? <span>{item.description}</span> : null}
-                        </div>
-                      </td>
-                      <td>{item.quantity}</td>
-                      <td>{formatQuotationCurrency(item.unitPrice, languageCode)}</td>
-                      <td>{formatQuotationCurrency(item.discount, languageCode)}</td>
-                      <td>{formatQuotationCurrency(item.taxAmount, languageCode)}</td>
-                      <td>{formatQuotationCurrency(item.total, languageCode)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section className={styles.totalsCard}>
-            <div>
-              <span>{copy.subtotal}</span>
-              <strong>{formatQuotationCurrency(quotation.subtotal, languageCode)}</strong>
-            </div>
-            <div>
-              <span>{copy.discountTotal}</span>
+          <section className={styles.metricsBlock}>
+            <div className={styles.metricRow}>
+              <span>
+                <Percent size={17} strokeWidth={2.3} />
+                {copy.detailDiscountPercent.replace(
+                  "{percent}",
+                  discountPercentage.toString(),
+                )}
+              </span>
               <strong>
                 {formatQuotationCurrency(quotation.discountTotal, languageCode)}
               </strong>
             </div>
-            <div>
-              <span>{copy.taxesTotal}</span>
-              <strong>{formatQuotationCurrency(quotation.taxTotal, languageCode)}</strong>
-            </div>
-            <div>
-              <span>{copy.grandTotal}</span>
-              <strong>{formatQuotationCurrency(quotation.total, languageCode)}</strong>
+            <div className={styles.metricRow}>
+              <span>
+                <CircleDollarSign size={17} strokeWidth={2.3} />
+                {copy.grandTotal}
+              </span>
+              <strong className={styles.greenValue}>
+                {formatQuotationCurrency(quotation.total, languageCode)}
+              </strong>
             </div>
           </section>
 
-          <section className={styles.notesGrid}>
-            <div className={styles.noteCard}>
-              <h4 className={styles.sectionTitle}>{copy.detailNotes}</h4>
-              <p>{quotation.notes ?? copy.noNotes}</p>
+          <section className={styles.metaBlock}>
+            <div className={styles.metaRow}>
+              <span>
+                <CalendarDays size={17} strokeWidth={2.3} />
+                {copy.detailCreatedAt}
+              </span>
+              <strong>
+                {formatDrawerDateTime(quotation.createdAt, languageCode)}
+              </strong>
             </div>
-            <div className={styles.noteCard}>
-              <h4 className={styles.sectionTitle}>{copy.detailTerms}</h4>
-              <p>{quotation.terms ?? copy.noTerms}</p>
+            <div className={styles.metaRow}>
+              <span>
+                <UserRound size={17} strokeWidth={2.3} />
+                {copy.detailCustomer}
+              </span>
+              <strong>{quotation.customer?.name ?? copy.noCustomer}</strong>
+            </div>
+            <div className={styles.metaRow}>
+              <span>
+                <UsersRound size={17} strokeWidth={2.3} />
+                {copy.detailCreator}
+              </span>
+              <strong>{quotation.creatorName ?? "—"}</strong>
+            </div>
+            <div className={styles.metaRow}>
+              <span>
+                <FileText size={17} strokeWidth={2.3} />
+                {copy.detailReferences}
+              </span>
+              <strong>{quotation.itemCount.toString()}</strong>
+            </div>
+          </section>
+
+          <section className={styles.itemsBlock}>
+            <h4>{copy.detailItems}</h4>
+            <div className={styles.itemsList}>
+              {quotation.items.map((item) => (
+                <article className={styles.itemRow} key={item.id}>
+                  <span className={styles.itemThumb} aria-hidden="true">
+                    <Package size={20} strokeWidth={2.2} />
+                  </span>
+                  <div className={styles.itemCopy}>
+                    <strong>{item.name}</strong>
+                    <span>
+                      {formatUnits(item.quantity, languageCode)}
+                      {item.productCode ? ` · ${item.productCode}` : ""}
+                    </span>
+                  </div>
+                  <div className={styles.itemTotals}>
+                    <strong>
+                      {formatQuotationCurrency(item.total, languageCode)}
+                    </strong>
+                    <span>
+                      {formatQuotationCurrency(item.unitPrice, languageCode)}
+                      {" x "}
+                      {formatUnits(item.quantity, languageCode)}
+                    </span>
+                  </div>
+                </article>
+              ))}
             </div>
           </section>
         </div>
