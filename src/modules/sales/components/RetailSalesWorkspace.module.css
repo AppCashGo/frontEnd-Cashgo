@@ -271,7 +271,6 @@
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid rgba(192, 204, 218, 0.96);
   border-radius: 1rem;
   background: #ffffff;
 }
@@ -316,7 +315,6 @@
   align-content: start;
   gap: 1rem;
   min-height: 0;
-  padding: 1rem;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
