@@ -233,7 +233,7 @@
 .workspace {
   display: grid;
   gap: 1.05rem;
-  padding: clamp(3rem, 5.8vw, 6.25rem) clamp(1.45rem, 2.5vw, 2.5rem) 3rem;
+  padding: 0;
 }
 
 .segmentedTabs {
