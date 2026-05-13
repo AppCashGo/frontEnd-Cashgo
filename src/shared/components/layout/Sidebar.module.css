@@ -515,6 +515,24 @@
   cursor: pointer;
 }
 
+.languagePanel {
+  padding: 0.85rem 0.4rem 0;
+}
+
+.languagePanel label {
+  gap: 0.3rem;
+}
+
+.languagePanel span {
+  font-size: 0.72rem;
+}
+
+.languagePanel select {
+  min-height: 2.5rem;
+  border-radius: 0.8rem;
+  font-size: 0.88rem;
+}
+
 .versionRow {
   display: flex;
   align-items: center;

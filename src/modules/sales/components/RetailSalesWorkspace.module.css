@@ -1388,9 +1388,9 @@
 
 @media (min-width: 1100px) {
   .page {
-    --sales-sticky-offset: 4.95rem;
-    --sales-workspace-height: calc(100vh - 6.75rem);
-    --sales-workspace-height: calc(100dvh - 6.75rem);
+    --sales-sticky-offset: 1rem;
+    --sales-workspace-height: calc(100vh - 2.35rem);
+    --sales-workspace-height: calc(100dvh - 2.35rem);
     min-height: 0;
   }
 

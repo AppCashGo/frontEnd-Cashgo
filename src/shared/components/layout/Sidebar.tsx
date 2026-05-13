@@ -11,12 +11,14 @@ import { useCreateManagedBusinessMutation } from "@/modules/settings/hooks/use-s
 import { CreateBusinessModal } from "@/shared/components/business/CreateBusinessModal";
 import { getBusinessNavigationPreset } from "@/shared/constants/business-categories";
 import { BrandLogo } from "@/shared/components/brand/BrandLogo";
+import { LanguageSelect } from "@/shared/components/ui/LanguageSelect";
 import {
   getModuleLandingPath,
   getModuleNavigationRoutes,
 } from "@/routes/module-navigation-routes";
 import { routePaths, routeSegments } from "@/routes/route-paths";
 import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
+import { useTranslationsQuery } from "@/shared/hooks/use-translations-query";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import styles from "./Sidebar.module.css";
@@ -251,7 +253,9 @@ export function Sidebar({
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const createManagedBusinessMutation = useCreateManagedBusinessMutation();
-  const { dictionary, languageCode } = useAppTranslation();
+  const { dictionary, languageCode, translationId, setLanguagePreference } =
+    useAppTranslation();
+  const { data: translations = [] } = useTranslationsQuery();
   const navigationPreset = useBusinessNavigationPreset();
   const activeBusinessCategory = getActiveBusinessCategory(user);
   const activeBusinessRole = getActiveBusinessRole(user);
@@ -630,6 +634,23 @@ export function Sidebar({
               <SidebarIcon className={styles.utilityIcon} name="logout" />
               <span>{dictionary.layout.sidebar.logout}</span>
             </button>
+
+            {translations.length > 0 ? (
+              <div className={styles.languagePanel}>
+                <LanguageSelect
+                  id="sidebar-language"
+                  label={dictionary.layout.header.interfaceLanguage}
+                  options={translations}
+                  value={translationId}
+                  onChange={(translation) =>
+                    setLanguagePreference({
+                      code: translation.code,
+                      translationId: translation.id,
+                    })
+                  }
+                />
+              </div>
+            ) : null}
 
             <div className={styles.versionRow}>
               <BrandLogo

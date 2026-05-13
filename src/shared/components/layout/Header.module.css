@@ -2,20 +2,13 @@
   position: sticky;
   top: 0;
   z-index: 35;
+  display: flex;
+  align-items: center;
+  min-height: 3.15rem;
+  padding: 0.35rem 1rem;
   background: rgba(248, 250, 252, 0.96);
   border-bottom: 1px solid rgba(31, 41, 55, 0.08);
   backdrop-filter: blur(18px);
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: 0.75rem;
-  min-height: 3.15rem;
-  padding: 0.35rem 1rem;
-  min-width: 0;
 }
 
 .mobileMenuButton,
@@ -24,19 +17,21 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  min-height: 2.2rem;
-  padding: 0.45rem 0.7rem;
   border: 1px solid rgba(33, 43, 58, 0.14);
-  border-radius: 8px;
   background: #ffffff;
   color: #253247;
+  font: inherit;
   font-size: 0.84rem;
   font-weight: 800;
   line-height: 1;
   box-shadow: 0 0.45rem 1rem rgba(15, 23, 42, 0.06);
   cursor: pointer;
-  flex: 0 0 auto;
-  max-width: 100%;
+}
+
+.mobileMenuButton {
+  min-height: 2.2rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 8px;
 }
 
 .desktopSidebarButton {
@@ -50,39 +45,18 @@
   flex: 0 0 auto;
 }
 
-.toolbarUtilities {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.languageField {
-  width: min(100%, 12rem);
-  min-width: 0;
-}
-
-.languageField label {
-  gap: 0.2rem;
-}
-
-.languageField span {
-  font-size: 0.7rem;
-  line-height: 1;
-}
-
-.languageField select {
-  min-height: 2.15rem;
-  border-radius: 8px;
-  padding: 0.45rem 0.75rem;
-  font-size: 0.88rem;
-}
-
 @media (min-width: 992px) {
-  .toolbar {
-    justify-content: space-between;
-    padding-inline: 1.25rem;
+  .header {
+    position: fixed;
+    inset: 0 auto auto 0;
+    z-index: 201;
+    display: block;
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    pointer-events: none;
+    backdrop-filter: none;
   }
 
   .mobileMenuButton {
@@ -90,28 +64,48 @@
   }
 
   .desktopSidebarButton {
+    position: fixed;
+    top: 9px;
+    left: 68px;
+    z-index: 201;
     display: inline-flex;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: #38a9f8;
+    color: #ffffff;
+    box-shadow: 0 0.9rem 1.7rem rgba(56, 169, 248, 0.32);
+    pointer-events: auto;
+    transform: translate(0) rotate(0);
+    transition:
+      transform 0.25s ease,
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .desktopSidebarButton:hover {
+    background: #238ee2;
+    box-shadow: 0 1rem 2rem rgba(35, 142, 226, 0.34);
+  }
+
+  .desktopSidebarButtonExpanded {
+    transform: translate(220px) rotate(0);
+  }
+
+  .sidebarToggleIcon {
+    width: 1.15rem;
+    height: 1.15rem;
   }
 }
 
 @media (max-width: 420px) {
-  .toolbar {
+  .header {
     padding-inline: 0.75rem;
-    gap: 0.5rem;
   }
 
-  .mobileMenuButton span,
-  .desktopSidebarButton span {
+  .mobileMenuButton span {
     display: none;
-  }
-
-  .languageField {
-    width: min(58vw, 11rem);
-  }
-}
-
-@media (max-width: 340px) {
-  .languageField {
-    width: min(54vw, 9.5rem);
   }
 }
