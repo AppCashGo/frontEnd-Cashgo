@@ -1,7 +1,7 @@
 .panel {
   display: grid;
   gap: 1.1rem;
-  padding: 1.25rem;
+  padding: 0;
 }
 
 .header {
@@ -131,28 +131,42 @@
 }
 
 .emptyState {
-  background: linear-gradient(145deg, #fbfcff 0%, #f3f5fb 100%);
-  border: 1px dashed #d8ddeb;
-  border-radius: 1.1rem;
   display: grid;
-  gap: 0.35rem;
+  gap: 1rem;
+  align-content: center;
   justify-items: center;
-  padding: 2rem 1.25rem;
+  min-height: 28rem;
+  padding: 4rem 1.25rem;
   text-align: center;
 }
 
-.emptyTitle {
-  color: #27314d;
-  font-size: 1rem;
-  font-weight: 800;
-  margin: 0;
+.emptyIcon {
+  width: 4.4rem;
+  height: 4.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #f2df00;
 }
 
-.emptyDescription {
-  color: #74809b;
-  line-height: 1.5;
+.emptyIcon svg {
+  width: 3.4rem;
+  height: 3.4rem;
+  stroke-width: 1.8;
+}
+
+.emptyTitle {
+  color: #5b667b;
+  font-size: 1.05rem;
+  font-weight: 800;
   margin: 0;
-  max-width: 30rem;
+  max-width: 42rem;
+  line-height: 1.45;
+}
+
+.emptyTitle strong {
+  color: #3f4a5f;
+  font-weight: 900;
 }
 
 @media (min-width: 900px) {

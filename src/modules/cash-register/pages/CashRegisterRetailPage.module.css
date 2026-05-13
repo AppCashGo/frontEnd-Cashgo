@@ -1,6 +1,6 @@
 .page {
   display: grid;
-  min-height: calc(100vh - 5.25rem);
+  min-height: calc(100vh - 3.6rem);
   background: #ffffff;
   color: #172033;
 }
@@ -65,8 +65,9 @@
 
 .topBar {
   display: grid;
-  gap: 0.95rem;
-  padding: 1rem clamp(1rem, 2vw, 1.8rem);
+  gap: 1rem;
+  min-height: 5.75rem;
+  padding: 1rem clamp(1.4rem, 2.4vw, 2.55rem);
   border-bottom: 1px solid #20945a;
   min-width: 0;
 }
@@ -80,9 +81,11 @@
 }
 
 .topActions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 1.1rem;
   min-width: 0;
 }
 
@@ -94,13 +97,13 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0.65rem 0.9rem;
+  gap: 0.65rem;
+  padding: 0.75rem 1.35rem;
   border: 0;
-  border-radius: 0.62rem;
+  border-radius: 0.75rem;
   color: #ffffff;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 900;
   line-height: 1.1;
   text-align: center;
@@ -113,7 +116,6 @@
 }
 
 .cashButton {
-  grid-column: 1 / -1;
   background: #172033;
   box-shadow: 0 0.45rem 1.1rem rgba(23, 32, 51, 0.16);
 }
@@ -126,6 +128,7 @@
 }
 
 .cashButton svg,
+.topReportButton svg,
 .saleMenuIcon svg,
 .selectorIcon svg {
   width: 1.15rem;
@@ -229,28 +232,28 @@
 
 .workspace {
   display: grid;
-  gap: 1rem;
-  padding: 1rem clamp(1rem, 2vw, 1.8rem) 2rem;
+  gap: 1.05rem;
+  padding: clamp(3rem, 5.8vw, 6.25rem) clamp(1.45rem, 2.5vw, 2.5rem) 3rem;
 }
 
 .segmentedTabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  padding: 0.38rem;
+  padding: 0.45rem;
   border: 1px solid #d5dfeb;
-  border-radius: 0.55rem;
+  border-radius: 0.45rem;
   background: #ffffff;
 }
 
 .segment,
 .segmentActive {
-  min-height: 2.9rem;
+  min-height: 3.1rem;
   border: 0;
-  border-radius: 0.35rem;
+  border-radius: 0.3rem;
   background: transparent;
   color: #768397;
   font: inherit;
-  font-size: 0.92rem;
+  font-size: 1.05rem;
   font-weight: 900;
   cursor: pointer;
 }
@@ -263,7 +266,7 @@
 
 .filtersBar {
   display: grid;
-  gap: 0.7rem;
+  gap: 0.85rem;
   min-width: 0;
 }
 
@@ -272,9 +275,9 @@
 .dateShell,
 .searchShell,
 .reportButton {
-  min-height: 3rem;
-  border: 1px solid #cad5e4;
-  border-radius: 0.6rem;
+  min-height: 3.45rem;
+  border: 2px solid #c7d0dc;
+  border-radius: 0.75rem;
   background: #ffffff;
   color: #172033;
   font: inherit;
@@ -285,10 +288,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  padding: 0 0.9rem;
+  gap: 0.6rem;
+  padding: 0 1rem;
   font-weight: 900;
   cursor: pointer;
+}
+
+.filterButton svg,
+.dateShell svg,
+.searchShell svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
 }
 
 .filterCount {
@@ -307,9 +318,10 @@
 .dateShell,
 .searchShell {
   position: relative;
-  display: grid;
+  display: flex;
   align-items: center;
-  padding: 0.35rem 0.8rem;
+  gap: 0.65rem;
+  padding: 0 1rem;
 }
 
 .selectShell span,
@@ -329,8 +341,19 @@
   background: transparent;
   color: #172033;
   font: inherit;
-  font-size: 0.93rem;
+  font-size: 1rem;
   font-weight: 800;
+}
+
+.dateShell input {
+  padding-right: 1.8rem;
+}
+
+.dateShell input::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0.75rem 0.85rem auto auto;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .selectShell select:focus,
@@ -347,24 +370,24 @@
 
 .summaryGrid {
   display: grid;
-  gap: 0.8rem;
+  gap: 1.1rem;
 }
 
 .summaryCard {
-  min-height: 5.4rem;
+  min-height: 6.25rem;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 1rem;
+  gap: 1rem;
+  padding: 1.05rem 1.35rem;
   border: 1px solid #edf1f6;
-  border-radius: 0.55rem;
+  border-radius: 0.75rem;
   background: #ffffff;
-  box-shadow: 0 0.9rem 2rem rgba(17, 24, 39, 0.05);
+  box-shadow: 0 1rem 2.2rem rgba(17, 24, 39, 0.07);
 }
 
 .summaryIcon {
-  width: 3rem;
-  height: 3rem;
+  width: 3.75rem;
+  height: 3.75rem;
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
@@ -373,8 +396,8 @@
 }
 
 .summaryIcon svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  width: 1.65rem;
+  height: 1.65rem;
 }
 
 .summaryIcon_balance,
@@ -396,13 +419,13 @@
 .summaryLabel {
   margin: 0 0 0.18rem;
   color: #66758a;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   font-weight: 900;
 }
 
 .summaryValue {
   color: #172033;
-  font-size: 1.25rem;
+  font-size: 1.45rem;
   font-weight: 900;
 }
 
@@ -411,17 +434,18 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.25rem;
   border-bottom: 1px solid #e5ebf3;
+  margin-top: 1.25rem;
 }
 
 .ledgerTab,
 .ledgerTabActive {
-  min-height: 3.2rem;
+  min-height: 3.75rem;
   border: 0;
   border-bottom: 4px solid transparent;
   background: #ffffff;
   color: #728094;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 900;
   cursor: pointer;
 }
@@ -435,6 +459,11 @@
 .debtPanel {
   display: grid;
   gap: 1rem;
+}
+
+.feedbackPanel {
+  min-height: 18rem;
+  align-content: center;
 }
 
 .drawerStack {
@@ -707,17 +736,15 @@
   }
 
   .topActions {
-    display: flex;
-    align-items: center;
     justify-content: flex-end;
-    flex-wrap: wrap;
   }
 
   .cashButton,
   .saleButton,
   .expenseButton,
   .topReportButton {
-    min-width: 8.8rem;
+    min-width: 12.2rem;
+    min-height: 3.15rem;
   }
 
   .cashButton {
@@ -736,12 +763,15 @@
 @media (min-width: 900px) {
   .filtersBar {
     grid-template-columns:
-      minmax(7rem, auto)
       minmax(9rem, 11rem)
-      minmax(11rem, 16rem)
-      minmax(15rem, 22rem)
-      minmax(11rem, 1fr);
+      minmax(9rem, 11rem)
+      minmax(12rem, 16rem)
+      minmax(15rem, 19rem);
     align-items: center;
+  }
+
+  .filtersBarClosures {
+    grid-template-columns: minmax(9rem, 12rem) minmax(12rem, 16rem);
   }
 
   .reportButton {

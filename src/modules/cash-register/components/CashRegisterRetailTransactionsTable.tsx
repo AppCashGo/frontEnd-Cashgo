@@ -1,3 +1,4 @@
+import { Wallet } from "lucide-react";
 import type { MovementLedgerItem } from "@/modules/cash-register/types/cash-register";
 import {
   formatCashRegisterCurrency,
@@ -96,6 +97,10 @@ export function CashRegisterRetailTransactionsTable({
   if (transactions.length === 0) {
     return (
       <div className={styles.emptyState}>
+        <span className={styles.emptyIcon} aria-hidden="true">
+          <Wallet />
+          <span />
+        </span>
         <p className={styles.emptyTitle}>
           Aún no tienes registros creados en esta fecha.
         </p>

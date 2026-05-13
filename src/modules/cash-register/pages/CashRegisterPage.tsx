@@ -1,5 +1,14 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import {
+  Banknote,
+  Calendar,
+  Crown,
+  Search,
+  SlidersHorizontal,
+  TrendingUp,
+  Wallet,
+} from "lucide-react";
 import { CashRegisterHistoryList } from "@/modules/cash-register/components/CashRegisterHistoryList";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
 import { CashRegisterRetailTransactionsTable } from "@/modules/cash-register/components/CashRegisterRetailTransactionsTable";
@@ -30,10 +39,8 @@ import {
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
 import { useEmployeesQuery } from "@/modules/employees/hooks/use-employees-query";
 import { useSuppliersQuery } from "@/modules/suppliers/hooks/use-suppliers-query";
-import { routePaths } from "@/routes/route-paths";
 import { AppIcon } from "@/shared/components/icons/AppIcon";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
-import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
 import { toDateInputValue } from "@/shared/utils/date-input";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import { joinClassNames } from "@/shared/utils/join-class-names";
@@ -265,10 +272,13 @@ function SummaryCard({
   value: string;
   tone?: "balance" | "sales" | "expenses" | "neutral";
 }) {
+  const Icon =
+    tone === "balance" ? TrendingUp : tone === "expenses" ? Wallet : Banknote;
+
   return (
     <article className={styles.summaryCard}>
       <span className={joinClassNames(styles.summaryIcon, styles[`summaryIcon_${tone}`])}>
-        <AppIcon name={tone === "expenses" ? "expenses" : "cash"} />
+        <Icon />
       </span>
       <div>
         <p className={styles.summaryLabel}>{label}</p>
@@ -608,9 +618,6 @@ function ReportsDrawer({
 }
 
 export function CashRegisterPage() {
-  const navigate = useNavigate();
-  const navigationPreset = useBusinessNavigationPreset();
-  const isRestaurantPreset = navigationPreset === "restaurant";
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<CashRegisterTab>("transactions");
   const [activeLedgerTab, setActiveLedgerTab] = useState<LedgerTab>("income");
@@ -623,7 +630,6 @@ export function CashRegisterPage() {
     useState<SelectionDrawerType | null>(null);
   const [isReportDrawerOpen, setReportDrawerOpen] = useState(false);
   const [reportStep, setReportStep] = useState<ReportStep>("menu");
-  const [isSaleMenuOpen, setSaleMenuOpen] = useState(false);
   const [selectedPaymentFilters, setSelectedPaymentFilters] = useState<string[]>([]);
   const [selectedSaleOrigins, setSelectedSaleOrigins] = useState<string[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
@@ -653,9 +659,22 @@ export function CashRegisterPage() {
   const downloadReportMutation = useDownloadCashRegisterReportMutation();
   const downloadMovementsReportMutation = useDownloadMovementsReportMutation();
   const currentSession = currentSessionQuery.data ?? null;
-  const history = historyQuery.data ?? [];
+  const history = historyQuery.data;
   const movementsOverview = movementsOverviewQuery.data ?? null;
-  const closedSessions = history.filter((session) => session.status === "CLOSED");
+  const closedSessions = useMemo(
+    () =>
+      (history ?? []).filter((session) => {
+        if (session.status !== "CLOSED") {
+          return false;
+        }
+
+        const referenceDate = session.closedAt ?? session.openedAt;
+        const sessionDate = toDateInputValue(new Date(referenceDate));
+
+        return sessionDate >= dateRange.from && sessionDate <= dateRange.to;
+      }),
+    [dateRange.from, dateRange.to, history],
+  );
   const activeFiltersCount =
     selectedPaymentFilters.length +
     selectedSaleOrigins.length +
@@ -785,20 +804,19 @@ export function CashRegisterPage() {
     manualEntryMutation.isPending;
   const isLoading =
     currentSessionQuery.isLoading ||
-    historyQuery.isLoading ||
     assigneesQuery.isLoading ||
     movementsOverviewQuery.isLoading;
   const hasError =
     currentSessionQuery.isError ||
-    historyQuery.isError ||
     assigneesQuery.isError ||
     movementsOverviewQuery.isError;
   const error =
     currentSessionQuery.error ??
-    historyQuery.error ??
     assigneesQuery.error ??
     movementsOverviewQuery.error;
-  const periodLabel = formatPeriodLabel(dateRange.from, dateRange.to, periodOption);
+  const hasClosuresError = historyQuery.isError;
+  const closuresError = historyQuery.error;
+  const isClosuresLoading = historyQuery.isLoading;
   const selectedDrawerItems =
     selectionDrawerType === "employees"
       ? employeeItems
@@ -899,30 +917,8 @@ export function CashRegisterPage() {
     setReportDrawerOpen(true);
   }
 
-  const emptyTransactionsDescription = isRestaurantPreset
-    ? 'Empieza agregando uno con las acciones de "Nueva venta" y "Nuevo gasto"'
-    : undefined;
-
   return (
-    <div
-      className={joinClassNames(
-        styles.page,
-        isRestaurantPreset && styles.pageRestaurant,
-      )}
-    >
-      <section className={styles.planBanner} aria-label="Plan Pro">
-        <span className={styles.planBannerIcon}>
-          <AppIcon name="cash" />
-        </span>
-        <p>
-          Compra el <strong>Plan Pro</strong>, disfruta de todos los beneficios
-          y lleva tu negocio al siguiente nivel.
-        </p>
-        <button className={styles.planBannerButton} type="button">
-          Conocer más
-        </button>
-      </section>
-
+    <div className={styles.page}>
       <div className={styles.topBar}>
         <h1 className={styles.pageTitle}>Movimientos</h1>
 
@@ -935,78 +931,18 @@ export function CashRegisterPage() {
             type="button"
             onClick={() => setSessionDrawerOpen(true)}
           >
-            <AppIcon name="cash" />
+            <Crown />
             {currentSession ? "Caja abierta" : "Abrir caja"}
           </button>
 
-          {isRestaurantPreset ? (
-            <>
-              <div className={styles.saleMenuWrapper}>
-                <button
-                  className={styles.saleButton}
-                  type="button"
-                  onClick={() => setSaleMenuOpen((isOpen) => !isOpen)}
-                >
-                  Nueva venta
-                  <span aria-hidden="true">{isSaleMenuOpen ? "⌃" : "⌄"}</span>
-                </button>
-
-                {isSaleMenuOpen ? (
-                  <div className={styles.saleMenu}>
-                    <button
-                      className={styles.saleMenuItem}
-                      type="button"
-                      onClick={() => {
-                        setSaleMenuOpen(false);
-                        navigate(`${routePaths.sales}?sale=products`);
-                      }}
-                    >
-                      <span className={styles.saleMenuIcon}>
-                        <AppIcon name="sales" />
-                      </span>
-                      <span>
-                        <strong>Venta de productos</strong>
-                        <small>Registra una venta seleccionando productos de tu inventario.</small>
-                      </span>
-                    </button>
-                    <button
-                      className={styles.saleMenuItem}
-                      type="button"
-                      onClick={() => {
-                        setSaleMenuOpen(false);
-                        navigate(`${routePaths.sales}?sale=free`);
-                      }}
-                    >
-                      <span className={styles.saleMenuIcon}>
-                        <AppIcon name="money" />
-                      </span>
-                      <span>
-                        <strong>Venta libre</strong>
-                        <small>Registra un ingreso sin seleccionar productos.</small>
-                      </span>
-                    </button>
-                  </div>
-                ) : null}
-              </div>
-
-              <button
-                className={styles.expenseButton}
-                type="button"
-                onClick={() => navigate(routePaths.expenses)}
-              >
-                Nuevo gasto
-              </button>
-            </>
-          ) : (
-            <button
-              className={styles.topReportButton}
-              type="button"
-              onClick={openReportsDrawer}
-            >
-              <AppIcon name="reports" />
-              Descargar reporte
-            </button>
-          )}
+          <button
+            className={styles.topReportButton}
+            type="button"
+            onClick={openReportsDrawer}
+          >
+            <Crown />
+            Descargar reporte
+          </button>
         </div>
       </div>
 
@@ -1028,22 +964,29 @@ export function CashRegisterPage() {
           </button>
         </div>
 
-        <div className={styles.filtersBar}>
-          <button
-            className={styles.filterButton}
-            type="button"
-            onClick={() => setFilterDrawerOpen(true)}
-          >
-            <span>☷</span>
-            Filtrar
-            {activeFiltersCount > 0 ? (
-              <strong className={styles.filterCount}>{activeFiltersCount}</strong>
-            ) : null}
-          </button>
+        <div
+          className={joinClassNames(
+            styles.filtersBar,
+            activeTab === "closures" && styles.filtersBarClosures,
+          )}
+        >
+          {activeTab === "transactions" ? (
+            <button
+              className={styles.filterButton}
+              type="button"
+              onClick={() => setFilterDrawerOpen(true)}
+            >
+              <SlidersHorizontal />
+              Filtrar
+              {activeFiltersCount > 0 ? (
+                <strong className={styles.filterCount}>{activeFiltersCount}</strong>
+              ) : null}
+            </button>
+          ) : null}
 
           <label className={styles.selectShell}>
-            <span>Periodo</span>
             <select
+              aria-label="Periodo"
               value={periodOption}
               onChange={(event) => setPeriodOption(event.target.value as PeriodOption)}
             >
@@ -1054,32 +997,26 @@ export function CashRegisterPage() {
           </label>
 
           <label className={styles.dateShell}>
-            <span>{periodLabel}</span>
             <input
+              aria-label={formatPeriodLabel(dateRange.from, dateRange.to, periodOption)}
               type="date"
               value={selectedDate}
               onChange={(event) => setSelectedDate(event.target.value)}
             />
+            <Calendar />
           </label>
 
-          <label className={styles.searchShell}>
-            <span>Buscar concepto</span>
-            <input
-              placeholder="Buscar concepto..."
-              type="search"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-            />
-          </label>
-
-          {isRestaurantPreset ? (
-            <button
-              className={styles.reportButton}
-              type="button"
-              onClick={openReportsDrawer}
-            >
-              ⇩ Descargar reporte
-            </button>
+          {activeTab === "transactions" ? (
+            <label className={styles.searchShell}>
+              <Search />
+              <input
+                aria-label="Buscar concepto"
+                placeholder="Buscar concepto..."
+                type="search"
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+              />
+            </label>
           ) : null}
         </div>
 
@@ -1147,35 +1084,45 @@ export function CashRegisterPage() {
                   )}
                 />
                 <CashRegisterRetailTransactionsTable
-                  emptyActionLabel={
-                    isRestaurantPreset ? undefined : "Crear un movimiento"
-                  }
-                  emptyDescription={emptyTransactionsDescription}
+                  emptyActionLabel="Crear un movimiento"
                   transactions={visibleTransactions}
-                  onEmptyAction={
-                    isRestaurantPreset
-                      ? undefined
-                      : () => setSessionDrawerOpen(true)
-                  }
+                  onEmptyAction={() => setSessionDrawerOpen(true)}
                 />
               </div>
             ) : (
               <CashRegisterRetailTransactionsTable
-                emptyActionLabel={
-                  isRestaurantPreset ? undefined : "Crear un movimiento"
-                }
-                emptyDescription={emptyTransactionsDescription}
+                emptyActionLabel="Crear un movimiento"
                 transactions={visibleTransactions}
-                onEmptyAction={
-                  isRestaurantPreset
-                    ? undefined
-                    : () => setSessionDrawerOpen(true)
-                }
+                onEmptyAction={() => setSessionDrawerOpen(true)}
               />
             )}
           </>
         ) : (
-          <CashRegisterHistoryList sessions={closedSessions} />
+          <>
+            {hasClosuresError ? (
+              <div className={styles.feedbackPanel}>
+                <RetailEmptyState
+                  title="No pudimos cargar los cierres de caja"
+                  description={getErrorMessage(
+                    closuresError,
+                    "Intenta actualizar la pantalla o revisar que el backend siga respondiendo.",
+                  )}
+                />
+                <button className={styles.drawerPrimaryButton} type="button" onClick={() => void handleRefresh()}>
+                  Reintentar
+                </button>
+              </div>
+            ) : isClosuresLoading ? (
+              <div className={styles.feedbackPanel}>
+                <RetailEmptyState
+                  title="Preparando cierres de caja..."
+                  description="Estamos consultando el historial de cierres del negocio."
+                />
+              </div>
+            ) : (
+              <CashRegisterHistoryList sessions={closedSessions} />
+            )}
+          </>
         )}
       </section>
 
