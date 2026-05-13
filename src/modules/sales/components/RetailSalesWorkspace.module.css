@@ -607,6 +607,10 @@
   font-weight: 800;
 }
 
+.requiredAsterisk {
+  color: #d4493b;
+}
+
 .input,
 .select,
 .textarea,
@@ -834,18 +838,23 @@
 
 .paymentMethodsGrid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
 }
 
 .paymentMethodCard,
 .paymentMethodCardActive {
-  min-height: 5.7rem;
-  padding: 0.9rem 0.8rem;
-  border: 1px solid #c5d0de;
+  position: relative;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  min-height: 7.5rem;
+  padding: 1rem 0.65rem;
+  border: 2px solid #c5d0de;
   border-radius: 1rem;
   background: #ffffff;
-  color: #415166;
+  color: #1f2a37;
   font: inherit;
   font-weight: 800;
   text-align: center;
@@ -853,48 +862,109 @@
 }
 
 .paymentMethodCardActive {
-  position: relative;
-  border-width: 2px;
-  border-color: #1f9d5d;
-  box-shadow: inset 0 0 0 1px rgba(31, 157, 93, 0.16);
+  border-color: #15995b;
+  box-shadow: none;
 }
 
 .paymentMethodIcon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  margin: 0 auto 0.55rem;
-  border-radius: 0.75rem;
-  background: #eef3f8;
+  width: 2.35rem;
+  height: 2.35rem;
   color: #1f2a37;
-  font-size: 0.95rem;
-  font-weight: 900;
+}
+
+.paymentMethodIconSvg {
+  width: 2.1rem;
+  height: 2.1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .paymentMethodLabel {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 100%;
+  min-height: 2.75rem;
+  color: #607086;
+  font-size: 1.05rem;
+  font-weight: 900;
   line-height: 1.35;
 }
 
 .paymentMethodCheck {
   position: absolute;
-  top: 0.55rem;
-  right: 0.55rem;
+  top: 0;
+  right: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.35rem;
-  height: 1.35rem;
-  border-radius: 999px;
-  background: #1f9d5d;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0 0.85rem 0 1rem;
+  background: #15995b;
   color: #ffffff;
-  font-size: 0.78rem;
+  font-size: 0;
   font-weight: 900;
+}
+
+.paymentMethodCheck::before {
+  content: '✓';
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.nequiMark {
+  position: relative;
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.45rem;
+  background: #26365f;
+  transform: rotate(45deg);
+}
+
+.nequiMark::before,
+.nequiMark::after {
+  content: '';
+  position: absolute;
+  inset: -0.25rem;
+  border-radius: inherit;
+}
+
+.nequiMark::before {
+  border-top: 0.32rem solid #00c7d9;
+  border-bottom: 0.32rem solid #ff2d8e;
+}
+
+.nequiMark::after {
+  border-left: 0.32rem solid #5b4bff;
+  border-right: 0.32rem solid #ff7a00;
+}
+
+.daviplataMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.45rem;
+  background: #d81324;
+  color: #ffffff;
+  font-size: 0.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
 .paymentSummary {
@@ -1455,6 +1525,10 @@
   .pageTitle {
     font-size: clamp(1.55rem, 9vw, 2.1rem);
     line-height: 1.08;
+  }
+
+  .paymentMethodsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .drawer {

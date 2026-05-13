@@ -114,14 +114,13 @@ type DrawerShellProps = {
 const paymentOptions: Array<{
   value: RetailPaymentOption
   label: string
-  icon: string
 }> = [
-  { value: 'CASH', label: 'Efectivo', icon: '$' },
-  { value: 'CARD', label: 'Tarjeta', icon: '[]' },
-  { value: 'TRANSFER', label: 'Transferencia bancaria', icon: '<>' },
-  { value: 'OTHER', label: 'Otro', icon: '••' },
-  { value: 'NEQUI', label: 'Nequi', icon: 'N' },
-  { value: 'DAVIPLATA', label: 'Daviplata', icon: 'D' },
+  { value: 'CASH', label: 'Efectivo' },
+  { value: 'CARD', label: 'Tarjeta' },
+  { value: 'TRANSFER', label: 'Transferencia bancaria' },
+  { value: 'OTHER', label: 'Otro' },
+  { value: 'NEQUI', label: 'Nequi' },
+  { value: 'DAVIPLATA', label: 'Daviplata' },
 ]
 
 const paymentSplitOptions = ['1', '2', '3', '4', '5', '6', 'Otro'] as const
@@ -603,6 +602,52 @@ function PrinterIcon() {
   )
 }
 
+function PaymentMethodIcon({ option }: { option: RetailPaymentOption }) {
+  switch (option) {
+    case 'CASH':
+      return (
+        <svg aria-hidden="true" className={styles.paymentMethodIconSvg} viewBox="0 0 24 24">
+          <path d="M4 7h16v10H4z" />
+          <path d="M8 12h.01M16 12h.01" />
+          <circle cx="12" cy="12" r="2.4" />
+        </svg>
+      )
+    case 'CARD':
+      return (
+        <svg aria-hidden="true" className={styles.paymentMethodIconSvg} viewBox="0 0 24 24">
+          <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9Z" />
+          <path d="M7 10h.01M16 14h1.5" />
+        </svg>
+      )
+    case 'TRANSFER':
+      return (
+        <svg aria-hidden="true" className={styles.paymentMethodIconSvg} viewBox="0 0 24 24">
+          <path d="M4 10h16L12 5 4 10Z" />
+          <path d="M6 10v7M10 10v7M14 10v7M18 10v7M4 19h16" />
+        </svg>
+      )
+    case 'OTHER':
+      return (
+        <svg aria-hidden="true" className={styles.paymentMethodIconSvg} viewBox="0 0 24 24">
+          <circle cx="8" cy="8" r="2" />
+          <circle cx="16" cy="8" r="2" />
+          <circle cx="8" cy="16" r="2" />
+          <circle cx="16" cy="16" r="2" />
+        </svg>
+      )
+    case 'NEQUI':
+      return <span className={styles.nequiMark} aria-hidden="true" />
+    case 'DAVIPLATA':
+      return (
+        <span className={styles.daviplataMark} aria-hidden="true">
+          DaviPlata
+        </span>
+      )
+    default:
+      return null
+  }
+}
+
 type ChangeCalculatorModalProps = {
   saleTotal: number
   amountTenderedInput: string
@@ -703,9 +748,13 @@ function PaymentMethodSelector({
             type="button"
             onClick={() => onChange(option.value)}
           >
-            <span className={styles.paymentMethodIcon}>{option.icon}</span>
+            <span className={styles.paymentMethodIcon}>
+              <PaymentMethodIcon option={option.value} />
+            </span>
             <span className={styles.paymentMethodLabel}>{option.label}</span>
-            {isActive ? <span className={styles.paymentMethodCheck}>✓</span> : null}
+            {isActive ? (
+              <span className={styles.paymentMethodCheck} aria-hidden="true" />
+            ) : null}
           </button>
         )
       })}
@@ -2048,7 +2097,8 @@ export function RetailSalesWorkspace() {
                       ) : (
                         <div className={styles.fieldGroup}>
                           <p className={styles.helperTitle}>
-                            Selecciona el método de pago*
+                            Selecciona el método de pago
+                            <span className={styles.requiredAsterisk}>*</span>
                           </p>
                           <PaymentMethodSelector
                             value={paymentOption}
@@ -2289,7 +2339,10 @@ export function RetailSalesWorkspace() {
 
             {quickSaleForm.settlement === 'PAID' ? (
               <div className={styles.fieldGroup}>
-                <p className={styles.helperTitle}>Selecciona el método de pago*</p>
+                <p className={styles.helperTitle}>
+                  Selecciona el método de pago
+                  <span className={styles.requiredAsterisk}>*</span>
+                </p>
                 <PaymentMethodSelector
                   value={quickSaleForm.paymentOption}
                   onChange={(nextValue) =>
@@ -2508,7 +2561,10 @@ export function RetailSalesWorkspace() {
 
             {quickExpenseForm.status === 'PAID' ? (
               <div className={styles.fieldGroup}>
-                <p className={styles.helperTitle}>Selecciona el método de pago *</p>
+                <p className={styles.helperTitle}>
+                  Selecciona el método de pago
+                  <span className={styles.requiredAsterisk}>*</span>
+                </p>
                 <PaymentMethodSelector
                   value={quickExpenseForm.paymentOption}
                   onChange={(nextValue) =>
