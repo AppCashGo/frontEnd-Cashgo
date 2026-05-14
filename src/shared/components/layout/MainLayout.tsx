@@ -60,10 +60,7 @@ export function MainLayout() {
         <Header />
 
         <main
-          className={joinClassNames(
-            styles.main,
-            isRetailPreset && styles.mainRetail,
-          )}
+          className={styles.main}
         >
           <div
             className={joinClassNames(
