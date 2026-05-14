@@ -3,7 +3,10 @@ import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { Crown } from 'lucide-react'
 import { downloadBillingReceipt } from '@/modules/billing/services/billing-api'
-import { CashRegisterSessionDrawer } from '@/modules/cash-register/components/CashRegisterSessionDrawer'
+import {
+  CashRegisterSessionDrawer,
+  type CashRegisterDrawerMode,
+} from '@/modules/cash-register/components/CashRegisterSessionDrawer'
 import {
   useCashRegisterAssigneesQuery,
   useCloseCashRegisterMutation,
@@ -937,6 +940,9 @@ export function RetailSalesWorkspace() {
   const [isQuickSaleDrawerOpen, setQuickSaleDrawerOpen] = useState(false)
   const [isQuickExpenseDrawerOpen, setQuickExpenseDrawerOpen] = useState(false)
   const [isCashRegisterDrawerOpen, setCashRegisterDrawerOpen] = useState(false)
+  const [cashRegisterDrawerMode, setCashRegisterDrawerMode] =
+    useState<CashRegisterDrawerMode>('manage')
+  const [isCashRegisterMenuOpen, setCashRegisterMenuOpen] = useState(false)
   const [isSortDrawerOpen, setSortDrawerOpen] = useState(false)
   const [isChangeModalOpen, setChangeModalOpen] = useState(false)
   const [sortOption, setSortOption] = useState<ProductSortOption>(defaultSortOption)
@@ -991,6 +997,12 @@ export function RetailSalesWorkspace() {
     openCashRegisterMutation.isPending ||
     closeCashRegisterMutation.isPending ||
     createCashRegisterManualEntryMutation.isPending
+
+  useEffect(() => {
+    if (!currentCashRegister) {
+      setCashRegisterMenuOpen(false)
+    }
+  }, [currentCashRegister])
 
   const {
     cartItems,
@@ -1630,6 +1642,12 @@ export function RetailSalesWorkspace() {
     }
   }
 
+  function openCashRegisterDrawer(mode: CashRegisterDrawerMode) {
+    setCashRegisterDrawerMode(mode)
+    setCashRegisterDrawerOpen(true)
+    setCashRegisterMenuOpen(false)
+  }
+
   return (
     <>
       <RetailPageLayout
@@ -1637,14 +1655,54 @@ export function RetailSalesWorkspace() {
         title="Nueva venta"
         actions={
           <>
-            <button
-              className={`${retailStyles.buttonDark} ${styles.headerCashButton}`}
-              type="button"
-              onClick={() => setCashRegisterDrawerOpen(true)}
-            >
-              <Crown />
-              Abrir caja
-            </button>
+            {currentCashRegister ? (
+              <div className={styles.cashRegisterMenu}>
+                <button
+                  aria-expanded={isCashRegisterMenuOpen}
+                  className={styles.cashRegisterStatusButton}
+                  type="button"
+                  onClick={() =>
+                    setCashRegisterMenuOpen((isOpen) => !isOpen)
+                  }
+                >
+                  <Crown />
+                  Caja abierta
+                  <span aria-hidden="true">
+                    {isCashRegisterMenuOpen ? '⌃' : '⌄'}
+                  </span>
+                </button>
+
+                {isCashRegisterMenuOpen ? (
+                  <div className={styles.cashRegisterMenuList} role="menu">
+                    <button
+                      className={styles.cashRegisterMenuItem}
+                      role="menuitem"
+                      type="button"
+                      onClick={() => openCashRegisterDrawer('close')}
+                    >
+                      Cerrar caja
+                    </button>
+                    <button
+                      className={styles.cashRegisterMenuItem}
+                      role="menuitem"
+                      type="button"
+                      onClick={() => openCashRegisterDrawer('summary')}
+                    >
+                      Ver Resumen de Caja
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <button
+                className={`${retailStyles.buttonDark} ${styles.headerCashButton}`}
+                type="button"
+                onClick={() => openCashRegisterDrawer('manage')}
+              >
+                <Crown />
+                Abrir caja
+              </button>
+            )}
             <span className={styles.headerActionDivider} aria-hidden="true" />
             <button
               className={styles.quickSaleButton}
@@ -2243,11 +2301,12 @@ export function RetailSalesWorkspace() {
       <CashRegisterSessionDrawer
         assignees={cashRegisterAssigneesQuery.data ?? []}
         currentSession={currentCashRegister}
+        initialMode={cashRegisterDrawerMode}
         isOpen={isCashRegisterDrawerOpen}
         isSubmitting={isCashRegisterSubmitting}
         onClose={() => setCashRegisterDrawerOpen(false)}
         onCloseSession={async (input) => {
-          await closeCashRegisterMutation.mutateAsync(input)
+          return closeCashRegisterMutation.mutateAsync(input)
         }}
         onManualEntry={async (input) => {
           await createCashRegisterManualEntryMutation.mutateAsync(input)

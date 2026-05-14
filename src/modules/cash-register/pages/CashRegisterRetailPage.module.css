@@ -158,6 +158,53 @@
   box-shadow: none;
 }
 
+.cashRegisterMenu {
+  position: relative;
+  display: inline-flex;
+  min-width: 12.2rem;
+}
+
+.cashRegisterToggle {
+  width: 100%;
+  box-shadow: none;
+}
+
+.cashRegisterToggle svg:last-child {
+  margin-left: auto;
+}
+
+.cashRegisterMenuList {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  z-index: 28;
+  display: grid;
+  width: min(18rem, 86vw);
+  overflow: hidden;
+  border: 1px solid #172033;
+  border-radius: 0.85rem;
+  background: #ffffff;
+  box-shadow: 0 1.1rem 2rem rgba(15, 23, 42, 0.16);
+}
+
+.cashRegisterMenuItem {
+  min-height: 3.35rem;
+  padding: 0 1rem;
+  border: 0;
+  background: #ffffff;
+  color: #172033;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cashRegisterMenuItem:hover,
+.cashRegisterMenuItem:focus-visible {
+  background: #f3f6fa;
+}
+
 .topReportButton svg {
   width: 1.05rem;
   height: 1.05rem;

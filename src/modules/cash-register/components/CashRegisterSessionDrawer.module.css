@@ -119,9 +119,292 @@
   cursor: not-allowed;
 }
 
+.recordsPanel {
+  width: min(100vw, 34rem);
+}
+
+.recordsBody {
+  padding-bottom: 0;
+}
+
+.recordsView {
+  display: grid;
+  gap: 1rem;
+}
+
+.recordsList {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.methodCard {
+  overflow: hidden;
+  border: 1px solid rgba(220, 228, 238, 0.98);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.methodCardExpanded {
+  background: #f1f5f9;
+}
+
+.methodHeader {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.25rem;
+  padding: 1rem;
+  border: 0;
+  background: transparent;
+  color: #1f2937;
+  font: inherit;
+  font-size: 1.05rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.methodHeaderAmount {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-left: auto;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.methodChevron {
+  color: #1f2937;
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.methodRows {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0 1rem 1rem;
+}
+
+.methodRow,
+.methodBalanceRow,
+.shiftSummaryRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.methodRow {
+  color: #46566a;
+}
+
+.methodDivider {
+  height: 1px;
+  margin-top: 0.25rem;
+  background: rgba(203, 213, 225, 0.95);
+}
+
+.methodBalanceRow {
+  padding-top: 0.4rem;
+  color: #1f2937;
+  font-size: 1.03rem;
+}
+
+.negativeValue {
+  color: #c13f3f;
+}
+
+.cashCountCard {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(220, 228, 238, 0.98);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.cashCountCard div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.cashCountCard strong {
+  color: #1f2937;
+  font-size: 1.02rem;
+}
+
+.cashCountCard span {
+  color: #3f4f64;
+  font-weight: 700;
+}
+
+.cashStatusPillDanger,
+.cashStatusPillSuccess {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.5rem;
+  padding: 0 0.7rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.cashStatusPillDanger {
+  background: #ffe1df;
+  color: #b4382f;
+}
+
+.cashStatusPillSuccess {
+  background: #d9f7e8;
+  color: #157f49;
+}
+
+.cashAlert,
+.cashSuccess {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 4.2rem;
+  padding: 1rem;
+  border-radius: 1rem;
+}
+
+.cashAlert {
+  border: 1px solid #d85a50;
+  background: #ffe9e8;
+  color: #ae332d;
+}
+
+.cashSuccess {
+  background: #d8f8e8;
+  color: #155e3e;
+  text-align: center;
+  justify-content: center;
+}
+
+.cashAlert span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.shiftSummary {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  gap: 0.8rem;
+  margin: 0 -1.2rem;
+  padding: 1rem 1.2rem 1.2rem;
+  border-radius: 1.25rem 1.25rem 0 0;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 -1rem 2rem rgba(15, 23, 42, 0.08);
+}
+
+.shiftSummaryHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1f2937;
+  font: inherit;
+  font-size: 1.05rem;
+}
+
+.shiftSummaryRows {
+  display: grid;
+  gap: 0.65rem;
+  color: #4a5a70;
+}
+
+.shiftSummaryRow strong {
+  color: #314258;
+}
+
+.shiftSummaryRow strong.negativeValue {
+  color: #c13f3f;
+}
+
+.reviewFooterShell {
+  padding-top: 0.75rem;
+}
+
+.reviewFooter {
+  display: grid;
+  grid-template-columns: 3.2rem 3.2rem minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+.iconFooterButton,
+.confirmCloseButton {
+  min-height: 3.25rem;
+  border-radius: 0.9rem;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.iconFooterButton {
+  border: 1px solid #1f2937;
+  background: #ffffff;
+  color: #1f2937;
+  font-size: 1.25rem;
+}
+
+.confirmCloseButton {
+  border: 0;
+  background: #1f2937;
+  color: #ffffff;
+}
+
+.iconFooterButton:disabled,
+.confirmCloseButton:disabled {
+  border-color: #d3dce8;
+  background: #dce4ef;
+  color: #91a0b5;
+  cursor: not-allowed;
+}
+
 @media (min-width: 560px) {
   .inlineFields,
   .metricsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .methodHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .methodHeaderAmount {
+    width: 100%;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .reviewFooter {
+    grid-template-columns: repeat(2, 3.2rem);
+  }
+
+  .confirmCloseButton {
+    grid-column: 1 / -1;
   }
 }

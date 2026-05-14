@@ -39,6 +39,71 @@
   color: #f2df00;
 }
 
+.cashRegisterMenu {
+  position: relative;
+  display: inline-flex;
+  min-width: 12.5rem;
+}
+
+.cashRegisterStatusButton {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 3.55rem;
+  padding: 0 1rem;
+  border: 1px solid #1f2a37;
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.cashRegisterStatusButton svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: #1f2a37;
+}
+
+.cashRegisterStatusButton span {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.cashRegisterMenuList {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  z-index: 20;
+  display: grid;
+  min-width: 100%;
+  overflow: hidden;
+  border: 1px solid #1f2a37;
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.14);
+}
+
+.cashRegisterMenuItem {
+  min-height: 3.15rem;
+  padding: 0 1rem;
+  border: 0;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.cashRegisterMenuItem:hover,
+.cashRegisterMenuItem:focus-visible {
+  background: #f3f6fa;
+}
+
 .headerActionDivider {
   width: 1px;
   height: 3.9rem;
@@ -1491,6 +1556,7 @@
     align-items: stretch;
     height: var(--sales-workspace-height);
     min-height: 0;
+    gap: 20px;
   }
 
   .catalogColumn {
@@ -1498,8 +1564,6 @@
     min-height: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding: 0 clamp(1.4rem, 2.2vw, 2rem) 1.35rem
-      clamp(1.5rem, 2.4vw, 2.6rem);
   }
 
   .checkoutColumn {

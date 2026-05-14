@@ -3,6 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import {
   Banknote,
   Calendar,
+  ChevronDown,
+  ChevronUp,
   Crown,
   Search,
   SlidersHorizontal,
@@ -12,7 +14,10 @@ import {
 import { CashRegisterHistoryList } from "@/modules/cash-register/components/CashRegisterHistoryList";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
 import { CashRegisterRetailTransactionsTable } from "@/modules/cash-register/components/CashRegisterRetailTransactionsTable";
-import { CashRegisterSessionDrawer } from "@/modules/cash-register/components/CashRegisterSessionDrawer";
+import {
+  CashRegisterSessionDrawer,
+  type CashRegisterDrawerMode,
+} from "@/modules/cash-register/components/CashRegisterSessionDrawer";
 import {
   useCashRegisterAssigneesQuery,
   useCashRegisterHistoryQuery,
@@ -626,6 +631,9 @@ export function CashRegisterPage() {
   const [selectedDate, setSelectedDate] = useState(() => toDateInputValue(new Date()));
   const [searchValue, setSearchValue] = useState("");
   const [isSessionDrawerOpen, setSessionDrawerOpen] = useState(false);
+  const [sessionDrawerMode, setSessionDrawerMode] =
+    useState<CashRegisterDrawerMode>("manage");
+  const [isCashRegisterMenuOpen, setCashRegisterMenuOpen] = useState(false);
   const [isFilterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [selectionDrawerType, setSelectionDrawerType] =
     useState<SelectionDrawerType | null>(null);
@@ -842,12 +850,25 @@ export function CashRegisterPage() {
       return;
     }
 
+    setSessionDrawerMode("manage");
     setSessionDrawerOpen(true);
 
     const nextSearchParams = new URLSearchParams(searchParams);
     nextSearchParams.delete("session");
     setSearchParams(nextSearchParams, { replace: true });
   }, [searchParams, setSearchParams]);
+
+  useEffect(() => {
+    if (!currentSession) {
+      setCashRegisterMenuOpen(false);
+    }
+  }, [currentSession]);
+
+  function openSessionDrawer(mode: CashRegisterDrawerMode) {
+    setSessionDrawerMode(mode);
+    setSessionDrawerOpen(true);
+    setCashRegisterMenuOpen(false);
+  }
 
   async function handleRefresh() {
     await Promise.allSettled([
@@ -926,17 +947,54 @@ export function CashRegisterPage() {
         title="Movimientos"
         actions={
           <>
-          <button
-            className={joinClassNames(
-              styles.cashButton,
-              currentSession && styles.cashButtonOpen,
-            )}
-            type="button"
-            onClick={() => setSessionDrawerOpen(true)}
-          >
-            <Crown />
-            {currentSession ? "Caja abierta" : "Abrir caja"}
-          </button>
+          {currentSession ? (
+            <div className={styles.cashRegisterMenu}>
+              <button
+                aria-expanded={isCashRegisterMenuOpen}
+                className={joinClassNames(
+                  styles.cashButton,
+                  styles.cashButtonOpen,
+                  styles.cashRegisterToggle,
+                )}
+                type="button"
+                onClick={() => setCashRegisterMenuOpen((isOpen) => !isOpen)}
+              >
+                <Crown />
+                Caja abierta
+                {isCashRegisterMenuOpen ? <ChevronUp /> : <ChevronDown />}
+              </button>
+
+              {isCashRegisterMenuOpen ? (
+                <div className={styles.cashRegisterMenuList} role="menu">
+                  <button
+                    className={styles.cashRegisterMenuItem}
+                    role="menuitem"
+                    type="button"
+                    onClick={() => openSessionDrawer("close")}
+                  >
+                    Cerrar caja
+                  </button>
+                  <button
+                    className={styles.cashRegisterMenuItem}
+                    role="menuitem"
+                    type="button"
+                    onClick={() => openSessionDrawer("summary")}
+                  >
+                    Ver Resumen de Caja
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <button
+              className={styles.cashButton}
+              type="button"
+              onClick={() => openSessionDrawer("manage")}
+            >
+              <Crown />
+              Abrir caja
+            </button>
+          )}
 
           <button
             className={styles.topReportButton}
@@ -1134,6 +1192,7 @@ export function CashRegisterPage() {
       <CashRegisterSessionDrawer
         assignees={assigneesQuery.data ?? []}
         currentSession={currentSession}
+        initialMode={sessionDrawerMode}
         isOpen={isSessionDrawerOpen}
         isSubmitting={isSubmitting}
         onClose={() => setSessionDrawerOpen(false)}
