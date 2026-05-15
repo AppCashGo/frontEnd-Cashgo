@@ -124,6 +124,162 @@
   line-height: 1.7;
 }
 
+.retailEmployeesWorkspace {
+  width: min(100%, 68rem);
+  margin: 0 auto;
+  padding: 0 clamp(1rem, 2vw, 2rem) 2rem;
+}
+
+.retailTableShell {
+  overflow-x: auto;
+  background: #ffffff;
+}
+
+.retailEmployeesTable {
+  width: 100%;
+  min-width: 56rem;
+  border-collapse: collapse;
+  color: #1f2a37;
+}
+
+.retailEmployeesTable thead {
+  background: #f4f6f9;
+}
+
+.retailEmployeesTable th {
+  padding: 0.95rem 1.35rem;
+  color: #66758a;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-align: left;
+}
+
+.retailEmployeesTable td {
+  padding: 1rem 1.35rem;
+  border-top: 1px solid rgba(229, 235, 243, 0.95);
+  color: #1f2a37;
+  font-size: 0.95rem;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+.retailEmployeesTable tbody tr:first-child td {
+  border-top: 0;
+}
+
+.retailEmployeesTable tbody tr:nth-child(odd) {
+  background: #fafbfc;
+}
+
+.retailEmployeeName {
+  font-weight: 900;
+}
+
+.retailRolePill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.55rem;
+  padding: 0.1rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.roleOwner,
+.roleSeller {
+  background: #ddecff;
+  color: #2368aa;
+}
+
+.roleAdmin {
+  background: #dff7ea;
+  color: #17744b;
+}
+
+.roleDelivery {
+  background: #efe8ff;
+  color: #6a3cc3;
+}
+
+.retailStatusActive,
+.retailStatusPending {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.retailStatusActive {
+  color: #1f2a37;
+}
+
+.retailStatusPending {
+  color: #9a6b12;
+}
+
+.retailStatusActive svg,
+.retailStatusPending svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0.2rem;
+  border-radius: 999px;
+}
+
+.retailStatusActive svg {
+  background: #d9f8e8;
+  color: #2fa36a;
+}
+
+.retailStatusPending svg {
+  background: #fff3d4;
+  color: #d29417;
+}
+
+.retailEditButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.25rem;
+  border: 0;
+  background: transparent;
+  color: #1f2a37;
+  font: inherit;
+  font-weight: 900;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.retailEditButton svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.retailFeedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 8rem;
+  color: #66758a;
+  font-weight: 800;
+  text-align: center;
+}
+
+.retailFeedback button {
+  min-height: 2.35rem;
+  padding: 0 0.85rem;
+  border: 1px solid #1f2a37;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
 @media (min-width: 720px) {
   .metricsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -160,5 +316,9 @@
   .heroButton,
   .heroGhostButton {
     width: 100%;
+  }
+
+  .retailEmployeesWorkspace {
+    padding-inline: 0;
   }
 }

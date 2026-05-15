@@ -5,33 +5,33 @@ export const employeeFormSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, "Name must contain at least 2 characters.")
-    .max(120, "Name must contain at most 120 characters."),
+    .min(2, "El nombre debe tener al menos 2 caracteres.")
+    .max(120, "El nombre debe tener maximo 120 caracteres."),
   email: z
     .string()
     .trim()
-    .max(191, "Email must contain at most 191 characters.")
+    .max(191, "El correo debe tener maximo 191 caracteres.")
     .refine(
       (value) =>
         value.length === 0 || z.string().email().safeParse(value).success,
-      "Email must be a valid email address.",
+      "El correo debe tener un formato valido.",
     ),
   phone: z
     .string()
     .trim()
-    .min(8, "Phone number must contain at least 8 characters.")
-    .max(30, "Phone number must contain at most 30 characters."),
+    .min(8, "El celular debe tener al menos 8 caracteres.")
+    .max(30, "El celular debe tener maximo 30 caracteres."),
   role: z.enum(assignableUserRoles, {
     errorMap: () => ({
-      message: "Role must be selected.",
+      message: "Selecciona un rol.",
     }),
   }),
   password: z
     .string()
-    .max(72, "Access code must contain at most 72 characters.")
+    .max(72, "El codigo debe tener maximo 72 caracteres.")
     .refine(
       (value) => value.length === 0 || value.trim().length >= 8,
-      "Access code must contain at least 8 characters.",
+      "El codigo debe tener al menos 8 caracteres.",
     ),
 });
 

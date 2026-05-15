@@ -1,6 +1,8 @@
 import { useDeferredValue, useEffect, useState } from 'react'
+import { CheckCircle, Pencil } from 'lucide-react'
 import { EmployeeFormDrawer } from '@/modules/employees/components/EmployeeFormDrawer'
 import { EmployeesRoster } from '@/modules/employees/components/EmployeesRoster'
+import { RetailEmployeeDrawer } from '@/modules/employees/components/RetailEmployeeDrawer'
 import {
   useCreateEmployeeMutation,
   useDeleteEmployeeMutation,
@@ -15,14 +17,14 @@ import type {
   EmployeeUpdateInput,
 } from '@/modules/employees/types/employee'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
-import { RetailPremiumBanner } from '@/shared/components/retail/RetailPremiumBanner'
+import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
-import listPageStyles from '@/shared/components/retail/RetailListPage.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
 import { MetricCard } from '@/shared/components/ui/MetricCard'
 import { isTeamManagementRole } from '@/shared/constants/user-roles'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './EmployeesPage.module.css'
 
 function matchesEmployeeSearch(employee: Employee, query: string) {
@@ -40,6 +42,38 @@ function matchesEmployeeSearch(employee: Employee, query: string) {
   )
 }
 
+function getRetailEmployeeRoleLabel(employee: Employee) {
+  if (employee.role === 'OWNER') {
+    return 'Propietario'
+  }
+
+  if (employee.role === 'ADMIN' || employee.role === 'MANAGER') {
+    return 'Administrador'
+  }
+
+  if (employee.role === 'STAFF') {
+    return 'Domiciliario'
+  }
+
+  return 'Mesero o vendedor'
+}
+
+function getRetailEmployeeRoleTone(employee: Employee) {
+  if (employee.role === 'OWNER') {
+    return styles.roleOwner
+  }
+
+  if (employee.role === 'ADMIN' || employee.role === 'MANAGER') {
+    return styles.roleAdmin
+  }
+
+  if (employee.role === 'STAFF') {
+    return styles.roleDelivery
+  }
+
+  return styles.roleSeller
+}
+
 export function EmployeesPage() {
   const navigationPreset = useBusinessNavigationPreset()
   const isRetailPreset = navigationPreset === 'retail'
@@ -49,6 +83,8 @@ export function EmployeesPage() {
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(
     null,
   )
+  const [isRetailEmployeeDrawerOpen, setRetailEmployeeDrawerOpen] =
+    useState(false)
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const employeesQuery = useEmployeesQuery(canManageTeam)
   const employeeRolesQuery = useEmployeeRolesQuery(canManageTeam)
@@ -68,6 +104,7 @@ export function EmployeesPage() {
 
     if (!employeeStillExists) {
       setSelectedEmployeeId(null)
+      setRetailEmployeeDrawerOpen(false)
     }
   }, [employeesQuery.data, selectedEmployeeId])
 
@@ -148,86 +185,169 @@ export function EmployeesPage() {
     ])
   }
 
+  function startCreateEmployee() {
+    setSelectedEmployeeId(null)
+
+    if (isRetailPreset) {
+      setRetailEmployeeDrawerOpen(true)
+    }
+  }
+
+  function startEditEmployee(employeeId: string) {
+    setSelectedEmployeeId(employeeId)
+
+    if (isRetailPreset) {
+      setRetailEmployeeDrawerOpen(true)
+    }
+  }
+
+  function closeRetailEmployeeDrawer() {
+    setRetailEmployeeDrawerOpen(false)
+    setSelectedEmployeeId(null)
+  }
+
   if (isRetailPreset) {
     return (
-      <div className={listPageStyles.page}>
-        <div className={listPageStyles.headerRow}>
-          <div />
-          <button
-            className={retailStyles.buttonDark}
-            type="button"
-            onClick={() => {
-              setSelectedEmployeeId(null)
-            }}
-          >
-            Crear empleado
-          </button>
-        </div>
-
-        <RetailPremiumBanner
-          title="¡Ups! Ya no puedes crear más empleados."
-          description="Desbloquea la función premium, accede a toda la información y sigue creciendo sin límites."
-          linkLabel="Ver beneficios"
-        />
-
-        <section className={retailStyles.tableCard}>
-          <div className={retailStyles.tableScroller}>
-            <table className={retailStyles.table}>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Celular</th>
-                  <th>Rol</th>
-                  <th>Estado</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleEmployees.length > 0 ? (
-                  visibleEmployees.map((employee) => (
-                    <tr key={employee.id}>
-                      <td>{employee.name}</td>
-                      <td>{employee.phone ?? 'Sin celular'}</td>
-                      <td>{employee.role}</td>
-                      <td
-                        className={
-                          employee.activationStatus === 'ACTIVE'
-                            ? listPageStyles.statusPositive
-                            : listPageStyles.statusNegative
-                        }
-                      >
-                        {employee.activationStatus === 'ACTIVE'
-                          ? 'Activo'
-                          : 'Pendiente'}
-                      </td>
-                      <td>
-                        <button
-                          className={listPageStyles.detailLink}
-                          type="button"
-                          onClick={() => setSelectedEmployeeId(employee.id)}
-                        >
-                          Editar
-                        </button>
+      <>
+        <RetailPageLayout
+          accent="success"
+          bodyVariant="flush"
+          title="Empleados"
+          actions={
+            <button
+              className={retailStyles.buttonDark}
+              type="button"
+              onClick={startCreateEmployee}
+            >
+              Crear empleado
+            </button>
+          }
+        >
+          <section className={styles.retailEmployeesWorkspace}>
+            <div className={styles.retailTableShell}>
+              <table className={styles.retailEmployeesTable}>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Celular</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employeesQuery.isLoading ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className={styles.retailFeedback}>
+                          Cargando empleados...
+                        </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5}>
-                      <div className={retailStyles.emptyState}>
-                        <div className={retailStyles.emptyIcon} />
-                        <p className={retailStyles.emptyTitle}>
-                          No encontramos empleados con ese criterio.
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
+                  ) : null}
+
+                  {employeesQuery.isError ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className={styles.retailFeedback} role="alert">
+                          No pudimos cargar los empleados.
+                          <button
+                            type="button"
+                            onClick={() => void handleRefresh()}
+                          >
+                            Reintentar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null}
+
+                  {!employeesQuery.isLoading &&
+                  !employeesQuery.isError &&
+                  visibleEmployees.length > 0
+                    ? visibleEmployees.map((employee) => {
+                        const canEditEmployee = employee.role !== 'OWNER'
+
+                        return (
+                          <tr key={employee.id}>
+                            <td>
+                              <strong className={styles.retailEmployeeName}>
+                                {employee.name}
+                              </strong>
+                            </td>
+                            <td>{employee.phone ?? 'Sin celular'}</td>
+                            <td>
+                              <span
+                                className={joinClassNames(
+                                  styles.retailRolePill,
+                                  getRetailEmployeeRoleTone(employee),
+                                )}
+                              >
+                                {getRetailEmployeeRoleLabel(employee)}
+                              </span>
+                            </td>
+                            <td>
+                              <span
+                                className={
+                                  employee.activationStatus === 'ACTIVE'
+                                    ? styles.retailStatusActive
+                                    : styles.retailStatusPending
+                                }
+                              >
+                                <CheckCircle />
+                                {employee.activationStatus === 'ACTIVE'
+                                  ? 'Activo'
+                                  : 'Pendiente'}
+                              </span>
+                            </td>
+                            <td>
+                              {canEditEmployee ? (
+                                <button
+                                  className={styles.retailEditButton}
+                                  type="button"
+                                  onClick={() => startEditEmployee(employee.id)}
+                                >
+                                  <Pencil />
+                                  Editar
+                                  <span aria-hidden="true">›</span>
+                                </button>
+                              ) : null}
+                            </td>
+                          </tr>
+                        )
+                      })
+                    : null}
+
+                  {!employeesQuery.isLoading &&
+                  !employeesQuery.isError &&
+                  visibleEmployees.length === 0 ? (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className={retailStyles.emptyState}>
+                          <div className={retailStyles.emptyIcon} />
+                          <p className={retailStyles.emptyTitle}>
+                            Aun no tienes empleados creados.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </RetailPageLayout>
+
+        <RetailEmployeeDrawer
+          employee={selectedEmployee}
+          isOpen={isRetailEmployeeDrawerOpen}
+          isSubmitting={isSubmitting}
+          presets={presets}
+          roles={roles}
+          onClose={closeRetailEmployeeDrawer}
+          onSubmit={handleSubmitEmployee}
+        />
+      </>
     )
   }
 
@@ -318,10 +438,8 @@ export function EmployeesPage() {
             void handleRefresh()
           }}
           onSearchChange={setSearchValue}
-          onSelectEmployee={setSelectedEmployeeId}
-          onStartCreate={() => {
-            setSelectedEmployeeId(null)
-          }}
+          onSelectEmployee={startEditEmployee}
+          onStartCreate={startCreateEmployee}
         />
 
         <div className={styles.drawerColumn}>
@@ -330,9 +448,7 @@ export function EmployeesPage() {
             isSubmitting={isSubmitting}
             presets={presets}
             roles={roles}
-            onStartCreate={() => {
-              setSelectedEmployeeId(null)
-            }}
+            onStartCreate={startCreateEmployee}
             onSubmit={handleSubmitEmployee}
           />
         </div>

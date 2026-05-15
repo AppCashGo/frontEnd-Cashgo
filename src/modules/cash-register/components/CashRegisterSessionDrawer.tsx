@@ -529,18 +529,31 @@ export function CashRegisterSessionDrawer({
             </section>
 
             {hasClosingDifference ? (
-              <div className={styles.cashAlert} role="alert">
-                <span aria-hidden="true">i</span>
-                <strong>
-                  {closingDifference < 0
-                    ? `Te faltan ${formatCashRegisterCurrency(
-                        Math.abs(closingDifference),
-                      )} en efectivo.`
-                    : `Te sobran ${formatCashRegisterCurrency(
-                        closingDifference,
-                      )} en efectivo.`}
-                </strong>
-              </div>
+              <>
+                <div className={styles.cashAlert} role="alert">
+                  <span aria-hidden="true">i</span>
+                  <strong>
+                    {closingDifference < 0
+                      ? `Te faltan ${formatCashRegisterCurrency(
+                          Math.abs(closingDifference),
+                        )} en efectivo.`
+                      : `Te sobran ${formatCashRegisterCurrency(
+                          closingDifference,
+                        )} en efectivo.`}
+                  </strong>
+                </div>
+
+                <label className={`${styles.field} ${styles.discrepancyNote}`}>
+                  <span className={styles.noteLabel}>Nota</span>
+                  <textarea
+                    className={styles.discrepancyTextarea}
+                    placeholder="Puedes dejar una nota que aclare el motivo del descuadre para recordarlo más adelante."
+                    rows={4}
+                    value={closingNote}
+                    onChange={(event) => setClosingNote(event.target.value)}
+                  />
+                </label>
+              </>
             ) : (
               <div className={styles.cashSuccess} role="status">
                 <span aria-hidden="true">✓</span>
@@ -767,17 +780,6 @@ export function CashRegisterSessionDrawer({
               type="text"
               value={closingAmount}
               onChange={(event) => setClosingAmount(event.target.value)}
-            />
-          </label>
-
-          <label className={styles.field}>
-            <span className={styles.label}>Nota de cierre</span>
-            <textarea
-              className={styles.textarea}
-              placeholder="Observaciones del conteo final."
-              rows={4}
-              value={closingNote}
-              onChange={(event) => setClosingNote(event.target.value)}
             />
           </label>
 

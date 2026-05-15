@@ -301,6 +301,33 @@
   font-weight: 900;
 }
 
+.discrepancyNote {
+  gap: 0.5rem;
+}
+
+.noteLabel {
+  color: #4a5a70;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.discrepancyTextarea {
+  width: 100%;
+  min-height: 6.4rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #1f2937;
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #1f2937;
+  font: inherit;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.discrepancyTextarea::placeholder {
+  color: #7a8797;
+}
+
 .shiftSummary {
   position: sticky;
   bottom: 0;
