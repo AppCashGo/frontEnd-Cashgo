@@ -5,21 +5,20 @@ import { ExpensesBreakdownChart } from '@/modules/reports/components/ExpensesBre
 import { ReportsChartCard } from '@/modules/reports/components/ReportsChartCard'
 import { ReportsDateFilters } from '@/modules/reports/components/ReportsDateFilters'
 import { ReportsMetricCard } from '@/modules/reports/components/ReportsMetricCard'
+import { RetailSalesComparisonChart } from '@/modules/reports/components/RetailSalesComparisonChart'
 import { SalesPerformanceChart } from '@/modules/reports/components/SalesPerformanceChart'
 import { TopProductsChart } from '@/modules/reports/components/TopProductsChart'
 import { useReportsOverviewQuery } from '@/modules/reports/hooks/use-reports-overview-query'
 import type {
-  CustomersReport,
-  DebtsReport,
   EmployeesReport,
   ExpensesReport,
-  InventoryReport,
   ReportDateRangeFilters,
   ReportRangePreset,
   SalesReport,
 } from '@/modules/reports/types/report'
 import { formatReportCurrency } from '@/modules/reports/utils/format-report'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
+import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
@@ -29,6 +28,8 @@ import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './ReportsPage.module.css'
 import retailPageStyles from './ReportsRetailPage.module.css'
 
+type ConcreteReportRangePreset = Exclude<ReportRangePreset, 'CUSTOM'>
+
 function formatDateInputValue(date: Date) {
   const year = date.getFullYear()
   const month = `${date.getMonth() + 1}`.padStart(2, '0')
@@ -37,8 +38,57 @@ function formatDateInputValue(date: Date) {
   return `${year}-${month}-${day}`
 }
 
-function getPresetFilters(preset: Exclude<ReportRangePreset, 'CUSTOM'>): ReportDateRangeFilters {
-  const today = new Date()
+function parseDateInputValue(value: string) {
+  return new Date(`${value}T12:00:00`)
+}
+
+function addDays(date: Date, days: number) {
+  const nextDate = new Date(date)
+  nextDate.setDate(nextDate.getDate() + days)
+
+  return nextDate
+}
+
+function getStartOfWeek(date: Date) {
+  const weekday = date.getDay()
+  const daysFromMonday = weekday === 0 ? 6 : weekday - 1
+
+  return addDays(date, -daysFromMonday)
+}
+
+function getEndOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0)
+}
+
+function getQuarterStart(date: Date) {
+  const quarterStartMonth = Math.floor(date.getMonth() / 3) * 3
+
+  return new Date(date.getFullYear(), quarterStartMonth, 1)
+}
+
+function getSemesterStart(date: Date) {
+  const semesterStartMonth = date.getMonth() < 6 ? 0 : 6
+
+  return new Date(date.getFullYear(), semesterStartMonth, 1)
+}
+
+function getDateRangeLengthInDays(filters: ReportDateRangeFilters) {
+  if (!filters.from || !filters.to) {
+    return 0
+  }
+
+  const from = parseDateInputValue(filters.from)
+  const to = parseDateInputValue(filters.to)
+  const millisecondsPerDay = 24 * 60 * 60 * 1000
+
+  return Math.floor((to.getTime() - from.getTime()) / millisecondsPerDay) + 1
+}
+
+function getPresetFilters(
+  preset: ConcreteReportRangePreset,
+  anchorDate = new Date(),
+): ReportDateRangeFilters {
+  const selectedDate = new Date(anchorDate)
 
   if (preset === 'ALL') {
     return {
@@ -47,18 +97,124 @@ function getPresetFilters(preset: Exclude<ReportRangePreset, 'CUSTOM'>): ReportD
     }
   }
 
-  if (preset === 'WEEK') {
+  if (preset === 'DAY') {
+    const value = formatDateInputValue(selectedDate)
+
     return {
-      from: formatDateInputValue(today),
-      to: formatDateInputValue(today),
+      from: value,
+      to: value,
     }
   }
 
-  const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
+  if (preset === 'WEEK') {
+    const startOfWeek = getStartOfWeek(selectedDate)
+
+    return {
+      from: formatDateInputValue(startOfWeek),
+      to: formatDateInputValue(addDays(startOfWeek, 6)),
+    }
+  }
+
+  if (preset === 'BIWEEK') {
+    const firstDayOfHalfMonth =
+      selectedDate.getDate() <= 15
+        ? new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+        : new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 16)
+    const lastDayOfHalfMonth =
+      selectedDate.getDate() <= 15
+        ? new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 15)
+        : getEndOfMonth(selectedDate)
+
+    return {
+      from: formatDateInputValue(firstDayOfHalfMonth),
+      to: formatDateInputValue(lastDayOfHalfMonth),
+    }
+  }
+
+  if (preset === 'QUARTER') {
+    const quarterStart = getQuarterStart(selectedDate)
+
+    return {
+      from: formatDateInputValue(quarterStart),
+      to: formatDateInputValue(
+        new Date(quarterStart.getFullYear(), quarterStart.getMonth() + 3, 0),
+      ),
+    }
+  }
+
+  if (preset === 'SEMESTER') {
+    const semesterStart = getSemesterStart(selectedDate)
+
+    return {
+      from: formatDateInputValue(semesterStart),
+      to: formatDateInputValue(
+        new Date(semesterStart.getFullYear(), semesterStart.getMonth() + 6, 0),
+      ),
+    }
+  }
+
+  const firstDayOfMonth = new Date(
+    selectedDate.getFullYear(),
+    selectedDate.getMonth(),
+    1,
+  )
 
   return {
     from: formatDateInputValue(firstDayOfMonth),
-    to: formatDateInputValue(today),
+    to: formatDateInputValue(getEndOfMonth(selectedDate)),
+  }
+}
+
+function getPreviousFilters(
+  preset: ReportRangePreset,
+  currentFilters: ReportDateRangeFilters,
+  anchorDateValue: string,
+): ReportDateRangeFilters {
+  if (!currentFilters.from || !currentFilters.to || preset === 'ALL') {
+    return {
+      from: '',
+      to: '',
+    }
+  }
+
+  const anchorDate = parseDateInputValue(anchorDateValue)
+
+  if (preset === 'DAY') {
+    return getPresetFilters('DAY', addDays(anchorDate, -7))
+  }
+
+  if (preset === 'WEEK') {
+    return getPresetFilters('WEEK', addDays(anchorDate, -7))
+  }
+
+  if (preset === 'MONTH') {
+    return getPresetFilters(
+      'MONTH',
+      new Date(anchorDate.getFullYear(), anchorDate.getMonth() - 1, 1),
+    )
+  }
+
+  if (preset === 'QUARTER') {
+    return getPresetFilters(
+      'QUARTER',
+      new Date(anchorDate.getFullYear(), anchorDate.getMonth() - 3, 1),
+    )
+  }
+
+  if (preset === 'SEMESTER') {
+    return getPresetFilters(
+      'SEMESTER',
+      new Date(anchorDate.getFullYear(), anchorDate.getMonth() - 6, 1),
+    )
+  }
+
+  const rangeLength = getDateRangeLengthInDays(currentFilters)
+  const previousTo = addDays(parseDateInputValue(currentFilters.from), -1)
+  const previousFrom = addDays(previousTo, -(rangeLength - 1))
+
+  return {
+    from: formatDateInputValue(previousFrom),
+    to: formatDateInputValue(previousTo),
   }
 }
 
@@ -102,20 +258,6 @@ function formatPercent(value: number, languageCode: 'es' | 'en') {
   }).format(value / 100)
 }
 
-function getPaymentMethodLabel(method: string, languageCode: 'es' | 'en') {
-  const dictionary: Record<string, { es: string; en: string }> = {
-    CASH: { es: 'Efectivo', en: 'Cash' },
-    CARD: { es: 'Tarjeta', en: 'Card' },
-    TRANSFER: { es: 'Transferencia', en: 'Transfer' },
-    DIGITAL_WALLET: { es: 'Billetera digital', en: 'Digital wallet' },
-    BANK_DEPOSIT: { es: 'Depósito bancario', en: 'Bank deposit' },
-    CREDIT: { es: 'Crédito', en: 'Credit' },
-    OTHER: { es: 'Otro', en: 'Other' },
-  }
-
-  return dictionary[method]?.[languageCode] ?? method
-}
-
 function formatRole(role: string, languageCode: 'es' | 'en') {
   const normalizedRole = role.split('_').join(' ')
   const dictionary: Record<string, { es: string; en: string }> = {
@@ -134,6 +276,7 @@ function formatRole(role: string, languageCode: 'es' | 'en') {
 function buildReportsCopy(languageCode: 'es' | 'en') {
   if (languageCode === 'en') {
     return {
+      title: 'Statistics',
       tabs: {
         sales: 'Sales',
         expenses: 'Expenses',
@@ -141,7 +284,11 @@ function buildReportsCopy(languageCode: 'es' | 'en') {
       },
       filters: {
         day: 'Daily',
+        week: 'Weekly',
+        biweek: 'Biweekly',
         month: 'Monthly',
+        quarter: 'Quarterly',
+        semester: 'Semester',
         all: 'All',
       },
       banner: {
@@ -191,6 +338,7 @@ function buildReportsCopy(languageCode: 'es' | 'en') {
   }
 
   return {
+    title: 'Estadísticas',
     tabs: {
       sales: 'Ventas',
       expenses: 'Gastos',
@@ -198,7 +346,11 @@ function buildReportsCopy(languageCode: 'es' | 'en') {
     },
     filters: {
       day: 'Diario',
+      week: 'Semanal',
+      biweek: 'Quincenal',
       month: 'Mensual',
+      quarter: 'Trimestral',
+      semester: 'Semestral',
       all: 'Todo',
     },
     banner: {
@@ -247,6 +399,108 @@ function buildReportsCopy(languageCode: 'es' | 'en') {
   }
 }
 
+function getComparisonLabel(
+  preset: ReportRangePreset,
+  anchorDateValue: string,
+  languageCode: 'es' | 'en',
+) {
+  if (languageCode === 'en') {
+    const dictionary: Record<ReportRangePreset, string> = {
+      DAY: 'Compared with the same weekday last week',
+      WEEK: 'Compared with the previous week',
+      BIWEEK: 'Compared with the previous half-month',
+      MONTH: 'Compared with the previous month',
+      QUARTER: 'Compared with the previous quarter',
+      SEMESTER: 'Compared with the previous semester',
+      ALL: 'Compared with the available history',
+      CUSTOM: 'Compared with the previous range',
+    }
+
+    return dictionary[preset]
+  }
+
+  if (preset === 'DAY') {
+    const weekday = new Intl.DateTimeFormat('es-CO', {
+      weekday: 'long',
+    }).format(parseDateInputValue(anchorDateValue))
+
+    return `Comparado con el ${weekday} de la semana anterior`
+  }
+
+  const dictionary: Record<ReportRangePreset, string> = {
+    DAY: 'Comparado con el mismo día de la semana anterior',
+    WEEK: 'Comparado con la semana anterior',
+    BIWEEK: 'Comparado con la quincena anterior',
+    MONTH: 'Comparado con el mes anterior',
+    QUARTER: 'Comparado con el trimestre anterior',
+    SEMESTER: 'Comparado con el semestre anterior',
+    ALL: 'Comparado con el historial disponible',
+    CUSTOM: 'Comparado con el rango anterior',
+  }
+
+  return dictionary[preset]
+}
+
+function getCurrentSeriesLabel(
+  preset: ReportRangePreset,
+  languageCode: 'es' | 'en',
+) {
+  if (languageCode === 'en') {
+    return preset === 'DAY' ? 'Today' : 'Current period'
+  }
+
+  return preset === 'DAY' ? 'Hoy' : 'Periodo actual'
+}
+
+function getPreviousSeriesLabel(
+  preset: ReportRangePreset,
+  anchorDateValue: string,
+  languageCode: 'es' | 'en',
+) {
+  if (languageCode === 'en') {
+    return preset === 'DAY' ? 'Same weekday last week' : 'Previous period'
+  }
+
+  if (preset === 'DAY') {
+    const weekday = new Intl.DateTimeFormat('es-CO', {
+      weekday: 'long',
+    }).format(addDays(parseDateInputValue(anchorDateValue), -7))
+
+    return `${weekday.charAt(0).toUpperCase()}${weekday.slice(1)} anterior`
+  }
+
+  return 'Periodo anterior'
+}
+
+function calculatePercentChange(previousValue: number, currentValue: number) {
+  if (previousValue <= 0) {
+    return currentValue > 0 ? 100 : 0
+  }
+
+  return ((currentValue - previousValue) / previousValue) * 100
+}
+
+function formatRetailCurrency(value: number, languageCode: 'es' | 'en') {
+  return new Intl.NumberFormat(languageCode === 'en' ? 'en-US' : 'es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value)
+}
+
+function formatRetailTrend(value: number, languageCode: 'es' | 'en') {
+  const formattedValue = new Intl.NumberFormat(
+    languageCode === 'en' ? 'en-US' : 'es-CO',
+    {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    },
+  ).format(Math.abs(value))
+
+  return `${value >= 0 ? '+' : '-'}${formattedValue}%`
+}
+
 const emptySalesReport: SalesReport = {
   from: null,
   to: null,
@@ -274,36 +528,6 @@ const emptyExpensesReport: ExpensesReport = {
   categories: [],
 }
 
-const emptyInventoryReport: InventoryReport = {
-  from: null,
-  to: null,
-  totalProducts: 0,
-  activeProducts: 0,
-  inventoryValue: 0,
-  lowStockCount: 0,
-  outOfStockCount: 0,
-  lowStockItems: [],
-}
-
-const emptyCustomersReport: CustomersReport = {
-  from: null,
-  to: null,
-  totalCustomers: 0,
-  newCustomersCount: 0,
-  activeCustomersCount: 0,
-  topCustomers: [],
-}
-
-const emptyDebtsReport: DebtsReport = {
-  from: null,
-  to: null,
-  totalReceivable: 0,
-  collectedAmount: 0,
-  overdueCount: 0,
-  averageDebt: 0,
-  topDebtors: [],
-}
-
 const emptyEmployeesReport: EmployeesReport = {
   from: null,
   to: null,
@@ -320,8 +544,13 @@ export function ReportsPage() {
   const copy = buildReportsCopy(languageCode)
   const navigationPreset = useBusinessNavigationPreset()
   const isRetailPreset = navigationPreset === 'retail'
-  const initialPreset: ReportRangePreset = 'WEEK'
-  const initialFilters = getPresetFilters(initialPreset)
+  const initialPreset: ReportRangePreset = 'DAY'
+  const initialDateValue = formatDateInputValue(new Date())
+  const initialFilters = getPresetFilters(
+    initialPreset,
+    parseDateInputValue(initialDateValue),
+  )
+  const [anchorDateValue, setAnchorDateValue] = useState(initialDateValue)
   const [selectedPreset, setSelectedPreset] =
     useState<ReportRangePreset>(initialPreset)
   const [draftFilters, setDraftFilters] =
@@ -330,15 +559,22 @@ export function ReportsPage() {
     useState<ReportDateRangeFilters>(initialFilters)
   const [retailTab, setRetailTab] =
     useState<'sales' | 'expenses' | 'employees'>('sales')
+  const previousFilters = getPreviousFilters(
+    selectedPreset,
+    appliedFilters,
+    anchorDateValue,
+  )
   const reportsOverviewQuery = useReportsOverviewQuery(appliedFilters)
+  const previousReportsOverviewQuery = useReportsOverviewQuery(previousFilters)
   const reportsOverview = reportsOverviewQuery.data
+  const previousReportsOverview = previousReportsOverviewQuery.data
   const salesReport = reportsOverview?.sales ?? emptySalesReport
+  const previousSalesReport =
+    previousReportsOverview?.sales ?? emptySalesReport
   const expensesReport = reportsOverview?.expenses ?? emptyExpensesReport
   const cashflowReport = reportsOverview?.cashflow
   const topProductsReport = reportsOverview?.topProducts
-  const inventoryReport = reportsOverview?.inventory ?? emptyInventoryReport
-  const customersReport = reportsOverview?.customers ?? emptyCustomersReport
-  const debtsReport = reportsOverview?.debts ?? emptyDebtsReport
+  const previousTopProductsReport = previousReportsOverview?.topProducts
   const employeesReport = reportsOverview?.employees ?? emptyEmployeesReport
   const topProduct = topProductsReport?.items[0]
   const rangeLabel = formatReportRangeLabel(appliedFilters, languageCode)
@@ -352,6 +588,25 @@ export function ReportsPage() {
   const netProfit = grossProfit - totalExpenses
   const profitMargin =
     totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : 0
+  const comparisonLabel = getComparisonLabel(
+    selectedPreset,
+    anchorDateValue,
+    languageCode,
+  )
+  const totalRevenueTrend = calculatePercentChange(
+    previousSalesReport.totalRevenue,
+    totalRevenue,
+  )
+  const grossProfitTrend = calculatePercentChange(
+    previousSalesReport.grossProfit,
+    grossProfit,
+  )
+  const previousProductRevenueById = new Map(
+    (previousTopProductsReport?.items ?? []).map((item) => [
+      item.productId,
+      item.revenue,
+    ]),
+  )
 
   function applyPreset(preset: ReportRangePreset) {
     setSelectedPreset(preset)
@@ -360,94 +615,106 @@ export function ReportsPage() {
       return
     }
 
-    const nextFilters = getPresetFilters(preset)
+    const nextFilters = getPresetFilters(
+      preset,
+      parseDateInputValue(anchorDateValue),
+    )
     setDraftFilters(nextFilters)
     setAppliedFilters(nextFilters)
   }
 
   if (isRetailPreset) {
     return (
-      <div className={retailPageStyles.page}>
-        <div className={retailStyles.tabs}>
-          <button
-            className={
-              retailTab === 'sales'
-                ? retailStyles.tabButtonActive
-                : retailStyles.tabButton
-            }
-            type="button"
-            onClick={() => setRetailTab('sales')}
-          >
-            {copy.tabs.sales}
-          </button>
-          <button
-            className={
-              retailTab === 'expenses'
-                ? retailStyles.tabButtonActive
-                : retailStyles.tabButton
-            }
-            type="button"
-            onClick={() => setRetailTab('expenses')}
-          >
-            {copy.tabs.expenses}
-          </button>
-          <button
-            className={
-              retailTab === 'employees'
-                ? retailStyles.tabButtonActive
-                : retailStyles.tabButton
-            }
-            type="button"
-            onClick={() => setRetailTab('employees')}
-          >
-            {copy.tabs.employees}
-          </button>
-        </div>
-
-        <section className={retailStyles.premiumBanner}>
-          <p className={retailStyles.premiumTitle}>{copy.banner.title}</p>
-          <p className={retailStyles.premiumDescription}>
-            {copy.banner.description}
-          </p>
-          <button className={retailStyles.premiumLink} type="button">
-            {copy.banner.action}
-          </button>
-        </section>
-
-        <div className={retailStyles.filtersRow}>
-          <label className={retailStyles.selectField}>
-            <select
-              className={retailStyles.select}
-              value={selectedPreset}
-              onChange={(event) =>
-                applyPreset(event.target.value as ReportRangePreset)
+      <RetailPageLayout
+        accent="success"
+        actions={
+          <div className={retailPageStyles.headerTabs}>
+            <button
+              className={
+                retailTab === 'sales'
+                  ? retailPageStyles.headerTabActive
+                  : retailPageStyles.headerTab
               }
+              type="button"
+              onClick={() => setRetailTab('sales')}
             >
-              <option value="WEEK">{copy.filters.day}</option>
-              <option value="MONTH">{copy.filters.month}</option>
-              <option value="ALL">{copy.filters.all}</option>
-            </select>
-          </label>
-          <label className={retailStyles.dateField}>
-            <input
-              className={retailStyles.input}
-              type="date"
-              value={draftFilters.to || draftFilters.from}
-              onChange={(event) => {
-                setSelectedPreset('CUSTOM')
-                setDraftFilters((currentFilters) => ({
-                  ...currentFilters,
-                  from: event.target.value,
-                  to: event.target.value,
-                }))
-                setAppliedFilters({
-                  from: event.target.value,
-                  to: event.target.value,
-                })
-              }}
-            />
-          </label>
-        </div>
+              {copy.tabs.sales}
+            </button>
+            <button
+              className={
+                retailTab === 'expenses'
+                  ? retailPageStyles.headerTabActive
+                  : retailPageStyles.headerTab
+              }
+              type="button"
+              onClick={() => setRetailTab('expenses')}
+            >
+              {copy.tabs.expenses}
+            </button>
+            <button
+              className={
+                retailTab === 'employees'
+                  ? retailPageStyles.headerTabActive
+                  : retailPageStyles.headerTab
+              }
+              type="button"
+              onClick={() => setRetailTab('employees')}
+            >
+              {copy.tabs.employees}
+            </button>
+          </div>
+        }
+        bodyClassName={retailPageStyles.body}
+        bodyVariant="flush"
+        title={copy.title}
+      >
+        <div className={retailPageStyles.page}>
+          <div className={retailPageStyles.filtersRow}>
+            <label className={retailPageStyles.selectField}>
+              <select
+                className={retailPageStyles.select}
+                value={selectedPreset}
+                onChange={(event) =>
+                  applyPreset(event.target.value as ReportRangePreset)
+                }
+              >
+                <option value="DAY">{copy.filters.day}</option>
+                <option value="WEEK">{copy.filters.week}</option>
+                <option value="BIWEEK">{copy.filters.biweek}</option>
+                <option value="MONTH">{copy.filters.month}</option>
+                <option value="QUARTER">{copy.filters.quarter}</option>
+                <option value="SEMESTER">{copy.filters.semester}</option>
+              </select>
+            </label>
+            <label className={retailPageStyles.dateField}>
+              <input
+                className={retailPageStyles.input}
+                type="date"
+                value={anchorDateValue}
+                onChange={(event) => {
+                  const nextAnchorDateValue = event.target.value
+
+                  if (!nextAnchorDateValue) {
+                    return
+                  }
+
+                  const nextPreset: ConcreteReportRangePreset =
+                    selectedPreset === 'CUSTOM' || selectedPreset === 'ALL'
+                      ? 'DAY'
+                      : selectedPreset
+                  const nextFilters = getPresetFilters(
+                    nextPreset,
+                    parseDateInputValue(nextAnchorDateValue),
+                  )
+
+                  setAnchorDateValue(nextAnchorDateValue)
+                  setSelectedPreset(nextPreset)
+                  setDraftFilters(nextFilters)
+                  setAppliedFilters(nextFilters)
+                }}
+              />
+            </label>
+          </div>
 
         {reportsOverviewQuery.isError ? (
           <SurfaceCard className={retailPageStyles.compactCard}>
@@ -469,36 +736,54 @@ export function ReportsPage() {
 
         {retailTab === 'sales' ? (
           <>
-            <div className={retailPageStyles.summaryGrid}>
-              <RetailStatCard
-                label={copy.sales.totalRevenue}
-                value={formatReportCurrency(totalRevenue, languageCode)}
-                hint={copy.common.compareHint}
-              />
-              <RetailStatCard
-                label={copy.sales.grossProfit}
-                value={formatReportCurrency(grossProfit, languageCode)}
-                hint={copy.common.compareHint}
-              />
-              <RetailStatCard
-                label={copy.sales.averageTicket}
-                value={formatReportCurrency(salesReport.averageTicket, languageCode)}
-                hint={`${salesCount.toString()} ${copy.common.records} • ${customersReport.activeCustomersCount.toString()} ${languageCode === 'en' ? 'active customers' : 'clientes activos'}`}
-              />
-              <RetailStatCard
-                label={copy.sales.receivable}
-                value={formatReportCurrency(debtsReport.totalReceivable, languageCode)}
-                hint={`${debtsReport.overdueCount.toString()} ${languageCode === 'en' ? 'overdue' : 'vencidas'}`}
-              />
+            <div className={retailPageStyles.salesSummaryGrid}>
+              <article className={retailPageStyles.salesSummaryCardFeatured}>
+                <p className={retailPageStyles.salesSummaryLabel}>
+                  {copy.sales.totalRevenue}
+                </p>
+                <div className={retailPageStyles.salesSummaryValueRow}>
+                  <p className={retailPageStyles.salesSummaryValue}>
+                    {formatRetailCurrency(totalRevenue, languageCode)}
+                  </p>
+                  <span className={retailPageStyles.trendBadge}>
+                    {formatRetailTrend(totalRevenueTrend, languageCode)}
+                  </span>
+                </div>
+                <p className={retailPageStyles.salesSummaryHint}>
+                  {comparisonLabel}
+                </p>
+              </article>
+
+              <article className={retailPageStyles.salesSummaryCard}>
+                <p className={retailPageStyles.salesSummaryLabel}>
+                  {copy.sales.grossProfit}
+                </p>
+                <div className={retailPageStyles.salesSummaryValueRow}>
+                  <p className={retailPageStyles.salesSummaryValue}>
+                    {formatRetailCurrency(grossProfit, languageCode)}
+                  </p>
+                  <span className={retailPageStyles.trendBadge}>
+                    {formatRetailTrend(grossProfitTrend, languageCode)}
+                  </span>
+                </div>
+                <p className={retailPageStyles.salesSummaryHint}>
+                  {comparisonLabel}
+                </p>
+              </article>
             </div>
 
             <SurfaceCard className={retailPageStyles.chartCard}>
               <p className={retailPageStyles.chartTitle}>{copy.sales.salesChart}</p>
-              <SalesPerformanceChart
+              <RetailSalesComparisonChart
+                currentLabel={getCurrentSeriesLabel(
+                  selectedPreset,
+                  languageCode,
+                )}
+                currentReport={salesReport}
                 emptyDescription={
                   languageCode === 'en'
-                    ? 'Once the selected range has sales, this chart will show revenue and gross profit over time.'
-                    : 'Cuando el rango seleccionado tenga ventas, esta gráfica mostrará ingresos y ganancia bruta por tramo del tiempo.'
+                    ? 'Once the selected range has sales, this chart will compare it with the previous period.'
+                    : 'Cuando el rango seleccionado tenga ventas, esta gráfica comparará el periodo actual contra el anterior.'
                 }
                 emptyTitle={
                   languageCode === 'en'
@@ -506,171 +791,82 @@ export function ReportsPage() {
                     : 'Todavía no hay detalle de ventas'
                 }
                 languageCode={languageCode}
-                profitSeriesLabel={
-                  languageCode === 'en' ? 'Profit' : 'Ganancia'
-                }
-                report={salesReport}
-                revenueSeriesLabel={
-                  languageCode === 'en' ? 'Sales' : 'Ventas'
-                }
+                previousLabel={getPreviousSeriesLabel(
+                  selectedPreset,
+                  anchorDateValue,
+                  languageCode,
+                )}
+                previousReport={previousSalesReport}
               />
             </SurfaceCard>
 
-            <div className={retailPageStyles.secondaryGrid}>
-              <section className={retailStyles.tableCard}>
-                <div className={retailStyles.tableHeader}>
-                  <p className={retailStyles.tableTitle}>{copy.sales.products}</p>
-                </div>
+            <section className={retailPageStyles.productsTableCard}>
+              <div className={retailPageStyles.productsTableHeader}>
+                <p className={retailPageStyles.chartTitle}>{copy.sales.products}</p>
+              </div>
 
-                <div className={retailStyles.tableScroller}>
-                  <table className={retailStyles.table}>
-                    <thead>
-                      <tr>
-                        <th>{languageCode === 'en' ? 'Product' : 'Producto'}</th>
-                        <th>{copy.sales.productsRevenue}</th>
-                        <th>{copy.sales.productsQuantity}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(topProductsReport?.items ?? []).length > 0 ? (
-                        (topProductsReport?.items ?? []).map((item) => (
+              <div className={retailStyles.tableScroller}>
+                <table className={retailStyles.table}>
+                  <thead>
+                    <tr>
+                      <th>{languageCode === 'en' ? 'Product' : 'Producto'}</th>
+                      <th>{copy.sales.productsRevenue}</th>
+                      <th>{copy.sales.productsQuantity}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(topProductsReport?.items ?? []).length > 0 ? (
+                      (topProductsReport?.items ?? []).map((item, index) => {
+                        const productTrend = calculatePercentChange(
+                          previousProductRevenueById.get(item.productId) ?? 0,
+                          item.revenue,
+                        )
+
+                        return (
                           <tr key={item.productId}>
-                            <td className={retailPageStyles.tableCellStrong}>
-                              {item.name}
+                            <td>
+                              <div className={retailPageStyles.productCell}>
+                                <span className={retailPageStyles.productThumb}>
+                                  {item.name.charAt(0).toUpperCase()}
+                                </span>
+                                <span className={retailPageStyles.tableCellStrong}>
+                                  {item.name}
+                                </span>
+                                {index === 0 ? (
+                                  <span className={retailPageStyles.starBadge}>
+                                    {languageCode === 'en'
+                                      ? 'Top product'
+                                      : 'Producto estrella'}
+                                  </span>
+                                ) : null}
+                              </div>
                             </td>
-                            <td>{formatReportCurrency(item.revenue, languageCode)}</td>
+                            <td>
+                              <div className={retailPageStyles.amountWithTrend}>
+                                <span>{formatRetailCurrency(item.revenue, languageCode)}</span>
+                                <span className={retailPageStyles.trendBadge}>
+                                  {formatRetailTrend(productTrend, languageCode)}
+                                </span>
+                              </div>
+                            </td>
                             <td>{item.quantitySold.toString()}</td>
                           </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan={3}>
-                            <RetailEmptyState
-                              title={copy.common.empty}
-                              description={rangeLabel}
-                            />
-                          </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </section>
-
-              <div className={retailPageStyles.list}>
-                <SurfaceCard className={retailPageStyles.compactCard}>
-                  <p className={retailPageStyles.compactCardTitle}>
-                    {copy.sales.paymentMethods}
-                  </p>
-                  <div className={retailPageStyles.list}>
-                    {salesReport.paymentMethods.length > 0 ? (
-                      salesReport.paymentMethods.map((paymentMethod) => (
-                        <div
-                          key={paymentMethod.method}
-                          className={retailPageStyles.listItem}
-                        >
-                          <div className={retailPageStyles.listItemHeader}>
-                            <p className={retailPageStyles.listItemTitle}>
-                              {getPaymentMethodLabel(
-                                paymentMethod.method,
-                                languageCode,
-                              )}
-                            </p>
-                            <span className={retailPageStyles.badge}>
-                              {paymentMethod.paymentsCount.toString()}
-                            </span>
-                          </div>
-                          <p className={retailPageStyles.listItemDescription}>
-                            {formatReportCurrency(paymentMethod.total, languageCode)}
-                          </p>
-                        </div>
-                      ))
+                        )
+                      })
                     ) : (
-                      <RetailEmptyState
-                        title={copy.common.empty}
-                        description={rangeLabel}
-                      />
+                      <tr>
+                        <td colSpan={3}>
+                          <RetailEmptyState
+                            title={copy.common.empty}
+                            description={rangeLabel}
+                          />
+                        </td>
+                      </tr>
                     )}
-                  </div>
-                </SurfaceCard>
-
-                <SurfaceCard className={retailPageStyles.compactCard}>
-                  <p className={retailPageStyles.compactCardTitle}>
-                    {copy.sales.debts}
-                  </p>
-                  <div className={retailPageStyles.list}>
-                    {debtsReport.topDebtors.length > 0 ? (
-                      debtsReport.topDebtors.map((debtor) => (
-                        <div
-                          key={debtor.customerId}
-                          className={retailPageStyles.listItem}
-                        >
-                          <div className={retailPageStyles.listItemHeader}>
-                            <p className={retailPageStyles.listItemTitle}>
-                              {debtor.name}
-                            </p>
-                            <span className={retailPageStyles.badgeAlert}>
-                              {debtor.overdueCount.toString()}
-                            </span>
-                          </div>
-                          <p className={retailPageStyles.listItemDescription}>
-                            {formatReportCurrency(debtor.balance, languageCode)}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <RetailEmptyState
-                        title={copy.common.empty}
-                        description={rangeLabel}
-                      />
-                    )}
-                  </div>
-                </SurfaceCard>
-
-                <SurfaceCard className={retailPageStyles.compactCard}>
-                  <p className={retailPageStyles.compactCardTitle}>
-                    {copy.sales.inventory}
-                  </p>
-                  <div className={retailPageStyles.list}>
-                    {inventoryReport.lowStockItems.length > 0 ? (
-                      inventoryReport.lowStockItems.map((item) => (
-                        <div
-                          key={item.productId}
-                          className={retailPageStyles.listItem}
-                        >
-                          <div className={retailPageStyles.listItemHeader}>
-                            <p className={retailPageStyles.listItemTitle}>
-                              {item.name}
-                            </p>
-                            <span className={retailPageStyles.badgeAlert}>
-                              {item.stock.toString()}
-                            </span>
-                          </div>
-                          <p className={retailPageStyles.listItemDescription}>
-                            {languageCode === 'en'
-                              ? `Minimum ${item.minStock.toString()} units`
-                              : `Mínimo ${item.minStock.toString()} unidades`}
-                          </p>
-                        </div>
-                      ))
-                    ) : (
-                      <RetailEmptyState
-                        title={
-                          languageCode === 'en'
-                            ? 'Inventory under control'
-                            : 'Inventario bajo control'
-                        }
-                        description={
-                          languageCode === 'en'
-                            ? 'No critical products for the selected range.'
-                            : 'No hay productos críticos en el rango seleccionado.'
-                        }
-                      />
-                    )}
-                  </div>
-                </SurfaceCard>
+                  </tbody>
+                </table>
               </div>
-            </div>
+            </section>
           </>
         ) : null}
 
@@ -892,7 +1088,8 @@ export function ReportsPage() {
             </section>
           </>
         ) : null}
-      </div>
+        </div>
+      </RetailPageLayout>
     )
   }
 

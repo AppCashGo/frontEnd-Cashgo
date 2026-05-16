@@ -3,7 +3,15 @@ export type ReportDateRangeFilters = {
   to: string
 }
 
-export type ReportRangePreset = 'WEEK' | 'MONTH' | 'ALL' | 'CUSTOM'
+export type ReportRangePreset =
+  | 'DAY'
+  | 'WEEK'
+  | 'BIWEEK'
+  | 'MONTH'
+  | 'QUARTER'
+  | 'SEMESTER'
+  | 'ALL'
+  | 'CUSTOM'
 export type SalesDetailGranularity = 'HOUR' | 'DAY'
 
 type ReportDateRangeMetadata = {

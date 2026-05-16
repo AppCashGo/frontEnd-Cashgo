@@ -1,17 +1,156 @@
 .page {
   display: grid;
-  gap: 1rem;
+  gap: 1.35rem;
+  padding: 0 clamp(1.5rem, 2.4vw, 2.6rem) 2rem;
 }
 
-.topStrip {
-  height: 1.15rem;
-  border-radius: 0.85rem;
-  background: linear-gradient(90deg, #1f78da 0%, #0b77ff 100%);
+.body {
+  align-content: start;
+}
+
+.headerTabs {
+  display: flex;
+  align-items: center;
+  gap: clamp(1.4rem, 3vw, 3rem);
+  min-width: min(100%, 26rem);
+}
+
+.headerTab,
+.headerTabActive {
+  position: relative;
+  min-height: 3.8rem;
+  padding: 0 0.2rem;
+  border: 0;
+  background: transparent;
+  color: #748196;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.headerTabActive {
+  color: #1f2a37;
+}
+
+.headerTabActive::after {
+  position: absolute;
+  right: 0;
+  bottom: -1.45rem;
+  left: 0;
+  height: 0.2rem;
+  border-radius: 999px;
+  background: #1f2a37;
+  content: "";
+}
+
+.filtersRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+}
+
+.selectField,
+.dateField {
+  display: inline-flex;
+  align-items: center;
+  min-height: 3.75rem;
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  border-radius: 0.7rem;
+  background: #ffffff;
+}
+
+.selectField {
+  min-width: min(100%, 17.5rem);
+}
+
+.dateField {
+  min-width: min(100%, 21rem);
+}
+
+.select,
+.input {
+  width: 100%;
+  height: 100%;
+  padding: 0 1.25rem;
+  border: 0;
+  background: transparent;
+  color: #1f2a37;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+
+.select:focus,
+.input:focus {
+  outline: none;
 }
 
 .summaryGrid {
   display: grid;
   gap: 1rem;
+}
+
+.salesSummaryGrid {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.salesSummaryCard,
+.salesSummaryCardFeatured {
+  display: grid;
+  gap: 0.8rem;
+  min-height: 10rem;
+  padding: 1.45rem;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 0.95rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 2rem rgba(18, 27, 38, 0.04);
+}
+
+.salesSummaryCardFeatured {
+  border-color: rgba(17, 168, 117, 0.65);
+}
+
+.salesSummaryLabel {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.salesSummaryValueRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.salesSummaryValue {
+  margin: 0;
+  color: #1f2a37;
+  font-size: clamp(1.8rem, 2.4vw, 2.25rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.salesSummaryHint {
+  margin: 0;
+  color: #66758c;
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.trendBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: #d9f7eb;
+  color: #0f8f57;
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
 }
 
 .secondaryGrid {
@@ -20,7 +159,7 @@
 }
 
 .chartCard {
-  padding: 1rem;
+  padding: 1.35rem;
 }
 
 .chartTitle {
@@ -104,12 +243,93 @@
   font-weight: 800;
 }
 
+.productsTableCard {
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 0.95rem;
+  background: #ffffff;
+  box-shadow: 0 1rem 2rem rgba(18, 27, 38, 0.03);
+  overflow: hidden;
+}
+
+.productsTableHeader {
+  padding: 1.3rem 1.35rem 0;
+}
+
+.productCell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.productThumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.55rem;
+  background: #f0f3f8;
+  color: #7d8ba0;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.starBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  background: #fff3d7;
+  color: #936312;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.amountWithTrend {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  font-weight: 800;
+}
+
 @media (min-width: 1100px) {
   .summaryGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .salesSummaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .secondaryGrid {
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 0 1rem 1.35rem;
+  }
+
+  .headerTabs {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .headerTab,
+  .headerTabActive {
+    min-height: 2.7rem;
+  }
+
+  .headerTabActive::after {
+    bottom: -0.35rem;
+  }
+
+  .selectField,
+  .dateField {
+    width: 100%;
   }
 }

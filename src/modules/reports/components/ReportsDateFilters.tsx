@@ -56,8 +56,12 @@ export function ReportsDateFilters({
               onPresetChange(event.target.value as ReportRangePreset)
             }
           >
+            <option value="DAY">Diario</option>
             <option value="WEEK">Semanal</option>
+            <option value="BIWEEK">Quincenal</option>
             <option value="MONTH">Mensual</option>
+            <option value="QUARTER">Trimestral</option>
+            <option value="SEMESTER">Semestral</option>
             <option value="ALL">Todo</option>
             <option value="CUSTOM">Personalizado</option>
           </select>
