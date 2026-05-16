@@ -17,6 +17,7 @@ import type {
   EmployeeUpdateInput,
 } from '@/modules/employees/types/employee'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
@@ -224,116 +225,120 @@ export function EmployeesPage() {
           }
         >
           <section className={styles.retailEmployeesWorkspace}>
-            <div className={styles.retailTableShell}>
-              <table className={styles.retailEmployeesTable}>
-                <thead>
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Celular</th>
-                    <th>Rol</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employeesQuery.isLoading ? (
+            <div className={retailStyles.tableCard}>
+              <div className={retailStyles.tableHeader}>
+                <h3 className={retailStyles.tableTitle}>Empleados registrados</h3>
+              </div>
+
+              <div className={retailStyles.tableScroller}>
+                <table className={retailStyles.table}>
+                  <thead>
                     <tr>
-                      <td colSpan={5}>
-                        <div className={styles.retailFeedback}>
-                          Cargando empleados...
-                        </div>
-                      </td>
+                      <th>Nombre</th>
+                      <th>Celular</th>
+                      <th>Rol</th>
+                      <th>Estado</th>
+                      <th>Acciones</th>
                     </tr>
-                  ) : null}
+                  </thead>
+                  <tbody>
+                    {employeesQuery.isLoading ? (
+                      <tr>
+                        <td colSpan={5}>
+                          <div className={styles.retailFeedback}>
+                            Cargando empleados...
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null}
 
-                  {employeesQuery.isError ? (
-                    <tr>
-                      <td colSpan={5}>
-                        <div className={styles.retailFeedback} role="alert">
-                          No pudimos cargar los empleados.
-                          <button
-                            type="button"
-                            onClick={() => void handleRefresh()}
-                          >
-                            Reintentar
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : null}
+                    {employeesQuery.isError ? (
+                      <tr>
+                        <td colSpan={5}>
+                          <div className={styles.retailFeedback} role="alert">
+                            No pudimos cargar los empleados.
+                            <button
+                              type="button"
+                              onClick={() => void handleRefresh()}
+                            >
+                              Reintentar
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : null}
 
-                  {!employeesQuery.isLoading &&
-                  !employeesQuery.isError &&
-                  visibleEmployees.length > 0
-                    ? visibleEmployees.map((employee) => {
-                        const canEditEmployee = employee.role !== 'OWNER'
+                    {!employeesQuery.isLoading &&
+                    !employeesQuery.isError &&
+                    visibleEmployees.length > 0
+                      ? visibleEmployees.map((employee) => {
+                          const canEditEmployee = employee.role !== 'OWNER'
 
-                        return (
-                          <tr key={employee.id}>
-                            <td>
-                              <strong className={styles.retailEmployeeName}>
-                                {employee.name}
-                              </strong>
-                            </td>
-                            <td>{employee.phone ?? 'Sin celular'}</td>
-                            <td>
-                              <span
-                                className={joinClassNames(
-                                  styles.retailRolePill,
-                                  getRetailEmployeeRoleTone(employee),
-                                )}
-                              >
-                                {getRetailEmployeeRoleLabel(employee)}
-                              </span>
-                            </td>
-                            <td>
-                              <span
-                                className={
-                                  employee.activationStatus === 'ACTIVE'
-                                    ? styles.retailStatusActive
-                                    : styles.retailStatusPending
-                                }
-                              >
-                                <CheckCircle />
-                                {employee.activationStatus === 'ACTIVE'
-                                  ? 'Activo'
-                                  : 'Pendiente'}
-                              </span>
-                            </td>
-                            <td>
-                              {canEditEmployee ? (
-                                <button
-                                  className={styles.retailEditButton}
-                                  type="button"
-                                  onClick={() => startEditEmployee(employee.id)}
+                          return (
+                            <tr key={employee.id}>
+                              <td>
+                                <strong className={styles.retailEmployeeName}>
+                                  {employee.name}
+                                </strong>
+                              </td>
+                              <td>{employee.phone ?? 'Sin celular'}</td>
+                              <td>
+                                <span
+                                  className={joinClassNames(
+                                    styles.retailRolePill,
+                                    getRetailEmployeeRoleTone(employee),
+                                  )}
                                 >
-                                  <Pencil />
-                                  Editar
-                                  <span aria-hidden="true">›</span>
-                                </button>
-                              ) : null}
-                            </td>
-                          </tr>
-                        )
-                      })
-                    : null}
+                                  {getRetailEmployeeRoleLabel(employee)}
+                                </span>
+                              </td>
+                              <td>
+                                <span
+                                  className={
+                                    employee.activationStatus === 'ACTIVE'
+                                      ? styles.retailStatusActive
+                                      : styles.retailStatusPending
+                                  }
+                                >
+                                  <CheckCircle />
+                                  {employee.activationStatus === 'ACTIVE'
+                                    ? 'Activo'
+                                    : 'Pendiente'}
+                                </span>
+                              </td>
+                              <td>
+                                {canEditEmployee ? (
+                                  <button
+                                    className={styles.retailEditButton}
+                                    type="button"
+                                    onClick={() => startEditEmployee(employee.id)}
+                                  >
+                                    <Pencil />
+                                    Editar
+                                    <span aria-hidden="true">›</span>
+                                  </button>
+                                ) : null}
+                              </td>
+                            </tr>
+                          )
+                        })
+                      : null}
 
-                  {!employeesQuery.isLoading &&
-                  !employeesQuery.isError &&
-                  visibleEmployees.length === 0 ? (
-                    <tr>
-                      <td colSpan={5}>
-                        <div className={retailStyles.emptyState}>
-                          <div className={retailStyles.emptyIcon} />
-                          <p className={retailStyles.emptyTitle}>
-                            Aun no tienes empleados creados.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
+                    {!employeesQuery.isLoading &&
+                    !employeesQuery.isError &&
+                    visibleEmployees.length === 0 ? (
+                      <tr>
+                        <td colSpan={5}>
+                          <RetailEmptyState
+                            description="Crea empleados para asignar roles, permisos y responsabilidades dentro del negocio."
+                            title="Aun no tienes empleados creados."
+                          />
+                        </td>
+                      </tr>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </section>
         </RetailPageLayout>

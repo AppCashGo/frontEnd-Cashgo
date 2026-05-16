@@ -228,52 +228,6 @@
   background: #f2f4f8;
 }
 
-.selectedPermissionsCard {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid rgba(217, 226, 237, 0.95);
-  border-radius: 0.95rem;
-  background: #f8fafc;
-}
-
-.selectedPermissionsCard div {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.selectedPermissionsCard strong {
-  color: #1f2a37;
-}
-
-.selectedPermissionsCard span {
-  color: #66758a;
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.inlinePermissionButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 2.45rem;
-  padding: 0 0.85rem;
-  border: 1px solid #1f2a37;
-  border-radius: 0.75rem;
-  background: #ffffff;
-  color: #1f2a37;
-  font: inherit;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.inlinePermissionButton svg {
-  width: 1rem;
-  height: 1rem;
-}
-
 .errorText {
   color: #bf3f34;
   font-size: 0.9rem;
@@ -345,6 +299,17 @@
   box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.22);
 }
 
+.confirmationModal {
+  position: relative;
+  display: grid;
+  gap: 1.45rem;
+  width: min(100%, 36rem);
+  padding: 2.2rem;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.24);
+}
+
 .modalClose {
   position: absolute;
   top: 0.8rem;
@@ -361,6 +326,132 @@
 
 .modalTitle {
   font-size: 1.65rem;
+}
+
+.confirmationHeader {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  padding: 0 1.75rem;
+  text-align: center;
+}
+
+.confirmationIllustration {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 4.75rem;
+  height: 4.75rem;
+  border-radius: 1.35rem;
+  background: #fff8d9;
+  color: #1f2a37;
+  box-shadow: inset 0 0 0 1px rgba(241, 208, 79, 0.5);
+}
+
+.confirmationIllustration svg {
+  width: 2.35rem;
+  height: 2.35rem;
+}
+
+.confirmationTitle {
+  margin: 0;
+  color: #1f2a37;
+  font-size: 1.7rem;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.confirmationDescription {
+  max-width: 27rem;
+  margin: 0;
+  color: #66758a;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.confirmationCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 5.25rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid rgba(217, 226, 237, 0.95);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.confirmationCard div {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.confirmationCard strong {
+  color: #1f2a37;
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.confirmationCard span {
+  min-width: 0;
+}
+
+.confirmationCard div span {
+  color: #2f6fad;
+  font-weight: 800;
+}
+
+.confirmationRolePill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 1.55rem;
+  padding: 0.12rem 0.65rem;
+  border-radius: 999px;
+  background: #ddecff;
+  color: #2368aa;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.confirmationActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.8rem;
+}
+
+.confirmationSecondaryButton,
+.confirmationPrimaryButton {
+  min-width: 8.25rem;
+  min-height: 3.6rem;
+  padding: 0 1rem;
+  border-radius: 0.9rem;
+  font: inherit;
+  font-size: 1.02rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.confirmationSecondaryButton {
+  border: 1px solid #1f2937;
+  background: #ffffff;
+  color: #1f2937;
+}
+
+.confirmationPrimaryButton {
+  border: 0;
+  background: #172033;
+  color: #ffffff;
+}
+
+.confirmationSecondaryButton:disabled,
+.confirmationPrimaryButton:disabled {
+  border-color: #d3dce8;
+  background: #dbe1eb;
+  color: #94a3b8;
+  cursor: not-allowed;
 }
 
 .modalDescription {
@@ -493,11 +584,6 @@
     padding-right: 1rem;
   }
 
-  .selectedPermissionsCard {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
   .roleOption {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -511,5 +597,19 @@
   .permissionsModal {
     max-height: 92vh;
     padding: 1.2rem;
+  }
+
+  .confirmationModal {
+    padding: 1.4rem;
+  }
+
+  .confirmationHeader {
+    padding: 0 1rem;
+  }
+
+  .confirmationCard,
+  .confirmationActions {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

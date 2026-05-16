@@ -125,50 +125,9 @@
 }
 
 .retailEmployeesWorkspace {
-  width: min(100%, 68rem);
-  margin: 0 auto;
+  display: grid;
+  gap: 0.75rem;
   padding: 0 clamp(1rem, 2vw, 2rem) 2rem;
-}
-
-.retailTableShell {
-  overflow-x: auto;
-  background: #ffffff;
-}
-
-.retailEmployeesTable {
-  width: 100%;
-  min-width: 56rem;
-  border-collapse: collapse;
-  color: #1f2a37;
-}
-
-.retailEmployeesTable thead {
-  background: #f4f6f9;
-}
-
-.retailEmployeesTable th {
-  padding: 0.95rem 1.35rem;
-  color: #66758a;
-  font-size: 0.82rem;
-  font-weight: 900;
-  text-align: left;
-}
-
-.retailEmployeesTable td {
-  padding: 1rem 1.35rem;
-  border-top: 1px solid rgba(229, 235, 243, 0.95);
-  color: #1f2a37;
-  font-size: 0.95rem;
-  font-weight: 800;
-  vertical-align: middle;
-}
-
-.retailEmployeesTable tbody tr:first-child td {
-  border-top: 0;
-}
-
-.retailEmployeesTable tbody tr:nth-child(odd) {
-  background: #fafbfc;
 }
 
 .retailEmployeeName {

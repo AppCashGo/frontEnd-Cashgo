@@ -4,7 +4,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
-  Pencil,
+  UserCheck,
   X,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -47,6 +47,21 @@ type EmployeePermissionsModalProps = {
   preset: EmployeePermissionPreset
   roleLabel: string
   onClose: () => void
+}
+
+type EmployeeConfirmationModalProps = {
+  employeeName: string
+  isSubmitting: boolean
+  phone: string
+  roleLabel: string
+  onClose: () => void
+  onConfirm: () => void
+  onEdit: () => void
+}
+
+type PendingEmployeeConfirmation = {
+  normalizedPhone: string
+  values: EmployeeFormValues
 }
 
 const primaryRetailRoleOptions: RetailRoleOption[] = [
@@ -206,6 +221,16 @@ function createTemporaryPassword(phone: string) {
   const suffix = digits.slice(-4).padStart(4, '0')
 
   return `Cashgo${suffix}!`
+}
+
+function formatConfirmationPhone(phone: string) {
+  const digits = phone.replace(/\D/g, '')
+
+  if (digits.startsWith('57') && digits.length > 2) {
+    return `+57 ${digits.slice(2)}`
+  }
+
+  return phone
 }
 
 function getPermissionLabel(permission: EmployeePermissionItem) {
@@ -403,6 +428,77 @@ function EmployeePermissionsModal({
   )
 }
 
+function EmployeeConfirmationModal({
+  employeeName,
+  isSubmitting,
+  phone,
+  roleLabel,
+  onClose,
+  onConfirm,
+  onEdit,
+}: EmployeeConfirmationModalProps) {
+  return (
+    <div className={styles.modalBackdrop} role="presentation" onClick={onClose}>
+      <section
+        aria-label="Confirmar datos del empleado"
+        aria-modal="true"
+        className={styles.confirmationModal}
+        role="dialog"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button
+          aria-label="Cerrar confirmacion"
+          className={styles.modalClose}
+          type="button"
+          onClick={onClose}
+        >
+          <X />
+        </button>
+
+        <div className={styles.confirmationHeader}>
+          <div className={styles.confirmationIllustration} aria-hidden="true">
+            <UserCheck />
+          </div>
+          <h3 className={styles.confirmationTitle}>
+            Confirma los datos de tu empleado
+          </h3>
+          <p className={styles.confirmationDescription}>
+            Recuerda que tu empleado deberá iniciar sesión con su número celular
+            para asociarse a tu negocio.
+          </p>
+        </div>
+
+        <div className={styles.confirmationCard}>
+          <div>
+            <strong>{employeeName}</strong>
+            <span>{formatConfirmationPhone(phone)}</span>
+          </div>
+          <span className={styles.confirmationRolePill}>{roleLabel}</span>
+        </div>
+
+        <div className={styles.confirmationActions}>
+          <button
+            className={styles.confirmationSecondaryButton}
+            disabled={isSubmitting}
+            type="button"
+            onClick={onEdit}
+          >
+            Editar
+          </button>
+          <button
+            className={styles.confirmationPrimaryButton}
+            disabled={isSubmitting}
+            type="button"
+            onClick={onConfirm}
+          >
+            {isSubmitting ? 'Creando...' : 'Confirmar'}
+          </button>
+        </div>
+      </section>
+    </div>
+  )
+}
+
 export function RetailEmployeeDrawer({
   employee,
   isOpen,
@@ -417,6 +513,8 @@ export function RetailEmployeeDrawer({
   const [permissionRole, setPermissionRole] = useState<AssignableUserRole | null>(
     null,
   )
+  const [pendingConfirmation, setPendingConfirmation] =
+    useState<PendingEmployeeConfirmation | null>(null)
   const {
     handleSubmit,
     register,
@@ -431,7 +529,6 @@ export function RetailEmployeeDrawer({
   })
   const selectedRole = watch('role')
   const roleOptions = getAvailableRetailRoles(roles, selectedRole)
-  const selectedPreset = getPresetForRole(presets, selectedRole)
   const permissionPreset = permissionRole
     ? getPresetForRole(presets, permissionRole)
     : null
@@ -444,7 +541,15 @@ export function RetailEmployeeDrawer({
     reset(getDefaultValues(employee))
     setRoleMenuOpen(false)
     setPermissionRole(null)
+    setPendingConfirmation(null)
   }, [employee, isOpen, reset])
+
+  function selectRole(role: AssignableUserRole) {
+    setValue('role', role, {
+      shouldDirty: true,
+      shouldValidate: true,
+    })
+  }
 
   const submitEmployee = handleSubmit(async (values) => {
     try {
@@ -457,12 +562,17 @@ export function RetailEmployeeDrawer({
           role: values.role,
         })
       } else {
-        await onSubmit({
-          name: values.name.trim(),
-          password: createTemporaryPassword(normalizedPhone),
-          phone: normalizedPhone,
-          role: values.role,
+        setPendingConfirmation({
+          normalizedPhone,
+          values: {
+            ...values,
+            name: values.name.trim(),
+            phone: values.phone.trim(),
+          },
         })
+        setPermissionRole(null)
+        setRoleMenuOpen(false)
+        return
       }
 
       onClose()
@@ -472,6 +582,28 @@ export function RetailEmployeeDrawer({
       })
     }
   })
+
+  async function confirmCreateEmployee() {
+    if (!pendingConfirmation) {
+      return
+    }
+
+    try {
+      await onSubmit({
+        name: pendingConfirmation.values.name.trim(),
+        password: createTemporaryPassword(pendingConfirmation.normalizedPhone),
+        phone: pendingConfirmation.normalizedPhone,
+        role: pendingConfirmation.values.role,
+      })
+      setPendingConfirmation(null)
+      onClose()
+    } catch (error) {
+      setPendingConfirmation(null)
+      setError('root', {
+        message: getApiErrorMessage(error),
+      })
+    }
+  }
 
   if (!isOpen) {
     return null
@@ -563,10 +695,7 @@ export function RetailEmployeeDrawer({
                             className={styles.roleChoiceButton}
                             type="button"
                             onClick={() => {
-                              setValue('role', option.role, {
-                                shouldDirty: true,
-                                shouldValidate: true,
-                              })
+                              selectRole(option.role)
                               setRoleMenuOpen(false)
                             }}
                           >
@@ -577,7 +706,9 @@ export function RetailEmployeeDrawer({
                             type="button"
                             onClick={(event) => {
                               event.stopPropagation()
+                              selectRole(option.role)
                               setPermissionRole(option.role)
+                              setRoleMenuOpen(false)
                             }}
                           >
                             Ver Permisos
@@ -591,23 +722,6 @@ export function RetailEmployeeDrawer({
                   <span className={styles.errorText}>{errors.role.message}</span>
                 ) : null}
               </div>
-
-              {selectedPreset ? (
-                <section className={styles.selectedPermissionsCard}>
-                  <div>
-                    <strong>{getRetailRoleLabel(selectedRole)}</strong>
-                    <span>{selectedPreset.permissionGroups.length} grupos de permisos</span>
-                  </div>
-                  <button
-                    className={styles.inlinePermissionButton}
-                    type="button"
-                    onClick={() => setPermissionRole(selectedRole)}
-                  >
-                    <Pencil />
-                    Ver permisos
-                  </button>
-                </section>
-              ) : null}
 
               {errors.root?.message ? (
                 <div className={styles.errorBanner} role="alert">
@@ -640,6 +754,20 @@ export function RetailEmployeeDrawer({
           preset={permissionPreset}
           roleLabel={getRetailRoleLabel(permissionRole)}
           onClose={() => setPermissionRole(null)}
+        />
+      ) : null}
+
+      {pendingConfirmation ? (
+        <EmployeeConfirmationModal
+          employeeName={pendingConfirmation.values.name}
+          isSubmitting={isSubmitting}
+          phone={pendingConfirmation.normalizedPhone}
+          roleLabel={getRetailRoleLabel(pendingConfirmation.values.role)}
+          onClose={() => setPendingConfirmation(null)}
+          onConfirm={() => {
+            void confirmCreateEmployee()
+          }}
+          onEdit={() => setPendingConfirmation(null)}
         />
       ) : null}
     </>
