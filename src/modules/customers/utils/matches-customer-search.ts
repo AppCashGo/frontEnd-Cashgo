@@ -12,6 +12,8 @@ export function matchesCustomerSearch(
     customer.name,
     customer.email ?? '',
     customer.phone ?? '',
+    customer.documentNumber ?? '',
+    customer.address ?? '',
   ]
 
   return searchableFields.some((field) =>

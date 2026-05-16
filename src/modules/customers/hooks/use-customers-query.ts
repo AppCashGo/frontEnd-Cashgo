@@ -3,10 +3,13 @@ import {
   createCustomer,
   getCustomerDetail,
   getCustomers,
+  registerCustomerPayment,
+  updateCustomer,
 } from '@/modules/customers/services/customers-api'
 import type {
   CustomerDetail,
   CustomerMutationInput,
+  CustomerPaymentInput,
   CustomerSummary,
 } from '@/modules/customers/types/customer'
 
@@ -18,6 +21,10 @@ function toCustomerSummary(customer: CustomerDetail): CustomerSummary {
     name: customer.name,
     email: customer.email,
     phone: customer.phone,
+    documentType: customer.documentType,
+    documentNumber: customer.documentNumber,
+    address: customer.address,
+    notes: customer.notes,
     balance: customer.balance,
     purchaseCount: customer.purchaseCount,
     lastPurchaseAt: customer.lastPurchaseAt,
@@ -60,6 +67,61 @@ export function useCreateCustomerMutation() {
         ]
       })
 
+      await queryClient.invalidateQueries({
+        queryKey: customersQueryKey,
+      })
+    },
+  })
+}
+
+export function useUpdateCustomerMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      customerId,
+      input,
+    }: {
+      customerId: string
+      input: CustomerMutationInput
+    }) => updateCustomer(customerId, input),
+    onSuccess: async (customer) => {
+      queryClient.setQueryData<CustomerSummary[]>(customersQueryKey, (current) => {
+        const nextCustomer = toCustomerSummary(customer)
+
+        if (!current) {
+          return [nextCustomer]
+        }
+
+        return current.map((item) =>
+          item.id === customer.id ? nextCustomer : item,
+        )
+      })
+
+      queryClient.setQueryData<CustomerDetail>(
+        [...customersQueryKey, 'detail', customer.id],
+        customer,
+      )
+
+      await queryClient.invalidateQueries({
+        queryKey: customersQueryKey,
+      })
+    },
+  })
+}
+
+export function useRegisterCustomerPaymentMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      receivableId,
+      input,
+    }: {
+      receivableId: string
+      input: CustomerPaymentInput
+    }) => registerCustomerPayment(receivableId, input),
+    onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: customersQueryKey,
       })

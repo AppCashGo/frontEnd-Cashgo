@@ -1,0 +1,335 @@
+.drawerBody {
+  padding-bottom: 1.25rem;
+}
+
+.form,
+.detail,
+.paymentForm {
+  display: grid;
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+  color: #1f2a37;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border: 2px solid #c0ccda;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+  font-weight: 700;
+}
+
+.input {
+  min-height: 3.25rem;
+  padding: 0 1rem;
+}
+
+.textarea {
+  min-height: 6.2rem;
+  resize: vertical;
+  padding: 0.95rem 1rem;
+}
+
+.input:focus,
+.textarea:focus {
+  outline: 3px solid rgba(31, 42, 55, 0.12);
+  border-color: #1f2a37;
+}
+
+.twoColumns {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.primaryButton,
+.secondaryButton {
+  min-height: 3.1rem;
+  border-radius: 0.9rem;
+  padding: 0 1.1rem;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.primaryButton {
+  border: 0;
+  background: #1f2a37;
+  color: #ffffff;
+}
+
+.secondaryButton {
+  border: 2px solid #1f2a37;
+  background: #ffffff;
+  color: #1f2a37;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.errorMessage {
+  margin: 0;
+  border-radius: 0.85rem;
+  border: 1px solid #d44a3d;
+  background: #fff0ed;
+  color: #b83229;
+  padding: 0.85rem 1rem;
+  font-weight: 800;
+}
+
+.feedback {
+  display: grid;
+  gap: 1rem;
+  place-items: center;
+  min-height: 14rem;
+  border-radius: 1rem;
+  border: 1px dashed #c0ccda;
+  color: #66758c;
+  text-align: center;
+  font-weight: 800;
+}
+
+.profileCard,
+.receiptPanel,
+.paymentForm,
+.receivableCard {
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  border-radius: 1rem;
+  background: #ffffff;
+  padding: 1rem;
+}
+
+.profileCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profileCard h4,
+.profileCard p,
+.sectionHeader h4,
+.receiptPanel h4,
+.receiptPanel p,
+.emptyText,
+.receivableDue {
+  margin: 0;
+}
+
+.profileCard h4,
+.sectionHeader h4,
+.receiptPanel h4 {
+  color: #1f2a37;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.profileCard p,
+.receiptPanel p,
+.emptyText,
+.receivableDue {
+  color: #66758c;
+  line-height: 1.55;
+}
+
+.avatar {
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: #2457b8;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.infoGrid,
+.behaviorGrid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.infoItem,
+.metricTile {
+  display: flex;
+  gap: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.9rem;
+  background: #fbfcfe;
+  padding: 0.85rem;
+}
+
+.infoIcon,
+.metricIcon {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  background: #edfdf5;
+  color: #15995b;
+}
+
+.infoIcon svg,
+.metricIcon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.infoItem div,
+.metricTile {
+  min-width: 0;
+}
+
+.infoItem span,
+.metricTile span {
+  color: #66758c;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.infoItem strong,
+.metricTile strong {
+  display: block;
+  margin-top: 0.15rem;
+  color: #1f2a37;
+  overflow-wrap: anywhere;
+}
+
+.metricTile {
+  display: grid;
+  align-content: start;
+}
+
+.section {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sectionHeader span {
+  color: #66758c;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.receivableList,
+.historyList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.receivableCard {
+  display: grid;
+  gap: 0.85rem;
+  background: #f8fafc;
+}
+
+.receivableCardPaid {
+  background: #f0fdf4;
+}
+
+.receivableTop,
+.historyItem,
+.receivableAmounts {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.9rem;
+}
+
+.receivableTop {
+  align-items: flex-start;
+}
+
+.receivableTop strong,
+.historyItem strong {
+  color: #1f2a37;
+}
+
+.receivableTop span,
+.historyItem span {
+  display: block;
+  margin-top: 0.2rem;
+  color: #66758c;
+  font-size: 0.86rem;
+}
+
+.statusPill,
+.statusPillPaid {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.statusPill {
+  background: #fff3d4;
+  color: #9a6b12;
+}
+
+.statusPillPaid {
+  background: #d9f8e8;
+  color: #17744b;
+}
+
+.receivableAmounts {
+  flex-wrap: wrap;
+  color: #66758c;
+  font-weight: 800;
+}
+
+.receivableAmounts strong {
+  color: #1f2a37;
+}
+
+.historyItem {
+  align-items: center;
+  border-bottom: 1px solid #e5ebf2;
+  padding-bottom: 0.75rem;
+}
+
+.receiptPanel {
+  display: grid;
+  gap: 1rem;
+  background: #f4f7fb;
+}
+
+.receiptActions,
+.footerActions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 560px) {
+  .twoColumns,
+  .infoGrid,
+  .behaviorGrid,
+  .receiptActions,
+  .footerActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

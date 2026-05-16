@@ -103,6 +103,260 @@
   gap: 1rem;
 }
 
+.retailWorkspace {
+  display: grid;
+  gap: 1.15rem;
+  padding: 0 clamp(1rem, 2.2vw, 2rem) 2rem;
+}
+
+.premiumCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  min-height: 4.65rem;
+  border: 0;
+  border-radius: 0.95rem;
+  background: #1473d2;
+  color: #ffffff;
+  padding: 1rem 1.15rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.premiumCard svg {
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: 0 0 auto;
+}
+
+.premiumCard strong,
+.premiumCard span {
+  display: block;
+}
+
+.premiumCard strong {
+  font-weight: 900;
+}
+
+.premiumCard div span {
+  margin-top: 0.25rem;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.93rem;
+}
+
+.premiumCard > span {
+  font-weight: 900;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+.retailSearchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.retailMetricsGrid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.refreshingLabel {
+  color: #66758c;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.retailFeedback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  min-height: 5rem;
+  color: #66758c;
+  font-weight: 800;
+  text-align: center;
+}
+
+.inlineButton {
+  border: 0;
+  background: transparent;
+  color: #1473d2;
+  font: inherit;
+  font-weight: 900;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.customerName {
+  color: #1f2a37;
+  overflow-wrap: anywhere;
+}
+
+.statusPending,
+.statusOk {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.28rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.statusPending {
+  background: #fff3d4;
+  color: #9a6b12;
+}
+
+.statusOk {
+  background: #d9f8e8;
+  color: #17744b;
+}
+
+.rowActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.premiumBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 420;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(17, 24, 39, 0.55);
+}
+
+.premiumModal {
+  position: relative;
+  display: grid;
+  gap: 2.25rem;
+  width: min(92vw, 50rem);
+  max-height: min(92vh, 44rem);
+  overflow: auto;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  padding: 2rem 2.6rem 1.4rem;
+  box-shadow: 0 1.6rem 4rem rgba(15, 23, 42, 0.22);
+}
+
+.premiumCloseButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: #66758c;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.premiumCloseButton svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.premiumIntro {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.premiumTitle {
+  margin: 0;
+  color: #111827;
+  font-size: 1.45rem;
+  line-height: 1.25;
+  font-weight: 900;
+}
+
+.premiumTitle span {
+  color: #1269df;
+}
+
+.premiumLead {
+  margin: 0;
+  color: #475569;
+  line-height: 1.55;
+}
+
+.premiumFeatures {
+  display: grid;
+  gap: 1.35rem;
+}
+
+.premiumFeature {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.65rem;
+}
+
+.premiumIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  color: #1f2a37;
+}
+
+.premiumIcon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.premiumFeature h3,
+.premiumFeature p {
+  margin: 0;
+}
+
+.premiumFeature h3 {
+  color: #1f2a37;
+  font-size: 0.98rem;
+  font-weight: 900;
+}
+
+.premiumFeature p {
+  margin-top: 0.35rem;
+  color: #334155;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.premiumCta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 3.1rem;
+  width: calc(100% - 1rem);
+  justify-self: center;
+  border: 0;
+  border-radius: 0.5rem;
+  background: #1f2a37;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.premiumCta svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  color: #f5d20a;
+}
+
 @media (min-width: 768px) {
   .hero {
     padding: 1.5rem;
@@ -110,6 +364,10 @@
 
   .metricsGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .retailMetricsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
@@ -138,6 +396,22 @@
   .heroActions,
   .heroButton,
   .heroGhostButton {
+    width: 100%;
+  }
+
+  .premiumCard {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .premiumCard > span {
+    grid-column: 2;
+  }
+
+  .premiumModal {
+    padding: 1.5rem 1.25rem 1.2rem;
+  }
+
+  .premiumCta {
     width: 100%;
   }
 }
