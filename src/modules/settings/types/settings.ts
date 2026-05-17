@@ -14,6 +14,7 @@ export type BusinessSettings = {
   businessCategory: string | null;
   legalName: string | null;
   taxId: string | null;
+  city: string | null;
   email: string | null;
   phone: string | null;
   address: string | null;
@@ -33,6 +34,7 @@ export type BusinessProfileInput = {
   businessCategory?: BusinessCategoryOption | null;
   legalName?: string | null;
   taxId?: string | null;
+  city?: string | null;
   email?: string | null;
   phone?: string | null;
   address?: string | null;

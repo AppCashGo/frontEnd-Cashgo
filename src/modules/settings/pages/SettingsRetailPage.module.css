@@ -1,18 +1,23 @@
-.page {
-  display: grid;
-  gap: 1rem;
+.header {
+  min-height: 3.75rem;
+  padding: 0 1.85rem;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: 900;
 }
 
 .tabs {
   display: flex;
   justify-content: flex-end;
   gap: 1.5rem;
-  border-bottom: 1px solid rgba(192, 204, 218, 0.96);
 }
 
 .tab,
 .tabActive {
-  padding: 0.9rem 0;
+  min-height: 3.75rem;
+  padding: 0;
   border: 0;
   border-bottom: 3px solid transparent;
   background: transparent;
@@ -25,6 +30,12 @@
   color: #1f2a37;
 }
 
+.body {
+  gap: 1.35rem;
+  padding: 2.25rem;
+  background: #ffffff;
+}
+
 .stack {
   display: grid;
   gap: 1rem;
@@ -32,7 +43,7 @@
 
 .accordion {
   border: 1px solid rgba(192, 204, 218, 0.96);
-  border-radius: 1rem;
+  border-radius: 0.75rem;
   background: #ffffff;
 }
 
@@ -41,7 +52,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1rem 1.1rem;
+  padding: 1.05rem 1.1rem;
   cursor: pointer;
   list-style: none;
 }
@@ -64,4 +75,24 @@
   padding: 1.25rem 0.25rem 0.5rem;
   color: #64748b;
   line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .header {
+    padding: 1rem;
+  }
+
+  .tabs {
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .tab,
+  .tabActive {
+    flex: 1 1 0;
+  }
+
+  .body {
+    padding: 1rem;
+  }
 }

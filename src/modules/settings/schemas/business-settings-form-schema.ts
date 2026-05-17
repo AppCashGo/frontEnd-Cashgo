@@ -38,6 +38,7 @@ export const businessProfileFormSchema = z.object({
   }),
   legalName: buildOptionalTextSchema('La razón social', 2, 191),
   taxId: buildOptionalTextSchema('El NIT o ID fiscal', 5, 80),
+  city: buildOptionalTextSchema('La ciudad', 2, 120),
   email: buildOptionalEmailSchema(),
   phone: buildOptionalTextSchema('El teléfono', 7, 30),
   address: buildOptionalTextSchema('La dirección', 5, 255),

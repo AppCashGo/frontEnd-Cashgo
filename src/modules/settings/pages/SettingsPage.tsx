@@ -26,6 +26,7 @@ import {
   isTeamManagementRole,
 } from "@/shared/constants/user-roles";
 import { SurfaceCard } from "@/shared/components/ui/SurfaceCard";
+import { RetailPageLayout } from "@/shared/components/retail/RetailPageLayout";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "./SettingsPage.module.css";
 import retailStyles from "./SettingsRetailPage.module.css";
@@ -134,36 +135,42 @@ export function SettingsPage() {
 
   if (isRetailPreset) {
     return (
-      <div className={retailStyles.page}>
-        <div className={retailStyles.tabs}>
-          <button
-            className={
-              retailTab === "general" ? retailStyles.tabActive : retailStyles.tab
-            }
-            type="button"
-            onClick={() => setRetailTab("general")}
-          >
-            General
-          </button>
-          <button
-            className={
-              retailTab === "plan" ? retailStyles.tabActive : retailStyles.tab
-            }
-            type="button"
-            onClick={() => setRetailTab("plan")}
-          >
-            Tu plan
-          </button>
-          <button
-            className={
-              retailTab === "print" ? retailStyles.tabActive : retailStyles.tab
-            }
-            type="button"
-            onClick={() => setRetailTab("print")}
-          >
-            Impresión
-          </button>
-        </div>
+      <RetailPageLayout
+        bodyClassName={retailStyles.body}
+        headerClassName={retailStyles.header}
+        title="Configuraciones"
+        actions={
+          <div className={retailStyles.tabs}>
+            <button
+              className={
+                retailTab === "general" ? retailStyles.tabActive : retailStyles.tab
+              }
+              type="button"
+              onClick={() => setRetailTab("general")}
+            >
+              General
+            </button>
+            <button
+              className={
+                retailTab === "plan" ? retailStyles.tabActive : retailStyles.tab
+              }
+              type="button"
+              onClick={() => setRetailTab("plan")}
+            >
+              Tu plan
+            </button>
+            <button
+              className={
+                retailTab === "print" ? retailStyles.tabActive : retailStyles.tab
+              }
+              type="button"
+              onClick={() => setRetailTab("print")}
+            >
+              Impresión
+            </button>
+          </div>
+        }
+      >
 
         {retailTab === "general" ? (
           <div className={retailStyles.stack}>
@@ -175,6 +182,7 @@ export function SettingsPage() {
                 createBusinessSettingsMutation.isPending ||
                 updateBusinessProfileMutation.isPending
               }
+              variant="retail"
               onRetry={() => {
                 void businessSettingsQuery.refetch();
               }}
@@ -215,22 +223,7 @@ export function SettingsPage() {
 
             <details className={retailStyles.accordion}>
               <summary className={retailStyles.accordionSummary}>
-                <p className={retailStyles.accordionTitle}>Recordatorios</p>
-                <span>⌄</span>
-              </summary>
-              <div className={retailStyles.accordionBody}>
-                <p className={retailStyles.placeholder}>
-                  Próximamente verás recordatorios operativos y avisos de cartera
-                  o inventario desde esta sección.
-                </p>
-              </div>
-            </details>
-
-            <details className={retailStyles.accordion}>
-              <summary className={retailStyles.accordionSummary}>
-                <p className={retailStyles.accordionTitle}>
-                  Configuraciones adicionales
-                </p>
+                <p className={retailStyles.accordionTitle}>Inventario</p>
                 <span>⌄</span>
               </summary>
               <div className={retailStyles.accordionBody}>
@@ -290,7 +283,7 @@ export function SettingsPage() {
             </p>
           </SurfaceCard>
         ) : null}
-      </div>
+      </RetailPageLayout>
     );
   }
 

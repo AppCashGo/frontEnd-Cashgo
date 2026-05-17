@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
+import { ChevronDown, ChevronUp, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { BusinessCategoryPickerModal } from '@/shared/components/business/BusinessCategoryPickerModal'
@@ -11,9 +12,11 @@ import type {
   BusinessSettings,
 } from '@/modules/settings/types/settings'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { businessCategoryOptions } from '@/shared/constants/business-categories'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { formatDate } from '@/shared/utils/format-date'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './BusinessSettingsPanel.module.css'
 
 type BusinessSettingsPanelProps = {
@@ -21,6 +24,7 @@ type BusinessSettingsPanelProps = {
   errorMessage: string | null
   isLoading: boolean
   isSubmitting: boolean
+  variant?: 'default' | 'retail'
   onRetry: () => void
   onSubmit: (input: BusinessProfileInput) => Promise<void>
 }
@@ -35,6 +39,7 @@ function getDefaultValues(
       'corner_store',
     legalName: businessSettings?.legalName ?? '',
     taxId: businessSettings?.taxId ?? '',
+    city: businessSettings?.city ?? '',
     email: businessSettings?.email ?? '',
     phone: businessSettings?.phone ?? '',
     address: businessSettings?.address ?? '',
@@ -52,10 +57,12 @@ export function BusinessSettingsPanel({
   errorMessage,
   isLoading,
   isSubmitting,
+  variant = 'default',
   onRetry,
   onSubmit,
 }: BusinessSettingsPanelProps) {
   const [isCategoryModalOpen, setCategoryModalOpen] = useState(false)
+  const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
   const { dictionary } = useAppTranslation()
   const {
     register,
@@ -64,16 +71,25 @@ export function BusinessSettingsPanel({
     setError,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<BusinessProfileFormValues>({
     resolver: zodResolver(businessProfileFormSchema),
     defaultValues: getDefaultValues(businessSettings),
+    mode: 'onChange',
   })
   const selectedBusinessCategory = watch('businessCategory')
 
   useEffect(() => {
     reset(getDefaultValues(businessSettings))
   }, [businessSettings, reset])
+
+  useEffect(() => {
+    return () => {
+      if (logoPreviewUrl) {
+        URL.revokeObjectURL(logoPreviewUrl)
+      }
+    }
+  }, [logoPreviewUrl])
 
   const submitBusinessProfile = handleSubmit(async (values) => {
     try {
@@ -82,6 +98,7 @@ export function BusinessSettingsPanel({
         businessCategory: values.businessCategory,
         legalName: normalizeOptionalText(values.legalName),
         taxId: normalizeOptionalText(values.taxId),
+        city: normalizeOptionalText(values.city),
         email: normalizeOptionalText(values.email)?.toLowerCase() ?? null,
         phone: normalizeOptionalText(values.phone),
         address: normalizeOptionalText(values.address),
@@ -97,10 +114,228 @@ export function BusinessSettingsPanel({
   })
 
   const isDisabled = isLoading || isSubmitting || errorMessage !== null
+  const isSubmitDisabled = isDisabled || (variant === 'retail' && !isDirty)
+
+  function handleLogoChange(file: File | null) {
+    if (!file) {
+      return
+    }
+
+    setLogoPreviewUrl((currentPreviewUrl) => {
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl)
+      }
+
+      return URL.createObjectURL(file)
+    })
+  }
+
+  if (variant === 'retail') {
+    return (
+      <details className={styles.retailAccordion} open>
+        <summary className={styles.retailAccordionSummary}>
+          <h3 className={styles.retailAccordionTitle}>Datos del negocio</h3>
+          <ChevronUp aria-hidden="true" className={styles.retailAccordionIcon} />
+        </summary>
+
+        <div className={styles.retailAccordionBody}>
+          {errorMessage ? (
+            <div className={styles.feedbackCard} role="alert">
+              <p className={styles.feedbackTitle}>
+                No pudimos cargar la configuración del negocio
+              </p>
+              <p className={styles.feedbackDescription}>{errorMessage}</p>
+              <button
+                className={styles.feedbackButton}
+                type="button"
+                onClick={onRetry}
+              >
+                Reintentar
+              </button>
+            </div>
+          ) : null}
+
+          <form
+            className={styles.retailForm}
+            noValidate
+            onSubmit={submitBusinessProfile}
+          >
+            <label className={styles.logoUploader}>
+              <input
+                accept="image/png,image/jpeg,image/webp"
+                className={styles.logoInput}
+                disabled={isDisabled}
+                type="file"
+                onChange={(event) => {
+                  handleLogoChange(event.target.files?.[0] ?? null)
+                }}
+              />
+              {logoPreviewUrl ? (
+                <img
+                  alt="Logo del negocio"
+                  className={styles.logoPreview}
+                  src={logoPreviewUrl}
+                />
+              ) : (
+                <>
+                  <Upload aria-hidden="true" className={styles.logoIcon} />
+                  <span>Cargar logo</span>
+                </>
+              )}
+            </label>
+
+            <div className={styles.retailGrid}>
+              <label className={styles.retailField}>
+                <span className={styles.retailLabel}>Tipo de negocio*</span>
+                <span className={styles.selectWrap}>
+                  <select
+                    aria-invalid={Boolean(errors.businessCategory)}
+                    className={styles.retailInput}
+                    disabled={isDisabled}
+                    {...register('businessCategory')}
+                  >
+                    {businessCategoryOptions.map((category) => (
+                      <option key={category} value={category}>
+                        {dictionary.categories[category]}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown aria-hidden="true" className={styles.selectIcon} />
+                </span>
+                {errors.businessCategory ? (
+                  <span className={styles.errorMessage}>
+                    {errors.businessCategory.message}
+                  </span>
+                ) : null}
+              </label>
+
+              <label className={styles.retailField}>
+                <span className={styles.retailLabel}>Nombre del negocio*</span>
+                <input
+                  aria-invalid={Boolean(errors.businessName)}
+                  className={styles.retailInput}
+                  disabled={isDisabled}
+                  placeholder="Escribe el nombre"
+                  type="text"
+                  {...register('businessName')}
+                />
+                {errors.businessName ? (
+                  <span className={styles.errorMessage}>
+                    {errors.businessName.message}
+                  </span>
+                ) : null}
+              </label>
+
+              <label className={styles.retailField}>
+                <span className={styles.retailLabel}>Dirección del negocio</span>
+                <input
+                  aria-invalid={Boolean(errors.address)}
+                  className={styles.retailInput}
+                  disabled={isDisabled}
+                  placeholder="Escribe la dirección"
+                  type="text"
+                  {...register('address')}
+                />
+                {errors.address ? (
+                  <span className={styles.errorMessage}>
+                    {errors.address.message}
+                  </span>
+                ) : null}
+              </label>
+
+              <label className={styles.retailField}>
+                <span className={styles.retailLabel}>
+                  Ciudad donde se ubica el negocio
+                </span>
+                <input
+                  aria-invalid={Boolean(errors.city)}
+                  className={styles.retailInput}
+                  disabled={isDisabled}
+                  placeholder="Escribe la ciudad"
+                  type="text"
+                  {...register('city')}
+                />
+                {errors.city ? (
+                  <span className={styles.errorMessage}>{errors.city.message}</span>
+                ) : null}
+              </label>
+
+              <label className={styles.retailField}>
+                <span className={styles.retailLabel}>Número de celular</span>
+                <span className={styles.phoneField}>
+                  <span className={styles.countrySelect} aria-hidden="true">
+                    <span className={styles.flagColombia} />
+                  </span>
+                  <input
+                    aria-invalid={Boolean(errors.phone)}
+                    className={styles.phoneInput}
+                    disabled={isDisabled}
+                    inputMode="tel"
+                    placeholder="Escribe el número"
+                    type="tel"
+                    {...register('phone')}
+                  />
+                </span>
+                {errors.phone ? (
+                  <span className={styles.errorMessage}>{errors.phone.message}</span>
+                ) : null}
+              </label>
+
+              <label className={styles.retailField}>
+                <span className={styles.retailLabel}>Correo electrónico</span>
+                <input
+                  aria-invalid={Boolean(errors.email)}
+                  className={styles.retailInput}
+                  disabled={isDisabled}
+                  placeholder="Escribe el correo"
+                  type="email"
+                  {...register('email')}
+                />
+                {errors.email ? (
+                  <span className={styles.errorMessage}>{errors.email.message}</span>
+                ) : null}
+              </label>
+
+              <label className={styles.retailField}>
+                <span className={styles.retailLabel}>Número de documento</span>
+                <input
+                  aria-invalid={Boolean(errors.taxId)}
+                  className={styles.retailInput}
+                  disabled={isDisabled}
+                  placeholder="Escribe el número de documento"
+                  type="text"
+                  {...register('taxId')}
+                />
+                {errors.taxId ? (
+                  <span className={styles.errorMessage}>{errors.taxId.message}</span>
+                ) : null}
+              </label>
+
+              <div className={styles.retailButtonField}>
+                <button
+                  className={styles.retailSubmitButton}
+                  disabled={isSubmitDisabled}
+                  type="submit"
+                >
+                  {isSubmitting ? 'Guardando cambios...' : 'Guardar cambios'}
+                </button>
+              </div>
+            </div>
+
+            {errors.root?.message ? (
+              <div className={styles.errorBanner} role="alert">
+                {errors.root.message}
+              </div>
+            ) : null}
+          </form>
+        </div>
+      </details>
+    )
+  }
 
   return (
     <>
-      <SurfaceCard className={styles.card}>
+      <SurfaceCard className={joinClassNames(styles.card)}>
         <div className={styles.header}>
           <div>
             <p className={styles.eyebrow}>Perfil del negocio</p>
