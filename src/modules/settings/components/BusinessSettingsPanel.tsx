@@ -24,6 +24,7 @@ type BusinessSettingsPanelProps = {
   errorMessage: string | null
   isLoading: boolean
   isSubmitting: boolean
+  initialOpen?: boolean
   variant?: 'default' | 'retail'
   onRetry: () => void
   onSubmit: (input: BusinessProfileInput) => Promise<void>
@@ -57,11 +58,13 @@ export function BusinessSettingsPanel({
   errorMessage,
   isLoading,
   isSubmitting,
+  initialOpen = true,
   variant = 'default',
   onRetry,
   onSubmit,
 }: BusinessSettingsPanelProps) {
   const [isCategoryModalOpen, setCategoryModalOpen] = useState(false)
+  const [isRetailAccordionOpen, setRetailAccordionOpen] = useState(initialOpen)
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
   const { dictionary } = useAppTranslation()
   const {
@@ -132,10 +135,23 @@ export function BusinessSettingsPanel({
 
   if (variant === 'retail') {
     return (
-      <details className={styles.retailAccordion} open>
+      <details
+        className={styles.retailAccordion}
+        open={isRetailAccordionOpen}
+        onToggle={(event) => {
+          setRetailAccordionOpen(event.currentTarget.open)
+        }}
+      >
         <summary className={styles.retailAccordionSummary}>
           <h3 className={styles.retailAccordionTitle}>Datos del negocio</h3>
-          <ChevronUp aria-hidden="true" className={styles.retailAccordionIcon} />
+          {isRetailAccordionOpen ? (
+            <ChevronUp aria-hidden="true" className={styles.retailAccordionIcon} />
+          ) : (
+            <ChevronDown
+              aria-hidden="true"
+              className={styles.retailAccordionIcon}
+            />
+          )}
         </summary>
 
         <div className={styles.retailAccordionBody}>

@@ -177,6 +177,7 @@ export function SettingsPage() {
             <BusinessSettingsPanel
               businessSettings={businessSettings}
               errorMessage={businessSettingsError}
+              initialOpen={false}
               isLoading={businessSettingsQuery.isLoading}
               isSubmitting={
                 createBusinessSettingsMutation.isPending ||
@@ -189,24 +190,17 @@ export function SettingsPage() {
               onSubmit={handleBusinessProfileSubmit}
             />
 
-            <details className={retailStyles.accordion}>
-              <summary className={retailStyles.accordionSummary}>
-                <p className={retailStyles.accordionTitle}>Impuestos</p>
-                <span>⌄</span>
-              </summary>
-              <div className={retailStyles.accordionBody}>
-                <TaxSettingsPanel
-                  businessSettings={businessSettings}
-                  errorMessage={businessSettingsError}
-                  isLoading={businessSettingsQuery.isLoading}
-                  isSubmitting={updateTaxSettingsMutation.isPending}
-                  onRetry={() => {
-                    void businessSettingsQuery.refetch();
-                  }}
-                  onSubmit={handleBusinessTaxSubmit}
-                />
-              </div>
-            </details>
+            <TaxSettingsPanel
+              businessSettings={businessSettings}
+              errorMessage={businessSettingsError}
+              isLoading={businessSettingsQuery.isLoading}
+              isSubmitting={updateTaxSettingsMutation.isPending}
+              variant="retail"
+              onRetry={() => {
+                void businessSettingsQuery.refetch();
+              }}
+              onSubmit={handleBusinessTaxSubmit}
+            />
 
             <details className={retailStyles.accordion}>
               <summary className={retailStyles.accordionSummary}>
@@ -237,6 +231,34 @@ export function SettingsPage() {
                   }}
                   onSubmit={handleOperationalSettingsSubmit}
                 />
+              </div>
+            </details>
+
+            <details className={retailStyles.accordion}>
+              <summary className={retailStyles.accordionSummary}>
+                <p className={retailStyles.accordionTitle}>Recordatorios</p>
+                <span>⌄</span>
+              </summary>
+              <div className={retailStyles.accordionBody}>
+                <p className={retailStyles.placeholder}>
+                  Aquí podrás configurar recordatorios automáticos para
+                  clientes, cobros y tareas del negocio.
+                </p>
+              </div>
+            </details>
+
+            <details className={retailStyles.accordion}>
+              <summary className={retailStyles.accordionSummary}>
+                <p className={retailStyles.accordionTitle}>
+                  Configuraciones adicionales
+                </p>
+                <span>⌄</span>
+              </summary>
+              <div className={retailStyles.accordionBody}>
+                <p className={retailStyles.placeholder}>
+                  Aquí agruparemos ajustes avanzados para operación,
+                  automatizaciones y preferencias generales.
+                </p>
               </div>
             </details>
           </div>

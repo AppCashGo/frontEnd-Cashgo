@@ -39,10 +39,6 @@
   transition: transform 160ms ease;
 }
 
-.retailAccordion:not([open]) .retailAccordionIcon {
-  transform: rotate(180deg);
-}
-
 .retailAccordionBody {
   padding: 0 1.1rem 1.25rem;
 }
