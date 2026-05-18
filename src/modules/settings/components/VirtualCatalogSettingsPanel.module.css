@@ -1,0 +1,309 @@
+.accordion {
+  overflow: hidden;
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.accordionSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 3.8rem;
+  padding: 0 1.1rem;
+  border: 0;
+  background: transparent;
+  color: #1f2a37;
+  font: inherit;
+  cursor: pointer;
+}
+
+.accordionSummary svg,
+.innerSummary > svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  color: #111827;
+}
+
+.accordionTitle {
+  font-weight: 900;
+}
+
+.accordionBody {
+  display: grid;
+  gap: 1.15rem;
+  padding: 0 1.1rem 1.2rem;
+}
+
+.innerAccordion {
+  overflow: hidden;
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.innerSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 3.65rem;
+  padding: 0 1rem;
+  border: 0;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.summaryContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.summaryContent svg,
+.deliveryLabel svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  color: #111827;
+}
+
+.innerBody {
+  display: grid;
+  gap: 1rem;
+  padding: 0 1rem 1.05rem;
+}
+
+.hoursGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.dayCard {
+  display: grid;
+  grid-template-columns: auto minmax(7rem, 1fr) minmax(7rem, 10rem) minmax(7rem, 10rem);
+  align-items: center;
+  gap: 0.8rem;
+  min-height: 5rem;
+  padding: 0.8rem 1rem;
+  border: 1px solid #1aa066;
+  border-radius: 0.65rem;
+  color: #1f2a37;
+  font-weight: 700;
+}
+
+.dayCard input[type="checkbox"],
+.radioRow input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #26a269;
+}
+
+.dayCard input[type="time"],
+.urlField input {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid rgba(148, 163, 184, 0.66);
+  border-radius: 0.65rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+}
+
+.dayCard input[type="time"] {
+  padding: 0 1rem;
+}
+
+.dayCard input:disabled,
+.urlField input:disabled,
+.radioRow input:disabled,
+.toggleInput:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.primaryButton {
+  min-height: 3.15rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: #1b2a37;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.primaryButton:disabled {
+  cursor: not-allowed;
+  background: #dce3ec;
+  color: #8292a8;
+}
+
+.radioGroup,
+.deliveryList {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0 1rem 1rem;
+}
+
+.radioRow,
+.deliveryRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 4.25rem;
+  padding: 0 1rem;
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  border-radius: 0.65rem;
+  color: #1f2a37;
+  font-weight: 700;
+}
+
+.radioRow {
+  justify-content: flex-start;
+  gap: 1rem;
+}
+
+.deliveryLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.toggleInput {
+  position: relative;
+  width: 2.65rem;
+  height: 1.45rem;
+  flex: 0 0 auto;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  background: #94a3b8;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+}
+
+.toggleInput::after {
+  position: absolute;
+  top: 0.18rem;
+  left: 0.2rem;
+  width: 1.08rem;
+  height: 1.08rem;
+  border-radius: 999px;
+  background: #ffffff;
+  content: "";
+  transition: transform 160ms ease;
+}
+
+.toggleInput:checked {
+  background: #26a269;
+}
+
+.toggleInput:checked::after {
+  transform: translateX(1.18rem);
+}
+
+.urlSection {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0 1rem 1rem;
+}
+
+.urlField {
+  display: grid;
+  gap: 0.45rem;
+  color: #1f2a37;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.urlField input {
+  padding: 0 1rem;
+  font-weight: 700;
+}
+
+.errorBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  border-radius: 0.75rem;
+  background: #fee2e2;
+  color: #991b1b;
+  font-weight: 800;
+}
+
+.errorBanner p,
+.emptyMessage,
+.feedbackSuccess,
+.feedbackError {
+  margin: 0;
+}
+
+.errorBanner button {
+  border: 0;
+  background: transparent;
+  color: #991b1b;
+  font: inherit;
+  font-weight: 900;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.emptyMessage {
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.feedbackSuccess,
+.feedbackError {
+  padding: 0.85rem 1rem;
+  border-radius: 0.75rem;
+  font-weight: 800;
+}
+
+.feedbackSuccess {
+  border: 1px solid rgba(34, 197, 94, 0.22);
+  background: #dcfce7;
+  color: #166534;
+}
+
+.feedbackError {
+  border: 1px solid rgba(239, 68, 68, 0.22);
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+@media (max-width: 1180px) {
+  .hoursGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .accordionBody {
+    padding: 0 0.85rem 1rem;
+  }
+
+  .hoursGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .dayCard {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .dayCard input[type="time"] {
+    grid-column: span 2;
+  }
+}

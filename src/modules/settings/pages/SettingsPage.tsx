@@ -4,6 +4,7 @@ import { OperationalSettingsPanel } from "@/modules/settings/components/Operatio
 import { SettingsMetricCard } from "@/modules/settings/components/SettingsMetricCard";
 import { TaxSettingsPanel } from "@/modules/settings/components/TaxSettingsPanel";
 import { UsersManagementPanel } from "@/modules/settings/components/UsersManagementPanel";
+import { VirtualCatalogSettingsPanel } from "@/modules/settings/components/VirtualCatalogSettingsPanel";
 import {
   useBusinessSettingsQuery,
   useCreateBusinessSettingsMutation,
@@ -18,6 +19,7 @@ import {
   settingsUserRoles,
   type BusinessProfileInput,
   type BusinessOperationalSettingsInput,
+  type BusinessVirtualCatalogSettingsInput,
 } from "@/modules/settings/types/settings";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
 import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
@@ -51,6 +53,7 @@ export function SettingsPage() {
   const createBusinessSettingsMutation = useCreateBusinessSettingsMutation();
   const updateBusinessProfileMutation = useUpdateBusinessSettingsMutation();
   const updateTaxSettingsMutation = useUpdateBusinessSettingsMutation();
+  const updateVirtualCatalogSettingsMutation = useUpdateBusinessSettingsMutation();
   const createSettingsUserMutation = useCreateSettingsUserMutation();
   const updateSettingsUserMutation = useUpdateSettingsUserMutation();
   const deleteSettingsUserMutation = useDeleteSettingsUserMutation();
@@ -133,6 +136,12 @@ export function SettingsPage() {
     await updateBusinessProfileMutation.mutateAsync(input);
   }
 
+  async function handleVirtualCatalogSettingsSubmit(
+    input: BusinessVirtualCatalogSettingsInput,
+  ) {
+    await updateVirtualCatalogSettingsMutation.mutateAsync(input);
+  }
+
   if (isRetailPreset) {
     return (
       <RetailPageLayout
@@ -202,18 +211,16 @@ export function SettingsPage() {
               onSubmit={handleBusinessTaxSubmit}
             />
 
-            <details className={retailStyles.accordion}>
-              <summary className={retailStyles.accordionSummary}>
-                <p className={retailStyles.accordionTitle}>Catálogo virtual</p>
-                <span>⌄</span>
-              </summary>
-              <div className={retailStyles.accordionBody}>
-                <p className={retailStyles.placeholder}>
-                  Aquí podrás activar visibilidad del catálogo, compartir enlaces
-                  y ajustar cómo se ve tu inventario para clientes.
-                </p>
-              </div>
-            </details>
+            <VirtualCatalogSettingsPanel
+              businessSettings={businessSettings}
+              errorMessage={businessSettingsError}
+              isLoading={businessSettingsQuery.isLoading}
+              isSubmitting={updateVirtualCatalogSettingsMutation.isPending}
+              onRetry={() => {
+                void businessSettingsQuery.refetch();
+              }}
+              onSubmit={handleVirtualCatalogSettingsSubmit}
+            />
 
             <details className={retailStyles.accordion}>
               <summary className={retailStyles.accordionSummary}>

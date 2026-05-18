@@ -4,9 +4,33 @@ import { assignableUserRoles } from "@/shared/constants/user-roles";
 
 export const supportedCurrencies = ["COP", "USD", "EUR", "MXN"] as const;
 export const settingsUserRoles = assignableUserRoles;
+export const catalogWeekdayIds = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
+export const catalogOutOfStockBehaviors = [
+  "SHOW_NORMALLY",
+  "HIDE_FROM_CATALOG",
+  "SHOW_UNAVAILABLE",
+] as const;
 
 export type SupportedCurrency = (typeof supportedCurrencies)[number];
 export type SettingsUserRole = AuthUser["role"];
+export type CatalogWeekdayId = (typeof catalogWeekdayIds)[number];
+export type CatalogOutOfStockBehavior =
+  (typeof catalogOutOfStockBehaviors)[number];
+
+export type CatalogBusinessHour = {
+  day: CatalogWeekdayId;
+  enabled: boolean;
+  opensAt: string;
+  closesAt: string;
+};
 
 export type BusinessSettings = {
   id: string;
@@ -25,6 +49,11 @@ export type BusinessSettings = {
   lowStockAlertsEnabled: boolean;
   defaultLowStockThreshold: number;
   useWeightedAverageCost: boolean;
+  catalogBusinessHours: CatalogBusinessHour[] | null;
+  catalogOutOfStockBehavior: CatalogOutOfStockBehavior;
+  catalogPickupEnabled: boolean;
+  catalogDeliveryEnabled: boolean;
+  catalogSlug: string | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -53,12 +82,22 @@ export type BusinessOperationalSettingsInput = {
   useWeightedAverageCost: boolean;
 };
 
+export type BusinessVirtualCatalogSettingsInput = {
+  catalogBusinessHours?: CatalogBusinessHour[];
+  catalogOutOfStockBehavior?: CatalogOutOfStockBehavior;
+  catalogPickupEnabled?: boolean;
+  catalogDeliveryEnabled?: boolean;
+  catalogSlug?: string | null;
+};
+
 export type BusinessSettingsCreateInput = BusinessProfileInput &
   BusinessTaxSettingsInput &
-  Partial<BusinessOperationalSettingsInput>;
+  Partial<BusinessOperationalSettingsInput & BusinessVirtualCatalogSettingsInput>;
 
 export type BusinessSettingsUpdateInput = Partial<
-  BusinessSettingsCreateInput & BusinessOperationalSettingsInput
+  BusinessSettingsCreateInput &
+    BusinessOperationalSettingsInput &
+    BusinessVirtualCatalogSettingsInput
 >;
 
 export type SettingsUser = {
