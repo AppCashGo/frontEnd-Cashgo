@@ -49,6 +49,8 @@ export type BusinessSettings = {
   lowStockAlertsEnabled: boolean;
   defaultLowStockThreshold: number;
   useWeightedAverageCost: boolean;
+  cashRegisterOpeningReminderEnabled: boolean;
+  saleCompletionSoundEnabled: boolean;
   catalogBusinessHours: CatalogBusinessHour[] | null;
   catalogOutOfStockBehavior: CatalogOutOfStockBehavior;
   catalogPickupEnabled: boolean;
@@ -90,14 +92,29 @@ export type BusinessVirtualCatalogSettingsInput = {
   catalogSlug?: string | null;
 };
 
+export type BusinessReminderSettingsInput = {
+  cashRegisterOpeningReminderEnabled: boolean;
+};
+
+export type BusinessAdditionalSettingsInput = {
+  saleCompletionSoundEnabled?: boolean;
+};
+
 export type BusinessSettingsCreateInput = BusinessProfileInput &
   BusinessTaxSettingsInput &
-  Partial<BusinessOperationalSettingsInput & BusinessVirtualCatalogSettingsInput>;
+  Partial<
+    BusinessOperationalSettingsInput &
+      BusinessVirtualCatalogSettingsInput &
+      BusinessReminderSettingsInput &
+      BusinessAdditionalSettingsInput
+  >;
 
 export type BusinessSettingsUpdateInput = Partial<
   BusinessSettingsCreateInput &
     BusinessOperationalSettingsInput &
-    BusinessVirtualCatalogSettingsInput
+    BusinessVirtualCatalogSettingsInput &
+    BusinessReminderSettingsInput &
+    BusinessAdditionalSettingsInput
 >;
 
 export type SettingsUser = {

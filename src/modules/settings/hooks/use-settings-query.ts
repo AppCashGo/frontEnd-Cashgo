@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createBusinessSettings,
   createManagedBusiness,
+  deleteBusinessSettings,
   createSettingsUser,
   deleteSettingsUser,
   getBusinessSettings,
@@ -85,6 +86,22 @@ export function useUpdateBusinessSettingsMutation() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: settingsBusinessQueryKey,
+      })
+    },
+  })
+}
+
+export function useDeleteBusinessSettingsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: deleteBusinessSettings,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: settingsBusinessQueryKey,
+      })
+      await queryClient.invalidateQueries({
+        queryKey: settingsBusinessesQueryKey,
       })
     },
   })

@@ -993,6 +993,8 @@ export function RetailSalesWorkspace() {
   )
   const allowSaleWithoutStock =
     businessSettingsQuery.data?.allowSaleWithoutStock ?? false
+  const saleCompletionSoundEnabled =
+    businessSettingsQuery.data?.saleCompletionSoundEnabled ?? true
   const isCashRegisterSubmitting =
     openCashRegisterMutation.isPending ||
     closeCashRegisterMutation.isPending ||
@@ -1520,7 +1522,9 @@ export function RetailSalesWorkspace() {
       })
 
       completeSale(sale)
-      playCashRegisterSound()
+      if (saleCompletionSoundEnabled) {
+        playCashRegisterSound()
+      }
       resetPaymentStep()
       setSaleStep('CATALOG')
     } catch (error) {
@@ -1576,7 +1580,9 @@ export function RetailSalesWorkspace() {
       })
 
       completeSale(sale)
-      playCashRegisterSound()
+      if (saleCompletionSoundEnabled) {
+        playCashRegisterSound()
+      }
       setQuickSaleDrawerOpen(false)
       setQuickSaleForm(createDefaultQuickSaleState())
     } catch (error) {

@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { AdditionalSettingsPanel } from "@/modules/settings/components/AdditionalSettingsPanel";
 import { BusinessSettingsPanel } from "@/modules/settings/components/BusinessSettingsPanel";
 import { InventorySettingsPanel } from "@/modules/settings/components/InventorySettingsPanel";
 import { OperationalSettingsPanel } from "@/modules/settings/components/OperationalSettingsPanel";
+import { ReminderSettingsPanel } from "@/modules/settings/components/ReminderSettingsPanel";
 import { SettingsMetricCard } from "@/modules/settings/components/SettingsMetricCard";
 import { TaxSettingsPanel } from "@/modules/settings/components/TaxSettingsPanel";
 import { UsersManagementPanel } from "@/modules/settings/components/UsersManagementPanel";
@@ -10,6 +12,7 @@ import {
   useBusinessSettingsQuery,
   useCreateBusinessSettingsMutation,
   useCreateSettingsUserMutation,
+  useDeleteBusinessSettingsMutation,
   useSettingsRolesQuery,
   useSettingsUsersQuery,
   useUpdateBusinessSettingsMutation,
@@ -18,8 +21,10 @@ import {
 } from "@/modules/settings/hooks/use-settings-query";
 import {
   settingsUserRoles,
+  type BusinessAdditionalSettingsInput,
   type BusinessProfileInput,
   type BusinessOperationalSettingsInput,
+  type BusinessReminderSettingsInput,
   type BusinessVirtualCatalogSettingsInput,
 } from "@/modules/settings/types/settings";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
@@ -55,6 +60,9 @@ export function SettingsPage() {
   const updateBusinessProfileMutation = useUpdateBusinessSettingsMutation();
   const updateTaxSettingsMutation = useUpdateBusinessSettingsMutation();
   const updateVirtualCatalogSettingsMutation = useUpdateBusinessSettingsMutation();
+  const updateReminderSettingsMutation = useUpdateBusinessSettingsMutation();
+  const updateAdditionalSettingsMutation = useUpdateBusinessSettingsMutation();
+  const deleteBusinessSettingsMutation = useDeleteBusinessSettingsMutation();
   const createSettingsUserMutation = useCreateSettingsUserMutation();
   const updateSettingsUserMutation = useUpdateSettingsUserMutation();
   const deleteSettingsUserMutation = useDeleteSettingsUserMutation();
@@ -141,6 +149,22 @@ export function SettingsPage() {
     input: BusinessVirtualCatalogSettingsInput,
   ) {
     await updateVirtualCatalogSettingsMutation.mutateAsync(input);
+  }
+
+  async function handleReminderSettingsSubmit(
+    input: BusinessReminderSettingsInput,
+  ) {
+    await updateReminderSettingsMutation.mutateAsync(input);
+  }
+
+  async function handleAdditionalSettingsSubmit(
+    input: BusinessAdditionalSettingsInput,
+  ) {
+    await updateAdditionalSettingsMutation.mutateAsync(input);
+  }
+
+  async function handleDeleteBusinessSettings() {
+    await deleteBusinessSettingsMutation.mutateAsync();
   }
 
   if (isRetailPreset) {
@@ -234,33 +258,29 @@ export function SettingsPage() {
               onSubmit={handleOperationalSettingsSubmit}
             />
 
-            <details className={retailStyles.accordion}>
-              <summary className={retailStyles.accordionSummary}>
-                <p className={retailStyles.accordionTitle}>Recordatorios</p>
-                <span>⌄</span>
-              </summary>
-              <div className={retailStyles.accordionBody}>
-                <p className={retailStyles.placeholder}>
-                  Aquí podrás configurar recordatorios automáticos para
-                  clientes, cobros y tareas del negocio.
-                </p>
-              </div>
-            </details>
+            <ReminderSettingsPanel
+              businessSettings={businessSettings}
+              errorMessage={businessSettingsError}
+              isLoading={businessSettingsQuery.isLoading}
+              isSubmitting={updateReminderSettingsMutation.isPending}
+              onRetry={() => {
+                void businessSettingsQuery.refetch();
+              }}
+              onSubmit={handleReminderSettingsSubmit}
+            />
 
-            <details className={retailStyles.accordion}>
-              <summary className={retailStyles.accordionSummary}>
-                <p className={retailStyles.accordionTitle}>
-                  Configuraciones adicionales
-                </p>
-                <span>⌄</span>
-              </summary>
-              <div className={retailStyles.accordionBody}>
-                <p className={retailStyles.placeholder}>
-                  Aquí agruparemos ajustes avanzados para operación,
-                  automatizaciones y preferencias generales.
-                </p>
-              </div>
-            </details>
+            <AdditionalSettingsPanel
+              businessSettings={businessSettings}
+              errorMessage={businessSettingsError}
+              isDeleting={deleteBusinessSettingsMutation.isPending}
+              isLoading={businessSettingsQuery.isLoading}
+              isSubmitting={updateAdditionalSettingsMutation.isPending}
+              onDeleteBusiness={handleDeleteBusinessSettings}
+              onRetry={() => {
+                void businessSettingsQuery.refetch();
+              }}
+              onSubmit={handleAdditionalSettingsSubmit}
+            />
           </div>
         ) : null}
 

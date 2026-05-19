@@ -52,6 +52,12 @@ export function updateBusinessSettings(input: BusinessSettingsUpdateInput) {
   )
 }
 
+export function deleteBusinessSettings() {
+  return deleteJson<void>('/settings/business', {
+    accessToken: getAuthAccessToken(),
+  })
+}
+
 export function getSettingsRoles() {
   return getJson<SettingsUserRole[]>('/settings/roles', {
     accessToken: getAuthAccessToken(),
