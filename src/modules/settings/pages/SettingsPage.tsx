@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { BusinessSettingsPanel } from "@/modules/settings/components/BusinessSettingsPanel";
+import { InventorySettingsPanel } from "@/modules/settings/components/InventorySettingsPanel";
 import { OperationalSettingsPanel } from "@/modules/settings/components/OperationalSettingsPanel";
 import { SettingsMetricCard } from "@/modules/settings/components/SettingsMetricCard";
 import { TaxSettingsPanel } from "@/modules/settings/components/TaxSettingsPanel";
@@ -222,24 +223,16 @@ export function SettingsPage() {
               onSubmit={handleVirtualCatalogSettingsSubmit}
             />
 
-            <details className={retailStyles.accordion}>
-              <summary className={retailStyles.accordionSummary}>
-                <p className={retailStyles.accordionTitle}>Inventario</p>
-                <span>⌄</span>
-              </summary>
-              <div className={retailStyles.accordionBody}>
-                <OperationalSettingsPanel
-                  businessSettings={businessSettings}
-                  errorMessage={businessSettingsError}
-                  isLoading={businessSettingsQuery.isLoading}
-                  isSubmitting={updateBusinessProfileMutation.isPending}
-                  onRetry={() => {
-                    void businessSettingsQuery.refetch();
-                  }}
-                  onSubmit={handleOperationalSettingsSubmit}
-                />
-              </div>
-            </details>
+            <InventorySettingsPanel
+              businessSettings={businessSettings}
+              errorMessage={businessSettingsError}
+              isLoading={businessSettingsQuery.isLoading}
+              isSubmitting={updateBusinessProfileMutation.isPending}
+              onRetry={() => {
+                void businessSettingsQuery.refetch();
+              }}
+              onSubmit={handleOperationalSettingsSubmit}
+            />
 
             <details className={retailStyles.accordion}>
               <summary className={retailStyles.accordionSummary}>
