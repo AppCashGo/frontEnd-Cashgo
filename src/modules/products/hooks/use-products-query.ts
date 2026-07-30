@@ -11,6 +11,7 @@ import {
   getProducts,
   importProducts,
   updateProduct,
+  uploadProductImages,
 } from '@/modules/products/services/products-api'
 import type {
   ProductImportMutationInput,
@@ -84,6 +85,12 @@ export function useDeleteProductMutation() {
     onSuccess: async () => {
       await invalidateProductDependencies(queryClient)
     },
+  })
+}
+
+export function useUploadProductImagesMutation() {
+  return useMutation({
+    mutationFn: (files: File[]) => uploadProductImages(files),
   })
 }
 

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
+import { resolveProductImageUrl } from "@/modules/products/utils/resolve-product-image-url";
 import { usePublicCatalogQuery } from "../hooks/use-public-catalog-query";
 import type {
   PublicCatalogCategory,
@@ -274,7 +275,7 @@ function ServicePill({
 }
 
 function ProductCard({ product }: { product: PublicCatalogProduct }) {
-  const imageUrl = product.imageUrls[0];
+  const imageUrl = resolveProductImageUrl(product.imageUrls);
 
   return (
     <article

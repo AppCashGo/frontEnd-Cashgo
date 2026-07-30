@@ -27,6 +27,7 @@ import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inven
 import { useProductsQuery } from '@/modules/products/hooks/use-products-query'
 import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
+import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
 import { useSuppliersQuery } from '@/modules/suppliers/hooks/use-suppliers-query'
 import {
   useCreateSaleMutation,
@@ -1841,6 +1842,7 @@ export function RetailSalesWorkspace() {
 
               {filteredProducts.map((product) => {
                 const productQuantity = cartQuantitiesByProductId.get(product.id) ?? 0
+                const productImageUrl = resolveProductImageUrl(product.imageUrls)
                 const canSellProduct =
                   product.isActive && (allowSaleWithoutStock || product.stock > 0)
 
@@ -1860,13 +1862,13 @@ export function RetailSalesWorkspace() {
 
                     <div
                       className={
-                        product.imageUrls[0]
+                        productImageUrl
                           ? `${styles.productPreview} ${styles.productPreviewWithImage}`
                           : styles.productPreview
                       }
                     >
-                      {product.imageUrls[0] ? (
-                        <img alt="" src={product.imageUrls[0]} />
+                      {productImageUrl ? (
+                        <img alt="" src={productImageUrl} />
                       ) : (
                         <span className={styles.productPreviewMark}>
                           {product.name.slice(0, 1).toUpperCase()}
@@ -1910,66 +1912,78 @@ export function RetailSalesWorkspace() {
                     />
                   ) : (
                     <div className={styles.cartList}>
-                      {cartItems.map((item) => (
-                        <article className={styles.cartItem} key={item.product.id}>
-                          <div className={styles.cartItemHead}>
-                            <div className={styles.cartItemCopy}>
-                              {item.product.imageUrls[0] ? (
-                                <img
-                                  alt=""
-                                  className={styles.cartAvatarImage}
-                                  src={item.product.imageUrls[0]}
-                                />
-                              ) : (
-                                <div className={styles.cartAvatar}>
-                                  {item.product.name.slice(0, 1).toUpperCase()}
+                      {cartItems.map((item) => {
+                        const productImageUrl = resolveProductImageUrl(
+                          item.product.imageUrls,
+                        )
+
+                        return (
+                          <article className={styles.cartItem} key={item.product.id}>
+                            <div className={styles.cartItemHead}>
+                              <div className={styles.cartItemCopy}>
+                                {productImageUrl ? (
+                                  <img
+                                    alt=""
+                                    className={styles.cartAvatarImage}
+                                    src={productImageUrl}
+                                  />
+                                ) : (
+                                  <div className={styles.cartAvatar}>
+                                    {item.product.name.slice(0, 1).toUpperCase()}
+                                  </div>
+                                )}
+                                <div>
+                                  <p className={styles.cartItemName}>
+                                    {item.product.name}
+                                  </p>
                                 </div>
-                              )}
-                              <div>
-                                <p className={styles.cartItemName}>{item.product.name}</p>
+                              </div>
+                              <button
+                                className={styles.deleteButton}
+                                type="button"
+                                onClick={() => removeProduct(item.product.id)}
+                              >
+                                🗑
+                              </button>
+                            </div>
+
+                            <div className={styles.cartItemControls}>
+                              <div className={styles.quantityControls}>
+                                <button
+                                  className={styles.quantityButton}
+                                  type="button"
+                                  onClick={() =>
+                                    decreaseProductQuantity(item.product.id)
+                                  }
+                                >
+                                  −
+                                </button>
+                                <span className={styles.quantityValue}>
+                                  {item.quantity.toString()}
+                                </span>
+                                <button
+                                  className={styles.quantityButton}
+                                  type="button"
+                                  onClick={() =>
+                                    increaseProductQuantity(item.product.id)
+                                  }
+                                >
+                                  +
+                                </button>
+                              </div>
+
+                              <div className={styles.lineTotalBox}>
+                                {formatCurrency(item.lineTotal)}
                               </div>
                             </div>
-                            <button
-                              className={styles.deleteButton}
-                              type="button"
-                              onClick={() => removeProduct(item.product.id)}
-                            >
-                              🗑
-                            </button>
-                          </div>
 
-                          <div className={styles.cartItemControls}>
-                            <div className={styles.quantityControls}>
-                              <button
-                                className={styles.quantityButton}
-                                type="button"
-                                onClick={() => decreaseProductQuantity(item.product.id)}
-                              >
-                                −
-                              </button>
-                              <span className={styles.quantityValue}>
-                                {item.quantity.toString()}
-                              </span>
-                              <button
-                                className={styles.quantityButton}
-                                type="button"
-                                onClick={() => increaseProductQuantity(item.product.id)}
-                              >
-                                +
-                              </button>
-                            </div>
-
-                            <div className={styles.lineTotalBox}>
-                              {formatCurrency(item.lineTotal)}
-                            </div>
-                          </div>
-
-                          <p className={styles.cartMetaLine}>
-                            Precio por {item.quantity.toString()} unidades:{' '}
-                            <strong>{formatCurrency(item.lineTotal)}</strong>
-                          </p>
-                        </article>
-                      ))}
+                            <p className={styles.cartMetaLine}>
+                              Precio por {item.quantity.toString()} unidades:{' '}
+                              <strong>{formatCurrency(item.lineTotal)}</strong>
+                            </p>
+                          </article>
+                        )
+                      })}
                     </div>
                   )}
                 </div>

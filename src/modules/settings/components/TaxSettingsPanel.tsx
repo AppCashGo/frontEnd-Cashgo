@@ -20,6 +20,7 @@ import {
 import { useProductsQuery } from '@/modules/products/hooks/use-products-query'
 import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
+import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
 import {
   taxSettingsFormSchema,
   type TaxSettingsFormValues,
@@ -98,7 +99,7 @@ function formatProductTax(product: Product) {
 }
 
 function ProductThumb({ product }: { product: Product }) {
-  const imageUrl = product.imageUrls[0]
+  const imageUrl = resolveProductImageUrl(product.imageUrls)
 
   if (imageUrl) {
     return <img alt="" className={styles.productImage} src={imageUrl} />

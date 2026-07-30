@@ -30,6 +30,7 @@ import type {
   Product,
   ProductMutationInput,
 } from '@/modules/products/types/product'
+import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
 import {
   useBusinessSettingsQuery,
   useUpdateBusinessSettingsMutation,
@@ -1193,6 +1194,7 @@ export function RetailInventoryWorkspace() {
               {visibleProducts.map((product) => {
                 const productDraft =
                   productDrafts[product.id] ?? createInlineProductDraft(product)
+                const productImageUrl = resolveProductImageUrl(product.imageUrls)
                 const gain = product.price - product.cost
                 const margin =
                   product.price > 0
@@ -1211,11 +1213,11 @@ export function RetailInventoryWorkspace() {
                   >
                     <td>
                       <div className={styles.productCell}>
-                        {product.imageUrls[0] ? (
+                        {productImageUrl ? (
                           <img
                             alt=""
                             className={styles.productAvatarImage}
-                            src={product.imageUrls[0]}
+                            src={productImageUrl}
                           />
                         ) : (
                           <span className={styles.productAvatar}>t</span>

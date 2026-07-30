@@ -11,9 +11,14 @@ import {
   deleteJson,
   getJson,
   patchJson,
+  postFormData,
   postJson,
 } from '@/shared/services/api-client'
 import { getAuthAccessToken } from '@/shared/services/auth-session'
+
+type ProductImageUploadResponse = {
+  imageUrls: string[]
+}
 
 export async function getProducts() {
   const products = await getJson<ProductApiRecord[]>('/products', {
@@ -56,6 +61,24 @@ export async function deleteProduct(productId: string) {
   })
 
   return normalizeProductRecord(product)
+}
+
+export async function uploadProductImages(files: File[]) {
+  const formData = new FormData()
+
+  files.forEach((file) => {
+    formData.append('files', file)
+  })
+
+  const response = await postFormData<ProductImageUploadResponse>(
+    '/products/images',
+    formData,
+    {
+      accessToken: getAuthAccessToken(),
+    },
+  )
+
+  return response.imageUrls
 }
 
 export async function importProducts(input: ProductImportMutationInput) {

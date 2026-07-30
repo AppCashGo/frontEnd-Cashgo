@@ -137,6 +137,12 @@
   color: #2563eb;
 }
 
+.uploadPanel:disabled,
+.addImageTile:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .imageGallery {
   display: flex;
   align-items: flex-start;
@@ -283,6 +289,12 @@
 .imageError {
   margin: 0;
   color: #c2413a;
+  font-size: 0.9rem;
+}
+
+.imageHint {
+  margin: 0;
+  color: #475569;
   font-size: 0.9rem;
 }
 

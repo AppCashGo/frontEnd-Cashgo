@@ -6,6 +6,7 @@ import {
   useDeleteProductMutation,
   useProductsQuery,
   useUpdateProductMutation,
+  useUploadProductImagesMutation,
 } from "@/modules/products/hooks/use-products-query";
 import type {
   Product,
@@ -23,6 +24,7 @@ import {
   useInventoryCategoriesQuery,
 } from "@/modules/inventory/hooks/use-inventory-query";
 import { getInventoryCopy } from "@/modules/inventory/i18n/inventory-copy";
+import { resolveProductImageUrl } from "@/modules/products/utils/resolve-product-image-url";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { formatCurrency } from "@/shared/utils/format-currency";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
@@ -178,6 +180,29 @@ function loadImageFromObjectUrl(url: string) {
   });
 }
 
+function createProductImageFileName(originalName: string) {
+  const baseName = originalName.replace(/\.[^/.]+$/, "").trim();
+
+  return `${baseName || "product-image"}.webp`;
+}
+
+function canvasToWebpBlob(canvas: HTMLCanvasElement) {
+  return new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("No pudimos preparar la imagen."));
+          return;
+        }
+
+        resolve(blob);
+      },
+      "image/webp",
+      0.84,
+    );
+  });
+}
+
 async function resizeProductImage(file: File) {
   if (!file.type.startsWith("image/")) {
     throw new Error("Selecciona un archivo de imagen válido.");
@@ -209,7 +234,15 @@ async function resizeProductImage(file: File) {
     canvas.height = height;
     context.drawImage(image, 0, 0, width, height);
 
-    return canvas.toDataURL("image/webp", 0.84);
+    const blob = await canvasToWebpBlob(canvas);
+
+    if (blob.size > MAX_PRODUCT_IMAGE_BYTES) {
+      throw new Error("Cada imagen debe pesar máximo 2MB.");
+    }
+
+    return new File([blob], createProductImageFileName(file.name), {
+      type: "image/webp",
+    });
   } finally {
     URL.revokeObjectURL(objectUrl);
   }
@@ -627,6 +660,8 @@ function ProductImagePreviewDialog({
   onSelect: (index: number) => void;
 }) {
   const currentImage = images[selectedIndex];
+  const resolvedCurrentImage =
+    resolveProductImageUrl(images, selectedIndex) ?? currentImage;
   const canGoBack = selectedIndex > 0;
   const canGoForward = selectedIndex < images.length - 1;
 
@@ -660,7 +695,7 @@ function ProductImagePreviewDialog({
           <img
             alt={`Imagen ${selectedIndex + 1} del producto`}
             className={styles.imagePreviewMedia}
-            src={currentImage}
+            src={resolvedCurrentImage}
           />
         </div>
 
@@ -705,6 +740,7 @@ export function RetailProductCreateWorkspace({
   const createProductMutation = useCreateProductMutation();
   const updateProductMutation = useUpdateProductMutation();
   const deleteProductMutation = useDeleteProductMutation();
+  const uploadProductImagesMutation = useUploadProductImagesMutation();
   const categories = useMemo(
     () => categoriesQuery.data ?? [],
     [categoriesQuery.data],
@@ -916,10 +952,12 @@ export function RetailProductCreateWorkspace({
       const optimizedImages = await Promise.all(
         filesToProcess.map((file) => resizeProductImage(file)),
       );
+      const uploadedImageUrls =
+        await uploadProductImagesMutation.mutateAsync(optimizedImages);
 
       setProductImages((currentImages) => {
         if (replaceIndex !== null) {
-          const replacementImage = optimizedImages[0];
+          const replacementImage = uploadedImageUrls[0];
 
           if (!replacementImage || !currentImages[replaceIndex]) {
             return currentImages;
@@ -931,7 +969,7 @@ export function RetailProductCreateWorkspace({
           return nextImages;
         }
 
-        return [...currentImages, ...optimizedImages].slice(
+        return [...currentImages, ...uploadedImageUrls].slice(
           0,
           MAX_PRODUCT_IMAGES,
         );
@@ -983,6 +1021,7 @@ export function RetailProductCreateWorkspace({
           <button
             className={styles.uploadPanel}
             type="button"
+            disabled={uploadProductImagesMutation.isPending}
             onClick={() => requestProductImageUpload()}
           >
             <UploadIcon />
@@ -994,76 +1033,83 @@ export function RetailProductCreateWorkspace({
           </button>
         ) : (
           <div className={styles.imageGallery}>
-            {productImages.map((imageUrl, index) => (
-              <article
-                className={
-                  index === 0 ? styles.imageTileCover : styles.imageTile
-                }
-                key={`${imageUrl}-${index}`}
-              >
-                <button
-                  aria-label={`Ver imagen ${index + 1}`}
-                  className={styles.imagePreviewButton}
-                  type="button"
-                  onClick={() => handleOpenProductImagePreview(index)}
-                >
-                  <img
-                    alt={`Imagen ${index + 1} del producto`}
-                    className={styles.productImage}
-                    src={imageUrl}
-                  />
-                </button>
+            {productImages.map((imageUrl, index) => {
+              const resolvedImageUrl =
+                resolveProductImageUrl(productImages, index) ?? imageUrl;
 
-                {index === 0 ? (
-                  <span className={styles.coverBadge}>Portada</span>
-                ) : null}
-
-                <button
-                  aria-label={`Editar imagen ${index + 1}`}
-                  className={styles.imageEditButton}
-                  type="button"
-                  onClick={() =>
-                    setImageMenuState((currentMenuState) =>
-                      currentMenuState?.index === index ? null : { index },
-                    )
+              return (
+                <article
+                  className={
+                    index === 0 ? styles.imageTileCover : styles.imageTile
                   }
+                  key={`${imageUrl}-${index}`}
                 >
-                  <PencilIcon />
-                </button>
+                  <button
+                    aria-label={`Ver imagen ${index + 1}`}
+                    className={styles.imagePreviewButton}
+                    type="button"
+                    onClick={() => handleOpenProductImagePreview(index)}
+                  >
+                    <img
+                      alt={`Imagen ${index + 1} del producto`}
+                      className={styles.productImage}
+                      src={resolvedImageUrl}
+                    />
+                  </button>
 
-                {imageMenuState?.index === index ? (
-                  <div className={styles.imageMenu}>
-                    <button
-                      type="button"
-                      onClick={() => handleOpenProductImagePreview(index)}
-                    >
-                      <EyeIcon />
-                      <span>Ver imagen</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => requestProductImageUpload(index)}
-                    >
-                      <ImageIcon />
-                      <span>Cargar imagen</span>
-                    </button>
-                    <button
-                      className={styles.imageMenuDanger}
-                      type="button"
-                      onClick={() => handleRemoveProductImage(index)}
-                    >
-                      <TrashIcon />
-                      <span>Eliminar imagen</span>
-                    </button>
-                  </div>
-                ) : null}
-              </article>
-            ))}
+                  {index === 0 ? (
+                    <span className={styles.coverBadge}>Portada</span>
+                  ) : null}
+
+                  <button
+                    aria-label={`Editar imagen ${index + 1}`}
+                    className={styles.imageEditButton}
+                    type="button"
+                    onClick={() =>
+                      setImageMenuState((currentMenuState) =>
+                        currentMenuState?.index === index ? null : { index },
+                      )
+                    }
+                  >
+                    <PencilIcon />
+                  </button>
+
+                  {imageMenuState?.index === index ? (
+                    <div className={styles.imageMenu}>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenProductImagePreview(index)}
+                      >
+                        <EyeIcon />
+                        <span>Ver imagen</span>
+                      </button>
+                      <button
+                        type="button"
+                        disabled={uploadProductImagesMutation.isPending}
+                        onClick={() => requestProductImageUpload(index)}
+                      >
+                        <ImageIcon />
+                        <span>Cargar imagen</span>
+                      </button>
+                      <button
+                        className={styles.imageMenuDanger}
+                        type="button"
+                        onClick={() => handleRemoveProductImage(index)}
+                      >
+                        <TrashIcon />
+                        <span>Eliminar imagen</span>
+                      </button>
+                    </div>
+                  ) : null}
+                </article>
+              );
+            })}
 
             {remainingImages > 0 ? (
               <button
                 className={styles.addImageTile}
                 type="button"
+                disabled={uploadProductImagesMutation.isPending}
                 onClick={() => requestProductImageUpload()}
               >
                 <PlusIcon />
@@ -1075,6 +1121,9 @@ export function RetailProductCreateWorkspace({
 
         {productImageError ? (
           <p className={styles.imageError}>{productImageError}</p>
+        ) : null}
+        {uploadProductImagesMutation.isPending ? (
+          <p className={styles.imageHint}>Cargando imágenes...</p>
         ) : null}
       </div>
     );

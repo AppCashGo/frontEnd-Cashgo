@@ -38,6 +38,7 @@ import {
 } from "@/modules/quotes/utils/quotation-utils";
 import type { CustomerSummary } from "@/modules/customers/types/customer";
 import type { Product } from "@/modules/products/types/product";
+import { resolveProductImageUrl } from "@/modules/products/utils/resolve-product-image-url";
 import { routePaths } from "@/routes/route-paths";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
@@ -774,6 +775,7 @@ export function QuotationFormWorkspace({
   function renderProductCard(product: Product) {
     const selectedItem = watchedItems.find((item) => item.productId === product.id);
     const selectedQuantity = selectedItem ? Number(selectedItem.quantity) || 1 : 0;
+    const productImageUrl = resolveProductImageUrl(product.imageUrls);
 
     return (
       <button
@@ -790,11 +792,11 @@ export function QuotationFormWorkspace({
             {selectedQuantity}
           </span>
         ) : null}
-        {product.imageUrls[0] ? (
+        {productImageUrl ? (
           <img
             alt=""
             className={styles.productImage}
-            src={product.imageUrls[0]}
+            src={productImageUrl}
           />
         ) : (
           <span className={styles.productImage} aria-hidden="true">

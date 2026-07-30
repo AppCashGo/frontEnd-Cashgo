@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Product } from '@/modules/products/types/product'
+import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { routePaths } from '@/routes/route-paths'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -188,19 +189,20 @@ export function SaleProductBrowser({
             const quantityInCart = cartQuantitiesByProductId.get(product.id) ?? 0
             const remainingStock = Math.max(product.stock - quantityInCart, 0)
             const canAddProduct = remainingStock > 0 && product.isActive
+            const productImageUrl = resolveProductImageUrl(product.imageUrls)
 
             return (
               <article className={styles.productCard} key={product.id}>
                 <div
                   className={joinClassNames(
                     styles.productVisual,
-                    product.imageUrls[0]
+                    productImageUrl
                       ? styles.productVisualPhoto
                       : getProductCardToneClass(product),
                   )}
                 >
-                  {product.imageUrls[0] ? (
-                    <img alt="" src={product.imageUrls[0]} />
+                  {productImageUrl ? (
+                    <img alt="" src={productImageUrl} />
                   ) : (
                     <span>{getProductMonogram(product)}</span>
                   )}
