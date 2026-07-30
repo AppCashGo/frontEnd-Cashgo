@@ -34,6 +34,7 @@ import {
   useBusinessSettingsQuery,
   useUpdateBusinessSettingsMutation,
 } from '@/modules/settings/hooks/use-settings-query'
+import { buildConfiguredCatalogUrl } from '@/modules/settings/utils/virtual-catalog'
 import { routePaths, routeSegments } from '@/routes/route-paths'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
@@ -783,7 +784,11 @@ export function RetailInventoryWorkspace() {
 
   async function handleCopyCatalogLink() {
     try {
-      const catalogUrl = `${window.location.origin}${window.location.pathname}`
+      const catalogUrl = buildConfiguredCatalogUrl({
+        businessName: businessSettings?.businessName,
+        businessId: businessSettings?.id,
+        catalogSlug: businessSettings?.catalogSlug,
+      })
       await navigator.clipboard.writeText(catalogUrl)
       setFeedbackMessage({
         tone: 'info',

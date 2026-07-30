@@ -17,6 +17,11 @@ import type {
   CatalogOutOfStockBehavior,
   CatalogWeekdayId,
 } from "@/modules/settings/types/settings";
+import {
+  buildCatalogUrl,
+  buildDefaultCatalogSlug,
+  extractCatalogSlug,
+} from "@/modules/settings/utils/virtual-catalog";
 import styles from "./VirtualCatalogSettingsPanel.module.css";
 
 type VirtualCatalogSettingsPanelProps = {
@@ -34,8 +39,6 @@ type FeedbackMessage = {
   tone: "success" | "error";
   text: string;
 };
-
-const catalogBaseUrl = "https://catalogo.cashgo.co";
 
 const weekdays: Array<{ id: CatalogWeekdayId; label: string }> = [
   { id: "monday", label: "Lunes" },
@@ -65,47 +68,6 @@ function buildDefaultHours(): CatalogBusinessHour[] {
   }));
 }
 
-function normalizeSlug(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
-}
-
-function buildDefaultSlug(businessSettings: BusinessSettings | null) {
-  const baseName = normalizeSlug(businessSettings?.businessName ?? "");
-  const suffix = businessSettings?.id ? `-${String(businessSettings.id)}` : "";
-
-  return `${baseName || "catalogo"}${suffix}`;
-}
-
-function buildCatalogUrl(slug: string) {
-  return `${catalogBaseUrl}/${slug}`;
-}
-
-function extractSlug(value: string) {
-  const trimmedValue = value.trim();
-
-  if (!trimmedValue) {
-    return "";
-  }
-
-  try {
-    const parsedUrl = new URL(trimmedValue);
-    const firstPathSegment = parsedUrl.pathname
-      .split("/")
-      .map((segment) => segment.trim())
-      .find(Boolean);
-
-    return normalizeSlug(firstPathSegment ?? "");
-  } catch {
-    return normalizeSlug(trimmedValue.replace(catalogBaseUrl, ""));
-  }
-}
-
 function mergeBusinessHours(
   storedHours: CatalogBusinessHour[] | null | undefined,
 ) {
@@ -131,7 +93,11 @@ export function VirtualCatalogSettingsPanel({
   onSubmit,
 }: VirtualCatalogSettingsPanelProps) {
   const defaultSlug = useMemo(
-    () => buildDefaultSlug(businessSettings),
+    () =>
+      buildDefaultCatalogSlug({
+        businessName: businessSettings?.businessName,
+        businessId: businessSettings?.id,
+      }),
     [businessSettings],
   );
   const [isOpen, setIsOpen] = useState(true);
@@ -265,7 +231,7 @@ export function VirtualCatalogSettingsPanel({
   }
 
   async function handleSaveCatalogUrl() {
-    const catalogSlug = extractSlug(catalogUrl);
+    const catalogSlug = extractCatalogSlug(catalogUrl);
 
     if (catalogSlug.length < 3) {
       setFeedbackMessage({
