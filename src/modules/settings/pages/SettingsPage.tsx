@@ -65,6 +65,7 @@ export function SettingsPage() {
   const settingsRolesQuery = useSettingsRolesQuery(isAdmin);
   const createBusinessSettingsMutation = useCreateBusinessSettingsMutation();
   const updateBusinessProfileMutation = useUpdateBusinessSettingsMutation();
+  const updateOperationalSettingsMutation = useUpdateBusinessSettingsMutation();
   const updateTaxSettingsMutation = useUpdateBusinessSettingsMutation();
   const updateVirtualCatalogSettingsMutation = useUpdateBusinessSettingsMutation();
   const updateReminderSettingsMutation = useUpdateBusinessSettingsMutation();
@@ -162,7 +163,7 @@ export function SettingsPage() {
   async function handleOperationalSettingsSubmit(
     input: BusinessOperationalSettingsInput,
   ) {
-    await updateBusinessProfileMutation.mutateAsync(input);
+    await updateOperationalSettingsMutation.mutateAsync(input);
   }
 
   async function handleVirtualCatalogSettingsSubmit(
@@ -276,7 +277,7 @@ export function SettingsPage() {
               businessSettings={businessSettings}
               errorMessage={businessSettingsError}
               isLoading={businessSettingsQuery.isLoading}
-              isSubmitting={updateBusinessProfileMutation.isPending}
+              isSubmitting={updateOperationalSettingsMutation.isPending}
               onRetry={() => {
                 void businessSettingsQuery.refetch();
               }}
@@ -463,7 +464,7 @@ export function SettingsPage() {
             businessSettings={businessSettings}
             errorMessage={businessSettingsError}
             isLoading={businessSettingsQuery.isLoading}
-            isSubmitting={updateBusinessProfileMutation.isPending}
+            isSubmitting={updateOperationalSettingsMutation.isPending}
             onRetry={() => {
               void businessSettingsQuery.refetch();
             }}

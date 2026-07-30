@@ -158,7 +158,9 @@ export function BusinessSettingsPanel({
 
     try {
       await onLogoUpload(file)
+      setLogoPreviewUrl(null)
     } catch (error) {
+      setLogoPreviewUrl(null)
       setLogoError(
         getErrorMessage(
           error,
