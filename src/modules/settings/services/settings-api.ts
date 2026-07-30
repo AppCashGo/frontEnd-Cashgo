@@ -100,6 +100,20 @@ export function updateSettingsUser(
   )
 }
 
+export function uploadSettingsUserAvatar(userId: string, file: File) {
+  const formData = new FormData()
+
+  formData.append('file', file)
+
+  return patchFormData<SettingsUser>(
+    `/settings/users/${userId}/avatar`,
+    formData,
+    {
+      accessToken: getAuthAccessToken(),
+    },
+  )
+}
+
 export function deleteSettingsUser(userId: string) {
   return deleteJson<void>(`/settings/users/${userId}`, {
     accessToken: getAuthAccessToken(),

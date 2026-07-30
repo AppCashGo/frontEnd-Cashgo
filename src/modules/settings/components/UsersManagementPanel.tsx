@@ -1,5 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useDeferredValue, useEffect, useState } from "react";
+import {
+  type ChangeEvent,
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useForm } from "react-hook-form";
 import {
   settingsUserFormSchema,
@@ -21,6 +28,7 @@ import {
 import { formatDate } from "@/shared/utils/format-date";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import { joinClassNames } from "@/shared/utils/join-class-names";
+import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import styles from "./UsersManagementPanel.module.css";
 
 type UsersManagementPanelProps = {
@@ -30,16 +38,18 @@ type UsersManagementPanelProps = {
   isRefreshing: boolean;
   isCreatingUser: boolean;
   isUpdatingUser: boolean;
+  isUploadingUserAvatar: boolean;
   isDeletingUser: boolean;
   roles: readonly SettingsUserRole[];
   users: SettingsUser[];
-  onCreateUser: (input: SettingsUserCreateInput) => Promise<unknown>;
+  onCreateUser: (input: SettingsUserCreateInput) => Promise<SettingsUser>;
   onDeleteUser: (userId: string) => Promise<unknown>;
   onRetry: () => void;
+  onUploadUserAvatar: (userId: string, file: File) => Promise<SettingsUser>;
   onUpdateUser: (
     userId: string,
     input: SettingsUserUpdateInput,
-  ) => Promise<unknown>;
+  ) => Promise<SettingsUser>;
 };
 
 function getDefaultValues(user: SettingsUser | null): SettingsUserFormValues {
@@ -76,6 +86,17 @@ function matchesUserSearch(user: SettingsUser, query: string) {
   );
 }
 
+function getUserInitials(name: string) {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0).toUpperCase())
+    .join("");
+
+  return initials || "U";
+}
+
 export function UsersManagementPanel({
   currentUserId,
   errorMessage,
@@ -83,24 +104,35 @@ export function UsersManagementPanel({
   isRefreshing,
   isCreatingUser,
   isUpdatingUser,
+  isUploadingUserAvatar,
   isDeletingUser,
   roles,
   users,
   onCreateUser,
   onDeleteUser,
   onRetry,
+  onUploadUserAvatar,
   onUpdateUser,
 }: UsersManagementPanelProps) {
   const [searchValue, setSearchValue] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
   const deferredSearchValue = useDeferredValue(searchValue.trim());
   const visibleUsers = users.filter((user) =>
     matchesUserSearch(user, deferredSearchValue),
   );
   const selectedUser = users.find((user) => user.id === selectedUserId) ?? null;
   const isEditing = selectedUser !== null;
-  const isSubmitting = isCreatingUser || isUpdatingUser || isDeletingUser;
+  const isSubmitting =
+    isCreatingUser ||
+    isUpdatingUser ||
+    isUploadingUserAvatar ||
+    isDeletingUser;
   const isCurrentUserSelected = selectedUser?.id === currentUserId;
+  const storedAvatarUrl = resolveApiAssetUrl(selectedUser?.avatarUrl);
+  const visibleAvatarUrl = avatarPreviewUrl ?? storedAvatarUrl;
   const {
     register,
     handleSubmit,
@@ -128,9 +160,50 @@ export function UsersManagementPanel({
     }
   }, [selectedUserId, users]);
 
+  const clearAvatarSelection = useCallback(() => {
+    setAvatarFile(null);
+    setAvatarPreviewUrl((currentPreviewUrl) => {
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl);
+      }
+
+      return null;
+    });
+
+    if (avatarInputRef.current) {
+      avatarInputRef.current.value = "";
+    }
+  }, []);
+
   useEffect(() => {
     reset(getDefaultValues(selectedUser));
-  }, [selectedUser, reset]);
+    clearAvatarSelection();
+  }, [clearAvatarSelection, selectedUser, reset]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl);
+      }
+    };
+  }, [avatarPreviewUrl]);
+
+  function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] ?? null;
+
+    if (!file) {
+      return;
+    }
+
+    setAvatarFile(file);
+    setAvatarPreviewUrl((currentPreviewUrl) => {
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl);
+      }
+
+      return URL.createObjectURL(file);
+    });
+  }
 
   const submitUser = handleSubmit(async (values) => {
     const normalizedPassword = normalizePassword(values.password);
@@ -143,8 +216,10 @@ export function UsersManagementPanel({
     }
 
     try {
+      let savedUser: SettingsUser;
+
       if (isEditing) {
-        await onUpdateUser(selectedUser.id, {
+        savedUser = await onUpdateUser(selectedUser.id, {
           email: values.email.trim().toLowerCase(),
           name: values.name.trim(),
           role: values.role,
@@ -155,13 +230,19 @@ export function UsersManagementPanel({
             : {}),
         });
       } else {
-        await onCreateUser({
+        savedUser = await onCreateUser({
           email: values.email.trim().toLowerCase(),
           name: values.name.trim(),
           password: normalizedPassword as string,
           role: values.role,
         });
       }
+
+      if (avatarFile) {
+        await onUploadUserAvatar(savedUser.id, avatarFile);
+      }
+
+      clearAvatarSelection();
 
       if (!isEditing) {
         reset(getDefaultValues(null));
@@ -206,6 +287,7 @@ export function UsersManagementPanel({
   function handleStartCreate() {
     setSelectedUserId(null);
     reset(getDefaultValues(null));
+    clearAvatarSelection();
   }
 
   return (
@@ -291,6 +373,7 @@ export function UsersManagementPanel({
               {visibleUsers.map((user) => {
                 const isSelected = user.id === selectedUserId;
                 const isCurrentUser = user.id === currentUserId;
+                const avatarUrl = resolveApiAssetUrl(user.avatarUrl);
 
                 return (
                   <button
@@ -303,9 +386,19 @@ export function UsersManagementPanel({
                     onClick={() => setSelectedUserId(user.id)}
                   >
                     <div className={styles.userButtonTopRow}>
-                      <div>
-                        <p className={styles.userName}>{user.name}</p>
-                        <p className={styles.userMeta}>{user.email}</p>
+                      <div className={styles.userIdentity}>
+                        <span className={styles.userAvatar} aria-hidden="true">
+                          {avatarUrl ? (
+                            <img src={avatarUrl} alt="" />
+                          ) : (
+                            getUserInitials(user.name)
+                          )}
+                        </span>
+
+                        <div>
+                          <p className={styles.userName}>{user.name}</p>
+                          <p className={styles.userMeta}>{user.email}</p>
+                        </div>
                       </div>
 
                       <span
@@ -350,6 +443,54 @@ export function UsersManagementPanel({
                 {isCurrentUserSelected ? "Current session" : selectedUser.role}
               </span>
             ) : null}
+          </div>
+
+          <div className={styles.avatarField}>
+            <span className={styles.avatarPreview} aria-hidden="true">
+              {visibleAvatarUrl ? (
+                <img src={visibleAvatarUrl} alt="" />
+              ) : (
+                getUserInitials(selectedUser?.name ?? "Usuario")
+              )}
+            </span>
+
+            <div className={styles.avatarCopy}>
+              <p className={styles.avatarTitle}>Foto de perfil</p>
+              <p className={styles.avatarDescription}>
+                Sube una imagen PNG, JPG o WEBP de hasta 2MB.
+              </p>
+              <div className={styles.avatarActions}>
+                <label
+                  className={joinClassNames(
+                    styles.avatarUploadButton,
+                    (isSubmitting || errorMessage !== null) &&
+                      styles.avatarUploadButtonDisabled,
+                  )}
+                  htmlFor="settings-user-avatar"
+                >
+                  {avatarFile ? "Cambiar foto seleccionada" : "Subir foto"}
+                </label>
+                {avatarPreviewUrl ? (
+                  <button
+                    className={styles.avatarClearButton}
+                    disabled={isSubmitting || errorMessage !== null}
+                    type="button"
+                    onClick={clearAvatarSelection}
+                  >
+                    Quitar seleccion
+                  </button>
+                ) : null}
+              </div>
+              <input
+                ref={avatarInputRef}
+                accept="image/png,image/jpeg,image/webp"
+                className={styles.fileInput}
+                disabled={isSubmitting || errorMessage !== null}
+                id="settings-user-avatar"
+                type="file"
+                onChange={handleAvatarChange}
+              />
+            </div>
           </div>
 
           <div className={styles.field}>

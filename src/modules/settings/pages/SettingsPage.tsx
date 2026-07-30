@@ -17,6 +17,7 @@ import {
   useSettingsRolesQuery,
   useSettingsUsersQuery,
   useUploadBusinessLogoMutation,
+  useUploadSettingsUserAvatarMutation,
   useUpdateBusinessSettingsMutation,
   useUpdateSettingsUserMutation,
   useDeleteSettingsUserMutation,
@@ -72,6 +73,8 @@ export function SettingsPage() {
   const deleteBusinessSettingsMutation = useDeleteBusinessSettingsMutation();
   const createSettingsUserMutation = useCreateSettingsUserMutation();
   const updateSettingsUserMutation = useUpdateSettingsUserMutation();
+  const uploadSettingsUserAvatarMutation =
+    useUploadSettingsUserAvatarMutation();
   const deleteSettingsUserMutation = useDeleteSettingsUserMutation();
 
   if (!currentUser || !isAdmin) {
@@ -318,6 +321,7 @@ export function SettingsPage() {
             isRefreshing={
               settingsUsersQuery.isFetching || settingsRolesQuery.isFetching
             }
+            isUploadingUserAvatar={uploadSettingsUserAvatarMutation.isPending}
             isUpdatingUser={updateSettingsUserMutation.isPending}
             roles={roles}
             users={users}
@@ -330,6 +334,12 @@ export function SettingsPage() {
             onRetry={() => {
               void handleRefresh();
             }}
+            onUploadUserAvatar={(userId, file) =>
+              uploadSettingsUserAvatarMutation.mutateAsync({
+                file,
+                userId,
+              })
+            }
             onUpdateUser={(userId, input) =>
               updateSettingsUserMutation.mutateAsync({
                 userId,
@@ -472,6 +482,7 @@ export function SettingsPage() {
           isRefreshing={
             settingsUsersQuery.isFetching || settingsRolesQuery.isFetching
           }
+          isUploadingUserAvatar={uploadSettingsUserAvatarMutation.isPending}
           isUpdatingUser={updateSettingsUserMutation.isPending}
           roles={roles}
           users={users}
@@ -484,6 +495,12 @@ export function SettingsPage() {
           onRetry={() => {
             void handleRefresh();
           }}
+          onUploadUserAvatar={(userId, file) =>
+            uploadSettingsUserAvatarMutation.mutateAsync({
+              file,
+              userId,
+            })
+          }
           onUpdateUser={(userId, input) =>
             updateSettingsUserMutation.mutateAsync({
               userId,

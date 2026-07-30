@@ -9,6 +9,7 @@ import {
   getSettingsRoles,
   getSettingsUsers,
   uploadBusinessLogo,
+  uploadSettingsUserAvatar,
   updateBusinessSettings,
   updateSettingsUser,
 } from '@/modules/settings/services/settings-api'
@@ -145,6 +146,25 @@ export function useUpdateSettingsUserMutation() {
       userId: string
       input: SettingsUserUpdateInput
     }) => updateSettingsUser(userId, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: settingsUsersQueryKey,
+      })
+    },
+  })
+}
+
+export function useUploadSettingsUserAvatarMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      file,
+      userId,
+    }: {
+      file: File
+      userId: string
+    }) => uploadSettingsUserAvatar(userId, file),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: settingsUsersQueryKey,
