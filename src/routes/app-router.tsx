@@ -102,6 +102,12 @@ const PublicQuotationPage = lazy(() =>
   })),
 );
 
+const PublicCatalogPage = lazy(() =>
+  import("@/modules/catalog/pages/PublicCatalogPage").then((module) => ({
+    default: module.PublicCatalogPage,
+  })),
+);
+
 const MoneyPage = lazy(() =>
   import("@/modules/money/pages/MoneyPage").then((module) => ({
     default: module.MoneyPage,
@@ -148,6 +154,15 @@ function withModuleRouteSuspense(
 }
 
 export const appRouter = createBrowserRouter([
+  {
+    path: `${routePaths.catalogPublic}/:slug`,
+    errorElement: <RouteErrorBoundary />,
+    element: withRouteSuspense(
+      <PublicCatalogPage />,
+      "Cargando catálogo",
+      "Preparando productos, horarios y datos del negocio.",
+    ),
+  },
   {
     path: `${routePaths.quotePublic}/:token`,
     errorElement: <RouteErrorBoundary />,

@@ -1,5 +1,6 @@
 export const routeSegments = {
   auth: "auth",
+  catalogPublic: "catalogo",
   quotePublic: "quote",
   dashboard: "dashboard",
   deliveries: "deliveries",
@@ -20,6 +21,7 @@ export const routeSegments = {
 
 export const routePaths = {
   auth: `/${routeSegments.auth}`,
+  catalogPublic: `/${routeSegments.catalogPublic}`,
   quotePublic: `/${routeSegments.quotePublic}`,
   dashboard: `/${routeSegments.dashboard}`,
   deliveries: `/${routeSegments.deliveries}`,

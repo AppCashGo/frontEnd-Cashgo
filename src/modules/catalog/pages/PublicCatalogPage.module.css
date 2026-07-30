@@ -1,0 +1,357 @@
+.page {
+  min-height: 100vh;
+  background: #f6f8fb;
+  color: #172332;
+  padding: 1.25rem;
+}
+
+.hero,
+.catalogShell,
+.statePanel {
+  width: min(1180px, 100%);
+  margin: 0 auto;
+}
+
+.hero {
+  display: grid;
+  gap: 1.25rem;
+  background: #ffffff;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  padding: 1.35rem;
+  box-shadow: 0 16px 40px rgba(15, 23, 42, 0.06);
+}
+
+.businessBlock {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logoBox,
+.productImage {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: #edf2f7;
+  color: #738198;
+}
+
+.logoBox {
+  width: 76px;
+  height: 76px;
+  flex: 0 0 auto;
+  border-radius: 8px;
+}
+
+.logoBox img,
+.productImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.logoBox svg {
+  width: 34px;
+  height: 34px;
+}
+
+.kicker {
+  margin: 0 0 0.2rem;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.35rem);
+  line-height: 1.05;
+}
+
+.categoryLabel {
+  margin: 0.45rem 0 0;
+  color: #52647a;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.infoGrid,
+.serviceGrid,
+.hoursGrid,
+.categoryFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.infoChip,
+.servicePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 42px;
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.infoChip {
+  border: 1px solid #d4deeb;
+  color: #35445a;
+  background: #ffffff;
+}
+
+.infoChip svg,
+.servicePill svg,
+.sectionTitle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.servicePill {
+  border: 1px solid #cbd6e3;
+  color: #66768f;
+  background: #f8fafc;
+}
+
+.servicePill.isActive {
+  border-color: #16a05d;
+  color: #0f7145;
+  background: #e7f8ef;
+}
+
+.hoursPanel {
+  display: grid;
+  gap: 0.9rem;
+  border-top: 1px solid #e4eaf2;
+  padding-top: 1rem;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.sectionTitle h2,
+.statePanel h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.hoursPanel p {
+  margin: 0;
+  color: #64748b;
+}
+
+.hoursGrid span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 38px;
+  border-radius: 8px;
+  background: #f3f6fa;
+  padding: 0.45rem 0.7rem;
+  color: #475569;
+}
+
+.catalogShell {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.toolbar {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  min-height: 52px;
+  border: 2px solid #cbd6e3;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0 1rem;
+}
+
+.searchBox svg {
+  width: 22px;
+  height: 22px;
+  color: #63758c;
+}
+
+.searchBox input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #172332;
+  font: inherit;
+  font-weight: 700;
+}
+
+.categoryFilters button {
+  min-height: 40px;
+  border: 2px solid #cbd6e3;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #475569;
+  padding: 0 0.85rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.categoryFilters button.activeFilter {
+  border-color: #ffd43d;
+  background: #ffd43d;
+  color: #172332;
+}
+
+.productGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.productCard {
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+  min-height: 300px;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 1rem;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+}
+
+.unavailableCard {
+  opacity: 0.78;
+}
+
+.productImage {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 8px;
+}
+
+.productImage svg {
+  width: 42px;
+  height: 42px;
+}
+
+.productInfo {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.productInfo h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.productInfo p {
+  display: -webkit-box;
+  min-height: 2.8rem;
+  margin: 0;
+  overflow: hidden;
+  color: #64748b;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.productFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: auto;
+}
+
+.productFooter strong {
+  font-size: 1.25rem;
+}
+
+.stockPill,
+.unavailablePill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.stockPill {
+  background: #d8f6e8;
+  color: #106c45;
+}
+
+.unavailablePill {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.statePanel {
+  display: grid;
+  place-items: center;
+  min-height: 360px;
+  border: 1px solid #d8e1ec;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 2rem;
+  text-align: center;
+}
+
+.statePanel svg {
+  width: 54px;
+  height: 54px;
+  color: #8da0b8;
+}
+
+.statePanel h1,
+.statePanel h2 {
+  margin: 0;
+}
+
+.statePanel p {
+  max-width: 460px;
+  margin: 0;
+  color: #64748b;
+  font-weight: 700;
+}
+
+@media (max-width: 720px) {
+  .page {
+    padding: 0.8rem;
+  }
+
+  .hero {
+    padding: 1rem;
+  }
+
+  .businessBlock {
+    align-items: flex-start;
+  }
+
+  .logoBox {
+    width: 58px;
+    height: 58px;
+  }
+
+  .productFooter {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
