@@ -24,6 +24,10 @@ import type {
 } from '@/modules/employees/types/employee'
 import type { AssignableUserRole } from '@/shared/constants/user-roles'
 import { ApiError, resolveApiAssetUrl } from '@/shared/services/api-client'
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  validateImageUploadFile,
+} from '@/shared/utils/image-upload-validation'
 import styles from './RetailEmployeeDrawer.module.css'
 
 type RetailRoleOption = {
@@ -521,6 +525,7 @@ export function RetailEmployeeDrawer({
   const [pendingConfirmation, setPendingConfirmation] =
     useState<PendingEmployeeConfirmation | null>(null)
   const {
+    clearErrors,
     handleSubmit,
     register,
     reset,
@@ -573,6 +578,16 @@ export function RetailEmployeeDrawer({
       return
     }
 
+    const validationError = validateImageUploadFile(file)
+
+    if (validationError) {
+      setError('root', {
+        message: validationError,
+      })
+      return
+    }
+
+    clearErrors('root')
     setAvatarFile(file)
     setAvatarPreviewUrl((currentPreviewUrl) => {
       if (currentPreviewUrl) {
@@ -676,7 +691,7 @@ export function RetailEmployeeDrawer({
             <div className={styles.formBody}>
               <label className={styles.avatarUploader}>
                 <input
-                  accept="image/png,image/jpeg,image/webp"
+                  accept={IMAGE_UPLOAD_ACCEPT}
                   className={styles.avatarInput}
                   disabled={isSubmitting}
                   type="file"

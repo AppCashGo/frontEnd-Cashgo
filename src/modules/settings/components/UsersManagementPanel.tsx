@@ -27,6 +27,10 @@ import {
 } from "@/shared/constants/user-roles";
 import { formatDate } from "@/shared/utils/format-date";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  validateImageUploadFile,
+} from "@/shared/utils/image-upload-validation";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import styles from "./UsersManagementPanel.module.css";
@@ -137,6 +141,7 @@ export function UsersManagementPanel({
     register,
     handleSubmit,
     reset,
+    clearErrors,
     setError,
     formState: { errors },
   } = useForm<SettingsUserFormValues>({
@@ -195,6 +200,17 @@ export function UsersManagementPanel({
       return;
     }
 
+    const validationError = validateImageUploadFile(file);
+
+    if (validationError) {
+      clearAvatarSelection();
+      setError("root", {
+        message: validationError,
+      });
+      return;
+    }
+
+    clearErrors("root");
     setAvatarFile(file);
     setAvatarPreviewUrl((currentPreviewUrl) => {
       if (currentPreviewUrl) {
@@ -483,7 +499,7 @@ export function UsersManagementPanel({
               </div>
               <input
                 ref={avatarInputRef}
-                accept="image/png,image/jpeg,image/webp"
+                accept={IMAGE_UPLOAD_ACCEPT}
                 className={styles.fileInput}
                 disabled={isSubmitting || errorMessage !== null}
                 id="settings-user-avatar"

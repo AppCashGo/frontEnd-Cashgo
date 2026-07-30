@@ -6,6 +6,10 @@ import type {
   SupplierSummary,
 } from '@/modules/suppliers/types/supplier'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  validateImageUploadFile,
+} from '@/shared/utils/image-upload-validation'
 import styles from './RetailSupplierDrawer.module.css'
 
 type RetailSupplierDrawerProps = {
@@ -74,6 +78,17 @@ export function RetailSupplierDrawer({
   function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null
 
+    if (file) {
+      const validationError = validateImageUploadFile(file)
+
+      if (validationError) {
+        setLocalError(validationError)
+        event.currentTarget.value = ''
+        return
+      }
+    }
+
+    setLocalError(null)
     setAvatarFile(file)
     setAvatarPreviewUrl((currentUrl) => {
       if (currentUrl) {
@@ -123,7 +138,7 @@ export function RetailSupplierDrawer({
       <form className={styles.form} onSubmit={handleSubmit}>
         <label className={styles.avatarUploader}>
           <input
-            accept="image/png,image/jpeg,image/webp"
+            accept={IMAGE_UPLOAD_ACCEPT}
             className={styles.avatarInput}
             type="file"
             onChange={handleAvatarChange}

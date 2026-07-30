@@ -28,6 +28,7 @@ import { resolveProductImageUrl } from "@/modules/products/utils/resolve-product
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { formatCurrency } from "@/shared/utils/format-currency";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
+import { IMAGE_UPLOAD_ACCEPT } from "@/shared/utils/image-upload-validation";
 import styles from "./RetailProductCreateWorkspace.module.css";
 
 export type RetailProductCreateWorkspaceTab = "basic" | "variants" | "measures";
@@ -1333,7 +1334,7 @@ export function RetailProductCreateWorkspace({
         >
           <input
             ref={imageInputRef}
-            accept="image/png,image/jpeg,image/webp"
+            accept={IMAGE_UPLOAD_ACCEPT}
             className={styles.imageInput}
             multiple={imageReplaceIndex === null}
             type="file"

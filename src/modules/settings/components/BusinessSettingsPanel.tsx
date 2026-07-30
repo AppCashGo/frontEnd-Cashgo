@@ -16,6 +16,10 @@ import { businessCategoryOptions } from '@/shared/constants/business-categories'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { formatDate } from '@/shared/utils/format-date'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  validateImageUploadFile,
+} from '@/shared/utils/image-upload-validation'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './BusinessSettingsPanel.module.css'
@@ -132,6 +136,14 @@ export function BusinessSettingsPanel({
       return
     }
 
+    const validationError = validateImageUploadFile(file)
+
+    if (validationError) {
+      setLogoError(validationError)
+      return
+    }
+
+    setLogoError(null)
     setLogoPreviewUrl((currentPreviewUrl) => {
       if (currentPreviewUrl) {
         URL.revokeObjectURL(currentPreviewUrl)
@@ -145,7 +157,6 @@ export function BusinessSettingsPanel({
     }
 
     try {
-      setLogoError(null)
       await onLogoUpload(file)
     } catch (error) {
       setLogoError(
@@ -202,7 +213,7 @@ export function BusinessSettingsPanel({
           >
             <label className={styles.logoUploader}>
               <input
-                accept="image/png,image/jpeg,image/webp"
+                accept={IMAGE_UPLOAD_ACCEPT}
                 className={styles.logoInput}
                 disabled={isDisabled || isLogoUploading}
                 type="file"

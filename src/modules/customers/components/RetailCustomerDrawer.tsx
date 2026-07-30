@@ -29,6 +29,10 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { formatDateTime } from '@/shared/utils/format-date-time'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  validateImageUploadFile,
+} from '@/shared/utils/image-upload-validation'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './RetailCustomerDrawer.module.css'
@@ -410,6 +414,14 @@ export function RetailCustomerDrawer({
       return
     }
 
+    const validationError = validateImageUploadFile(file)
+
+    if (validationError) {
+      setFormError(validationError)
+      return
+    }
+
+    setFormError(null)
     setAvatarFile(file)
     setAvatarPreviewUrl((currentPreviewUrl) => {
       if (currentPreviewUrl) {
@@ -508,7 +520,7 @@ export function RetailCustomerDrawer({
       <form className={styles.form} onSubmit={handleSubmitCustomer}>
         <label className={styles.avatarUploader}>
           <input
-            accept="image/png,image/jpeg,image/webp"
+            accept={IMAGE_UPLOAD_ACCEPT}
             className={styles.avatarInput}
             disabled={isSubmitting}
             type="file"
