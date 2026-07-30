@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
 import {
+  getActiveBusiness,
   getActiveBusinessCategory,
   getActiveBusinessRole,
   isActiveBusiness as matchesActiveBusiness,
@@ -20,6 +21,7 @@ import { routePaths, routeSegments } from "@/routes/route-paths";
 import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
 import { useTranslationsQuery } from "@/shared/hooks/use-translations-query";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
+import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import styles from "./Sidebar.module.css";
 
@@ -184,6 +186,28 @@ function SidebarIcon({ name, className }: SidebarIconProps) {
   }
 }
 
+function BusinessAvatar({
+  className,
+  logoUrl,
+  name,
+}: {
+  className: string;
+  logoUrl?: string | null;
+  name: string;
+}) {
+  const resolvedLogoUrl = resolveApiAssetUrl(logoUrl);
+
+  return (
+    <div className={className}>
+      {resolvedLogoUrl ? (
+        <img alt="" src={resolvedLogoUrl} />
+      ) : (
+        name.trim().charAt(0) || "?"
+      )}
+    </div>
+  );
+}
+
 function getRouteIconName(segment: string): SidebarIconName {
   switch (segment) {
     case routeSegments.dashboard:
@@ -257,6 +281,7 @@ export function Sidebar({
     useAppTranslation();
   const { data: translations = [] } = useTranslationsQuery();
   const navigationPreset = useBusinessNavigationPreset();
+  const activeBusiness = getActiveBusiness(user);
   const activeBusinessCategory = getActiveBusinessCategory(user);
   const activeBusinessRole = getActiveBusinessRole(user);
   const navigationRoutes = getModuleNavigationRoutes(
@@ -470,9 +495,11 @@ export function Sidebar({
                   }}
                 >
                   <div className={styles.businessIdentity}>
-                    <div className={styles.businessAvatar}>
-                      {user.businessName.charAt(0)}
-                    </div>
+                    <BusinessAvatar
+                      className={styles.businessAvatar}
+                      logoUrl={activeBusiness?.logoUrl ?? user.logoUrl}
+                      name={user.businessName}
+                    />
 
                     <div className={styles.businessCopy}>
                       <p className={styles.businessName}>{user.businessName}</p>
@@ -506,9 +533,11 @@ export function Sidebar({
                           type="button"
                           onClick={() => handleBusinessChange(business.id)}
                         >
-                          <div className={styles.businessAvatarSmall}>
-                            {business.businessName.charAt(0)}
-                          </div>
+                          <BusinessAvatar
+                            className={styles.businessAvatarSmall}
+                            logoUrl={business.logoUrl}
+                            name={business.businessName}
+                          />
 
                           <div className={styles.businessDropdownCopy}>
                             <p className={styles.businessDropdownName}>

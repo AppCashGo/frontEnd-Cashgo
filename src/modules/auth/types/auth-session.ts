@@ -4,6 +4,7 @@ export type AuthBusiness = {
   id: string;
   businessName: string;
   businessCategory: string | null;
+  logoUrl: string | null;
   role: AppUserRole;
   isDefault: boolean;
 };
@@ -24,6 +25,7 @@ export type AuthUser = {
   businessId: string;
   businessName: string;
   businessCategory: string | null;
+  logoUrl: string | null;
   translationId: string | null;
   translation: AuthTranslation;
   businesses: AuthBusiness[];

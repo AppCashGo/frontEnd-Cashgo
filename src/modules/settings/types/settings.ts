@@ -146,6 +146,7 @@ export type ManagedBusinessSummary = {
   id: string;
   businessName: string;
   businessCategory: string | null;
+  logoUrl: string | null;
   role: SettingsUserRole;
   isDefault: boolean;
 };

@@ -114,6 +114,15 @@
   background: #edf1f5;
   color: #8694a7;
   font-weight: 800;
+  overflow: hidden;
+}
+
+.businessAvatar img,
+.businessAvatarSmall img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .businessCopy {
@@ -186,6 +195,7 @@
   color: #95a1b1;
   font-size: 0.78rem;
   font-weight: 800;
+  overflow: hidden;
 }
 
 .businessDropdownCopy {

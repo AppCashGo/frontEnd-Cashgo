@@ -23,6 +23,7 @@ import {
 } from "@/modules/settings/hooks/use-settings-query";
 import {
   settingsUserRoles,
+  type BusinessSettings,
   type BusinessAdditionalSettingsInput,
   type BusinessProfileInput,
   type BusinessOperationalSettingsInput,
@@ -54,6 +55,9 @@ export function SettingsPage() {
     "general",
   );
   const currentUser = useAuthSessionStore((state) => state.user);
+  const updateActiveBusiness = useAuthSessionStore(
+    (state) => state.updateActiveBusiness,
+  );
   const isAdmin = isAdminWorkspaceRole(currentUser?.role);
   const businessSettingsQuery = useBusinessSettingsQuery(isAdmin);
   const settingsUsersQuery = useSettingsUsersQuery(isAdmin);
@@ -122,16 +126,26 @@ export function SettingsPage() {
     ]);
   }
 
+  function syncBusinessSession(settings: BusinessSettings) {
+    updateActiveBusiness({
+      businessName: settings.businessName,
+      businessCategory: settings.businessCategory,
+      logoUrl: settings.logoUrl,
+    });
+  }
+
   async function handleBusinessProfileSubmit(input: BusinessProfileInput) {
     if (businessSettings) {
-      await updateBusinessProfileMutation.mutateAsync(input);
+      const settings = await updateBusinessProfileMutation.mutateAsync(input);
+      syncBusinessSession(settings);
       return;
     }
 
-    await createBusinessSettingsMutation.mutateAsync({
+    const settings = await createBusinessSettingsMutation.mutateAsync({
       ...input,
       ...defaultBusinessTaxSetup,
     });
+    syncBusinessSession(settings);
   }
 
   async function handleBusinessTaxSubmit(input: {
@@ -223,7 +237,8 @@ export function SettingsPage() {
               isLogoUploading={uploadBusinessLogoMutation.isPending}
               variant="retail"
               onLogoUpload={async (file) => {
-                await uploadBusinessLogoMutation.mutateAsync(file)
+                const settings = await uploadBusinessLogoMutation.mutateAsync(file)
+                syncBusinessSession(settings)
               }}
               onRetry={() => {
                 void businessSettingsQuery.refetch();
@@ -414,7 +429,8 @@ export function SettingsPage() {
             }
             isLogoUploading={uploadBusinessLogoMutation.isPending}
             onLogoUpload={async (file) => {
-              await uploadBusinessLogoMutation.mutateAsync(file)
+              const settings = await uploadBusinessLogoMutation.mutateAsync(file)
+              syncBusinessSession(settings)
             }}
             onRetry={() => {
               void businessSettingsQuery.refetch();

@@ -10,6 +10,11 @@ type AuthSessionState = {
   user: AuthUser | null
   setSession: (session: { accessToken: string; user: AuthUser }) => void
   setActiveBusiness: (businessId: string) => void
+  updateActiveBusiness: (input: {
+    businessName?: string
+    businessCategory?: string | null
+    logoUrl?: string | null
+  }) => void
   addBusiness: (business: AuthBusiness, shouldSetActive?: boolean) => void
   clearSession: () => void
 }
@@ -43,11 +48,50 @@ export const useAuthSessionStore = create<AuthSessionState>()(
               businessId: activeBusiness.id,
               businessName: activeBusiness.businessName,
               businessCategory: activeBusiness.businessCategory,
+              logoUrl: activeBusiness.logoUrl,
               role: activeBusiness.role,
               businesses: currentUser.businesses.map((business) => ({
                 ...business,
                 isDefault: business.id === activeBusiness.id,
               })),
+            },
+          }
+        }),
+      updateActiveBusiness: (input) =>
+        set((state) => {
+          const currentUser = state.user
+
+          if (!currentUser) {
+            return state
+          }
+
+          return {
+            ...state,
+            user: {
+              ...currentUser,
+              businessName: input.businessName ?? currentUser.businessName,
+              businessCategory:
+                input.businessCategory !== undefined
+                  ? input.businessCategory
+                  : currentUser.businessCategory,
+              logoUrl:
+                input.logoUrl !== undefined ? input.logoUrl : currentUser.logoUrl,
+              businesses: currentUser.businesses.map((business) =>
+                business.id === currentUser.businessId
+                  ? {
+                      ...business,
+                      businessName: input.businessName ?? business.businessName,
+                      businessCategory:
+                        input.businessCategory !== undefined
+                          ? input.businessCategory
+                          : business.businessCategory,
+                      logoUrl:
+                        input.logoUrl !== undefined
+                          ? input.logoUrl
+                          : business.logoUrl,
+                    }
+                  : business,
+              ),
             },
           }
         }),
@@ -90,6 +134,7 @@ export const useAuthSessionStore = create<AuthSessionState>()(
               businessId: business.id,
               businessName: business.businessName,
               businessCategory: business.businessCategory,
+              logoUrl: business.logoUrl,
               role: business.role,
               businesses: nextBusinesses,
             },
