@@ -10,6 +10,7 @@ import { routeSegments, routePaths } from "@/routes/route-paths";
 import { MainLayout } from "@/shared/components/layout/MainLayout";
 import { ModulePlaceholder } from "@/shared/components/states/ModulePlaceholder";
 import { NotFoundPage } from "@/shared/components/states/NotFoundPage";
+import { RouteErrorBoundary } from "@/shared/components/states/RouteErrorBoundary";
 
 const AuthPage = lazy(() =>
   import("@/modules/auth/pages/AuthPage").then((module) => ({
@@ -149,6 +150,7 @@ function withModuleRouteSuspense(
 export const appRouter = createBrowserRouter([
   {
     path: `${routePaths.quotePublic}/:token`,
+    errorElement: <RouteErrorBoundary />,
     element: withRouteSuspense(
       <PublicQuotationPage />,
       "Cargando cotización",
@@ -157,6 +159,7 @@ export const appRouter = createBrowserRouter([
   },
   {
     element: <PublicOnlyRoute />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         path: routePaths.auth,
@@ -170,10 +173,12 @@ export const appRouter = createBrowserRouter([
   },
   {
     element: <ProtectedRoute />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         path: "/",
         element: <MainLayout />,
+        errorElement: <RouteErrorBoundary />,
         children: [
           {
             index: true,
@@ -338,6 +343,7 @@ export const appRouter = createBrowserRouter([
   },
   {
     path: "*",
+    errorElement: <RouteErrorBoundary />,
     element: <NotFoundPage />,
   },
 ]);
