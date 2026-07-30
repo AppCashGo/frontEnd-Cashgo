@@ -65,6 +65,7 @@ export type QuotationDetail = QuotationSummary & {
   items: QuotationItem[];
   business: {
     businessName: string;
+    logoUrl: string | null;
     email: string | null;
     phone: string | null;
     address: string | null;
@@ -96,6 +97,7 @@ export type PublicQuotationDetail = {
   items: QuotationItem[];
   business: {
     businessName: string;
+    logoUrl: string | null;
     email: string | null;
     phone: string | null;
     address: string | null;

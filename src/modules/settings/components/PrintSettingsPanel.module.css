@@ -1,0 +1,223 @@
+.card {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.3rem;
+  color: #5b6b7f;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0;
+  color: #172635;
+  font-size: 1.18rem;
+  line-height: 1.25;
+}
+
+.description {
+  margin: 0.45rem 0 0;
+  color: #64748b;
+  line-height: 1.55;
+}
+
+.workspace {
+  display: grid;
+  gap: 1rem;
+}
+
+.controls {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.field span,
+.checkField span {
+  color: #24344d;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #111827;
+  font: inherit;
+}
+
+.input {
+  min-height: 3rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.textarea {
+  min-height: 5.8rem;
+  resize: vertical;
+  padding: 0.85rem 0.95rem;
+}
+
+.input:focus,
+.textarea:focus {
+  border-color: #1f5fcf;
+  outline: 3px solid rgba(31, 95, 207, 0.14);
+}
+
+.checkField {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  background: #f8fafc;
+}
+
+.checkField input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: #172635;
+}
+
+.feedback {
+  margin: 0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: #ecfdf3;
+  color: #067647;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton {
+  min-height: 3rem;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.primaryButton {
+  border: 0;
+  background: #172635;
+  color: #ffffff;
+}
+
+.secondaryButton {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #172635;
+}
+
+.preview,
+.previewNarrow {
+  display: grid;
+  justify-self: center;
+  gap: 0.35rem;
+  border: 1px solid #dbe3ee;
+  border-radius: 0.35rem;
+  padding: 1rem;
+  background: #ffffff;
+  color: #111827;
+  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.08);
+}
+
+.preview {
+  width: min(100%, 20rem);
+}
+
+.previewNarrow {
+  width: min(100%, 15rem);
+}
+
+.preview h3,
+.previewNarrow h3,
+.preview p,
+.previewNarrow p {
+  margin: 0;
+  text-align: center;
+}
+
+.preview h3,
+.previewNarrow h3 {
+  font-size: 1rem;
+}
+
+.preview p,
+.previewNarrow p {
+  color: #475467;
+  font-size: 0.78rem;
+}
+
+.logoMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  background: #172635;
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.ticketDivider {
+  height: 1px;
+  margin: 0.45rem 0;
+  border-top: 1px dashed #98a2b3;
+}
+
+.ticketRow,
+.ticketTotal {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.82rem;
+}
+
+.ticketTotal {
+  padding-top: 0.4rem;
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+@media (min-width: 900px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .actions,
+  .primaryButton,
+  .secondaryButton {
+    width: 100%;
+  }
+}

@@ -3,6 +3,7 @@ export type SupplierSummary = {
   name: string
   email: string | null
   phone: string | null
+  avatarUrl: string | null
   purchaseCount: number
   lastPurchaseAt: string | null
   createdAt: string
@@ -17,4 +18,10 @@ export type SupplierSupplyHistoryItem = {
 
 export type SupplierDetail = SupplierSummary & {
   purchaseHistory: SupplierSupplyHistoryItem[]
+}
+
+export type SupplierMutationInput = {
+  name: string
+  email?: string | null
+  phone?: string | null
 }

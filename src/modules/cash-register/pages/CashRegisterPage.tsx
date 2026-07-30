@@ -43,10 +43,12 @@ import {
 } from "@/modules/cash-register/utils/format-cash-register";
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
 import { useEmployeesQuery } from "@/modules/employees/hooks/use-employees-query";
+import { useBusinessSettingsQuery } from "@/modules/settings/hooks/use-settings-query";
 import { useSuppliersQuery } from "@/modules/suppliers/hooks/use-suppliers-query";
 import { AppIcon } from "@/shared/components/icons/AppIcon";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import { RetailPageLayout } from "@/shared/components/retail/RetailPageLayout";
+import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import { toDateInputValue } from "@/shared/utils/date-input";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import { joinClassNames } from "@/shared/utils/join-class-names";
@@ -656,6 +658,7 @@ export function CashRegisterPage() {
   const employeesQuery = useEmployeesQuery();
   const customersQuery = useCustomersQuery();
   const suppliersQuery = useSuppliersQuery();
+  const businessSettingsQuery = useBusinessSettingsQuery();
   const movementsOverviewQuery = useMovementsOverviewQuery({
     from: dateRange.from,
     to: dateRange.to,
@@ -1191,6 +1194,8 @@ export function CashRegisterPage() {
 
       <CashRegisterSessionDrawer
         assignees={assigneesQuery.data ?? []}
+        businessLogoUrl={resolveApiAssetUrl(businessSettingsQuery.data?.logoUrl)}
+        businessName={businessSettingsQuery.data?.businessName}
         currentSession={currentSession}
         initialMode={sessionDrawerMode}
         isOpen={isSessionDrawerOpen}

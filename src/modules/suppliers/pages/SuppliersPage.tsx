@@ -1,12 +1,17 @@
 import { useDeferredValue, useEffect, useState } from 'react'
 import { SupplierDetailPanel } from '@/modules/suppliers/components/SupplierDetailPanel'
 import { SupplierMetricCard } from '@/modules/suppliers/components/SupplierMetricCard'
+import { RetailSupplierDrawer } from '@/modules/suppliers/components/RetailSupplierDrawer'
 import { SupplierSupplyHistoryPanel } from '@/modules/suppliers/components/SupplierSupplyHistoryPanel'
 import { SuppliersListPanel } from '@/modules/suppliers/components/SuppliersListPanel'
 import {
+  useCreateSupplierMutation,
   useSupplierDetailQuery,
   useSuppliersQuery,
+  useUpdateSupplierMutation,
+  useUploadSupplierAvatarMutation,
 } from '@/modules/suppliers/hooks/use-suppliers-query'
+import type { SupplierMutationInput } from '@/modules/suppliers/types/supplier'
 import { RetailPremiumBanner } from '@/shared/components/retail/RetailPremiumBanner'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
@@ -24,8 +29,13 @@ export function SuppliersPage() {
   const [selectedSupplierId, setSelectedSupplierId] = useState<string | null>(
     null,
   )
+  const [isCreateSupplierOpen, setCreateSupplierOpen] = useState(false)
+  const [editingSupplierId, setEditingSupplierId] = useState<string | null>(null)
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const suppliersQuery = useSuppliersQuery()
+  const createSupplierMutation = useCreateSupplierMutation()
+  const updateSupplierMutation = useUpdateSupplierMutation()
+  const uploadSupplierAvatarMutation = useUploadSupplierAvatarMutation()
   const supplierRecords = suppliersQuery.data
   const suppliers = supplierRecords ?? []
   const visibleSuppliers = suppliers.filter((supplier) =>
@@ -35,6 +45,9 @@ export function SuppliersPage() {
     suppliers.find((supplier) => supplier.id === selectedSupplierId) ?? null
   const supplierDetailQuery = useSupplierDetailQuery(selectedSupplierId)
   const selectedSupplier = supplierDetailQuery.data ?? null
+  const editingSupplier =
+    suppliers.find((supplier) => supplier.id === editingSupplierId) ??
+    (selectedSupplier?.id === editingSupplierId ? selectedSupplier : null)
   const activeSuppliers = suppliers.filter((supplier) => supplier.purchaseCount > 0).length
   const trackedRestocks = suppliers.reduce(
     (sum, supplier) => sum + supplier.purchaseCount,
@@ -45,6 +58,23 @@ export function SuppliersPage() {
       (sum, purchase) => sum + purchase.total,
       0,
     ) ?? 0
+  const isSubmittingSupplier =
+    createSupplierMutation.isPending ||
+    updateSupplierMutation.isPending ||
+    uploadSupplierAvatarMutation.isPending
+  const createSupplierError =
+    createSupplierMutation.isError ||
+    updateSupplierMutation.isError ||
+    uploadSupplierAvatarMutation.isError
+      ? getErrorMessage(
+          createSupplierMutation.error ??
+            updateSupplierMutation.error ??
+            uploadSupplierAvatarMutation.error,
+          editingSupplier
+            ? 'No pudimos guardar el proveedor. Intenta nuevamente.'
+            : 'No pudimos crear el proveedor. Intenta nuevamente.',
+        )
+      : null
 
   useEffect(() => {
     const availableSuppliers = supplierRecords ?? []
@@ -66,100 +96,181 @@ export function SuppliersPage() {
     }
   }, [supplierRecords, selectedSupplierId])
 
+  async function handleCreateSupplier(
+    input: SupplierMutationInput,
+    avatarFile?: File | null,
+  ) {
+    if (editingSupplier) {
+      const updatedSupplier = await updateSupplierMutation.mutateAsync({
+        supplierId: editingSupplier.id,
+        input,
+      })
+
+      if (avatarFile) {
+        await uploadSupplierAvatarMutation.mutateAsync({
+          supplierId: updatedSupplier.id,
+          file: avatarFile,
+        })
+      }
+
+      setSelectedSupplierId(updatedSupplier.id)
+      setEditingSupplierId(null)
+      setCreateSupplierOpen(false)
+      return
+    }
+
+    const createdSupplier = await createSupplierMutation.mutateAsync(input)
+
+    if (avatarFile) {
+      await uploadSupplierAvatarMutation.mutateAsync({
+        supplierId: createdSupplier.id,
+        file: avatarFile,
+      })
+    }
+
+    setSelectedSupplierId(createdSupplier.id)
+    setCreateSupplierOpen(false)
+  }
+
+  function handleStartCreateSupplier() {
+    setEditingSupplierId(null)
+    setCreateSupplierOpen(true)
+  }
+
+  function handleStartEditSupplier(supplierId: string) {
+    setEditingSupplierId(supplierId)
+    setSelectedSupplierId(supplierId)
+    setCreateSupplierOpen(true)
+  }
+
+  function handleCloseSupplierDrawer() {
+    setCreateSupplierOpen(false)
+    setEditingSupplierId(null)
+  }
+
   if (isRetailPreset) {
     return (
-      <div className={listPageStyles.page}>
-        <div className={listPageStyles.headerRow}>
-          <div />
-          <button className={retailStyles.buttonDark} disabled type="button">
-            Crear proveedor
-          </button>
-        </div>
+      <>
+        <div className={listPageStyles.page}>
+          <div className={listPageStyles.headerRow}>
+            <div />
+            <button
+              className={retailStyles.buttonDark}
+              type="button"
+              onClick={handleStartCreateSupplier}
+            >
+              Crear proveedor
+            </button>
+          </div>
 
-        <RetailPremiumBanner
-          title="¡Ups! Ya no puedes crear más proveedores."
-          description="Desbloquea la función premium, accede a toda la información y sigue creciendo sin límites."
-          linkLabel="Ver beneficios"
-        />
+          <RetailPremiumBanner
+            title="Proveedores premium, toda tu red de abastecimiento en un solo lugar."
+            description="Registra contactos, agrega su avatar y consulta rapidamente su historial de compras."
+            linkLabel="Ver beneficios"
+          />
 
-        <div className={listPageStyles.searchRow}>
-          <label className={`${retailStyles.searchField} ${listPageStyles.searchField}`}>
-            <input
-              className={retailStyles.input}
-              placeholder="Busca un proveedor"
-              type="search"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
+          <div className={listPageStyles.searchRow}>
+            <label className={`${retailStyles.searchField} ${listPageStyles.searchField}`}>
+              <input
+                className={retailStyles.input}
+                placeholder="Busca un proveedor"
+                type="search"
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className={listPageStyles.metricsGrid}>
+            <RetailStatCard
+              label="Total proveedores"
+              value={suppliers.length.toString()}
             />
-          </label>
-        </div>
+            <RetailStatCard
+              label="Total por pagar"
+              value={formatCurrency(selectedProcurementTotal)}
+            />
+          </div>
 
-        <div className={listPageStyles.metricsGrid}>
-          <RetailStatCard
-            label="Total proveedores"
-            value={suppliers.length.toString()}
-          />
-          <RetailStatCard
-            label="Total por pagar"
-            value={formatCurrency(selectedProcurementTotal)}
-          />
-        </div>
-
-        <section className={retailStyles.tableCard}>
-          <div className={retailStyles.tableScroller}>
-            <table className={retailStyles.table}>
-              <thead>
-                <tr>
-                  <th>Nombre</th>
-                  <th>Celular</th>
-                  <th>Documento</th>
-                  <th>Total por pagar</th>
-                  <th>Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleSuppliers.length > 0 ? (
-                  visibleSuppliers.map((supplier) => (
-                    <tr key={supplier.id}>
-                      <td>{supplier.name}</td>
-                      <td>{supplier.phone ?? 'Sin celular'}</td>
-                      <td>{supplier.email ?? 'Sin documento'}</td>
-                      <td className={listPageStyles.statusPositive}>
-                        {formatCurrency(selectedSupplierId === supplier.id ? selectedProcurementTotal : 0)}
-                      </td>
-                      <td>
-                        <button
-                          className={listPageStyles.detailLink}
-                          type="button"
-                          onClick={() => setSelectedSupplierId(supplier.id)}
-                        >
-                          Detalle
-                        </button>
+          <section className={retailStyles.tableCard}>
+            <div className={retailStyles.tableScroller}>
+              <table className={retailStyles.table}>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Celular</th>
+                    <th>Documento</th>
+                    <th>Total por pagar</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleSuppliers.length > 0 ? (
+                    visibleSuppliers.map((supplier) => (
+                      <tr key={supplier.id}>
+                        <td>{supplier.name}</td>
+                        <td>{supplier.phone ?? 'Sin celular'}</td>
+                        <td>{supplier.email ?? 'Sin documento'}</td>
+                        <td className={listPageStyles.statusPositive}>
+                          {formatCurrency(
+                            selectedSupplierId === supplier.id
+                              ? selectedProcurementTotal
+                              : 0,
+                          )}
+                        </td>
+                        <td>
+                          <div className={listPageStyles.actionGroup}>
+                            <button
+                              className={listPageStyles.detailLink}
+                              type="button"
+                              onClick={() => setSelectedSupplierId(supplier.id)}
+                            >
+                              Detalle
+                            </button>
+                            <button
+                              className={listPageStyles.detailLink}
+                              type="button"
+                              onClick={() => handleStartEditSupplier(supplier.id)}
+                            >
+                              Editar
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5}>
+                        <div className={retailStyles.emptyState}>
+                          <div className={retailStyles.emptyIcon} />
+                          <p className={retailStyles.emptyTitle}>
+                            No encontramos proveedores con esa búsqueda.
+                          </p>
+                        </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5}>
-                      <div className={retailStyles.emptyState}>
-                        <div className={retailStyles.emptyIcon} />
-                        <p className={retailStyles.emptyTitle}>
-                          No encontramos proveedores con esa búsqueda.
-                        </p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+
+        <RetailSupplierDrawer
+          errorMessage={createSupplierError}
+          isOpen={isCreateSupplierOpen}
+          isSubmitting={isSubmittingSupplier}
+          supplier={editingSupplier}
+          onClose={handleCloseSupplierDrawer}
+          onSubmit={handleCreateSupplier}
+        />
+      </>
     )
   }
 
   return (
-    <div className={styles.page}>
+    <>
+      <div className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Procurement workspace</p>
@@ -175,6 +286,14 @@ export function SuppliersPage() {
         <div className={styles.heroActions}>
           <button
             className={styles.heroButton}
+            type="button"
+            onClick={handleStartCreateSupplier}
+          >
+            Create supplier
+          </button>
+
+          <button
+            className={styles.heroGhostButton}
             type="button"
             onClick={() => {
               void suppliersQuery.refetch()
@@ -253,18 +372,31 @@ export function SuppliersPage() {
             }
             isLoading={supplierDetailQuery.isLoading}
             selectedSupplierName={selectedSupplierSummary?.name ?? null}
+            onEdit={(supplier) => handleStartEditSupplier(supplier.id)}
             onRetry={() => {
               void supplierDetailQuery.refetch()
             }}
           />
 
           <SupplierSupplyHistoryPanel
-            supplierName={selectedSupplier?.name ?? selectedSupplierSummary?.name ?? null}
+            supplierName={
+              selectedSupplier?.name ?? selectedSupplierSummary?.name ?? null
+            }
             isLoading={supplierDetailQuery.isLoading}
             purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
           />
         </div>
       </div>
-    </div>
+      </div>
+
+      <RetailSupplierDrawer
+        errorMessage={createSupplierError}
+        isOpen={isCreateSupplierOpen}
+        isSubmitting={isSubmittingSupplier}
+        supplier={editingSupplier}
+        onClose={handleCloseSupplierDrawer}
+        onSubmit={handleCreateSupplier}
+      />
+    </>
   )
 }

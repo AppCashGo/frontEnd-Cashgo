@@ -1,5 +1,6 @@
 import type { SupplierSummary } from '@/modules/suppliers/types/supplier'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { formatDate } from '@/shared/utils/format-date'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './SuppliersListPanel.module.css'
@@ -91,48 +92,61 @@ export function SuppliersListPanel({
 
       {!isLoading && !errorMessage && suppliers.length > 0 ? (
         <div className={styles.list}>
-          {suppliers.map((supplier) => (
-            <button
-              key={supplier.id}
-              className={joinClassNames(
-                styles.supplierButton,
-                supplier.id === selectedSupplierId && styles.supplierButtonActive,
-              )}
-              type="button"
-              onClick={() => onSelectSupplier(supplier.id)}
-            >
-              <div className={styles.supplierTopRow}>
-                <div>
-                  <p className={styles.supplierName}>{supplier.name}</p>
-                  <p className={styles.supplierMeta}>
-                    {supplier.email ?? supplier.phone ?? 'Sin informacion de contacto'}
-                  </p>
+          {suppliers.map((supplier) => {
+            const avatarUrl = resolveApiAssetUrl(supplier.avatarUrl)
+
+            return (
+              <button
+                key={supplier.id}
+                className={joinClassNames(
+                  styles.supplierButton,
+                  supplier.id === selectedSupplierId && styles.supplierButtonActive,
+                )}
+                type="button"
+                onClick={() => onSelectSupplier(supplier.id)}
+              >
+                <div className={styles.supplierTopRow}>
+                  <div className={styles.supplierIdentity}>
+                    <span className={styles.supplierAvatar} aria-hidden="true">
+                      {avatarUrl ? (
+                        <img src={avatarUrl} alt="" />
+                      ) : (
+                        supplier.name.charAt(0).toUpperCase()
+                      )}
+                    </span>
+                    <div>
+                      <p className={styles.supplierName}>{supplier.name}</p>
+                      <p className={styles.supplierMeta}>
+                        {supplier.email ?? supplier.phone ?? 'Sin informacion de contacto'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <span
+                    className={joinClassNames(
+                      styles.statusPill,
+                      supplier.purchaseCount > 0 && styles.statusPillActive,
+                    )}
+                  >
+                    {supplier.purchaseCount > 0
+                      ? `${supplier.purchaseCount.toString()} reposiciones`
+                      : 'Proveedor nuevo'}
+                  </span>
                 </div>
 
-                <span
-                  className={joinClassNames(
-                    styles.statusPill,
-                    supplier.purchaseCount > 0 && styles.statusPillActive,
-                  )}
-                >
-                  {supplier.purchaseCount > 0
-                    ? `${supplier.purchaseCount.toString()} reposiciones`
-                    : 'Proveedor nuevo'}
-                </span>
-              </div>
-
-              <div className={styles.supplierStats}>
-                <span>
-                  Ultimo abastecimiento:{' '}
-                  <strong>
-                    {supplier.lastPurchaseAt
-                      ? formatDate(supplier.lastPurchaseAt)
-                      : 'Sin historial'}
-                  </strong>
-                </span>
-              </div>
-            </button>
-          ))}
+                <div className={styles.supplierStats}>
+                  <span>
+                    Ultimo abastecimiento:{' '}
+                    <strong>
+                      {supplier.lastPurchaseAt
+                        ? formatDate(supplier.lastPurchaseAt)
+                        : 'Sin historial'}
+                    </strong>
+                  </span>
+                </div>
+              </button>
+            )
+          })}
         </div>
       ) : null}
     </SurfaceCard>

@@ -4,6 +4,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
+  Upload,
   UserCheck,
   X,
 } from 'lucide-react'
@@ -22,7 +23,7 @@ import type {
   EmployeeUpdateInput,
 } from '@/modules/employees/types/employee'
 import type { AssignableUserRole } from '@/shared/constants/user-roles'
-import { ApiError } from '@/shared/services/api-client'
+import { ApiError, resolveApiAssetUrl } from '@/shared/services/api-client'
 import styles from './RetailEmployeeDrawer.module.css'
 
 type RetailRoleOption = {
@@ -40,6 +41,7 @@ type RetailEmployeeDrawerProps = {
   onClose: () => void
   onSubmit: (
     input: EmployeeCreateInput | EmployeeUpdateInput,
+    avatarFile?: File | null,
   ) => Promise<void>
 }
 
@@ -60,6 +62,7 @@ type EmployeeConfirmationModalProps = {
 }
 
 type PendingEmployeeConfirmation = {
+  avatarFile: File | null
   normalizedPhone: string
   values: EmployeeFormValues
 }
@@ -513,6 +516,8 @@ export function RetailEmployeeDrawer({
   const [permissionRole, setPermissionRole] = useState<AssignableUserRole | null>(
     null,
   )
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null)
   const [pendingConfirmation, setPendingConfirmation] =
     useState<PendingEmployeeConfirmation | null>(null)
   const {
@@ -532,6 +537,8 @@ export function RetailEmployeeDrawer({
   const permissionPreset = permissionRole
     ? getPresetForRole(presets, permissionRole)
     : null
+  const storedAvatarUrl = resolveApiAssetUrl(employee?.avatarUrl)
+  const visibleAvatarUrl = avatarPreviewUrl ?? storedAvatarUrl
 
   useEffect(() => {
     if (!isOpen) {
@@ -541,8 +548,18 @@ export function RetailEmployeeDrawer({
     reset(getDefaultValues(employee))
     setRoleMenuOpen(false)
     setPermissionRole(null)
+    setAvatarFile(null)
+    setAvatarPreviewUrl(null)
     setPendingConfirmation(null)
   }, [employee, isOpen, reset])
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl)
+      }
+    }
+  }, [avatarPreviewUrl])
 
   function selectRole(role: AssignableUserRole) {
     setValue('role', role, {
@@ -551,18 +568,37 @@ export function RetailEmployeeDrawer({
     })
   }
 
+  function handleAvatarChange(file: File | null) {
+    if (!file) {
+      return
+    }
+
+    setAvatarFile(file)
+    setAvatarPreviewUrl((currentPreviewUrl) => {
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl)
+      }
+
+      return URL.createObjectURL(file)
+    })
+  }
+
   const submitEmployee = handleSubmit(async (values) => {
     try {
       const normalizedPhone = normalizePhone(values.phone)
 
       if (isEditing) {
-        await onSubmit({
-          name: values.name.trim(),
-          phone: normalizedPhone,
-          role: values.role,
-        })
+        await onSubmit(
+          {
+            name: values.name.trim(),
+            phone: normalizedPhone,
+            role: values.role,
+          },
+          avatarFile,
+        )
       } else {
         setPendingConfirmation({
+          avatarFile,
           normalizedPhone,
           values: {
             ...values,
@@ -589,12 +625,15 @@ export function RetailEmployeeDrawer({
     }
 
     try {
-      await onSubmit({
-        name: pendingConfirmation.values.name.trim(),
-        password: createTemporaryPassword(pendingConfirmation.normalizedPhone),
-        phone: pendingConfirmation.normalizedPhone,
-        role: pendingConfirmation.values.role,
-      })
+      await onSubmit(
+        {
+          name: pendingConfirmation.values.name.trim(),
+          password: createTemporaryPassword(pendingConfirmation.normalizedPhone),
+          phone: pendingConfirmation.normalizedPhone,
+          role: pendingConfirmation.values.role,
+        },
+        pendingConfirmation.avatarFile,
+      )
       setPendingConfirmation(null)
       onClose()
     } catch (error) {
@@ -635,6 +674,31 @@ export function RetailEmployeeDrawer({
 
           <form className={styles.form} noValidate onSubmit={submitEmployee}>
             <div className={styles.formBody}>
+              <label className={styles.avatarUploader}>
+                <input
+                  accept="image/png,image/jpeg,image/webp"
+                  className={styles.avatarInput}
+                  disabled={isSubmitting}
+                  type="file"
+                  onChange={(event) => {
+                    handleAvatarChange(event.target.files?.[0] ?? null)
+                    event.currentTarget.value = ''
+                  }}
+                />
+                {visibleAvatarUrl ? (
+                  <img
+                    alt="Avatar del empleado"
+                    className={styles.avatarPreview}
+                    src={visibleAvatarUrl}
+                  />
+                ) : (
+                  <span className={styles.avatarPlaceholder} aria-hidden="true">
+                    <Upload />
+                  </span>
+                )}
+                <span>{visibleAvatarUrl ? 'Cambiar avatar' : 'Cargar avatar'}</span>
+              </label>
+
               <label className={styles.field}>
                 <span className={styles.label}>Nombre *</span>
                 <input

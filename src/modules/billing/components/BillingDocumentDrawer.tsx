@@ -22,6 +22,7 @@ import {
 } from "@/modules/billing/utils/format-billing";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import styles from "./BillingDocumentDrawer.module.css";
 
 type BillingDocumentDrawerProps = {
@@ -124,6 +125,7 @@ export function BillingDocumentDrawer({
   }, [document, reset]);
 
   const selectedMethod = watch("method");
+  const businessLogoUrl = resolveApiAssetUrl(document?.business.logoUrl);
 
   const submitCollection = handleSubmit(async (values) => {
     try {
@@ -177,6 +179,16 @@ export function BillingDocumentDrawer({
             <section className={styles.section}>
               <h4 className={styles.sectionTitle}>{copy.documentSummary}</h4>
               <div className={styles.summaryGrid}>
+                {businessLogoUrl ? (
+                  <div className={styles.summaryCard}>
+                    <p className={styles.summaryLabel}>Logo</p>
+                    <img
+                      className={styles.businessLogo}
+                      src={businessLogoUrl}
+                      alt=""
+                    />
+                  </div>
+                ) : null}
                 <div className={styles.summaryCard}>
                   <p className={styles.summaryLabel}>{copy.columns.invoiceType}</p>
                   <p className={styles.summaryValue}>

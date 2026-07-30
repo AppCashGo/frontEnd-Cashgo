@@ -4,6 +4,7 @@ import {
   getCustomerDetail,
   getCustomers,
   registerCustomerPayment,
+  uploadCustomerAvatar,
   updateCustomer,
 } from '@/modules/customers/services/customers-api'
 import type {
@@ -21,6 +22,7 @@ function toCustomerSummary(customer: CustomerDetail): CustomerSummary {
     name: customer.name,
     email: customer.email,
     phone: customer.phone,
+    avatarUrl: customer.avatarUrl,
     documentType: customer.documentType,
     documentNumber: customer.documentNumber,
     address: customer.address,
@@ -85,6 +87,42 @@ export function useUpdateCustomerMutation() {
       customerId: string
       input: CustomerMutationInput
     }) => updateCustomer(customerId, input),
+    onSuccess: async (customer) => {
+      queryClient.setQueryData<CustomerSummary[]>(customersQueryKey, (current) => {
+        const nextCustomer = toCustomerSummary(customer)
+
+        if (!current) {
+          return [nextCustomer]
+        }
+
+        return current.map((item) =>
+          item.id === customer.id ? nextCustomer : item,
+        )
+      })
+
+      queryClient.setQueryData<CustomerDetail>(
+        [...customersQueryKey, 'detail', customer.id],
+        customer,
+      )
+
+      await queryClient.invalidateQueries({
+        queryKey: customersQueryKey,
+      })
+    },
+  })
+}
+
+export function useUploadCustomerAvatarMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      customerId,
+      file,
+    }: {
+      customerId: string
+      file: File
+    }) => uploadCustomerAvatar(customerId, file),
     onSuccess: async (customer) => {
       queryClient.setQueryData<CustomerSummary[]>(customersQueryKey, (current) => {
         const nextCustomer = toCustomerSummary(customer)

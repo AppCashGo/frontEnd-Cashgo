@@ -45,6 +45,7 @@ export type BillingResolution = {
 
 export type BillingBusinessSummary = {
   businessName: string;
+  logoUrl: string | null;
   legalName: string | null;
   taxId: string | null;
   city: string | null;

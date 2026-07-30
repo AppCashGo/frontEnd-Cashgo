@@ -110,11 +110,11 @@ export function SaleCartPanel({
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Checkout</p>
-          <h2 className={styles.title}>Review and register the sale</h2>
+          <p className={styles.eyebrow}>Caja</p>
+          <h2 className={styles.title}>Revisa y registra la venta</h2>
           <p className={styles.description}>
-            Choose who is buying, define how much is paid now and keep the
-            remaining balance under control.
+            Elige el cliente, define cuánto se paga ahora y mantén el saldo
+            pendiente bajo control.
           </p>
         </div>
 
@@ -124,32 +124,32 @@ export function SaleCartPanel({
           type="button"
           onClick={onClearCart}
         >
-          Clear cart
+          Limpiar carrito
         </button>
       </div>
 
       <div className={styles.statusRow}>
         <div className={styles.statusCard}>
-          <span className={styles.statusLabel}>Cash register</span>
+          <span className={styles.statusLabel}>Caja registradora</span>
           <strong className={styles.statusValue}>
             {currentCashRegisterSession
-              ? `Open · ${currentCashRegisterSession.responsibleUserName ?? 'Team'}`
-              : 'Closed'}
+              ? `Abierta · ${currentCashRegisterSession.responsibleUserName ?? 'Equipo'}`
+              : 'Cerrada'}
           </strong>
         </div>
 
         <div className={styles.statusCard}>
-          <span className={styles.statusLabel}>Collected now</span>
+          <span className={styles.statusLabel}>Cobrado ahora</span>
           <strong className={styles.statusValue}>{formatCurrency(paidAmount)}</strong>
         </div>
       </div>
 
       {completedSale ? (
         <div className={styles.successBanner} role="status">
-          <p className={styles.successTitle}>Sale completed successfully</p>
+          <p className={styles.successTitle}>Venta completada con éxito</p>
           <p className={styles.successDescription}>
-            {completedSale.saleNumber} was created on{' '}
-            {formatDate(completedSale.createdAt)} for{' '}
+            {completedSale.saleNumber} se creó el{' '}
+            {formatDate(completedSale.createdAt)} por{' '}
             {formatCurrency(completedSale.total)}.
           </p>
         </div>
@@ -163,10 +163,10 @@ export function SaleCartPanel({
 
       {cartItems.length === 0 ? (
         <div className={styles.emptyState}>
-          <p className={styles.emptyTitle}>The cart is waiting for products</p>
+          <p className={styles.emptyTitle}>El carrito está esperando productos</p>
           <p className={styles.emptyDescription}>
-            Add items from the catalog and this panel will turn into your
-            checkout and payment workspace.
+            Agrega artículos del catálogo y este panel se convierte en tu
+            espacio de cobro y pago.
           </p>
         </div>
       ) : (
@@ -185,12 +185,12 @@ export function SaleCartPanel({
                         type="button"
                         onClick={() => onRemoveProduct(item.product.id)}
                       >
-                        Remove
+                        Quitar
                       </button>
                     </div>
 
                     <p className={styles.cartItemMeta}>
-                      {formatCurrency(item.product.price)} each
+                      {formatCurrency(item.product.price)} c/u
                     </p>
                   </div>
 
@@ -226,7 +226,7 @@ export function SaleCartPanel({
           <div className={styles.checkoutGrid}>
             <div className={styles.field}>
               <label className={styles.label} htmlFor="sale-customer">
-                Customer
+                Cliente
               </label>
               <select
                 className={styles.input}
@@ -234,20 +234,20 @@ export function SaleCartPanel({
                 value={selectedCustomerId}
                 onChange={(event) => onCustomerChange(event.target.value)}
               >
-                <option value="">Walk-in sale</option>
+                <option value="">Venta de mostrador</option>
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.id}>
                     {customer.name}
                     {customer.balance > 0
-                      ? ` · balance ${formatCurrency(customer.balance)}`
+                      ? ` · saldo ${formatCurrency(customer.balance)}`
                       : ''}
                   </option>
                 ))}
               </select>
               {selectedCustomer ? (
                 <p className={styles.helperText}>
-                  {selectedCustomer.phone ?? selectedCustomer.email ?? 'No contact info'} ·
-                  current balance {formatCurrency(selectedCustomer.balance)}
+                  {selectedCustomer.phone ?? selectedCustomer.email ?? 'Sin contacto'} ·
+                  saldo actual {formatCurrency(selectedCustomer.balance)}
                 </p>
               ) : null}
             </div>
@@ -262,7 +262,7 @@ export function SaleCartPanel({
                 type="button"
                 onClick={() => onPaymentModeChange('FULL')}
               >
-                Full payment
+                Pago completo
               </button>
               <button
                 className={
@@ -273,14 +273,14 @@ export function SaleCartPanel({
                 type="button"
                 onClick={() => onPaymentModeChange('PARTIAL')}
               >
-                Partial / credit
+                Parcial / crédito
               </button>
             </div>
 
             <div className={styles.inlineFields}>
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="sale-payment-method">
-                  Payment method
+                  Método de pago
                 </label>
                 <select
                   className={styles.input}
@@ -300,7 +300,7 @@ export function SaleCartPanel({
 
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="sale-paid-amount">
-                  {paymentMode === 'FULL' ? 'Collected now' : 'Amount collected'}
+                  {paymentMode === 'FULL' ? 'Cobrado ahora' : 'Valor cobrado'}
                 </label>
                 <input
                   className={styles.input}
@@ -320,7 +320,7 @@ export function SaleCartPanel({
             <div className={styles.inlineFields}>
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="sale-discount">
-                  Discount
+                  Descuento
                 </label>
                 <input
                   className={styles.input}
@@ -336,7 +336,7 @@ export function SaleCartPanel({
 
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="sale-tax">
-                  Tax
+                  Impuesto
                 </label>
                 <input
                   className={styles.input}
@@ -353,12 +353,12 @@ export function SaleCartPanel({
 
             <div className={styles.field}>
               <label className={styles.label} htmlFor="sale-reference">
-                Payment reference
+                Referencia de pago
               </label>
               <input
                 className={styles.input}
                 id="sale-reference"
-                placeholder="Transfer code, terminal or note"
+                placeholder="Código de transferencia, terminal o nota"
                 type="text"
                 value={paymentReference}
                 onChange={(event) => onPaymentReferenceChange(event.target.value)}
@@ -369,7 +369,7 @@ export function SaleCartPanel({
               <div className={styles.inlineFields}>
                 <div className={styles.field}>
                   <label className={styles.label} htmlFor="sale-due-date">
-                    Due date
+                    Fecha de vencimiento
                   </label>
                   <input
                     className={styles.input}
@@ -381,7 +381,7 @@ export function SaleCartPanel({
                 </div>
 
                 <div className={styles.field}>
-                  <span className={styles.label}>Pending balance</span>
+                  <span className={styles.label}>Saldo pendiente</span>
                   <div className={styles.balanceBox}>{formatCurrency(pendingBalance)}</div>
                 </div>
               </div>
@@ -389,12 +389,12 @@ export function SaleCartPanel({
 
             <div className={styles.field}>
               <label className={styles.label} htmlFor="sale-notes">
-                Notes
+                Notas
               </label>
               <textarea
                 className={styles.textarea}
                 id="sale-notes"
-                placeholder="Add a note for the team or the customer."
+                placeholder="Agrega una nota para el equipo o el cliente."
                 rows={3}
                 value={notes}
                 onChange={(event) => onNotesChange(event.target.value)}
@@ -403,15 +403,14 @@ export function SaleCartPanel({
 
             {usingCashWithoutOpenRegister ? (
               <div className={styles.warningBanner}>
-                You are collecting cash without an open register. The sale can
-                still be created, but it will not be reconciled in today&apos;s
-                cash session.
+                Estás cobrando efectivo sin una caja abierta. La venta puede
+                crearse, pero no quedará conciliada en la sesión de caja de hoy.
               </div>
             ) : null}
 
             {requiresCustomer && !selectedCustomer ? (
               <div className={styles.warningBanner}>
-                A customer is required when the sale leaves a pending balance.
+                Debes elegir un cliente cuando la venta deja saldo pendiente.
               </div>
             ) : null}
           </div>
@@ -419,7 +418,7 @@ export function SaleCartPanel({
           <div className={styles.footer} id="sale-cart">
             <div className={styles.summaryGrid}>
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Items in cart</span>
+                <span className={styles.summaryLabel}>Ítems en carrito</span>
                 <strong className={styles.summaryValue}>
                   {totalItems.toString()}
                 </strong>
@@ -431,19 +430,19 @@ export function SaleCartPanel({
                 </strong>
               </div>
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Discount</span>
+                <span className={styles.summaryLabel}>Descuento</span>
                 <strong className={styles.summaryValue}>
                   {formatCurrency(discountTotal)}
                 </strong>
               </div>
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Tax</span>
+                <span className={styles.summaryLabel}>Impuesto</span>
                 <strong className={styles.summaryValue}>
                   {formatCurrency(taxTotal)}
                 </strong>
               </div>
               <div className={styles.summaryRow}>
-                <span className={styles.summaryLabel}>Total due</span>
+                <span className={styles.summaryLabel}>Total a pagar</span>
                 <strong className={styles.totalValue}>
                   {formatCurrency(totalAmount)}
                 </strong>
@@ -460,7 +459,7 @@ export function SaleCartPanel({
               type="button"
               onClick={onFinalizeSale}
             >
-              {isSubmitting ? 'Registering sale...' : 'Register sale'}
+              {isSubmitting ? 'Registrando venta...' : 'Registrar venta'}
             </button>
           </div>
         </>

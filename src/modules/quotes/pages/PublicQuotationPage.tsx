@@ -16,6 +16,7 @@ import {
   formatQuotationDateTime,
 } from "@/modules/quotes/utils/quotation-utils";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
+import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "./PublicQuotationPage.module.css";
 
@@ -39,6 +40,7 @@ export function PublicQuotationPage() {
   const rejectMutation = useRejectPublicQuotationMutation();
   const downloadMutation = useDownloadPublicQuotationDocumentMutation();
   const quotation = quotationQuery.data ?? null;
+  const businessLogoUrl = resolveApiAssetUrl(quotation?.business.logoUrl);
   const isWorking =
     acceptMutation.isPending ||
     rejectMutation.isPending ||
@@ -133,6 +135,13 @@ export function PublicQuotationPage() {
             <section className={styles.metaGrid}>
               <div className={styles.metaCard}>
                 <span>{copy.publicBusiness}</span>
+                {businessLogoUrl ? (
+                  <img
+                    className={styles.businessLogo}
+                    src={businessLogoUrl}
+                    alt=""
+                  />
+                ) : null}
                 <strong>{quotation.business.businessName}</strong>
                 <small>
                   {quotation.business.email ?? quotation.business.phone ?? "—"}

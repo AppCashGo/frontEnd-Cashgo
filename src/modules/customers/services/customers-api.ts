@@ -1,4 +1,9 @@
-import { getJson, patchJson, postJson } from '@/shared/services/api-client'
+import {
+  getJson,
+  patchFormData,
+  patchJson,
+  postJson,
+} from '@/shared/services/api-client'
 import type {
   CustomerDetail,
   CustomerMutationInput,
@@ -124,6 +129,19 @@ export async function updateCustomer(
   const customer = await patchJson<CustomerDetailApiRecord, CustomerMutationInput>(
     `/customers/${customerId}`,
     input,
+  )
+
+  return normalizeCustomerDetailRecord(customer)
+}
+
+export async function uploadCustomerAvatar(customerId: string, file: File) {
+  const formData = new FormData()
+
+  formData.append('file', file)
+
+  const customer = await patchFormData<CustomerDetailApiRecord>(
+    `/customers/${customerId}/avatar`,
+    formData,
   )
 
   return normalizeCustomerDetailRecord(customer)

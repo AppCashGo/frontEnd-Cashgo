@@ -46,6 +46,7 @@ import {
   toDateInputValue as toLocalDateInputValue,
 } from "@/shared/utils/date-input";
 import { joinClassNames } from "@/shared/utils/join-class-names";
+import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import styles from "./QuotationFormWorkspace.module.css";
 
 export type QuotationCreationMode = "products" | "free";
@@ -243,6 +244,7 @@ function downloadBlobFile(blob: Blob, filename: string) {
 function createQuotationReceiptHtml({
   title,
   businessName,
+  logoUrl,
   customerName,
   validUntil,
   items,
@@ -254,6 +256,7 @@ function createQuotationReceiptHtml({
 }: {
   title: string;
   businessName: string;
+  logoUrl?: string | null;
   customerName: string;
   validUntil: string;
   items: QuotationItemInput[];
@@ -291,6 +294,10 @@ function createQuotationReceiptHtml({
       `;
     })
     .join("");
+  const resolvedLogoUrl = resolveApiAssetUrl(logoUrl);
+  const logoMarkup = resolvedLogoUrl
+    ? `<img class="businessLogo" src="${escapeHtml(resolvedLogoUrl)}" alt="" />`
+    : "";
 
   return `
     <!doctype html>
@@ -301,6 +308,8 @@ function createQuotationReceiptHtml({
         <style>
           body { margin: 0; background: #f4f7fb; color: #1f2937; font-family: Arial, sans-serif; }
           main { width: min(720px, calc(100% - 32px)); margin: 32px auto; padding: 32px; background: #fff; border-radius: 16px; box-shadow: 0 18px 50px rgba(15, 23, 42, .12); }
+          .header { display: flex; align-items: center; gap: 16px; }
+          .businessLogo { width: 64px; height: 64px; object-fit: contain; border: 1px solid #e2e8f0; border-radius: 12px; }
           h1 { margin: 0 0 8px; font-size: 26px; }
           .muted { color: #64748b; }
           .meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 28px 0; }
@@ -315,8 +324,13 @@ function createQuotationReceiptHtml({
       </head>
       <body>
         <main>
-          <h1>${escapeHtml(title)}</h1>
-          <p class="muted">${escapeHtml(businessName)}</p>
+          <div class="header">
+            ${logoMarkup}
+            <div>
+              <h1>${escapeHtml(title)}</h1>
+              <p class="muted">${escapeHtml(businessName)}</p>
+            </div>
+          </div>
           <div class="meta">
             <div class="box"><strong>Cliente</strong><br />${escapeHtml(customerName)}</div>
             <div class="box"><strong>Fecha</strong><br />${escapeHtml(dateFormatter.format(new Date()))}</div>
@@ -623,6 +637,7 @@ export function QuotationFormWorkspace({
     return createQuotationReceiptHtml({
       title: quotation?.fullNumber ?? copy.createTitle,
       businessName: quotation?.business.businessName ?? "Cashgo",
+      logoUrl: quotation?.business.logoUrl ?? null,
       customerName: selectedCustomer?.name ?? copy.noCustomer,
       validUntil: values.validUntil || copy.expirationNever,
       items: values.items,
@@ -642,6 +657,7 @@ export function QuotationFormWorkspace({
     return createQuotationReceiptHtml({
       title: quotationDetail.fullNumber,
       businessName: quotationDetail.business.businessName,
+      logoUrl: quotationDetail.business.logoUrl,
       customerName: quotationDetail.customer?.name ?? copy.noCustomer,
       validUntil: quotationDetail.validUntil ?? copy.expirationNever,
       items: quotationDetail.items.map((item) => ({

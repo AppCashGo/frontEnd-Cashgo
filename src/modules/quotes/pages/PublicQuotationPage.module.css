@@ -121,6 +121,17 @@
   font-size: 1rem;
 }
 
+.businessLogo {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 10px;
+  object-fit: contain;
+  border: 1px solid #e1e7ef;
+  border-radius: 14px;
+  background: #ffffff;
+}
+
 .metaCard small {
   display: block;
   margin-top: 6px;

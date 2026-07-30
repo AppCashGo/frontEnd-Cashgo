@@ -43,18 +43,18 @@ function getStockToneClass(product: Product) {
 
 function getInventoryHealthLabel(product: Product) {
   if (!product.isActive) {
-    return 'Inactive'
+    return 'Inactivo'
   }
 
   if (product.stock === 0) {
-    return 'Out of stock'
+    return 'Agotado'
   }
 
   if (product.stock <= Math.max(product.minStock, 5)) {
-    return 'Low stock'
+    return 'Stock bajo'
   }
 
-  return 'Healthy'
+  return 'Saludable'
 }
 
 export function ProductsTable({
@@ -81,20 +81,20 @@ export function ProductsTable({
     <SurfaceCard className={styles.card}>
       <div className={styles.toolbar}>
         <div className={styles.copy}>
-          <p className={styles.eyebrow}>Catalog workspace</p>
-          <h2 className={styles.title}>Products table</h2>
+          <p className={styles.eyebrow}>Catálogo</p>
+          <h2 className={styles.title}>Tabla de productos</h2>
           <p className={styles.description}>
-            Search, edit and monitor stock, cost and replenishment thresholds
-            from one clean workspace.
+            Busca, edita y vigila stock, costos y mínimos de reposición desde
+            una sola vista.
           </p>
         </div>
 
         <div className={styles.toolbarActions}>
           <label className={styles.searchField}>
-            <span className={styles.searchLabel}>Search products</span>
+            <span className={styles.searchLabel}>Buscar productos</span>
             <input
               className={styles.searchInput}
-              placeholder="Search by name, SKU or barcode"
+              placeholder="Busca por nombre, SKU o código"
               type="search"
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
@@ -106,7 +106,7 @@ export function ProductsTable({
             type="button"
             onClick={onCreateProduct}
           >
-            Create product
+            Crear producto
           </button>
         </div>
       </div>
@@ -114,20 +114,20 @@ export function ProductsTable({
       <div className={styles.metaRow}>
         <p className={styles.metaText}>
           {products.length === totalProductsCount
-            ? `${products.length} product${products.length === 1 ? '' : 's'} available`
-            : `Showing ${products.length} of ${totalProductsCount} products`}
+            ? `${products.length} producto${products.length === 1 ? '' : 's'} disponible${products.length === 1 ? '' : 's'}`
+            : `Mostrando ${products.length} de ${totalProductsCount} productos`}
         </p>
 
         {isRefreshing ? (
           <p className={styles.refreshingBadge} role="status">
-            Refreshing catalog...
+            Actualizando catálogo...
           </p>
         ) : null}
       </div>
 
       {isLoading ? (
         <div className={styles.stateBox} aria-live="polite">
-          <p className={styles.stateTitle}>Loading your catalog</p>
+          <p className={styles.stateTitle}>Cargando catálogo</p>
           <div className={styles.loadingRows}>
             {loadingRowKeys.map((rowKey) => (
               <div className={styles.loadingRow} key={rowKey}>
@@ -139,32 +139,32 @@ export function ProductsTable({
         </div>
       ) : errorMessage ? (
         <div className={styles.stateBox} role="alert">
-          <p className={styles.stateTitle}>Unable to load products</p>
+          <p className={styles.stateTitle}>No pudimos cargar los productos</p>
           <p className={styles.stateDescription}>{errorMessage}</p>
           <button
             className={styles.secondaryButton}
             type="button"
             onClick={onRetry}
           >
-            Retry request
+            Reintentar
           </button>
         </div>
       ) : products.length === 0 ? (
         <div className={styles.stateBox}>
           <p className={styles.stateTitle}>
-            {hasActiveSearch ? 'No matching products' : 'Your catalog is still empty'}
+            {hasActiveSearch ? 'No hay productos con esa búsqueda' : 'Tu catálogo está vacío'}
           </p>
           <p className={styles.stateDescription}>
             {hasActiveSearch
-              ? 'Try a different search term or create a new product from the action button.'
-              : 'Start by creating your first product or import a CSV and it will appear here immediately.'}
+              ? 'Prueba otra búsqueda o crea un producto desde el botón de acción.'
+              : 'Crea tu primer producto o importa un CSV para verlo aquí de inmediato.'}
           </p>
           <button
             className={styles.secondaryButton}
             type="button"
             onClick={onCreateProduct}
           >
-            Create product
+            Crear producto
           </button>
         </div>
       ) : (
@@ -172,12 +172,12 @@ export function ProductsTable({
           <table className={styles.table}>
             <thead>
               <tr>
-                <th scope="col">Product</th>
-                <th scope="col">Cost</th>
-                <th scope="col">Price</th>
+                <th scope="col">Producto</th>
+                <th scope="col">Costo</th>
+                <th scope="col">Precio</th>
                 <th scope="col">Stock</th>
-                <th scope="col">Updated</th>
-                <th scope="col">Actions</th>
+                <th scope="col">Actualizado</th>
+                <th scope="col">Acciones</th>
               </tr>
             </thead>
 
@@ -203,12 +203,12 @@ export function ProductsTable({
                         <span className={styles.productCreatedAt}>
                           {product.sku
                             ? `SKU ${product.sku} · ${getProductUnitLabel(product.unit)}`
-                            : `Created ${formatDate(product.createdAt)}`}
+                            : `Creado ${formatDate(product.createdAt)}`}
                         </span>
                       </div>
 
                       <p className={styles.productDescription}>
-                        {product.description ?? 'No description added yet.'}
+                        {product.description ?? 'Sin descripción todavía.'}
                       </p>
                     </td>
 
@@ -227,11 +227,11 @@ export function ProductsTable({
                           getStockToneClass(product),
                         )}
                       >
-                        {product.stock} in stock
+                        {product.stock} en stock
                       </span>
                       <p className={styles.stockMeta}>
                         {getInventoryHealthLabel(product)}
-                        {product.minStock > 0 ? ` · min ${product.minStock}` : ''}
+                        {product.minStock > 0 ? ` · mín. ${product.minStock}` : ''}
                       </p>
                     </td>
 
@@ -248,7 +248,7 @@ export function ProductsTable({
                               type="button"
                               onClick={onCancelDeleteProduct}
                             >
-                              Cancel
+                              Cancelar
                             </button>
                             <button
                               className={styles.dangerButton}
@@ -256,7 +256,7 @@ export function ProductsTable({
                               type="button"
                               onClick={() => onConfirmDeleteProduct(product)}
                             >
-                              {isDeleting ? 'Deleting...' : 'Confirm delete'}
+                              {isDeleting ? 'Eliminando...' : 'Confirmar'}
                             </button>
                           </>
                         ) : (
@@ -266,7 +266,7 @@ export function ProductsTable({
                               type="button"
                               onClick={() => onEditProduct(product)}
                             >
-                              Edit
+                              Editar
                             </button>
                             <button
                               className={styles.ghostDangerButton}
@@ -274,7 +274,7 @@ export function ProductsTable({
                               type="button"
                               onClick={() => onRequestDeleteProduct(product.id)}
                             >
-                              Delete
+                              Eliminar
                             </button>
                           </>
                         )}

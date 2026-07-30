@@ -14,6 +14,7 @@ import {
   useCustomersQuery,
   useRegisterCustomerPaymentMutation,
   useUpdateCustomerMutation,
+  useUploadCustomerAvatarMutation,
 } from '@/modules/customers/hooks/use-customers-query'
 import type {
   CustomerMutationInput,
@@ -45,6 +46,7 @@ export function CustomersPage() {
   const customersQuery = useCustomersQuery()
   const createCustomerMutation = useCreateCustomerMutation()
   const updateCustomerMutation = useUpdateCustomerMutation()
+  const uploadCustomerAvatarMutation = useUploadCustomerAvatarMutation()
   const registerPaymentMutation = useRegisterCustomerPaymentMutation()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const customerRecords = customersQuery.data
@@ -112,17 +114,35 @@ export function CustomersPage() {
     setRetailDrawerOpen(false)
   }
 
-  async function handleSubmitCustomer(input: CustomerMutationInput) {
+  async function handleSubmitCustomer(
+    input: CustomerMutationInput,
+    avatarFile?: File | null,
+  ) {
     if (retailDrawerMode === 'edit' && selectedCustomerId) {
-      await updateCustomerMutation.mutateAsync({
+      const updatedCustomer = await updateCustomerMutation.mutateAsync({
         customerId: selectedCustomerId,
         input,
       })
+
+      if (avatarFile) {
+        await uploadCustomerAvatarMutation.mutateAsync({
+          customerId: updatedCustomer.id,
+          file: avatarFile,
+        })
+      }
+
       setRetailDrawerMode('detail')
       return
     }
 
     const createdCustomer = await createCustomerMutation.mutateAsync(input)
+
+    if (avatarFile) {
+      await uploadCustomerAvatarMutation.mutateAsync({
+        customerId: createdCustomer.id,
+        file: avatarFile,
+      })
+    }
 
     setSelectedCustomerId(createdCustomer.id)
     setRetailDrawerMode('detail')
@@ -359,12 +379,15 @@ export function CustomersPage() {
           isOpen={isRetailDrawerOpen}
           isPaymentSubmitting={registerPaymentMutation.isPending}
           isSubmitting={
-            createCustomerMutation.isPending || updateCustomerMutation.isPending
+            createCustomerMutation.isPending ||
+            updateCustomerMutation.isPending ||
+            uploadCustomerAvatarMutation.isPending
           }
           mode={retailDrawerMode}
           submitError={
             createCustomerMutation.error ??
             updateCustomerMutation.error ??
+            uploadCustomerAvatarMutation.error ??
             registerPaymentMutation.error
           }
           onClose={closeRetailCustomerDrawer}

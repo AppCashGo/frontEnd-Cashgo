@@ -5,6 +5,7 @@ import {
   getEmployeePermissionPresets,
   getEmployeeRoles,
   getEmployees,
+  uploadEmployeeAvatar,
   updateEmployee,
 } from "@/modules/employees/services/employees-api";
 import type {
@@ -67,6 +68,25 @@ export function useUpdateEmployeeMutation() {
       employeeId: string;
       input: EmployeeUpdateInput;
     }) => updateEmployee(employeeId, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: employeesQueryKey,
+      });
+    },
+  });
+}
+
+export function useUploadEmployeeAvatarMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      employeeId,
+      file,
+    }: {
+      employeeId: string;
+      file: File;
+    }) => uploadEmployeeAvatar(employeeId, file),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: employeesQueryKey,

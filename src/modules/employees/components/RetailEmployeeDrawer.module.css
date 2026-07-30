@@ -72,6 +72,53 @@
   padding: 1.25rem 1.35rem 7rem;
 }
 
+.avatarUploader {
+  display: inline-grid;
+  justify-items: center;
+  gap: 0.55rem;
+  width: max-content;
+  color: #1f2a37;
+  font-size: 0.9rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.avatarInput {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.avatarPlaceholder,
+.avatarPreview {
+  width: 5.35rem;
+  height: 5.35rem;
+  border-radius: 999px;
+}
+
+.avatarPlaceholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #2563eb;
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.avatarPlaceholder svg {
+  width: 1.75rem;
+  height: 1.75rem;
+}
+
+.avatarPreview {
+  display: block;
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  object-fit: cover;
+}
+
 .field {
   display: grid;
   gap: 0.55rem;

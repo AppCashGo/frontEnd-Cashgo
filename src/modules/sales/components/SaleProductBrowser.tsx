@@ -28,10 +28,10 @@ const inventoryFilterOptions: Array<{
   value: InventoryFilter
   label: string
 }> = [
-  { value: 'ALL', label: 'All' },
-  { value: 'READY', label: 'Ready' },
-  { value: 'LOW', label: 'Low stock' },
-  { value: 'OUT', label: 'Out of stock' },
+  { value: 'ALL', label: 'Todos' },
+  { value: 'READY', label: 'Listos' },
+  { value: 'LOW', label: 'Stock bajo' },
+  { value: 'OUT', label: 'Agotados' },
 ]
 
 function getStockToneClass(product: Product) {
@@ -88,28 +88,28 @@ export function SaleProductBrowser({
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Product search</p>
-          <h2 className={styles.title}>Build the sale from your live catalog</h2>
+          <p className={styles.eyebrow}>Búsqueda de productos</p>
+          <h2 className={styles.title}>Arma la venta desde tu catálogo activo</h2>
           <p className={styles.description}>
-            Search fast, filter by stock health and keep checkout moving without
-            leaving the POS workspace.
+            Busca rápido, filtra por estado de stock y mantén la caja en
+            movimiento sin salir del POS.
           </p>
         </div>
 
         <div className={styles.headerAside}>
           <label className={styles.searchField} htmlFor="sale-product-search">
-            <span className={styles.searchLabel}>Search products</span>
+            <span className={styles.searchLabel}>Buscar productos</span>
             <input
               className={styles.searchInput}
               id="sale-product-search"
-              placeholder="Search by name, SKU or barcode"
+              placeholder="Busca por nombre, SKU o código"
               type="search"
               value={searchValue}
               onChange={(event) => onSearchChange(event.target.value)}
             />
           </label>
 
-          <div className={styles.filterRow} role="tablist" aria-label="Stock filters">
+          <div className={styles.filterRow} role="tablist" aria-label="Filtros de stock">
             {inventoryFilterOptions.map((filterOption) => (
               <button
                 key={filterOption.value}
@@ -130,12 +130,12 @@ export function SaleProductBrowser({
       <div className={styles.metaRow}>
         <p className={styles.metaText}>
           {products.length === totalProductsCount
-            ? `${products.length} product${products.length === 1 ? '' : 's'} ready for checkout`
-            : `Showing ${products.length} of ${totalProductsCount} products`}
+            ? `${products.length} producto${products.length === 1 ? '' : 's'} listo${products.length === 1 ? '' : 's'} para vender`
+            : `Mostrando ${products.length} de ${totalProductsCount} productos`}
         </p>
 
         <Link className={styles.secondaryButton} to={routePaths.products}>
-          Create product
+          Crear producto
         </Link>
       </div>
 
@@ -152,36 +152,36 @@ export function SaleProductBrowser({
         </div>
       ) : errorMessage ? (
         <div className={styles.stateBox} role="alert">
-          <p className={styles.stateTitle}>Unable to load products</p>
+          <p className={styles.stateTitle}>No pudimos cargar productos</p>
           <p className={styles.stateDescription}>{errorMessage}</p>
           <button
             className={styles.secondaryButton}
             type="button"
             onClick={onRetry}
           >
-            Retry
+            Reintentar
           </button>
         </div>
       ) : products.length === 0 ? (
         <div className={styles.stateBox}>
           <p className={styles.stateTitle}>
-            {hasActiveSearch ? 'No matching products' : 'No products available yet'}
+            {hasActiveSearch ? 'No hay productos con esa búsqueda' : 'Aún no hay productos disponibles'}
           </p>
           <p className={styles.stateDescription}>
             {hasActiveSearch
-              ? 'Try a broader search term or switch the stock filter to find more items.'
-              : 'Add products to the catalog first so they can be sold from this POS screen.'}
+              ? 'Prueba una búsqueda más amplia o cambia el filtro de stock.'
+              : 'Agrega productos al catálogo para venderlos desde esta pantalla POS.'}
           </p>
           <Link className={styles.secondaryButton} to={routePaths.products}>
-            Go to products
+            Ir a productos
           </Link>
         </div>
       ) : (
         <div className={styles.productsGrid}>
           <Link className={joinClassNames(styles.productCard, styles.createCard)} to={routePaths.products}>
             <span className={styles.createIcon}>+</span>
-            <strong>Create product</strong>
-            <span>Add a new item and bring it straight into the next sale.</span>
+            <strong>Crear producto</strong>
+            <span>Agrega un artículo y úsalo en la próxima venta.</span>
           </Link>
 
           {products.map((product) => {
@@ -210,13 +210,13 @@ export function SaleProductBrowser({
                   <div>
                     <h3 className={styles.productName}>{product.name}</h3>
                     <p className={styles.productDescription}>
-                      {product.description ?? 'No description available.'}
+                      {product.description ?? 'Sin descripción disponible.'}
                     </p>
                   </div>
 
                   {quantityInCart > 0 ? (
                     <span className={styles.cartBadge}>
-                      {quantityInCart} in cart
+                      {quantityInCart} en carrito
                     </span>
                   ) : null}
                 </div>
@@ -232,7 +232,7 @@ export function SaleProductBrowser({
                         getStockToneClass(product),
                       )}
                     >
-                      {product.stock} available
+                      {product.stock} disponibles
                     </span>
                   </div>
 
@@ -243,14 +243,14 @@ export function SaleProductBrowser({
                     onClick={() => onAddProduct(product)}
                   >
                     {!product.isActive
-                      ? 'Inactive'
+                      ? 'Inactivo'
                       : product.stock === 0
-                        ? 'Out of stock'
+                        ? 'Agotado'
                         : canAddProduct
                           ? quantityInCart > 0
-                            ? 'Add one more'
-                            : 'Add to sale'
-                          : 'Max in cart'}
+                            ? 'Agregar otro'
+                            : 'Agregar a venta'
+                          : 'Máximo en carrito'}
                   </button>
                 </div>
               </article>

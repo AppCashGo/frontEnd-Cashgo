@@ -10,6 +10,7 @@ import {
   useEmployeeRolesQuery,
   useEmployeesQuery,
   useUpdateEmployeeMutation,
+  useUploadEmployeeAvatarMutation,
 } from '@/modules/employees/hooks/use-employees-query'
 import type {
   Employee,
@@ -26,6 +27,7 @@ import { isTeamManagementRole } from '@/shared/constants/user-roles'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { joinClassNames } from '@/shared/utils/join-class-names'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import styles from './EmployeesPage.module.css'
 
 function matchesEmployeeSearch(employee: Employee, query: string) {
@@ -92,6 +94,7 @@ export function EmployeesPage() {
   const employeePresetsQuery = useEmployeePermissionPresetsQuery(canManageTeam)
   const createEmployeeMutation = useCreateEmployeeMutation()
   const updateEmployeeMutation = useUpdateEmployeeMutation()
+  const uploadEmployeeAvatarMutation = useUploadEmployeeAvatarMutation()
   const deleteEmployeeMutation = useDeleteEmployeeMutation()
 
   useEffect(() => {
@@ -146,20 +149,39 @@ export function EmployeesPage() {
   const isSubmitting =
     createEmployeeMutation.isPending ||
     updateEmployeeMutation.isPending ||
+    uploadEmployeeAvatarMutation.isPending ||
     deleteEmployeeMutation.isPending
 
   async function handleSubmitEmployee(
     input: EmployeeCreateInput | EmployeeUpdateInput,
+    avatarFile?: File | null,
   ) {
     if (selectedEmployee) {
-      await updateEmployeeMutation.mutateAsync({
+      const updatedEmployee = await updateEmployeeMutation.mutateAsync({
         employeeId: selectedEmployee.id,
         input: input as EmployeeUpdateInput,
       })
+
+      if (avatarFile) {
+        await uploadEmployeeAvatarMutation.mutateAsync({
+          employeeId: updatedEmployee.id,
+          file: avatarFile,
+        })
+      }
+
       return
     }
 
-    await createEmployeeMutation.mutateAsync(input as EmployeeCreateInput)
+    const createdEmployee = await createEmployeeMutation.mutateAsync(
+      input as EmployeeCreateInput,
+    )
+
+    if (avatarFile) {
+      await uploadEmployeeAvatarMutation.mutateAsync({
+        employeeId: createdEmployee.id,
+        file: avatarFile,
+      })
+    }
   }
 
   async function handleDeleteEmployee(employee: Employee) {
@@ -273,13 +295,26 @@ export function EmployeesPage() {
                     visibleEmployees.length > 0
                       ? visibleEmployees.map((employee) => {
                           const canEditEmployee = employee.role !== 'OWNER'
+                          const avatarUrl = resolveApiAssetUrl(employee.avatarUrl)
 
                           return (
                             <tr key={employee.id}>
                               <td>
-                                <strong className={styles.retailEmployeeName}>
-                                  {employee.name}
-                                </strong>
+                                <span className={styles.retailEmployeeIdentity}>
+                                  <span
+                                    className={styles.retailEmployeeAvatar}
+                                    aria-hidden="true"
+                                  >
+                                    {avatarUrl ? (
+                                      <img alt="" src={avatarUrl} />
+                                    ) : (
+                                      employee.name.charAt(0).toUpperCase()
+                                    )}
+                                  </span>
+                                  <strong className={styles.retailEmployeeName}>
+                                    {employee.name}
+                                  </strong>
+                                </span>
                               </td>
                               <td>{employee.phone ?? 'Sin celular'}</td>
                               <td>

@@ -54,7 +54,7 @@ function getErrorMessage(error: unknown) {
     return error.message
   }
 
-  return 'Unable to save the product right now. Please try again.'
+  return 'No pudimos guardar el producto en este momento. Intenta otra vez.'
 }
 
 export function ProductFormPanel({
@@ -118,15 +118,15 @@ export function ProductFormPanel({
       <div className={styles.header}>
         <div>
           <p className={styles.eyebrow}>
-            {isEditing ? 'Edit product' : 'Create product'}
+            {isEditing ? 'Editar producto' : 'Crear producto'}
           </p>
           <h2 className={styles.title}>
-            {isEditing ? product.name : 'Add a new product to your catalog'}
+            {isEditing ? product.name : 'Agrega un producto al catálogo'}
           </h2>
           <p className={styles.description}>
             {isEditing
-              ? `Update pricing, stock thresholds and SKU details for ${getProductUnitLabel(product.unit).toLowerCase()} sales.`
-              : 'Use a compact form to keep your catalog, stock thresholds and selling units ready for daily operations.'}
+              ? `Actualiza precio, mínimos de stock y datos SKU para ventas por ${getProductUnitLabel(product.unit).toLowerCase()}.`
+              : 'Usa este formulario para dejar catálogo, mínimos de stock y unidades de venta listos para operar.'}
           </p>
         </div>
 
@@ -135,21 +135,21 @@ export function ProductFormPanel({
           type="button"
           onClick={handleReset}
         >
-          {isEditing ? 'Switch to create' : 'Clear form'}
+          {isEditing ? 'Crear nuevo' : 'Limpiar formulario'}
         </button>
       </div>
 
       <form className={styles.form} noValidate onSubmit={submitProduct}>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="product-name">
-            Product name
+            Nombre del producto
           </label>
           <input
             aria-describedby={errors.name ? 'product-name-error' : undefined}
             aria-invalid={Boolean(errors.name)}
             className={styles.input}
             id="product-name"
-            placeholder="Colombian roast coffee"
+            placeholder="Café tostado colombiano"
             type="text"
             {...register('name')}
           />
@@ -162,7 +162,7 @@ export function ProductFormPanel({
 
         <div className={styles.field}>
           <label className={styles.label} htmlFor="product-description">
-            Description
+            Descripción
           </label>
           <textarea
             aria-describedby={
@@ -171,7 +171,7 @@ export function ProductFormPanel({
             aria-invalid={Boolean(errors.description)}
             className={styles.textarea}
             id="product-description"
-            placeholder="Notes for the sales team, ingredients or packaging details."
+            placeholder="Notas para el equipo de ventas, ingredientes o detalles del empaque."
             rows={4}
             {...register('description')}
           />
@@ -205,7 +205,7 @@ export function ProductFormPanel({
 
           <div className={styles.field}>
             <label className={styles.label} htmlFor="product-barcode">
-              Barcode
+              Código de barras
             </label>
             <input
               aria-describedby={
@@ -229,7 +229,7 @@ export function ProductFormPanel({
         <div className={styles.inlineFields}>
           <div className={styles.field}>
             <label className={styles.label} htmlFor="product-cost">
-              Cost
+              Costo
             </label>
             <input
               aria-describedby={errors.cost ? 'product-cost-error' : undefined}
@@ -252,7 +252,7 @@ export function ProductFormPanel({
 
           <div className={styles.field}>
             <label className={styles.label} htmlFor="product-price">
-              Price
+              Precio
             </label>
             <input
               aria-describedby={errors.price ? 'product-price-error' : undefined}
@@ -300,7 +300,7 @@ export function ProductFormPanel({
 
           <div className={styles.field}>
             <label className={styles.label} htmlFor="product-min-stock">
-              Minimum stock
+              Stock mínimo
             </label>
             <input
               aria-describedby={
@@ -327,7 +327,7 @@ export function ProductFormPanel({
         <div className={styles.inlineFields}>
           <div className={styles.field}>
             <label className={styles.label} htmlFor="product-unit">
-              Selling unit
+              Unidad de venta
             </label>
             <select
               aria-describedby={errors.unit ? 'product-unit-error' : undefined}
@@ -352,7 +352,7 @@ export function ProductFormPanel({
           <label className={styles.checkboxField}>
             <input className={styles.checkbox} type="checkbox" {...register('isActive')} />
             <span className={styles.checkboxCopy}>
-              Keep this product active and visible in the selling catalog
+              Mantener este producto activo y visible en ventas
             </span>
           </label>
         </div>
@@ -366,8 +366,8 @@ export function ProductFormPanel({
         <div className={styles.footer}>
           <p className={styles.helperText}>
             {isEditing
-              ? 'Changes are saved directly to the active catalog item.'
-              : 'New products will appear immediately in the table after saving.'}
+              ? 'Los cambios se guardan directamente en el producto activo.'
+              : 'Los nuevos productos aparecen en la tabla apenas se guarden.'}
           </p>
 
           <button
@@ -377,11 +377,11 @@ export function ProductFormPanel({
           >
             {isSubmitting
               ? isEditing
-                ? 'Saving changes...'
-                : 'Creating product...'
+                ? 'Guardando cambios...'
+                : 'Creando producto...'
               : isEditing
-                ? 'Save changes'
-                : 'Create product'}
+                ? 'Guardar cambios'
+                : 'Crear producto'}
           </button>
         </div>
       </form>

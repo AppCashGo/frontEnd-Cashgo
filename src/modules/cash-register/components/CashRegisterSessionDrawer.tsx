@@ -23,6 +23,8 @@ type CashRegisterSessionDrawerProps = {
   isOpen: boolean;
   assignees: CashRegisterAssignee[];
   currentSession: CashRegisterSession | null;
+  businessLogoUrl?: string | null;
+  businessName?: string | null;
   initialMode?: CashRegisterDrawerMode;
   isSubmitting: boolean;
   onClose: () => void;
@@ -150,11 +152,29 @@ function getSignedCurrency(value: number) {
   return `-${formatCashRegisterCurrency(value)}`;
 }
 
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function buildVoucherHtml(
   session: CashRegisterSession,
   closingAmount?: number,
   difference = 0,
+  options?: { businessLogoUrl?: string | null; businessName?: string | null },
 ) {
+  const businessName = options?.businessName?.trim() || "Cashgo";
+  const escapedBusinessName = escapeHtml(businessName);
+  const escapedLogoUrl = options?.businessLogoUrl
+    ? escapeHtml(options.businessLogoUrl)
+    : null;
+  const brandMarkup = options?.businessLogoUrl
+    ? `<img class="brand-logo" src="${escapedLogoUrl}" alt="${escapedBusinessName}" />`
+    : `<span class="brand-name">${escapedBusinessName}</span>`;
   const rows = paymentMethodsOrder
     .map((paymentMethod) => {
       const amount = getPaymentMethodBalance(session, paymentMethod.method);
@@ -190,6 +210,13 @@ function buildVoucherHtml(
           h1 { margin: 0 0 44px; font-size: 28px; }
           .meta { margin-bottom: 42px; }
           .brand { float: right; font-weight: 800; }
+          .brand-logo {
+            display: block;
+            width: 116px;
+            max-height: 56px;
+            object-fit: contain;
+          }
+          .brand-name { font-weight: 800; }
           table { width: 100%; border-collapse: collapse; margin-bottom: 26px; }
           th, td { padding: 14px 0; border-bottom: 1px solid #d9e2ec; text-align: left; }
           th:last-child, td:last-child { text-align: right; }
@@ -204,7 +231,7 @@ function buildVoucherHtml(
         </style>
       </head>
       <body>
-        <h1>Arqueo de caja <span class="brand">Cashgo</span></h1>
+        <h1>Arqueo de caja <span class="brand">${brandMarkup}</span></h1>
         <div class="meta">
           <strong>Apertura:</strong> ${formatCashRegisterDateTime(session.openedAt)}, ${
             session.responsibleUserName ?? "Sin empleado"
@@ -266,6 +293,7 @@ function openPrintableVoucher(
   session: CashRegisterSession,
   closingAmount?: number,
   difference = 0,
+  options?: { businessLogoUrl?: string | null; businessName?: string | null },
 ) {
   const printWindow = window.open("", "_blank");
 
@@ -273,7 +301,9 @@ function openPrintableVoucher(
     return;
   }
 
-  printWindow.document.write(buildVoucherHtml(session, closingAmount, difference));
+  printWindow.document.write(
+    buildVoucherHtml(session, closingAmount, difference, options),
+  );
   printWindow.document.close();
   printWindow.focus();
   printWindow.print();
@@ -283,10 +313,14 @@ function downloadVoucher(
   session: CashRegisterSession,
   closingAmount?: number,
   difference = 0,
+  options?: { businessLogoUrl?: string | null; businessName?: string | null },
 ) {
-  const blob = new Blob([buildVoucherHtml(session, closingAmount, difference)], {
-    type: "text/html;charset=utf-8",
-  });
+  const blob = new Blob(
+    [buildVoucherHtml(session, closingAmount, difference, options)],
+    {
+      type: "text/html;charset=utf-8",
+    },
+  );
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
 
@@ -300,6 +334,8 @@ export function CashRegisterSessionDrawer({
   isOpen,
   assignees,
   currentSession,
+  businessLogoUrl,
+  businessName,
   initialMode = "manage",
   isSubmitting,
   onClose,
@@ -651,6 +687,7 @@ export function CashRegisterSessionDrawer({
                       currentSession,
                       closingAmountValue,
                       closingDifference,
+                      { businessLogoUrl, businessName },
                     )
                   : undefined
               }
@@ -668,6 +705,7 @@ export function CashRegisterSessionDrawer({
                       currentSession,
                       closingAmountValue,
                       closingDifference,
+                      { businessLogoUrl, businessName },
                     )
                   : undefined
               }

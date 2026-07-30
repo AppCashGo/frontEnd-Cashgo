@@ -214,53 +214,52 @@ function StandardSalesPage() {
     <div className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>New sale</p>
+          <p className={styles.eyebrow}>Nueva venta</p>
           <h2 className={styles.title}>
-            Register each sale with a faster, sharper and more complete POS flow.
+            Registra cada venta con un flujo POS más rápido y completo.
           </h2>
           <p className={styles.description}>
-            Search products, add them in seconds, choose how much the customer
-            pays now and keep the balance, customer and cash register under
-            control from one responsive workspace.
+            Busca productos, agrégalos en segundos, elige cuánto paga el cliente
+            ahora y controla saldo, cliente y caja desde una sola vista.
           </p>
 
           <div className={styles.heroActions}>
             <Link className={styles.primaryLink} to={routePaths.movements}>
-              {currentCashRegisterSession ? 'Cash register open' : 'Open cash register'}
+              {currentCashRegisterSession ? 'Caja abierta' : 'Abrir caja'}
             </Link>
             <Link className={styles.ghostLink} to={routePaths.expenses}>
-              New expense
+              Nuevo gasto
             </Link>
             <Link className={styles.ghostLink} to={routePaths.products}>
-              Create product
+              Crear producto
             </Link>
           </div>
         </div>
 
         <div className={styles.heroStats}>
           <div className={styles.heroStat}>
-            <span className={styles.heroStatLabel}>Matching products</span>
+            <span className={styles.heroStatLabel}>Productos encontrados</span>
             <strong className={styles.heroStatValue}>
               {filteredProducts.length.toString()}
             </strong>
           </div>
 
           <div className={styles.heroStat}>
-            <span className={styles.heroStatLabel}>Items in cart</span>
+            <span className={styles.heroStatLabel}>Ítems en carrito</span>
             <strong className={styles.heroStatValue}>
               {totalItems.toString()}
             </strong>
           </div>
 
           <div className={styles.heroStat}>
-            <span className={styles.heroStatLabel}>Total due</span>
+            <span className={styles.heroStatLabel}>Total a pagar</span>
             <strong className={styles.heroStatValue}>
               {formatCurrency(totalAmount)}
             </strong>
           </div>
 
           <div className={styles.heroStat}>
-            <span className={styles.heroStatLabel}>Pending balance</span>
+            <span className={styles.heroStatLabel}>Saldo pendiente</span>
             <strong className={styles.heroStatValue}>
               {formatCurrency(pendingBalance)}
             </strong>
@@ -277,7 +276,7 @@ function StandardSalesPage() {
               productsQuery.isError
                 ? getErrorMessage(
                     productsQuery.error,
-                    'Unable to load the current catalog. Please try again.',
+                    'No pudimos cargar el catálogo actual. Intenta otra vez.',
                   )
                 : null
             }
@@ -298,7 +297,7 @@ function StandardSalesPage() {
               salesQuery.isError
                 ? getErrorMessage(
                     salesQuery.error,
-                    'Unable to load recent sales right now.',
+                    'No pudimos cargar las ventas recientes en este momento.',
                   )
                 : null
             }

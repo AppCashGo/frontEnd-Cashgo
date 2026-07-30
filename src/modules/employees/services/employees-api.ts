@@ -8,6 +8,7 @@ import type { AssignableUserRole } from "@/shared/constants/user-roles";
 import {
   deleteJson,
   getJson,
+  patchFormData,
   patchJson,
   postJson,
 } from "@/shared/services/api-client";
@@ -45,6 +46,16 @@ export function updateEmployee(employeeId: string, input: EmployeeUpdateInput) {
       accessToken: getAuthAccessToken(),
     },
   );
+}
+
+export function uploadEmployeeAvatar(employeeId: string, file: File) {
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  return patchFormData<Employee>(`/employees/${employeeId}/avatar`, formData, {
+    accessToken: getAuthAccessToken(),
+  });
 }
 
 export function deleteEmployee(employeeId: string) {

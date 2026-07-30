@@ -11,6 +11,7 @@ import type {
 import {
   deleteJson,
   getJson,
+  patchFormData,
   patchJson,
   postJson,
 } from '@/shared/services/api-client'
@@ -50,6 +51,16 @@ export function updateBusinessSettings(input: BusinessSettingsUpdateInput) {
       accessToken: getAuthAccessToken(),
     },
   )
+}
+
+export function uploadBusinessLogo(file: File) {
+  const formData = new FormData()
+
+  formData.append('file', file)
+
+  return patchFormData<BusinessSettings>('/settings/business/logo', formData, {
+    accessToken: getAuthAccessToken(),
+  })
 }
 
 export function deleteBusinessSettings() {

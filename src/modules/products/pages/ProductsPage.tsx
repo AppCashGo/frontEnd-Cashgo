@@ -91,15 +91,14 @@ export function ProductsPage() {
     <div className={styles.page}>
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>Products command center</p>
+          <p className={styles.eyebrow}>Centro de productos</p>
           <h2 className={styles.title}>
-            Load, adjust and organize your catalog from one inventory web
-            workspace.
+            Carga, ajusta y organiza tu catálogo desde un espacio de inventario.
           </h2>
           <p className={styles.description}>
-            Create products one by one or import them in bulk from a spreadsheet
-            file. Cashgo keeps stock, cost and low-stock thresholds ready for
-            selling and replenishment.
+            Crea productos uno a uno o impórtalos en lote desde una hoja de
+            cálculo. Cashgo mantiene stock, costos y mínimos listos para vender
+            y reponer.
           </p>
         </div>
 
@@ -112,7 +111,7 @@ export function ProductsPage() {
               setConfirmingDeleteProductId(null)
             }}
           >
-            Create product
+            Crear producto
           </button>
 
           <button
@@ -120,39 +119,39 @@ export function ProductsPage() {
             type="button"
             onClick={() => setSearchValue('')}
           >
-            Clear search
+            Limpiar búsqueda
           </button>
         </div>
       </section>
 
       <div className={styles.metricsGrid}>
         <ProductMetricCard
-          hint="Total active catalog items."
-          label="Catalog size"
+          hint="Total de productos activos en el catálogo."
+          label="Tamaño del catálogo"
           value={products.length.toString()}
         />
         <ProductMetricCard
-          hint="Combined units available across products."
-          label="Units in stock"
+          hint="Unidades disponibles sumadas entre todos los productos."
+          label="Unidades en stock"
           value={totalUnits.toString()}
         />
         <ProductMetricCard
-          hint="Estimated revenue value based on current sale prices."
-          label="Catalog value"
+          hint="Valor estimado según precios de venta actuales."
+          label="Valor del catálogo"
           value={formatCurrency(catalogValue)}
         />
         <ProductMetricCard
-          hint="Current stock valuation using product cost."
-          label="Inventory cost"
+          hint="Valor actual del inventario usando costo de producto."
+          label="Costo de inventario"
           value={formatCurrency(inventoryCost)}
         />
         <ProductMetricCard
           hint={
             lowStockItems > 0
-              ? `${lowStockItems} product${lowStockItems === 1 ? '' : 's'} need replenishment soon.`
-              : 'No low-stock alerts right now.'
+              ? `${lowStockItems} producto${lowStockItems === 1 ? '' : 's'} necesita${lowStockItems === 1 ? '' : 'n'} reposición pronto.`
+              : 'No hay alertas de stock bajo en este momento.'
           }
-          label="Low-stock alerts"
+          label="Alertas de stock bajo"
           value={lowStockItems.toString()}
         />
       </div>
@@ -166,7 +165,7 @@ export function ProductsPage() {
             productsQuery.isError
               ? getErrorMessage(
                   productsQuery.error,
-                  'Unable to load the current catalog. Please try again.',
+                  'No pudimos cargar el catálogo actual. Intenta otra vez.',
                 )
               : null
           }

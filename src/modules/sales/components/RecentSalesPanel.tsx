@@ -15,13 +15,13 @@ type RecentSalesPanelProps = {
 function getStatusLabel(status: SaleReceipt['status']) {
   switch (status) {
     case 'COMPLETED':
-      return 'Paid'
+      return 'Pagada'
     case 'PARTIALLY_PAID':
-      return 'Partial'
+      return 'Parcial'
     case 'PENDING_PAYMENT':
-      return 'Pending'
+      return 'Pendiente'
     case 'CANCELLED':
-      return 'Cancelled'
+      return 'Cancelada'
     default:
       return status
   }
@@ -37,10 +37,10 @@ export function RecentSalesPanel({
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Recent sales</p>
-          <h2 className={styles.title}>Latest activity from the register</h2>
+          <p className={styles.eyebrow}>Ventas recientes</p>
+          <h2 className={styles.title}>Última actividad de caja</h2>
           <p className={styles.description}>
-            Keep the most recent tickets visible while you continue selling.
+            Mantén visibles los últimos comprobantes mientras sigues vendiendo.
           </p>
         </div>
       </div>
@@ -53,21 +53,21 @@ export function RecentSalesPanel({
         </div>
       ) : errorMessage ? (
         <div className={styles.stateBox} role="alert">
-          <p className={styles.stateTitle}>Unable to load recent sales</p>
+          <p className={styles.stateTitle}>No pudimos cargar ventas recientes</p>
           <p className={styles.stateDescription}>{errorMessage}</p>
           <button
             className={styles.secondaryButton}
             type="button"
             onClick={onRetry}
           >
-            Retry
+            Reintentar
           </button>
         </div>
       ) : sales.length === 0 ? (
         <div className={styles.stateBox}>
-          <p className={styles.stateTitle}>No sales registered yet</p>
+          <p className={styles.stateTitle}>Aún no hay ventas registradas</p>
           <p className={styles.stateDescription}>
-            Your latest tickets will appear here as soon as you start selling.
+            Tus últimos comprobantes aparecerán aquí cuando empieces a vender.
           </p>
         </div>
       ) : (
@@ -78,7 +78,7 @@ export function RecentSalesPanel({
                 <div>
                   <strong className={styles.saleNumber}>{sale.saleNumber}</strong>
                   <p className={styles.saleMeta}>
-                    {sale.customer?.name ?? 'Walk-in sale'} ·{' '}
+                    {sale.customer?.name ?? 'Venta de mostrador'} ·{' '}
                     {formatDate(sale.createdAt)}
                   </p>
                 </div>
@@ -93,11 +93,11 @@ export function RecentSalesPanel({
                   <span>
                     {sale.payments[0]
                       ? getPaymentMethodLabel(sale.payments[0].method)
-                      : 'Pending payment'}
+                      : 'Pago pendiente'}
                   </span>
                   {sale.accountReceivable ? (
                     <span>
-                      Due {formatCurrency(sale.accountReceivable.balance)}
+                      Debe {formatCurrency(sale.accountReceivable.balance)}
                     </span>
                   ) : null}
                 </div>

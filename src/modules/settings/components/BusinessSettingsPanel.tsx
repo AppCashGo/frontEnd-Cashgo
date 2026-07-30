@@ -16,6 +16,7 @@ import { businessCategoryOptions } from '@/shared/constants/business-categories'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { formatDate } from '@/shared/utils/format-date'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './BusinessSettingsPanel.module.css'
 
@@ -23,9 +24,11 @@ type BusinessSettingsPanelProps = {
   businessSettings: BusinessSettings | null
   errorMessage: string | null
   isLoading: boolean
+  isLogoUploading?: boolean
   isSubmitting: boolean
   initialOpen?: boolean
   variant?: 'default' | 'retail'
+  onLogoUpload?: (file: File) => Promise<void>
   onRetry: () => void
   onSubmit: (input: BusinessProfileInput) => Promise<void>
 }
@@ -57,15 +60,18 @@ export function BusinessSettingsPanel({
   businessSettings,
   errorMessage,
   isLoading,
+  isLogoUploading = false,
   isSubmitting,
   initialOpen = true,
   variant = 'default',
+  onLogoUpload,
   onRetry,
   onSubmit,
 }: BusinessSettingsPanelProps) {
   const [isCategoryModalOpen, setCategoryModalOpen] = useState(false)
   const [isRetailAccordionOpen, setRetailAccordionOpen] = useState(initialOpen)
   const [logoPreviewUrl, setLogoPreviewUrl] = useState<string | null>(null)
+  const [logoError, setLogoError] = useState<string | null>(null)
   const { dictionary } = useAppTranslation()
   const {
     register,
@@ -118,8 +124,10 @@ export function BusinessSettingsPanel({
 
   const isDisabled = isLoading || isSubmitting || errorMessage !== null
   const isSubmitDisabled = isDisabled || (variant === 'retail' && !isDirty)
+  const storedLogoUrl = resolveApiAssetUrl(businessSettings?.logoUrl)
+  const visibleLogoUrl = logoPreviewUrl ?? storedLogoUrl
 
-  function handleLogoChange(file: File | null) {
+  async function handleLogoChange(file: File | null) {
     if (!file) {
       return
     }
@@ -131,6 +139,22 @@ export function BusinessSettingsPanel({
 
       return URL.createObjectURL(file)
     })
+
+    if (!onLogoUpload) {
+      return
+    }
+
+    try {
+      setLogoError(null)
+      await onLogoUpload(file)
+    } catch (error) {
+      setLogoError(
+        getErrorMessage(
+          error,
+          'No pudimos subir el logo. Revisa que sea PNG, JPG o WEBP y pese menos de 2 MB.',
+        ),
+      )
+    }
   }
 
   if (variant === 'retail') {
@@ -180,25 +204,31 @@ export function BusinessSettingsPanel({
               <input
                 accept="image/png,image/jpeg,image/webp"
                 className={styles.logoInput}
-                disabled={isDisabled}
+                disabled={isDisabled || isLogoUploading}
                 type="file"
                 onChange={(event) => {
-                  handleLogoChange(event.target.files?.[0] ?? null)
+                  void handleLogoChange(event.target.files?.[0] ?? null)
+                  event.currentTarget.value = ''
                 }}
               />
-              {logoPreviewUrl ? (
+              {visibleLogoUrl ? (
                 <img
                   alt="Logo del negocio"
                   className={styles.logoPreview}
-                  src={logoPreviewUrl}
+                  src={visibleLogoUrl}
                 />
               ) : (
                 <>
                   <Upload aria-hidden="true" className={styles.logoIcon} />
-                  <span>Cargar logo</span>
+                  <span>{isLogoUploading ? 'Subiendo...' : 'Cargar logo'}</span>
                 </>
               )}
             </label>
+            {logoError ? (
+              <div className={styles.errorBanner} role="alert">
+                {logoError}
+              </div>
+            ) : null}
 
             <div className={styles.retailGrid}>
               <label className={styles.retailField}>

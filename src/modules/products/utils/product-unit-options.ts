@@ -4,15 +4,15 @@ export const productUnitOptions: Array<{
   label: string
   value: ProductUnit
 }> = [
-  { value: 'UNIT', label: 'Unit' },
-  { value: 'KG', label: 'Kilogram' },
-  { value: 'GRAM', label: 'Gram' },
-  { value: 'LITER', label: 'Liter' },
-  { value: 'MILLILITER', label: 'Milliliter' },
-  { value: 'METER', label: 'Meter' },
-  { value: 'BOX', label: 'Box' },
+  { value: 'UNIT', label: 'Unidad' },
+  { value: 'KG', label: 'Kilogramo' },
+  { value: 'GRAM', label: 'Gramo' },
+  { value: 'LITER', label: 'Litro' },
+  { value: 'MILLILITER', label: 'Mililitro' },
+  { value: 'METER', label: 'Metro' },
+  { value: 'BOX', label: 'Caja' },
   { value: 'PACK', label: 'Pack' },
-  { value: 'SERVICE', label: 'Service' },
+  { value: 'SERVICE', label: 'Servicio' },
 ]
 
 export function getProductUnitLabel(unit: ProductUnit) {

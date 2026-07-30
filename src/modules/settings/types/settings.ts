@@ -35,6 +35,7 @@ export type CatalogBusinessHour = {
 export type BusinessSettings = {
   id: string;
   businessName: string;
+  logoUrl: string | null;
   businessCategory: string | null;
   legalName: string | null;
   taxId: string | null;
@@ -121,6 +122,7 @@ export type SettingsUser = {
   id: string;
   email: string;
   name: string;
+  avatarUrl: string | null;
   role: SettingsUserRole;
   createdAt: string;
   updatedAt: string;

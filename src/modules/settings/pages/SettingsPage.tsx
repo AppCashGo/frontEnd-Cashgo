@@ -3,6 +3,7 @@ import { AdditionalSettingsPanel } from "@/modules/settings/components/Additiona
 import { BusinessSettingsPanel } from "@/modules/settings/components/BusinessSettingsPanel";
 import { InventorySettingsPanel } from "@/modules/settings/components/InventorySettingsPanel";
 import { OperationalSettingsPanel } from "@/modules/settings/components/OperationalSettingsPanel";
+import { PrintSettingsPanel } from "@/modules/settings/components/PrintSettingsPanel";
 import { ReminderSettingsPanel } from "@/modules/settings/components/ReminderSettingsPanel";
 import { SettingsMetricCard } from "@/modules/settings/components/SettingsMetricCard";
 import { TaxSettingsPanel } from "@/modules/settings/components/TaxSettingsPanel";
@@ -15,6 +16,7 @@ import {
   useDeleteBusinessSettingsMutation,
   useSettingsRolesQuery,
   useSettingsUsersQuery,
+  useUploadBusinessLogoMutation,
   useUpdateBusinessSettingsMutation,
   useUpdateSettingsUserMutation,
   useDeleteSettingsUserMutation,
@@ -62,6 +64,7 @@ export function SettingsPage() {
   const updateVirtualCatalogSettingsMutation = useUpdateBusinessSettingsMutation();
   const updateReminderSettingsMutation = useUpdateBusinessSettingsMutation();
   const updateAdditionalSettingsMutation = useUpdateBusinessSettingsMutation();
+  const uploadBusinessLogoMutation = useUploadBusinessLogoMutation();
   const deleteBusinessSettingsMutation = useDeleteBusinessSettingsMutation();
   const createSettingsUserMutation = useCreateSettingsUserMutation();
   const updateSettingsUserMutation = useUpdateSettingsUserMutation();
@@ -217,7 +220,11 @@ export function SettingsPage() {
                 createBusinessSettingsMutation.isPending ||
                 updateBusinessProfileMutation.isPending
               }
+              isLogoUploading={uploadBusinessLogoMutation.isPending}
               variant="retail"
+              onLogoUpload={async (file) => {
+                await uploadBusinessLogoMutation.mutateAsync(file)
+              }}
               onRetry={() => {
                 void businessSettingsQuery.refetch();
               }}
@@ -318,12 +325,7 @@ export function SettingsPage() {
         ) : null}
 
         {retailTab === "print" ? (
-          <SurfaceCard className={retailStyles.accordionBody}>
-            <p className={retailStyles.placeholder}>
-              Aquí prepararemos el formato de impresión de tickets y comprobantes
-              para tu negocio.
-            </p>
-          </SurfaceCard>
+          <PrintSettingsPanel businessSettings={businessSettings} />
         ) : null}
       </RetailPageLayout>
     );
@@ -410,6 +412,10 @@ export function SettingsPage() {
               createBusinessSettingsMutation.isPending ||
               updateBusinessProfileMutation.isPending
             }
+            isLogoUploading={uploadBusinessLogoMutation.isPending}
+            onLogoUpload={async (file) => {
+              await uploadBusinessLogoMutation.mutateAsync(file)
+            }}
             onRetry={() => {
               void businessSettingsQuery.refetch();
             }}

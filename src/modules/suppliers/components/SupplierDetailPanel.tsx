@@ -1,5 +1,6 @@
 import type { SupplierDetail } from '@/modules/suppliers/types/supplier'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import styles from './SupplierDetailPanel.module.css'
@@ -9,6 +10,7 @@ type SupplierDetailPanelProps = {
   isLoading: boolean
   errorMessage: string | null
   selectedSupplierName: string | null
+  onEdit?: (supplier: SupplierDetail) => void
   onRetry: () => void
 }
 
@@ -17,6 +19,7 @@ export function SupplierDetailPanel({
   isLoading,
   errorMessage,
   selectedSupplierName,
+  onEdit,
   onRetry,
 }: SupplierDetailPanelProps) {
   const procurementTotal =
@@ -25,25 +28,46 @@ export function SupplierDetailPanel({
     supplier && supplier.purchaseHistory.length > 0
       ? procurementTotal / supplier.purchaseHistory.length
       : 0
+  const avatarUrl = resolveApiAssetUrl(supplier?.avatarUrl)
 
   return (
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Perfil del proveedor</p>
-          <h3 className={styles.title}>
-            {supplier?.name ?? selectedSupplierName ?? 'Selecciona un proveedor'}
-          </h3>
+        <div className={styles.profileHeading}>
+          <span className={styles.profileAvatar} aria-hidden="true">
+            {avatarUrl ? (
+              <img src={avatarUrl} alt="" />
+            ) : (
+              (supplier?.name ?? selectedSupplierName ?? 'P').charAt(0).toUpperCase()
+            )}
+          </span>
+          <div>
+            <p className={styles.eyebrow}>Perfil del proveedor</p>
+            <h3 className={styles.title}>
+              {supplier?.name ?? selectedSupplierName ?? 'Selecciona un proveedor'}
+            </h3>
+          </div>
         </div>
 
         {supplier ? (
-          <span
-            className={
-              supplier.purchaseCount > 0 ? styles.statusPillActive : styles.statusPill
-            }
-          >
-            {supplier.purchaseCount > 0 ? 'Abastecimiento activo' : 'Sin historial'}
-          </span>
+          <div className={styles.headerActions}>
+            <span
+              className={
+                supplier.purchaseCount > 0 ? styles.statusPillActive : styles.statusPill
+              }
+            >
+              {supplier.purchaseCount > 0 ? 'Abastecimiento activo' : 'Sin historial'}
+            </span>
+            {onEdit ? (
+              <button
+                className={styles.editButton}
+                type="button"
+                onClick={() => onEdit(supplier)}
+              >
+                Editar
+              </button>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

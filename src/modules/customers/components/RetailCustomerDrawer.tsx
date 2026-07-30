@@ -14,6 +14,7 @@ import {
   Phone,
   ReceiptText,
   TrendingUp,
+  Upload,
 } from 'lucide-react'
 import type {
   CustomerDetail,
@@ -27,6 +28,7 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { formatDateTime } from '@/shared/utils/format-date-time'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './RetailCustomerDrawer.module.css'
 
@@ -78,7 +80,10 @@ type RetailCustomerDrawerProps = {
     receivableId: string,
     input: CustomerPaymentInput,
   ) => Promise<void>
-  onSubmitCustomer: (input: CustomerMutationInput) => Promise<void>
+  onSubmitCustomer: (
+    input: CustomerMutationInput,
+    avatarFile?: File | null,
+  ) => Promise<void>
 }
 
 const EMPTY_FORM: CustomerFormState = {
@@ -258,6 +263,8 @@ export function RetailCustomerDrawer({
   onSubmitCustomer,
 }: RetailCustomerDrawerProps) {
   const [form, setForm] = useState<CustomerFormState>(EMPTY_FORM)
+  const [avatarFile, setAvatarFile] = useState<File | null>(null)
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [paymentForm, setPaymentForm] = useState<PaymentFormState>({
     receivableId: '',
@@ -300,6 +307,9 @@ export function RetailCustomerDrawer({
       : mode === 'edit'
         ? 'Editar cliente'
         : 'Detalle del cliente'
+  const storedAvatarUrl = resolveApiAssetUrl(customer?.avatarUrl)
+  const visibleAvatarUrl =
+    avatarPreviewUrl ?? (mode === 'create' ? null : storedAvatarUrl)
 
   useEffect(() => {
     if (!isOpen) {
@@ -307,10 +317,20 @@ export function RetailCustomerDrawer({
     }
 
     setForm(toFormState(mode === 'create' ? null : customer))
+    setAvatarFile(null)
+    setAvatarPreviewUrl(null)
     setFormError(null)
     setPaymentError(null)
     setLastReceipt(null)
   }, [customer, isOpen, mode])
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl) {
+        URL.revokeObjectURL(avatarPreviewUrl)
+      }
+    }
+  }, [avatarPreviewUrl])
 
   useEffect(() => {
     if (!isOpen || mode !== 'detail') {
@@ -340,6 +360,21 @@ export function RetailCustomerDrawer({
     }))
   }
 
+  function handleAvatarChange(file: File | null) {
+    if (!file) {
+      return
+    }
+
+    setAvatarFile(file)
+    setAvatarPreviewUrl((currentPreviewUrl) => {
+      if (currentPreviewUrl) {
+        URL.revokeObjectURL(currentPreviewUrl)
+      }
+
+      return URL.createObjectURL(file)
+    })
+  }
+
   async function handleSubmitCustomer(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -358,16 +393,19 @@ export function RetailCustomerDrawer({
 
     setFormError(null)
 
-    await onSubmitCustomer({
-      name,
-      phone: normalizeOptionalText(form.phone),
-      email: normalizeOptionalText(form.email),
-      documentType: normalizeOptionalText(form.documentType),
-      documentNumber: normalizeOptionalText(form.documentNumber),
-      address: normalizeOptionalText(form.address),
-      notes: normalizeOptionalText(form.notes),
-      balance,
-    })
+    await onSubmitCustomer(
+      {
+        name,
+        phone: normalizeOptionalText(form.phone),
+        email: normalizeOptionalText(form.email),
+        documentType: normalizeOptionalText(form.documentType),
+        documentNumber: normalizeOptionalText(form.documentNumber),
+        address: normalizeOptionalText(form.address),
+        notes: normalizeOptionalText(form.notes),
+        balance,
+      },
+      avatarFile,
+    )
   }
 
   async function handleRegisterPayment(event: FormEvent<HTMLFormElement>) {
@@ -423,6 +461,31 @@ export function RetailCustomerDrawer({
   function renderForm() {
     return (
       <form className={styles.form} onSubmit={handleSubmitCustomer}>
+        <label className={styles.avatarUploader}>
+          <input
+            accept="image/png,image/jpeg,image/webp"
+            className={styles.avatarInput}
+            disabled={isSubmitting}
+            type="file"
+            onChange={(event) => {
+              handleAvatarChange(event.target.files?.[0] ?? null)
+              event.currentTarget.value = ''
+            }}
+          />
+          {visibleAvatarUrl ? (
+            <img
+              alt="Avatar del cliente"
+              className={styles.avatarPreview}
+              src={visibleAvatarUrl}
+            />
+          ) : (
+            <span className={styles.avatarPlaceholder} aria-hidden="true">
+              <Upload />
+            </span>
+          )}
+          <span>{visibleAvatarUrl ? 'Cambiar avatar' : 'Cargar avatar'}</span>
+        </label>
+
         <label className={styles.field}>
           <span>Nombre *</span>
           <input
@@ -566,7 +629,11 @@ export function RetailCustomerDrawer({
       <div className={styles.detail}>
         <section className={styles.profileCard}>
           <div className={styles.avatar} aria-hidden="true">
-            {customer.name.charAt(0).toUpperCase()}
+            {storedAvatarUrl ? (
+              <img alt="" className={styles.avatarImage} src={storedAvatarUrl} />
+            ) : (
+              customer.name.charAt(0).toUpperCase()
+            )}
           </div>
           <div>
             <h4>{customer.name}</h4>

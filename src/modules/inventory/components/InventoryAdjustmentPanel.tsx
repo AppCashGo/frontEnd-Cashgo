@@ -212,7 +212,7 @@ export function InventoryAdjustmentPanel({
 
         <div className={styles.field}>
           <label className={styles.label} htmlFor="inventory-reason">
-            Reason
+            Motivo
           </label>
           <textarea
             aria-describedby={errors.reason ? 'inventory-reason-error' : undefined}
@@ -220,7 +220,7 @@ export function InventoryAdjustmentPanel({
             className={styles.textarea}
             disabled={isDisabled}
             id="inventory-reason"
-            placeholder="Cycle count, damaged units, supplier restock..."
+            placeholder="Conteo físico, unidades dañadas, reposición de proveedor..."
             rows={4}
             {...register('reason')}
           />

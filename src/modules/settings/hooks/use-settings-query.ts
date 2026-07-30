@@ -8,6 +8,7 @@ import {
   getBusinessSettings,
   getSettingsRoles,
   getSettingsUsers,
+  uploadBusinessLogo,
   updateBusinessSettings,
   updateSettingsUser,
 } from '@/modules/settings/services/settings-api'
@@ -83,6 +84,19 @@ export function useUpdateBusinessSettingsMutation() {
   return useMutation({
     mutationFn: (input: BusinessSettingsUpdateInput) =>
       updateBusinessSettings(input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: settingsBusinessQueryKey,
+      })
+    },
+  })
+}
+
+export function useUploadBusinessLogoMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (file: File) => uploadBusinessLogo(file),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: settingsBusinessQueryKey,

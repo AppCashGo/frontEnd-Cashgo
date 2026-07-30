@@ -34,6 +34,24 @@ function getApiBaseUrl() {
   return import.meta.env.DEV ? DEVELOPMENT_API_URL : PRODUCTION_API_URL;
 }
 
+function getApiAssetBaseUrl() {
+  const apiBaseUrl = getApiBaseUrl();
+
+  return apiBaseUrl.endsWith("/api") ? apiBaseUrl.slice(0, -4) : apiBaseUrl;
+}
+
+export function resolveApiAssetUrl(url?: string | null) {
+  if (!url) {
+    return null;
+  }
+
+  if (/^(blob:|data:|https?:\/\/)/i.test(url)) {
+    return url;
+  }
+
+  return `${getApiAssetBaseUrl()}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
 function isLocalApiUrl(url: string) {
   try {
     return LOCAL_API_HOSTS.includes(new URL(url).hostname);
@@ -168,6 +186,26 @@ async function requestJson<TResponse, TBody = undefined>(
   }
 }
 
+async function requestFormData<TResponse>(
+  method: "POST" | "PATCH",
+  path: string,
+  body: FormData,
+  options?: JsonRequestOptions,
+) {
+  try {
+    const response = await apiClient.request<TResponse>({
+      data: body,
+      headers: buildHeaders(options),
+      method,
+      url: path,
+    });
+
+    return response.data;
+  } catch (error) {
+    throw await toApiError(error);
+  }
+}
+
 export function getJson<TResponse>(path: string, options?: JsonRequestOptions) {
   return requestJson<TResponse>("GET", path, undefined, options);
 }
@@ -193,6 +231,22 @@ export function deleteJson<TResponse>(
   options?: JsonRequestOptions,
 ) {
   return requestJson<TResponse>("DELETE", path, undefined, options);
+}
+
+export function postFormData<TResponse>(
+  path: string,
+  body: FormData,
+  options?: JsonRequestOptions,
+) {
+  return requestFormData<TResponse>("POST", path, body, options);
+}
+
+export function patchFormData<TResponse>(
+  path: string,
+  body: FormData,
+  options?: JsonRequestOptions,
+) {
+  return requestFormData<TResponse>("PATCH", path, body, options);
 }
 
 export async function getBlob(

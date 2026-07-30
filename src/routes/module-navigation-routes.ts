@@ -140,14 +140,16 @@ const visibleSegmentsByPreset: Record<BusinessNavigationPreset, string[]> = {
     routeSegments.settings,
   ],
   retail: [
+    routeSegments.dashboard,
     routeSegments.sales,
     routeSegments.movements,
     routeSegments.billing,
     routeSegments.reports,
     routeSegments.inventory,
+    routeSegments.products,
     routeSegments.quotes,
+    routeSegments.expenses,
     routeSegments.employees,
-    routeSegments.money,
     routeSegments.customers,
     routeSegments.suppliers,
     routeSegments.settings,
@@ -274,6 +276,11 @@ const routeOverridesByPreset: Partial<
   },
   retail: {
     es: {
+      [routeSegments.dashboard]: {
+        label: "Inicio",
+        description: "Resumen diario de ventas, inventario y alertas clave.",
+        shortLabel: "IN",
+      },
       [routeSegments.sales]: {
         label: "Vender",
         description: "Ventas rápidas en caja para el mostrador del negocio.",
@@ -299,10 +306,20 @@ const routeOverridesByPreset: Partial<
         description: "Productos, stock y carga de catálogo.",
         shortLabel: "IV",
       },
+      [routeSegments.products]: {
+        label: "Productos",
+        description: "Catálogo, precios, códigos y carga masiva.",
+        shortLabel: "PD",
+      },
       [routeSegments.quotes]: {
         label: "Cotizaciones",
         description: "Cotizaciones, estados y seguimiento comercial.",
         shortLabel: "CZ",
+      },
+      [routeSegments.expenses]: {
+        label: "Gastos",
+        description: "Egresos, categorías y control de costos del negocio.",
+        shortLabel: "GT",
       },
       [routeSegments.employees]: {
         label: "Empleados",
@@ -316,6 +333,11 @@ const routeOverridesByPreset: Partial<
       },
     },
     en: {
+      [routeSegments.dashboard]: {
+        label: "Home",
+        description: "Daily sales, inventory and key alerts overview.",
+        shortLabel: "HM",
+      },
       [routeSegments.sales]: {
         label: "Sell",
         description: "Fast point-of-sale workflow for the storefront.",
@@ -341,10 +363,20 @@ const routeOverridesByPreset: Partial<
         description: "Products, stock and catalog loading.",
         shortLabel: "IV",
       },
+      [routeSegments.products]: {
+        label: "Products",
+        description: "Catalog, prices, codes and bulk import.",
+        shortLabel: "PR",
+      },
       [routeSegments.quotes]: {
         label: "Quotes",
         description: "Quotes, statuses and commercial follow-up.",
         shortLabel: "QT",
+      },
+      [routeSegments.expenses]: {
+        label: "Expenses",
+        description: "Outflows, categories and cost control.",
+        shortLabel: "EX",
       },
       [routeSegments.employees]: {
         label: "Employees",

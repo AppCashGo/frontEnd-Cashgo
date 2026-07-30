@@ -3,6 +3,7 @@ export type CustomerSummary = {
   name: string
   email: string | null
   phone: string | null
+  avatarUrl: string | null
   documentType: string | null
   documentNumber: string | null
   address: string | null

@@ -33,6 +33,7 @@ export type Employee = {
   id: string;
   email: string;
   phone: string | null;
+  avatarUrl: string | null;
   name: string;
   role: AppUserRole;
   activationStatus: EmployeeActivationStatus;

@@ -36,9 +36,20 @@
 }
 
 .detailLink {
+  border: 0;
+  background: transparent;
   color: #8fa0b4;
+  font: inherit;
   font-weight: 700;
   text-decoration: underline;
+  cursor: pointer;
+}
+
+.actionGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
 }
 
 @media (min-width: 1100px) {

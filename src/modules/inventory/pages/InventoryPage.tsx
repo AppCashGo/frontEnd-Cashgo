@@ -161,7 +161,7 @@ export function InventoryPage() {
               productsQuery.isError
                 ? getErrorMessage(
                     productsQuery.error,
-                    'Unable to load products for manual adjustments.',
+                    'No pudimos cargar productos para ajustes manuales.',
                   )
                 : null
             }
