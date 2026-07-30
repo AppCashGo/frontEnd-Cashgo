@@ -9,6 +9,7 @@ import {
   updateEmployee,
 } from "@/modules/employees/services/employees-api";
 import type {
+  Employee,
   EmployeeCreateInput,
   EmployeeUpdateInput,
 } from "@/modules/employees/types/employee";
@@ -19,6 +20,23 @@ export const employeePermissionPresetsQueryKey = [
   "employees",
   "presets",
 ] as const;
+
+function upsertEmployeeInCache(
+  current: Employee[] | undefined,
+  employee: Employee,
+) {
+  if (!current) {
+    return [employee];
+  }
+
+  const existingIndex = current.findIndex((item) => item.id === employee.id);
+
+  if (existingIndex === -1) {
+    return [employee, ...current];
+  }
+
+  return current.map((item) => (item.id === employee.id ? employee : item));
+}
 
 export function useEmployeesQuery(enabled = true) {
   return useQuery({
@@ -49,7 +67,11 @@ export function useCreateEmployeeMutation() {
 
   return useMutation({
     mutationFn: (input: EmployeeCreateInput) => createEmployee(input),
-    onSuccess: async () => {
+    onSuccess: async (employee) => {
+      queryClient.setQueryData<Employee[]>(employeesQueryKey, (current) =>
+        upsertEmployeeInCache(current, employee),
+      );
+
       await queryClient.invalidateQueries({
         queryKey: employeesQueryKey,
       });
@@ -68,7 +90,11 @@ export function useUpdateEmployeeMutation() {
       employeeId: string;
       input: EmployeeUpdateInput;
     }) => updateEmployee(employeeId, input),
-    onSuccess: async () => {
+    onSuccess: async (employee) => {
+      queryClient.setQueryData<Employee[]>(employeesQueryKey, (current) =>
+        upsertEmployeeInCache(current, employee),
+      );
+
       await queryClient.invalidateQueries({
         queryKey: employeesQueryKey,
       });
@@ -80,14 +106,13 @@ export function useUploadEmployeeAvatarMutation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      employeeId,
-      file,
-    }: {
-      employeeId: string;
-      file: File;
-    }) => uploadEmployeeAvatar(employeeId, file),
-    onSuccess: async () => {
+    mutationFn: ({ employeeId, file }: { employeeId: string; file: File }) =>
+      uploadEmployeeAvatar(employeeId, file),
+    onSuccess: async (employee) => {
+      queryClient.setQueryData<Employee[]>(employeesQueryKey, (current) =>
+        upsertEmployeeInCache(current, employee),
+      );
+
       await queryClient.invalidateQueries({
         queryKey: employeesQueryKey,
       });
@@ -100,7 +125,11 @@ export function useDeleteEmployeeMutation() {
 
   return useMutation({
     mutationFn: (employeeId: string) => deleteEmployee(employeeId),
-    onSuccess: async () => {
+    onSuccess: async (_result, employeeId) => {
+      queryClient.setQueryData<Employee[]>(employeesQueryKey, (current) =>
+        current?.filter((employee) => employee.id !== employeeId),
+      );
+
       await queryClient.invalidateQueries({
         queryKey: employeesQueryKey,
       });
