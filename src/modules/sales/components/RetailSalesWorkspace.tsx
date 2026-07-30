@@ -42,6 +42,7 @@ import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { getTodayDateInput } from '@/shared/utils/date-input'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import styles from './RetailSalesWorkspace.module.css'
 
@@ -1308,6 +1309,14 @@ export function RetailSalesWorkspace() {
       (customer) => customer.id === selectedCustomerId,
     )
     const customerName = selectedCustomer?.name ?? 'Consumidor final'
+    const businessName =
+      businessSettingsQuery.data?.legalName ??
+      businessSettingsQuery.data?.businessName ??
+      'Cashgo'
+    const businessLogoUrl = resolveApiAssetUrl(businessSettingsQuery.data?.logoUrl)
+    const brandMarkup = businessLogoUrl
+      ? `<img class="brand-logo" src="${escapeReceiptHtml(businessLogoUrl)}" alt="${escapeReceiptHtml(businessName)}" />`
+      : `<span class="brand-fallback">${escapeReceiptHtml(businessName.slice(0, 1).toUpperCase())}</span>`
     const paymentRows =
       settlement === 'CREDIT'
         ? '<p><strong>Estado:</strong> A crédito</p>'
@@ -1352,6 +1361,36 @@ export function RetailSalesWorkspace() {
               margin: 0 0 8px;
               font-size: 24px;
             }
+            .brand {
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin-bottom: 18px;
+            }
+            .brand-logo,
+            .brand-fallback {
+              width: 48px;
+              height: 48px;
+              border: 1px solid #d8e0ea;
+              border-radius: 12px;
+              background: #fff;
+            }
+            .brand-logo {
+              object-fit: contain;
+            }
+            .brand-fallback {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              color: #fff;
+              background: #172331;
+              font-weight: 800;
+            }
+            .brand-name {
+              margin: 0;
+              color: #607089;
+              font-weight: 700;
+            }
             p {
               margin: 4px 0;
             }
@@ -1393,7 +1432,13 @@ export function RetailSalesWorkspace() {
           </style>
         </head>
         <body>
-          <h1>Prefactura</h1>
+          <header class="brand">
+            ${brandMarkup}
+            <div>
+              <h1>Prefactura</h1>
+              <p class="brand-name">${escapeReceiptHtml(businessName)}</p>
+            </div>
+          </header>
           <p><strong>Fecha:</strong> ${escapeReceiptHtml(saleDate)}</p>
           <p><strong>Cliente:</strong> ${escapeReceiptHtml(customerName)}</p>
           <table>

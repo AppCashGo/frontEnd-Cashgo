@@ -23,6 +23,7 @@ import type {
   CustomerPaymentMethod,
   CustomerReceivable,
 } from '@/modules/customers/types/customer'
+import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
@@ -61,6 +62,11 @@ type PaymentReceiptState = {
   reference: string | null
   notes: string | null
   createdAt: string
+}
+
+type PaymentReceiptBrand = {
+  businessName: string
+  businessLogoUrl: string | null
 }
 
 type RetailCustomerDrawerProps = {
@@ -188,7 +194,15 @@ function escapeHtml(value: string) {
     .replace(/'/g, '&#039;')
 }
 
-function buildReceiptHtml(receipt: PaymentReceiptState) {
+function buildReceiptHtml(
+  receipt: PaymentReceiptState,
+  brand: PaymentReceiptBrand,
+) {
+  const businessName = brand.businessName.trim() || 'Cashgo'
+  const brandMarkup = brand.businessLogoUrl
+    ? `<img class="brand-logo" src="${escapeHtml(brand.businessLogoUrl)}" alt="${escapeHtml(businessName)}" />`
+    : `<span class="brand-fallback">${escapeHtml(businessName.slice(0, 1).toUpperCase())}</span>`
+
   return `<!doctype html>
 <html lang="es">
 <head>
@@ -197,13 +211,25 @@ function buildReceiptHtml(receipt: PaymentReceiptState) {
   <style>
     body { font-family: Arial, sans-serif; margin: 40px; color: #1f2a37; }
     h1 { margin: 0 0 24px; font-size: 28px; }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .brand-logo,
+    .brand-fallback { width: 52px; height: 52px; border: 1px solid #d8e0ea; border-radius: 12px; background: #fff; }
+    .brand-logo { object-fit: contain; }
+    .brand-fallback { display: inline-flex; align-items: center; justify-content: center; color: #fff; background: #172331; font-weight: 800; }
+    .brand-name { margin: -16px 0 24px; color: #607089; font-weight: 700; }
     .row { display: flex; justify-content: space-between; gap: 24px; padding: 12px 0; border-bottom: 1px solid #dde5ef; }
     .total { margin-top: 28px; font-size: 28px; font-weight: 800; text-align: right; }
     .footer { margin-top: 48px; color: #66758c; font-size: 12px; }
   </style>
 </head>
 <body>
-  <h1>Comprobante de pago</h1>
+  <header class="brand">
+    ${brandMarkup}
+    <div>
+      <h1>Comprobante de pago</h1>
+      <p class="brand-name">${escapeHtml(businessName)}</p>
+    </div>
+  </header>
   <div class="row"><strong>Cliente</strong><span>${escapeHtml(receipt.customerName)}</span></div>
   <div class="row"><strong>Venta</strong><span>${escapeHtml(receipt.saleNumber)}</span></div>
   <div class="row"><strong>Fecha y hora</strong><span>${escapeHtml(formatDateTime(receipt.createdAt))}</span></div>
@@ -216,8 +242,12 @@ function buildReceiptHtml(receipt: PaymentReceiptState) {
 </html>`
 }
 
-function openReceipt(receipt: PaymentReceiptState, action: 'download' | 'print') {
-  const receiptHtml = buildReceiptHtml(receipt)
+function openReceipt(
+  receipt: PaymentReceiptState,
+  action: 'download' | 'print',
+  brand: PaymentReceiptBrand,
+) {
+  const receiptHtml = buildReceiptHtml(receipt, brand)
   const receiptBlob = new Blob([receiptHtml], { type: 'text/html' })
   const receiptUrl = URL.createObjectURL(receiptBlob)
 
@@ -277,6 +307,7 @@ export function RetailCustomerDrawer({
   const [lastReceipt, setLastReceipt] = useState<PaymentReceiptState | null>(
     null,
   )
+  const businessSettingsQuery = useBusinessSettingsQuery()
 
   const pendingReceivables = useMemo(
     () =>
@@ -310,6 +341,20 @@ export function RetailCustomerDrawer({
   const storedAvatarUrl = resolveApiAssetUrl(customer?.avatarUrl)
   const visibleAvatarUrl =
     avatarPreviewUrl ?? (mode === 'create' ? null : storedAvatarUrl)
+  const receiptBrand = useMemo<PaymentReceiptBrand>(
+    () => ({
+      businessName:
+        businessSettingsQuery.data?.legalName ??
+        businessSettingsQuery.data?.businessName ??
+        'Cashgo',
+      businessLogoUrl: resolveApiAssetUrl(businessSettingsQuery.data?.logoUrl),
+    }),
+    [
+      businessSettingsQuery.data?.businessName,
+      businessSettingsQuery.data?.legalName,
+      businessSettingsQuery.data?.logoUrl,
+    ],
+  )
 
   useEffect(() => {
     if (!isOpen) {
@@ -856,7 +901,7 @@ export function RetailCustomerDrawer({
               type="button"
               onClick={() => {
                 if (lastReceipt) {
-                  openReceipt(lastReceipt, 'print')
+                  openReceipt(lastReceipt, 'print', receiptBrand)
                 }
               }}
             >
@@ -868,7 +913,7 @@ export function RetailCustomerDrawer({
               type="button"
               onClick={() => {
                 if (lastReceipt) {
-                  openReceipt(lastReceipt, 'download')
+                  openReceipt(lastReceipt, 'download', receiptBrand)
                 }
               }}
             >
