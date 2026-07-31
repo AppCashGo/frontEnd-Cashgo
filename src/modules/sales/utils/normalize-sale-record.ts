@@ -33,6 +33,7 @@ export type SaleApiRecord = Omit<
   | 'discountTotal'
   | 'taxTotal'
   | 'total'
+  | 'saleDate'
   | 'items'
   | 'payments'
   | 'accountReceivable'
@@ -41,6 +42,7 @@ export type SaleApiRecord = Omit<
   discountTotal: number | string
   taxTotal: number | string
   total: number | string
+  saleDate?: string | null
   items: SaleItemApiRecord[]
   payments: SalePaymentApiRecord[]
   accountReceivable: SaleAccountReceivableApiRecord | null
@@ -86,6 +88,7 @@ export function normalizeSaleRecord(record: SaleApiRecord): SaleReceipt {
     discountTotal: normalizeNumber(record.discountTotal),
     taxTotal: normalizeNumber(record.taxTotal),
     total: normalizeNumber(record.total),
+    saleDate: record.saleDate ?? record.createdAt,
     customer: record.customer
       ? {
           id: record.customer.id,

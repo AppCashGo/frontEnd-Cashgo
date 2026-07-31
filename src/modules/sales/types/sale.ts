@@ -23,6 +23,7 @@ export type CreateSaleInput = {
   discountTotal?: number
   taxTotal?: number
   notes?: string
+  saleDate?: string
   dueDate?: string
   payments?: Array<{
     method: SalePaymentMethod
@@ -63,6 +64,7 @@ export type SaleReceipt = {
   taxTotal: number
   total: number
   notes: string | null
+  saleDate: string
   createdAt: string
   customer: {
     id: string

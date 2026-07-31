@@ -185,6 +185,7 @@ function StandardSalesPage() {
         discountTotal,
         taxTotal,
         notes: normalizeOptionalText(notes),
+        saleDate: dueDate,
         dueDate: pendingBalance > 0 ? dueDate : undefined,
         payments:
           paidAmount > 0

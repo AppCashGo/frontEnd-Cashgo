@@ -1563,6 +1563,7 @@ export function RetailSalesWorkspace() {
         cashRegisterId: currentCashRegister?.id,
         discountTotal,
         notes: normalizeOptionalText(receiptNote),
+        saleDate,
         dueDate: settlement === 'CREDIT' ? saleDate : undefined,
         payments: settlement === 'PAID' ? paidPayments : [],
       })
@@ -1608,6 +1609,7 @@ export function RetailSalesWorkspace() {
         customerId: normalizeOptionalText(quickSaleForm.customerId),
         cashRegisterId: currentCashRegister?.id,
         notes: normalizeOptionalText(quickSaleForm.note),
+        saleDate: quickSaleForm.saleDate,
         dueDate:
           quickSaleForm.settlement === 'CREDIT'
             ? quickSaleForm.saleDate
