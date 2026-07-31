@@ -10,6 +10,7 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "smoke:browser": "playwright test",
+    "smoke:sale-date:prod-ui": "node scripts/smoke-sale-date-production-ui.mjs",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
