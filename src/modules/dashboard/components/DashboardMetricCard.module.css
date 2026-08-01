@@ -1,0 +1,101 @@
+.card {
+  --metric-accent: #2563eb;
+  --metric-accent-soft: rgba(37, 99, 235, 0.12);
+  display: grid;
+  align-content: space-between;
+  gap: 1rem;
+  min-height: 10.65rem;
+  padding: 1.15rem;
+  border: 1px solid rgba(203, 213, 225, 0.88);
+  border-left: 4px solid var(--metric-accent);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 1.2rem 2.5rem rgba(15, 23, 42, 0.06);
+}
+
+.cardSecondary {
+  --metric-accent: #4f46e5;
+  --metric-accent-soft: rgba(79, 70, 229, 0.12);
+}
+
+.cardSuccess {
+  --metric-accent: #16a34a;
+  --metric-accent-soft: rgba(22, 163, 74, 0.12);
+}
+
+.cardWarning {
+  --metric-accent: #f97316;
+  --metric-accent-soft: rgba(249, 115, 22, 0.14);
+}
+
+.cardDanger {
+  --metric-accent: #dc2626;
+  --metric-accent-soft: rgba(220, 38, 38, 0.12);
+}
+
+.header,
+.valueRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.iconBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 0.7rem;
+  background: var(--metric-accent-soft);
+  color: var(--metric-accent);
+}
+
+.iconBox svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.meta {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.copy {
+  min-width: 0;
+}
+
+.label {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.73rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.value {
+  margin: 0.2rem 0 0;
+  color: #0f172a;
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: 900;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.trend {
+  flex: 0 0 auto;
+  align-self: end;
+  color: #16a34a;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.hint {
+  margin: 0.55rem 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}

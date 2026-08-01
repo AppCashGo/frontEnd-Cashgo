@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom'
 import type { BestSellingProduct } from '@/modules/dashboard/types/dashboard-summary'
+import { routePaths } from '@/routes/route-paths'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import styles from './BestSellingProductsPanel.module.css'
 
@@ -15,13 +17,16 @@ export function BestSellingProductsPanel({
 }: BestSellingProductsPanelProps) {
   return (
     <SurfaceCard className={styles.card}>
-      <div>
-        <p className={styles.eyebrow}>Mas vendidos</p>
-        <h2 className={styles.title}>Productos con mejor salida hoy</h2>
-        <p className={styles.description}>
-          Usa esta lista para detectar que se esta vendiendo mejor y decidir
-          que reponer o impulsar despues.
-        </p>
+      <div className={styles.header}>
+        <div>
+          <h2 className={styles.title}>Productos con mejor salida</h2>
+          <p className={styles.description}>
+            Análisis de rendimiento por volumen de venta hoy.
+          </p>
+        </div>
+        <Link className={styles.reportLink} to={routePaths.reports}>
+          Reporte completo
+        </Link>
       </div>
 
       {isLoading ? (
@@ -48,16 +53,26 @@ export function BestSellingProductsPanel({
 
               <div className={styles.copy}>
                 <h3 className={styles.name}>{product.name}</h3>
-                <p className={styles.meta}>
+                <p className={styles.meta}>Ventas del día</p>
+              </div>
+
+              <div className={styles.amountBlock}>
+                <strong>
                   {product.quantitySold} unidad
-                  {product.quantitySold === 1 ? '' : 'es'} vendida
-                  {product.quantitySold === 1 ? '' : 's'}
-                </p>
+                  {product.quantitySold === 1 ? '' : 'es'}
+                </strong>
+                <span>Total unidades</span>
               </div>
             </li>
           ))}
         </ol>
       )}
+
+      {products.length > 0 && !isLoading ? (
+        <Link className={styles.rankingLink} to={routePaths.reports}>
+          Ver ranking completo
+        </Link>
+      ) : null}
     </SurfaceCard>
   )
 }
