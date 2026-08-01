@@ -1,10 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
 import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inventory-query'
 import { useProductsQuery } from '@/modules/products/hooks/use-products-query'
 import type { Product } from '@/modules/products/types/product'
+import {
+  useCreateDeliveryOrderMutation,
+  useDeliveryOrdersQuery,
+  useUpdateDeliveryOrderMutation,
+} from '@/modules/restaurant/hooks/use-restaurant-query'
 import type {
   DeliveryOrder,
   DeliveryOrderSource,
@@ -15,12 +19,8 @@ import {
   buildSaleItemsFromOrderItems,
   calculateOrderItemTotal,
   calculateOrderSubtotal,
-  createDeliveryOrder,
   createRestaurantOrderItem,
-  readDeliveryOrders,
   restaurantPaymentMethods,
-  saveDeliveryOrders,
-  touchDeliveryOrder,
 } from '@/modules/restaurant/utils/restaurant-workspace'
 import { useCreateSaleMutation } from '@/modules/sales/hooks/use-create-sale-mutation'
 import type { SalePaymentMethod } from '@/modules/sales/types/sale'
@@ -201,16 +201,16 @@ function createDeliverySaleNotes(order: DeliveryOrder) {
 }
 
 export function DeliveriesPage() {
-  const currentUser = useAuthSessionStore((state) => state.user)
-  const businessId = currentUser?.businessId
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const customersQuery = useCustomersQuery()
   const productsQuery = useProductsQuery()
   const categoriesQuery = useInventoryCategoriesQuery()
+  const deliveryOrdersQuery = useDeliveryOrdersQuery()
   const createSaleMutation = useCreateSaleMutation()
+  const createDeliveryOrderMutation = useCreateDeliveryOrderMutation()
+  const updateDeliveryOrderMutation = useUpdateDeliveryOrderMutation()
 
   const [orders, setOrders] = useState<DeliveryOrder[]>([])
-  const [hasLoadedOrders, setHasLoadedOrders] = useState(false)
   const [creationStep, setCreationStep] = useState<DeliveryCreationStep | null>(null)
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
   const [customerName, setCustomerName] = useState('')
@@ -248,17 +248,8 @@ export function DeliveriesPage() {
   const total = Math.max(tipBase + tipAmount, 0)
 
   useEffect(() => {
-    setOrders(readDeliveryOrders(businessId))
-    setHasLoadedOrders(true)
-  }, [businessId])
-
-  useEffect(() => {
-    if (!hasLoadedOrders) {
-      return
-    }
-
-    saveDeliveryOrders(businessId, orders)
-  }, [businessId, hasLoadedOrders, orders])
+    setOrders(deliveryOrdersQuery.data ?? [])
+  }, [deliveryOrdersQuery.data])
 
   const categoryNameById = useMemo(
     () => new Map(categories.map((category) => [category.id, category.name])),
@@ -422,38 +413,71 @@ export function DeliveriesPage() {
     setCreationStep('payment')
   }
 
-  function handleCreateOrder() {
+  async function handleCreateOrder() {
     if (!canCreateOrder) {
       setFeedbackMessage('Completa los datos del domicilio antes de confirmar.')
       return
     }
 
-    const createdOrder = createDeliveryOrder({
-      source: deliverySource,
-      customerId: selectedCustomerId,
-      customerName: customerName.trim(),
-      phone: phone.trim(),
-      address: address.trim(),
-      paymentMethod,
-      deliveryFee,
-      discountAmount,
-      tipAmount,
-      notes: notes.trim(),
-      items,
-    })
-    const order = touchDeliveryOrder({ ...createdOrder, status: 'PREPARING' })
+    try {
+      const order = await createDeliveryOrderMutation.mutateAsync({
+        status: 'PREPARING',
+        source: deliverySource,
+        customerId: selectedCustomerId,
+        customerName: customerName.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
+        paymentMethod,
+        deliveryFee,
+        discountAmount,
+        tipAmount,
+        notes: notes.trim(),
+        items,
+      })
 
-    setOrders((currentOrders) => [order, ...currentOrders])
-    setFeedbackMessage('Creaste un nuevo domicilio. Los ingredientes se han descontado automaticamente de tu inventario')
-    resetForm()
-    setCreationStep(null)
+      setOrders((currentOrders) => [
+        order,
+        ...currentOrders.filter((currentOrder) => currentOrder.id !== order.id),
+      ])
+      setFeedbackMessage('Creaste un nuevo domicilio. Los ingredientes se han descontado automaticamente de tu inventario')
+      resetForm()
+      setCreationStep(null)
+    } catch (error) {
+      setFeedbackMessage(
+        getErrorMessage(error, 'No se pudo crear el domicilio.'),
+      )
+    }
   }
 
   function handleUpdateOrderStatus(orderId: string, status: DeliveryOrderStatus) {
+    const updatedAt = new Date().toISOString()
+
     setOrders((currentOrders) =>
       currentOrders.map((order) =>
-        order.id === orderId ? touchDeliveryOrder({ ...order, status }) : order,
+        order.id === orderId ? { ...order, status, updatedAt } : order,
       ),
+    )
+    updateDeliveryOrderMutation.mutate(
+      {
+        orderId,
+        input: {
+          status,
+        },
+      },
+      {
+        onSuccess: (updatedOrder) => {
+          setOrders((currentOrders) =>
+            currentOrders.map((order) =>
+              order.id === updatedOrder.id ? updatedOrder : order,
+            ),
+          )
+        },
+        onError: (error) => {
+          setFeedbackMessage(
+            getErrorMessage(error, 'No se pudo actualizar el estado del domicilio.'),
+          )
+        },
+      },
     )
   }
 
@@ -485,11 +509,16 @@ export function DeliveriesPage() {
             : [],
       })
 
+      const updatedOrder = await updateDeliveryOrderMutation.mutateAsync({
+        orderId: order.id,
+        input: {
+          status: 'DELIVERED',
+        },
+      })
+
       setOrders((currentOrders) =>
         currentOrders.map((currentOrder) =>
-          currentOrder.id === order.id
-            ? touchDeliveryOrder({ ...currentOrder, status: 'DELIVERED' })
-            : currentOrder,
+          currentOrder.id === updatedOrder.id ? updatedOrder : currentOrder,
         ),
       )
       setFeedbackMessage(`Domicilio archivado. Venta ${sale.saleNumber} registrada.`)
@@ -540,7 +569,7 @@ export function DeliveriesPage() {
           {order.status === 'ON_ROUTE' ? (
             <button
               type="button"
-              disabled={createSaleMutation.isPending}
+              disabled={createSaleMutation.isPending || updateDeliveryOrderMutation.isPending}
               onClick={() => {
                 void handleDeliverOrder(order)
               }}
@@ -552,6 +581,7 @@ export function DeliveriesPage() {
             <button
               className={styles.dangerTextButton}
               type="button"
+              disabled={updateDeliveryOrderMutation.isPending}
               onClick={() => handleUpdateOrderStatus(order.id, 'CANCELLED')}
             >
               Cancelar
@@ -888,8 +918,10 @@ export function DeliveriesPage() {
               <button
                 className={styles.stickyAction}
                 type="button"
-                disabled={!canCreateOrder}
-                onClick={handleCreateOrder}
+                disabled={!canCreateOrder || createDeliveryOrderMutation.isPending}
+                onClick={() => {
+                  void handleCreateOrder()
+                }}
               >
                 <span>{items.length}</span>
                 Confirmar

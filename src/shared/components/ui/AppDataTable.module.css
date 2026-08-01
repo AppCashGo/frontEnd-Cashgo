@@ -1,0 +1,147 @@
+.card {
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1rem 0.85rem;
+}
+
+.copy {
+  display: grid;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.title,
+.description,
+.refreshing,
+.stateTitle,
+.stateDescription {
+  margin: 0;
+}
+
+.title {
+  color: #1f2a37;
+  font-size: 1.02rem;
+  font-weight: 900;
+}
+
+.description {
+  color: #5f6d80;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex: 0 0 auto;
+}
+
+.refreshing {
+  color: #66758c;
+  font-size: 0.84rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.scroller {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 0.95rem 1rem;
+  background: #f5f8fb;
+  color: #617186;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-align: left;
+}
+
+.table td {
+  padding: 0.95rem 1rem;
+  border-top: 1px solid rgba(230, 236, 243, 0.95);
+  color: #263445;
+  vertical-align: top;
+}
+
+.rowClickable {
+  cursor: pointer;
+}
+
+.rowClickable:hover td {
+  background: #f8fafc;
+}
+
+.alignCenter {
+  text-align: center;
+}
+
+.alignRight {
+  text-align: right;
+}
+
+.state {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 2rem 1rem;
+  color: #5f6d80;
+  text-align: center;
+}
+
+.stateTitle {
+  color: #1f2a37;
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.stateDescription {
+  max-width: 36rem;
+  font-size: 0.93rem;
+  line-height: 1.5;
+}
+
+.loadingRows {
+  width: min(100%, 40rem);
+  display: grid;
+  gap: 0.75rem;
+}
+
+.loadingRow {
+  height: 2.4rem;
+  border-radius: 0.8rem;
+  background:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.72), transparent),
+    #eef2f7;
+  background-size: 200% 100%;
+  animation: shimmer 1.2s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position-x: -200%;
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    display: grid;
+  }
+
+  .actions {
+    justify-content: flex-start;
+  }
+}

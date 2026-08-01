@@ -14,8 +14,11 @@ import {
   useCreateRestaurantTableMutation,
   useCreateRestaurantZoneMutation,
   useDeleteRestaurantTableMutation,
+  useDeleteRestaurantTableOrderMutation,
   useDeleteRestaurantZoneMutation,
+  useMoveRestaurantTableOrderMutation,
   useRestaurantWorkspaceQuery,
+  useSaveRestaurantTableOrderMutation,
   useUpdateRestaurantTableMutation,
   useUpdateRestaurantZoneMutation,
 } from '@/modules/restaurant/hooks/use-restaurant-query'
@@ -28,15 +31,14 @@ import {
   createEmptyTableOrder,
   createRestaurantOrderItem,
   getDefaultModifierGroups,
-  readRestaurantWorkspace,
   restaurantPaymentMethods,
-  saveRestaurantWorkspace,
   touchTableOrder,
 } from '@/modules/restaurant/utils/restaurant-workspace'
 import { useCreateSaleMutation } from '@/modules/sales/hooks/use-create-sale-mutation'
 import type { SalePaymentMethod } from '@/modules/sales/types/sale'
 import { routePaths } from '@/routes/route-paths'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import { ModalShell } from '@/shared/components/ui/ModalShell'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './RestaurantTablesWorkspace.module.css'
@@ -122,7 +124,6 @@ function createSaleNotes(input: {
 export function RestaurantTablesWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams()
   const currentUser = useAuthSessionStore((state) => state.user)
-  const businessId = currentUser?.businessId
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const productsQuery = useProductsQuery()
   const customersQuery = useCustomersQuery()
@@ -135,10 +136,12 @@ export function RestaurantTablesWorkspace() {
   const createRestaurantTableMutation = useCreateRestaurantTableMutation()
   const updateRestaurantTableMutation = useUpdateRestaurantTableMutation()
   const deleteRestaurantTableMutation = useDeleteRestaurantTableMutation()
+  const saveRestaurantTableOrderMutation = useSaveRestaurantTableOrderMutation()
+  const moveRestaurantTableOrderMutation = useMoveRestaurantTableOrderMutation()
+  const deleteRestaurantTableOrderMutation = useDeleteRestaurantTableOrderMutation()
   const createSaleMutation = useCreateSaleMutation()
 
   const [workspace, setWorkspace] = useState(createDefaultRestaurantWorkspace)
-  const [hasLoadedWorkspace, setHasLoadedWorkspace] = useState(false)
   const [activeZoneId, setActiveZoneId] = useState('')
   const [selectedTableId, setSelectedTableId] = useState('')
   const [tableSearchValue, setTableSearchValue] = useState('')
@@ -232,27 +235,13 @@ export function RestaurantTablesWorkspace() {
   }, [searchParams, setSearchParams])
 
   useEffect(() => {
-    const storedWorkspace = readRestaurantWorkspace(businessId)
-
-    setWorkspace(storedWorkspace)
-    setActiveZoneId(storedWorkspace.zones[0]?.id ?? '')
-    setSelectedTableId('')
-    setNewTableZoneId(storedWorkspace.zones[0]?.id ?? '')
-    setHasLoadedWorkspace(true)
-  }, [businessId])
-
-  useEffect(() => {
     const remoteWorkspace = restaurantWorkspaceQuery.data
 
     if (!remoteWorkspace) {
       return
     }
 
-    setWorkspace((currentWorkspace) => ({
-      ...currentWorkspace,
-      zones: remoteWorkspace.zones,
-      tables: remoteWorkspace.tables,
-    }))
+    setWorkspace(remoteWorkspace)
 
     setActiveZoneId((currentActiveZoneId) => {
       if (
@@ -275,14 +264,6 @@ export function RestaurantTablesWorkspace() {
       return remoteWorkspace.zones[0]?.id ?? ''
     })
   }, [restaurantWorkspaceQuery.data])
-
-  useEffect(() => {
-    if (!hasLoadedWorkspace) {
-      return
-    }
-
-    saveRestaurantWorkspace(businessId, workspace)
-  }, [businessId, hasLoadedWorkspace, workspace])
 
   useEffect(() => {
     if (employeeId || employeeOptions.length === 0) {
@@ -581,6 +562,18 @@ export function RestaurantTablesWorkspace() {
     }
   }
 
+  function handleTableOrderPersistenceError(error: unknown) {
+    setOperationError(
+      getErrorMessage(error, 'No se pudo guardar la comanda de la mesa.'),
+    )
+  }
+
+  function persistTableOrder(order: RestaurantTableOrder) {
+    saveRestaurantTableOrderMutation.mutate(order, {
+      onError: handleTableOrderPersistenceError,
+    })
+  }
+
   function updateSelectedOrder(
     updater: (order: RestaurantTableOrder) => RestaurantTableOrder,
   ) {
@@ -588,13 +581,16 @@ export function RestaurantTablesWorkspace() {
       return
     }
 
+    const nextOrder = touchTableOrder(updater(selectedOrder))
+
     setWorkspace((currentWorkspace) => ({
       ...currentWorkspace,
       orders: {
         ...currentWorkspace.orders,
-        [selectedOrder.tableId]: touchTableOrder(updater(selectedOrder)),
+        [nextOrder.tableId]: nextOrder,
       },
     }))
+    persistTableOrder(nextOrder)
   }
 
   function handleOpenTable() {
@@ -622,6 +618,7 @@ export function RestaurantTablesWorkspace() {
         [selectedTable.id]: order,
       },
     }))
+    persistTableOrder(order)
     setTableComment('')
     setGuestCountOption('1')
     setCustomGuestCount('')
@@ -730,11 +727,14 @@ export function RestaurantTablesWorkspace() {
       return
     }
 
+    const sourceTableId = selectedOrder.tableId
+    const targetTableId = moveTargetTableId
+
     setWorkspace((currentWorkspace) => {
       const nextOrders = { ...currentWorkspace.orders }
-      nextOrders[moveTargetTableId] = {
+      nextOrders[targetTableId] = {
         ...selectedOrder,
-        tableId: moveTargetTableId,
+        tableId: targetTableId,
         updatedAt: new Date().toISOString(),
       }
       delete nextOrders[selectedOrder.tableId]
@@ -744,9 +744,21 @@ export function RestaurantTablesWorkspace() {
         orders: nextOrders,
       }
     })
-    setSelectedTableId(moveTargetTableId)
+    setSelectedTableId(targetTableId)
     setIsMoveDialogOpen(false)
     setMoveTargetTableId('')
+    moveRestaurantTableOrderMutation.mutate(
+      {
+        tableId: sourceTableId,
+        targetTableId,
+      },
+      {
+        onError: (error) =>
+          setOperationError(
+            getErrorMessage(error, 'No se pudo mover la comanda de mesa.'),
+          ),
+      },
+    )
   }
 
   async function handleAddZone() {
@@ -1105,20 +1117,30 @@ export function RestaurantTablesWorkspace() {
               ]
             : [],
       })
+      const remainingItems = selectedOrder.items.filter(
+        (item) => !selectedCloseItemIds.includes(item.id),
+      )
+      const nextOrder =
+        remainingItems.length > 0
+          ? touchTableOrder({
+              ...selectedOrder,
+              items: remainingItems,
+            })
+          : null
+
+      if (nextOrder) {
+        await saveRestaurantTableOrderMutation.mutateAsync(nextOrder)
+      } else {
+        await deleteRestaurantTableOrderMutation.mutateAsync(selectedOrder.tableId)
+      }
 
       setWorkspace((currentWorkspace) => {
-        const remainingItems = selectedOrder.items.filter(
-          (item) => !selectedCloseItemIds.includes(item.id),
-        )
         const nextOrders = { ...currentWorkspace.orders }
 
-        if (remainingItems.length === 0) {
-          delete nextOrders[selectedOrder.tableId]
+        if (nextOrder) {
+          nextOrders[selectedOrder.tableId] = nextOrder
         } else {
-          nextOrders[selectedOrder.tableId] = touchTableOrder({
-            ...selectedOrder,
-            items: remainingItems,
-          })
+          delete nextOrders[selectedOrder.tableId]
         }
 
         return {
@@ -1348,7 +1370,12 @@ export function RestaurantTablesWorkspace() {
 
           <button
             className={styles.primaryAction}
-            disabled={createSaleMutation.isPending || closeItems.length === 0}
+            disabled={
+              createSaleMutation.isPending ||
+              saveRestaurantTableOrderMutation.isPending ||
+              deleteRestaurantTableOrderMutation.isPending ||
+              closeItems.length === 0
+            }
             type="button"
             onClick={() => {
               void handleConfirmClose()
@@ -1706,20 +1733,21 @@ export function RestaurantTablesWorkspace() {
 
   function renderFreeSaleModal() {
     return (
-      <div className={styles.modalBackdrop}>
-        <section className={styles.freeSaleModal}>
+      <ModalShell
+        ariaLabel="Registrar venta libre"
+        className={styles.modalBackdrop}
+        closeButtonClassName={styles.iconButton}
+        closeContent="x"
+        closeLabel="Cerrar venta libre"
+        isOpen={isFreeSaleOpen}
+        panelClassName={styles.freeSaleModal}
+        onClose={() => setIsFreeSaleOpen(false)}
+      >
           <div className={styles.panelHeader}>
             <div>
               <p className={styles.panelEyebrow}>Venta libre</p>
               <h3>Registrar servicio o venta sin producto</h3>
             </div>
-            <button
-              className={styles.iconButton}
-              type="button"
-              onClick={() => setIsFreeSaleOpen(false)}
-            >
-              x
-            </button>
           </div>
 
           <label className={styles.field}>
@@ -1802,8 +1830,7 @@ export function RestaurantTablesWorkspace() {
           >
             {createSaleMutation.isPending ? 'Creando...' : 'Crear venta libre'}
           </button>
-        </section>
-      </div>
+      </ModalShell>
     )
   }
 
@@ -2336,20 +2363,21 @@ export function RestaurantTablesWorkspace() {
       ) : null}
 
       {modifierItem ? (
-        <div className={styles.modalBackdrop}>
-          <section className={styles.modifierModal}>
+        <ModalShell
+          ariaLabel={`Modificar ${modifierItem.productName}`}
+          className={styles.modalBackdrop}
+          closeButtonClassName={styles.iconButton}
+          closeContent="x"
+          closeLabel="Cerrar modificadores"
+          isOpen
+          panelClassName={styles.modifierModal}
+          onClose={() => setModifierItemId(null)}
+        >
             <div className={styles.panelHeader}>
               <div>
                 <p className={styles.panelEyebrow}>Modificar producto</p>
                 <h3>{modifierItem.productName}</h3>
               </div>
-              <button
-                className={styles.iconButton}
-                type="button"
-                onClick={() => setModifierItemId(null)}
-              >
-                x
-              </button>
             </div>
 
             {getDefaultModifierGroups().map((group) => (
@@ -2395,25 +2423,25 @@ export function RestaurantTablesWorkspace() {
             >
               Guardar modificadores
             </button>
-          </section>
-        </div>
+        </ModalShell>
       ) : null}
 
       {isMoveDialogOpen ? (
-        <div className={styles.modalBackdrop}>
-          <section className={styles.moveModal}>
+        <ModalShell
+          ariaLabel={`Mover ${selectedTable?.name ?? 'mesa'}`}
+          className={styles.modalBackdrop}
+          closeButtonClassName={styles.iconButton}
+          closeContent="x"
+          closeLabel="Cerrar mover mesa"
+          isOpen={isMoveDialogOpen}
+          panelClassName={styles.moveModal}
+          onClose={() => setIsMoveDialogOpen(false)}
+        >
             <div className={styles.panelHeader}>
               <div>
                 <p className={styles.panelEyebrow}>Mover mesa</p>
                 <h3>{selectedTable?.name}</h3>
               </div>
-              <button
-                className={styles.iconButton}
-                type="button"
-                onClick={() => setIsMoveDialogOpen(false)}
-              >
-                x
-              </button>
             </div>
 
             <label className={styles.field}>
@@ -2458,8 +2486,7 @@ export function RestaurantTablesWorkspace() {
             >
               Mover mesa
             </button>
-          </section>
-        </div>
+        </ModalShell>
       ) : null}
     </div>
   )

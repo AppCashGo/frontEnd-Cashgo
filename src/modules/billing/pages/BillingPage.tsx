@@ -35,6 +35,7 @@ import { MetricCard } from "@/shared/components/ui/MetricCard";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
+import { downloadBlobFile } from "@/shared/utils/download-blob-file";
 import styles from "./BillingPage.module.css";
 
 function getPaymentStatusClassName(status: BillingDocumentStatus) {
@@ -150,24 +151,14 @@ export function BillingPage() {
 
   async function handleDownloadReport() {
     const { blob, filename } = await reportMutation.mutateAsync(filters);
-    const downloadUrl = URL.createObjectURL(blob);
-    const linkElement = document.createElement("a");
 
-    linkElement.href = downloadUrl;
-    linkElement.download = filename ?? "billing-report.csv";
-    linkElement.click();
-    URL.revokeObjectURL(downloadUrl);
+    downloadBlobFile(blob, filename ?? "billing-report.csv");
   }
 
   async function handleDownloadReceipt(documentId: string) {
     const { blob, filename } = await receiptMutation.mutateAsync(documentId);
-    const downloadUrl = URL.createObjectURL(blob);
-    const linkElement = document.createElement("a");
 
-    linkElement.href = downloadUrl;
-    linkElement.download = filename ?? `${documentId}-receipt.html`;
-    linkElement.click();
-    URL.revokeObjectURL(downloadUrl);
+    downloadBlobFile(blob, filename ?? `${documentId}-receipt.html`);
   }
 
   async function handlePrintReceipt(documentId: string) {

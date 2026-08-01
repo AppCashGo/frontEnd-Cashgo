@@ -18,6 +18,7 @@ import {
 } from "@/modules/billing/utils/format-billing";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
 import styles from "./BillingFormDrawer.module.css";
 
 type CreateBillingInvoiceDrawerProps = {
@@ -110,7 +111,7 @@ export function CreateBillingInvoiceDrawer({
     <CashRegisterRetailDrawer
       description={copy.createInvoiceDescription}
       footer={
-        <div className={styles.footerActions}>
+        <DrawerActionFooter>
           <button
             className={retailStyles.buttonOutline}
             disabled={isSubmitting}
@@ -127,7 +128,7 @@ export function CreateBillingInvoiceDrawer({
           >
             {isSubmitting ? copy.saving : copy.createInvoiceSubmit}
           </button>
-        </div>
+        </DrawerActionFooter>
       }
       isOpen={isOpen}
       title={copy.createInvoiceTitle}

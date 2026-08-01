@@ -1,0 +1,138 @@
+.backdrop {
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.dialog {
+  width: min(100%, 31rem);
+  padding: 1.25rem;
+  border: 1px solid rgba(203, 213, 225, 0.94);
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1.6rem 4rem rgba(15, 23, 42, 0.2);
+}
+
+.dialogContent {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-right: 2.5rem;
+}
+
+.titleGroup {
+  display: grid;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.icon {
+  width: 2.65rem;
+  height: 2.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #edf5ff;
+  color: #1e75d8;
+}
+
+.iconDanger {
+  background: #fee2e2;
+  color: #c9352c;
+}
+
+.iconWarning {
+  background: #fff3cd;
+  color: #8a6400;
+}
+
+.title {
+  margin: 0;
+  color: #1f2937;
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.description {
+  margin: 0;
+  color: #5f6f85;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.closeButton {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.content {
+  min-width: 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.button {
+  min-height: 2.85rem;
+  padding: 0.75rem 1.1rem;
+  border-radius: 0.85rem;
+  font-weight: 850;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.cancelButton {
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  background: #ffffff;
+  color: #1f2a37;
+}
+
+.confirmButton {
+  border: 1px solid #1f2a37;
+  background: #1f2a37;
+  color: #ffffff;
+}
+
+.confirmButtonDanger {
+  border-color: #c9352c;
+  background: #c9352c;
+}
+
+@media (max-width: 520px) {
+  .dialog {
+    padding: 1rem;
+  }
+
+  .actions {
+    display: grid;
+  }
+
+  .button {
+    width: 100%;
+  }
+}

@@ -1,15 +1,12 @@
-import { type ChangeEvent, type FormEvent, useEffect, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { ImagePlus, Truck } from 'lucide-react'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import type {
   SupplierMutationInput,
   SupplierSummary,
 } from '@/modules/suppliers/types/supplier'
-import { resolveApiAssetUrl } from '@/shared/services/api-client'
-import {
-  IMAGE_UPLOAD_ACCEPT,
-  validateImageUploadFile,
-} from '@/shared/utils/image-upload-validation'
+import { AvatarUploadField } from '@/shared/components/ui/AvatarUploadField'
+import { useImageUploadPreview } from '@/shared/hooks/use-image-upload-preview'
 import styles from './RetailSupplierDrawer.module.css'
 
 type RetailSupplierDrawerProps = {
@@ -36,9 +33,11 @@ export function RetailSupplierDrawer({
   onSubmit,
 }: RetailSupplierDrawerProps) {
   const [formValues, setFormValues] = useState(initialForm)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null)
   const [localError, setLocalError] = useState<string | null>(null)
+  const avatarUpload = useImageUploadPreview({
+    resetKey: `${isOpen ? 'open' : 'closed'}:${supplier?.id ?? 'new'}`,
+    storedImageUrl: supplier?.avatarUrl,
+  })
 
   useEffect(() => {
     if (isOpen) {
@@ -47,26 +46,9 @@ export function RetailSupplierDrawer({
         phone: supplier?.phone ?? '',
         email: supplier?.email ?? '',
       })
-      setAvatarFile(null)
       setLocalError(null)
-      setAvatarPreviewUrl((currentUrl) => {
-        if (currentUrl) {
-          URL.revokeObjectURL(currentUrl)
-        }
-
-        return null
-      })
     }
   }, [isOpen, supplier])
-
-  useEffect(
-    () => () => {
-      if (avatarPreviewUrl) {
-        URL.revokeObjectURL(avatarPreviewUrl)
-      }
-    },
-    [avatarPreviewUrl],
-  )
 
   function updateField(field: keyof typeof initialForm, value: string) {
     setFormValues((currentValues) => ({
@@ -75,28 +57,15 @@ export function RetailSupplierDrawer({
     }))
   }
 
-  function handleAvatarChange(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0] ?? null
+  function handleAvatarChange(file: File | null) {
+    const validationError = avatarUpload.selectFile(file)
 
-    if (file) {
-      const validationError = validateImageUploadFile(file)
-
-      if (validationError) {
-        setLocalError(validationError)
-        event.currentTarget.value = ''
-        return
-      }
+    if (validationError) {
+      setLocalError(validationError)
+      return
     }
 
     setLocalError(null)
-    setAvatarFile(file)
-    setAvatarPreviewUrl((currentUrl) => {
-      if (currentUrl) {
-        URL.revokeObjectURL(currentUrl)
-      }
-
-      return file ? URL.createObjectURL(file) : null
-    })
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -124,7 +93,7 @@ export function RetailSupplierDrawer({
         email: email.length > 0 ? email : null,
         phone: phone.length > 0 ? phone : null,
       },
-      avatarFile,
+      avatarUpload.file,
     )
   }
 
@@ -136,35 +105,16 @@ export function RetailSupplierDrawer({
       onClose={onClose}
     >
       <form className={styles.form} onSubmit={handleSubmit}>
-        <label className={styles.avatarUploader}>
-          <input
-            accept={IMAGE_UPLOAD_ACCEPT}
-            className={styles.avatarInput}
-            type="file"
-            onChange={handleAvatarChange}
-          />
-          {avatarPreviewUrl || supplier?.avatarUrl ? (
-            <span className={styles.avatarPreview}>
-              <img
-                alt=""
-                src={avatarPreviewUrl ?? resolveApiAssetUrl(supplier?.avatarUrl) ?? ''}
-              />
-            </span>
-          ) : (
-            <span className={styles.avatarPlaceholder} aria-hidden="true">
-              <Truck size={26} />
-            </span>
-          )}
-          <span className={styles.avatarCopy}>
-            <strong>
-              {avatarPreviewUrl || supplier?.avatarUrl
-                ? 'Cambiar avatar'
-                : 'Cargar avatar'}
-            </strong>
-            <small>PNG, JPG o WebP hasta 2MB.</small>
-          </span>
-          <ImagePlus size={20} aria-hidden="true" />
-        </label>
+        <AvatarUploadField
+          alt="Avatar del proveedor"
+          disabled={isSubmitting}
+          hint="PNG, JPG o WebP hasta 2MB."
+          imageUrl={avatarUpload.visibleImageUrl}
+          placeholderIcon={<Truck size={26} />}
+          trailingIcon={<ImagePlus size={20} />}
+          variant="card"
+          onSelectFile={handleAvatarChange}
+        />
 
         <label className={styles.field}>
           <span>Nombre del proveedor *</span>

@@ -1,14 +1,10 @@
-import {
-  ChevronDown,
-  ChevronUp,
-  Trash2,
-  Volume2,
-} from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type {
   BusinessAdditionalSettingsInput,
   BusinessSettings,
 } from "@/modules/settings/types/settings";
+import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "./AdditionalSettingsPanel.module.css";
 
@@ -44,6 +40,7 @@ export function AdditionalSettingsPanel({
   );
   const [feedbackMessage, setFeedbackMessage] =
     useState<FeedbackMessage | null>(null);
+  const { confirm, confirmationDialog } = useConfirmDialog();
 
   useEffect(() => {
     setSaleSoundEnabled(businessSettings?.saleCompletionSoundEnabled ?? true);
@@ -86,9 +83,13 @@ export function AdditionalSettingsPanel({
       return;
     }
 
-    const wasConfirmed = window.confirm(
-      "¿Seguro que quieres eliminar este negocio? Una vez eliminado no podrás recuperar la información registrada.",
-    );
+    const wasConfirmed = await confirm({
+      title: "Eliminar negocio",
+      description:
+        "¿Seguro que quieres eliminar este negocio? Una vez eliminado no podrás recuperar la información registrada.",
+      confirmLabel: "Eliminar negocio",
+      tone: "danger",
+    });
 
     if (!wasConfirmed) {
       return;
@@ -111,94 +112,97 @@ export function AdditionalSettingsPanel({
   }
 
   return (
-    <section className={styles.accordion}>
-      <button
-        aria-expanded={isOpen}
-        className={styles.accordionSummary}
-        type="button"
-        onClick={() => setIsOpen((currentValue) => !currentValue)}
-      >
-        <span className={styles.accordionTitle}>
-          Configuraciones adicionales
-        </span>
-        {isOpen ? <ChevronUp /> : <ChevronDown />}
-      </button>
+    <>
+      {confirmationDialog}
+      <section className={styles.accordion}>
+        <button
+          aria-expanded={isOpen}
+          className={styles.accordionSummary}
+          type="button"
+          onClick={() => setIsOpen((currentValue) => !currentValue)}
+        >
+          <span className={styles.accordionTitle}>
+            Configuraciones adicionales
+          </span>
+          {isOpen ? <ChevronUp /> : <ChevronDown />}
+        </button>
 
-      {isOpen ? (
-        <div className={styles.accordionBody}>
-          {errorMessage ? (
-            <div className={styles.errorBanner}>
-              <p>{errorMessage}</p>
-              <button type="button" onClick={onRetry}>
-                Reintentar
-              </button>
-            </div>
-          ) : null}
+        {isOpen ? (
+          <div className={styles.accordionBody}>
+            {errorMessage ? (
+              <div className={styles.errorBanner}>
+                <p>{errorMessage}</p>
+                <button type="button" onClick={onRetry}>
+                  Reintentar
+                </button>
+              </div>
+            ) : null}
 
-          {!businessSettings && !isLoading ? (
-            <p className={styles.emptyMessage}>
-              Completa primero los datos del negocio para activar estas
-              configuraciones.
-            </p>
-          ) : null}
+            {!businessSettings && !isLoading ? (
+              <p className={styles.emptyMessage}>
+                Completa primero los datos del negocio para activar estas
+                configuraciones.
+              </p>
+            ) : null}
 
-          <label className={styles.settingRow}>
-            <span className={styles.settingIcon}>
-              <Volume2 aria-hidden="true" />
-            </span>
-            <span className={styles.settingCopy}>
-              <span className={styles.settingTitle}>
-                Sonido al crear venta
+            <label className={styles.settingRow}>
+              <span className={styles.settingIcon}>
+                <Volume2 aria-hidden="true" />
               </span>
-              <span className={styles.settingDescription}>
-                Reproduce un sonido de caja registradora cuando se completa una
-                venta exitosamente
+              <span className={styles.settingCopy}>
+                <span className={styles.settingTitle}>
+                  Sonido al crear venta
+                </span>
+                <span className={styles.settingDescription}>
+                  Reproduce un sonido de caja registradora cuando se completa
+                  una venta exitosamente
+                </span>
               </span>
-            </span>
-            <input
-              checked={saleSoundEnabled}
-              className={styles.toggleInput}
-              disabled={isDisabled || Boolean(errorMessage)}
-              type="checkbox"
-              onChange={(event) => {
-                void handleToggle(event.target.checked);
+              <input
+                checked={saleSoundEnabled}
+                className={styles.toggleInput}
+                disabled={isDisabled || Boolean(errorMessage)}
+                type="checkbox"
+                onChange={(event) => {
+                  void handleToggle(event.target.checked);
+                }}
+              />
+            </label>
+
+            <button
+              className={styles.dangerRow}
+              disabled={isDeleteDisabled}
+              type="button"
+              onClick={() => {
+                void handleDeleteBusiness();
               }}
-            />
-          </label>
-
-          <button
-            className={styles.dangerRow}
-            disabled={isDeleteDisabled}
-            type="button"
-            onClick={() => {
-              void handleDeleteBusiness();
-            }}
-          >
-            <span className={styles.dangerIcon}>
-              <Trash2 aria-hidden="true" />
-            </span>
-            <span className={styles.settingCopy}>
-              <span className={styles.dangerTitle}>Eliminar negocio</span>
-              <span className={styles.dangerDescription}>
-                Una vez eliminado el negocio no podrás recuperar la información
-                registrada.
-              </span>
-            </span>
-          </button>
-
-          {feedbackMessage ? (
-            <p
-              className={
-                feedbackMessage.tone === "success"
-                  ? styles.feedbackSuccess
-                  : styles.feedbackError
-              }
             >
-              {feedbackMessage.text}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-    </section>
+              <span className={styles.dangerIcon}>
+                <Trash2 aria-hidden="true" />
+              </span>
+              <span className={styles.settingCopy}>
+                <span className={styles.dangerTitle}>Eliminar negocio</span>
+                <span className={styles.dangerDescription}>
+                  Una vez eliminado el negocio no podrás recuperar la
+                  información registrada.
+                </span>
+              </span>
+            </button>
+
+            {feedbackMessage ? (
+              <p
+                className={
+                  feedbackMessage.tone === "success"
+                    ? styles.feedbackSuccess
+                    : styles.feedbackError
+                }
+              >
+                {feedbackMessage.text}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+      </section>
+    </>
   );
 }

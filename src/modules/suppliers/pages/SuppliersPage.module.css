@@ -103,6 +103,12 @@
   gap: 1rem;
 }
 
+.retailWorkspace {
+  display: grid;
+  gap: 1.15rem;
+  padding: 0 clamp(1rem, 2.2vw, 2rem) 2rem;
+}
+
 @media (min-width: 768px) {
   .hero {
     padding: 1.5rem;

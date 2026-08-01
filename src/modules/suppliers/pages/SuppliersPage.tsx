@@ -13,7 +13,10 @@ import {
 } from '@/modules/suppliers/hooks/use-suppliers-query'
 import type { SupplierMutationInput } from '@/modules/suppliers/types/supplier'
 import { RetailPremiumBanner } from '@/shared/components/retail/RetailPremiumBanner'
+import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
+import { RetailTableShell } from '@/shared/components/retail/RetailTableShell'
+import { TableStateRow } from '@/shared/components/retail/TableStateRow'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import listPageStyles from '@/shared/components/retail/RetailListPage.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
@@ -48,7 +51,9 @@ export function SuppliersPage() {
   const editingSupplier =
     suppliers.find((supplier) => supplier.id === editingSupplierId) ??
     (selectedSupplier?.id === editingSupplierId ? selectedSupplier : null)
-  const activeSuppliers = suppliers.filter((supplier) => supplier.purchaseCount > 0).length
+  const activeSuppliers = suppliers.filter(
+    (supplier) => supplier.purchaseCount > 0,
+  ).length
   const trackedRestocks = suppliers.reduce(
     (sum, supplier) => sum + supplier.purchaseCount,
     0,
@@ -151,9 +156,11 @@ export function SuppliersPage() {
   if (isRetailPreset) {
     return (
       <>
-        <div className={listPageStyles.page}>
-          <div className={listPageStyles.headerRow}>
-            <div />
+        <RetailPageLayout
+          accent="success"
+          bodyVariant="flush"
+          title="Proveedores"
+          actions={
             <button
               className={retailStyles.buttonDark}
               type="button"
@@ -161,39 +168,44 @@ export function SuppliersPage() {
             >
               Crear proveedor
             </button>
-          </div>
+          }
+        >
+          <section className={styles.retailWorkspace}>
+            <RetailPremiumBanner
+              title="Proveedores premium, toda tu red de abastecimiento en un solo lugar."
+              description="Registra contactos, agrega su avatar y consulta rapidamente su historial de compras."
+              linkLabel="Ver beneficios"
+            />
 
-          <RetailPremiumBanner
-            title="Proveedores premium, toda tu red de abastecimiento en un solo lugar."
-            description="Registra contactos, agrega su avatar y consulta rapidamente su historial de compras."
-            linkLabel="Ver beneficios"
-          />
+            <div className={listPageStyles.searchRow}>
+              <label
+                className={`${retailStyles.searchField} ${listPageStyles.searchField}`}
+              >
+                <input
+                  className={retailStyles.input}
+                  placeholder="Busca un proveedor"
+                  type="search"
+                  value={searchValue}
+                  onChange={(event) => setSearchValue(event.target.value)}
+                />
+              </label>
+            </div>
 
-          <div className={listPageStyles.searchRow}>
-            <label className={`${retailStyles.searchField} ${listPageStyles.searchField}`}>
-              <input
-                className={retailStyles.input}
-                placeholder="Busca un proveedor"
-                type="search"
-                value={searchValue}
-                onChange={(event) => setSearchValue(event.target.value)}
+            <div className={listPageStyles.metricsGrid}>
+              <RetailStatCard
+                label="Total proveedores"
+                value={suppliers.length.toString()}
               />
-            </label>
-          </div>
+              <RetailStatCard
+                label="Total por pagar"
+                value={formatCurrency(selectedProcurementTotal)}
+              />
+            </div>
 
-          <div className={listPageStyles.metricsGrid}>
-            <RetailStatCard
-              label="Total proveedores"
-              value={suppliers.length.toString()}
-            />
-            <RetailStatCard
-              label="Total por pagar"
-              value={formatCurrency(selectedProcurementTotal)}
-            />
-          </div>
-
-          <section className={retailStyles.tableCard}>
-            <div className={retailStyles.tableScroller}>
+            <RetailTableShell
+              isRefreshing={suppliersQuery.isFetching && !suppliersQuery.isLoading}
+              title="Proveedores registrados"
+            >
               <table className={retailStyles.table}>
                 <thead>
                   <tr>
@@ -205,8 +217,38 @@ export function SuppliersPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleSuppliers.length > 0 ? (
-                    visibleSuppliers.map((supplier) => (
+                  {suppliersQuery.isLoading ? (
+                    <TableStateRow
+                      colSpan={5}
+                      tone="feedback"
+                      title="Cargando proveedores..."
+                    />
+                  ) : null}
+
+                  {suppliersQuery.isError ? (
+                    <TableStateRow
+                      action={
+                        <button
+                          className={retailStyles.tableAction}
+                          type="button"
+                          onClick={() => {
+                            void suppliersQuery.refetch()
+                          }}
+                        >
+                          Reintentar
+                        </button>
+                      }
+                      colSpan={5}
+                      description="Intenta nuevamente para consultar la lista de proveedores."
+                      tone="error"
+                      title="No pudimos cargar los proveedores."
+                    />
+                  ) : null}
+
+                  {!suppliersQuery.isLoading &&
+                  !suppliersQuery.isError &&
+                  visibleSuppliers.length > 0
+                    ? visibleSuppliers.map((supplier) => (
                       <tr key={supplier.id}>
                         <td>{supplier.name}</td>
                         <td>{supplier.phone ?? 'Sin celular'}</td>
@@ -238,23 +280,22 @@ export function SuppliersPage() {
                         </td>
                       </tr>
                     ))
-                  ) : (
-                    <tr>
-                      <td colSpan={5}>
-                        <div className={retailStyles.emptyState}>
-                          <div className={retailStyles.emptyIcon} />
-                          <p className={retailStyles.emptyTitle}>
-                            No encontramos proveedores con esa búsqueda.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
+                    : null}
+
+                  {!suppliersQuery.isLoading &&
+                  !suppliersQuery.isError &&
+                  visibleSuppliers.length === 0 ? (
+                    <TableStateRow
+                      colSpan={5}
+                      description="Crea un proveedor o limpia los filtros para ver más resultados."
+                      title="No encontramos proveedores con esa búsqueda."
+                    />
+                  ) : null}
                 </tbody>
               </table>
-            </div>
+            </RetailTableShell>
           </section>
-        </div>
+        </RetailPageLayout>
 
         <RetailSupplierDrawer
           errorMessage={createSupplierError}

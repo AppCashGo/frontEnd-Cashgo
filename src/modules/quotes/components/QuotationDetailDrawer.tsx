@@ -18,6 +18,7 @@ import {
   formatQuotationDate,
 } from "@/modules/quotes/utils/quotation-utils";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
+import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
 import styles from "./QuotationDetailDrawer.module.css";
 
 type QuotationDetailDrawerProps = {
@@ -96,7 +97,7 @@ export function QuotationDetailDrawer({
       bodyClassName={styles.body}
       footer={
         quotation ? (
-          <div className={styles.footerActions}>
+          <DrawerActionFooter layout="stack">
             <div className={styles.documentActions}>
               <button disabled={isWorking} type="button" onClick={() => void onPrint()}>
                 <Printer size={18} strokeWidth={2.4} />
@@ -134,7 +135,7 @@ export function QuotationDetailDrawer({
                 {copy.detailDelete}
               </button>
             ) : null}
-          </div>
+          </DrawerActionFooter>
         ) : undefined
       }
       footerClassName={styles.drawerFooter}

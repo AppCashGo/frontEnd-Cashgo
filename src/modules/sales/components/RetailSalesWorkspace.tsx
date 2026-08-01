@@ -2,7 +2,6 @@ import { useMutation } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { Crown } from 'lucide-react'
-import { downloadBillingReceipt } from '@/modules/billing/services/billing-api'
 import {
   CashRegisterSessionDrawer,
   type CashRegisterDrawerMode,
@@ -30,20 +29,27 @@ import { matchesProductSearch } from '@/modules/products/utils/matches-product-s
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
 import { useSuppliersQuery } from '@/modules/suppliers/hooks/use-suppliers-query'
 import {
+  useCancelSaleMutation,
   useCreateSaleMutation,
   useSalesQuery,
 } from '@/modules/sales/hooks/use-create-sale-mutation'
 import { useSaleCart } from '@/modules/sales/hooks/use-sale-cart'
+import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
 import type { SalePaymentMethod, SaleReceipt } from '@/modules/sales/types/sale'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import { routePaths } from '@/routes/route-paths'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
+import { ModalShell } from '@/shared/components/ui/ModalShell'
+import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { getTodayDateInput } from '@/shared/utils/date-input'
+import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
+import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
+import { useToast } from '@/shared/hooks/use-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import styles from './RetailSalesWorkspace.module.css'
 
@@ -549,34 +555,21 @@ function DrawerShell({
   children,
 }: DrawerShellProps) {
   return (
-    <div className={styles.drawerBackdrop} role="presentation" onClick={onClose}>
-      <aside
-        className={styles.drawer}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className={styles.drawerHeader}>
-          <div className={styles.drawerHeaderLead}>
-            {icon ? <span className={styles.drawerIconBadge}>{icon}</span> : null}
-            <div className={styles.drawerCopy}>
-              <h3 className={styles.drawerTitle}>{title}</h3>
-              {subtitle ? <p className={styles.drawerSubtitle}>{subtitle}</p> : null}
-            </div>
-          </div>
-          <button
-            className={styles.drawerClose}
-            type="button"
-            aria-label="Cerrar"
-            onClick={onClose}
-          >
-            ×
-          </button>
-        </div>
-        <div className={styles.drawerBody}>{children}</div>
-      </aside>
-    </div>
+    <SideDrawer
+      bodyClassName={styles.drawerBody}
+      className={styles.drawerBackdrop}
+      closeLabel="Cerrar"
+      description={subtitle}
+      isOpen
+      panelClassName={styles.drawer}
+      title={title}
+      titleAccessory={
+        icon ? <span className={styles.drawerIconBadge}>{icon}</span> : undefined
+      }
+      onClose={onClose}
+    >
+      {children}
+    </SideDrawer>
   )
 }
 
@@ -676,22 +669,15 @@ function ChangeCalculatorModal({
   const changeTotal = Math.max(amountTendered - saleTotal, 0)
 
   return (
-    <div className={styles.modalBackdrop} role="presentation" onClick={onClose}>
-      <div
-        aria-label="Calcula el cambio de tu venta"
-        aria-modal="true"
-        className={styles.modalCard}
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          aria-label="Cerrar"
-          className={styles.modalClose}
-          type="button"
-          onClick={onClose}
-        >
-          ×
-        </button>
+    <ModalShell
+      ariaLabel="Calcula el cambio de tu venta"
+      className={styles.modalBackdrop}
+      closeButtonClassName={styles.modalClose}
+      closeLabel="Cerrar"
+      isOpen
+      panelClassName={styles.modalCard}
+      onClose={onClose}
+    >
         <h3 className={styles.modalTitle}>Calcula el cambio de tu venta</h3>
 
         <label className={styles.field}>
@@ -729,8 +715,7 @@ function ChangeCalculatorModal({
         >
           {isSubmitting ? 'Creando venta...' : 'Confirmar'}
         </button>
-      </div>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -834,24 +819,29 @@ function ProductSortDrawer({
 
 type SaleSuccessDrawerProps = {
   sale: SaleReceipt
+  cancelErrorMessage: string | null
+  isCanceling: boolean
+  onCancel: () => void
   onClose: () => void
 }
 
-function SaleSuccessDrawer({ sale, onClose }: SaleSuccessDrawerProps) {
+function SaleSuccessDrawer({
+  sale,
+  cancelErrorMessage,
+  isCanceling,
+  onCancel,
+  onClose,
+}: SaleSuccessDrawerProps) {
   const receiptMutation = useMutation({
     mutationFn: async (mode: 'download' | 'print') => {
-      const { blob, filename } = await downloadBillingReceipt(sale.id)
-      const receiptUrl = URL.createObjectURL(blob)
+      const { blob, filename } = await downloadSaleReceipt(sale.id)
 
       if (mode === 'download') {
-        const linkElement = document.createElement('a')
-        linkElement.href = receiptUrl
-        linkElement.download = filename ?? `${sale.saleNumber}-receipt.html`
-        linkElement.click()
-        window.setTimeout(() => URL.revokeObjectURL(receiptUrl), 0)
+        downloadBlobFile(blob, filename ?? `${sale.saleNumber}-receipt.html`)
         return
       }
 
+      const receiptUrl = URL.createObjectURL(blob)
       const printWindow = window.open(receiptUrl, '_blank', 'noopener,noreferrer')
 
       if (!printWindow) {
@@ -912,9 +902,26 @@ function SaleSuccessDrawer({ sale, onClose }: SaleSuccessDrawerProps) {
           </button>
         </div>
       </div>
-      <button className={styles.primaryActionButton} type="button" onClick={onClose}>
-        Seguir vendiendo
-      </button>
+      <div className={styles.successActions}>
+        {cancelErrorMessage ? (
+          <p className={styles.successReceiptError}>{cancelErrorMessage}</p>
+        ) : null}
+        <button
+          className={styles.dangerActionButton}
+          disabled={isCanceling}
+          type="button"
+          onClick={onCancel}
+        >
+          {isCanceling ? 'Cancelando venta...' : 'Cancelar venta'}
+        </button>
+        <button
+          className={styles.primaryActionButton}
+          type="button"
+          onClick={onClose}
+        >
+          Seguir vendiendo
+        </button>
+      </div>
     </DrawerShell>
   )
 }
@@ -922,6 +929,8 @@ function SaleSuccessDrawer({ sale, onClose }: SaleSuccessDrawerProps) {
 export function RetailSalesWorkspace() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { confirm, confirmationDialog } = useConfirmDialog()
+  const toast = useToast()
   const [searchValue, setSearchValue] = useState('')
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [saleStep, setSaleStep] = useState<RetailStep>('CATALOG')
@@ -970,6 +979,7 @@ export function RetailSalesWorkspace() {
   const createCashRegisterManualEntryMutation =
     useCreateCashRegisterManualEntryMutation()
   const createSaleMutation = useCreateSaleMutation()
+  const cancelSaleMutation = useCancelSaleMutation()
   const salesQuery = useSalesQuery()
   const expenseCategoriesQuery = useExpenseCategoriesQuery()
   const createExpenseMutation = useCreateExpenseMutation()
@@ -1025,6 +1035,9 @@ export function RetailSalesWorkspace() {
   } = useSaleCart(products, {
     allowSaleWithoutStock,
   })
+  const cancelSaleErrorMessage = cancelSaleMutation.error
+    ? getErrorMessage(cancelSaleMutation.error, 'No pudimos cancelar la venta.')
+    : null
 
   const visibleCategories = useMemo(() => {
     const usedCategoryIds = new Set(
@@ -1693,6 +1706,38 @@ export function RetailSalesWorkspace() {
           'No pudimos registrar el gasto en este momento.',
         ),
       )
+    }
+  }
+
+  async function handleCancelCompletedSale() {
+    if (!completedSale || cancelSaleMutation.isPending) {
+      return
+    }
+
+    const confirmed = await confirm({
+      cancelLabel: 'Volver',
+      confirmLabel: 'Cancelar venta',
+      description:
+        'La venta quedará anulada, se revertirá el movimiento registrado y el inventario volverá a su cantidad anterior.',
+      title: '¿Quieres cancelar esta venta?',
+      tone: 'danger',
+    })
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      await cancelSaleMutation.mutateAsync({
+        saleId: completedSale.id,
+        input: {
+          reason: 'Cancelada desde el comprobante de venta',
+        },
+      })
+      clearCheckoutFeedback()
+      toast.showSuccess('Venta cancelada correctamente.')
+    } catch (error) {
+      toast.showError(error, 'No pudimos cancelar la venta.')
     }
   }
 
@@ -2741,10 +2786,17 @@ export function RetailSalesWorkspace() {
 
       {completedSale ? (
         <SaleSuccessDrawer
+          cancelErrorMessage={cancelSaleErrorMessage}
+          isCanceling={cancelSaleMutation.isPending}
           sale={completedSale}
+          onCancel={() => {
+            void handleCancelCompletedSale()
+          }}
           onClose={() => clearCheckoutFeedback()}
         />
       ) : null}
+
+      {confirmationDialog}
 
       {isChangeModalOpen ? (
         <ChangeCalculatorModal

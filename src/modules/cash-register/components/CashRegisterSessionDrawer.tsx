@@ -14,6 +14,7 @@ import {
   formatCashRegisterDateTime,
 } from "@/modules/cash-register/utils/format-cash-register";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { downloadBlobFile } from "@/shared/utils/download-blob-file";
 import { CashRegisterRetailDrawer } from "./CashRegisterRetailDrawer";
 import styles from "./CashRegisterSessionDrawer.module.css";
 
@@ -321,13 +322,8 @@ function downloadVoucher(
       type: "text/html;charset=utf-8",
     },
   );
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
 
-  link.href = url;
-  link.download = `arqueo-caja-${session.id}.html`;
-  link.click();
-  window.URL.revokeObjectURL(url);
+  downloadBlobFile(blob, `arqueo-caja-${session.id}.html`);
 }
 
 export function CashRegisterSessionDrawer({

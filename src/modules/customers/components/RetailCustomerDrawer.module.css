@@ -9,55 +9,8 @@
   gap: 1rem;
 }
 
-.avatarUploader {
-  display: inline-grid;
-  justify-items: center;
-  gap: 0.55rem;
-  width: max-content;
-  color: #1f2a37;
-  font-size: 0.9rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.avatarInput {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
-
-.avatarPlaceholder,
-.avatarPreview {
-  width: 5.25rem;
-  height: 5.25rem;
-  border-radius: 999px;
-}
-
-.avatarPlaceholder {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed #2563eb;
-  background: #dbeafe;
-  color: #2563eb;
-}
-
-.avatarPlaceholder svg {
-  width: 1.75rem;
-  height: 1.75rem;
-}
-
-.avatarPreview,
 .avatarImage {
   object-fit: cover;
-}
-
-.avatarPreview {
-  display: block;
-  border: 1px solid rgba(192, 204, 218, 0.96);
 }
 
 .field {
@@ -375,8 +328,7 @@
   background: #f4f7fb;
 }
 
-.receiptActions,
-.footerActions {
+.receiptActions {
   display: grid;
   gap: 0.75rem;
 }
@@ -385,8 +337,7 @@
   .twoColumns,
   .infoGrid,
   .behaviorGrid,
-  .receiptActions,
-  .footerActions {
+  .receiptActions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

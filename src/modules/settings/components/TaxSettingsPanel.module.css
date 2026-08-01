@@ -367,55 +367,14 @@
   color: #991b1b;
 }
 
-.drawerBackdrop {
-  position: fixed;
-  inset: 0;
+.drawerOverlay {
   z-index: 260;
-  display: flex;
-  justify-content: flex-end;
   background: rgba(17, 24, 39, 0.55);
 }
 
 .taxDrawer {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto;
   width: min(100%, 30rem);
-  min-height: 100vh;
-  background: #ffffff;
   box-shadow: -1.25rem 0 2rem rgba(15, 23, 42, 0.08);
-}
-
-.drawerHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.7rem 1.45rem 1.2rem;
-}
-
-.drawerTitle {
-  margin: 0;
-  color: #1f2a37;
-  font-size: 1rem;
-  font-weight: 900;
-}
-
-.drawerCloseButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.85rem;
-  height: 1.85rem;
-  border: 0;
-  border-radius: 999px;
-  background: #000000;
-  color: #ffffff;
-  cursor: pointer;
-}
-
-.drawerCloseButton svg {
-  width: 1rem;
-  height: 1rem;
 }
 
 .drawerContent {
@@ -424,6 +383,10 @@
   gap: 1.2rem;
   min-height: 0;
   overflow: auto;
+  padding: 1rem 1.45rem 2rem;
+}
+
+.taxDrawer .drawerContent {
   padding: 1rem 1.45rem 2rem;
 }
 
@@ -520,13 +483,26 @@
   color: #8292a8;
 }
 
-.productSelectorView {
+.productSelectorBackdrop {
   position: fixed;
   inset: 0;
   z-index: 280;
+  display: block;
+  padding: 0;
+  background: #ffffff;
+}
+
+.productSelectorView {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
+  width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  border: 0;
+  border-radius: 0;
   background: #ffffff;
+  box-shadow: none;
 }
 
 .selectorTopbar {

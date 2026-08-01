@@ -46,6 +46,7 @@ import {
   getTodayDateInput,
   toDateInputValue as toLocalDateInputValue,
 } from "@/shared/utils/date-input";
+import { downloadBlobFile } from "@/shared/utils/download-blob-file";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import styles from "./QuotationFormWorkspace.module.css";
@@ -230,16 +231,6 @@ function openPrintableDocument(html: string) {
   printWindow.document.close();
   printWindow.focus();
   printWindow.print();
-}
-
-function downloadBlobFile(blob: Blob, filename: string) {
-  const downloadUrl = URL.createObjectURL(blob);
-  const linkElement = document.createElement("a");
-
-  linkElement.href = downloadUrl;
-  linkElement.download = filename;
-  linkElement.click();
-  URL.revokeObjectURL(downloadUrl);
 }
 
 function createQuotationReceiptHtml({

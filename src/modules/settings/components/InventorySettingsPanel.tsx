@@ -4,7 +4,7 @@ import type {
   BusinessOperationalSettingsInput,
   BusinessSettings,
 } from "@/modules/settings/types/settings";
-import { getErrorMessage } from "@/shared/utils/get-error-message";
+import { useToast } from "@/shared/hooks/use-toast";
 import styles from "./InventorySettingsPanel.module.css";
 
 type InventorySettingsPanelProps = {
@@ -14,11 +14,6 @@ type InventorySettingsPanelProps = {
   isSubmitting: boolean;
   onRetry: () => void;
   onSubmit: (input: BusinessOperationalSettingsInput) => Promise<void>;
-};
-
-type FeedbackMessage = {
-  tone: "success" | "error";
-  text: string;
 };
 
 function buildOperationalSettingsInput(
@@ -45,8 +40,7 @@ export function InventorySettingsPanel({
   const [lowStockAlertsEnabled, setLowStockAlertsEnabled] = useState(
     businessSettings?.lowStockAlertsEnabled ?? true,
   );
-  const [feedbackMessage, setFeedbackMessage] =
-    useState<FeedbackMessage | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     setLowStockAlertsEnabled(businessSettings?.lowStockAlertsEnabled ?? true);
@@ -63,29 +57,20 @@ export function InventorySettingsPanel({
       return;
     }
 
-    setFeedbackMessage(null);
-
     try {
       await onSubmit(
         buildOperationalSettingsInput(businessSettings, lowStockAlertsEnabled),
       );
-      setFeedbackMessage({
-        tone: "success",
-        text: "Configuración de inventario actualizada.",
-      });
+      toast.showSuccess("Configuración de inventario actualizada.");
     } catch (error) {
-      setFeedbackMessage({
-        tone: "error",
-        text: getErrorMessage(
-          error,
-          "No fue posible guardar la configuración de inventario.",
-        ),
-      });
+      toast.showError(
+        error,
+        "No fue posible guardar la configuración de inventario.",
+      );
     }
   }
 
   function handleToggle(nextValue: boolean) {
-    setFeedbackMessage(null);
     setLowStockAlertsEnabled(nextValue);
   }
 
@@ -145,18 +130,6 @@ export function InventorySettingsPanel({
               onChange={(event) => handleToggle(event.target.checked)}
             />
           </label>
-
-          {feedbackMessage ? (
-            <p
-              className={
-                feedbackMessage.tone === "success"
-                  ? styles.feedbackSuccess
-                  : styles.feedbackError
-              }
-            >
-              {feedbackMessage.text}
-            </p>
-          ) : null}
 
           <div className={styles.footer}>
             <button

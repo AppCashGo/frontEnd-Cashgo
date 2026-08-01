@@ -1192,20 +1192,6 @@
   box-shadow: -1.4rem 0 2.6rem rgba(15, 23, 42, 0.14);
 }
 
-.drawerHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.25rem 1.15rem 1rem;
-}
-
-.drawerHeaderLead {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.85rem;
-}
-
 .drawerIconBadge {
   display: inline-flex;
   align-items: center;
@@ -1226,39 +1212,6 @@
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-}
-
-.drawerCopy {
-  display: grid;
-  gap: 0.45rem;
-}
-
-.drawerTitle {
-  margin: 0;
-  color: #1f2a37;
-  font-size: 1.5rem;
-  font-weight: 900;
-}
-
-.drawerSubtitle {
-  margin: 0;
-  color: #66758c;
-  line-height: 1.5;
-}
-
-.drawerClose {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: 0;
-  border-radius: 999px;
-  background: #111827;
-  color: #ffffff;
-  font-size: 1.1rem;
-  font-weight: 900;
-  cursor: pointer;
 }
 
 .drawerBody {
@@ -1370,12 +1323,6 @@
 }
 
 .modalBackdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 90;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   padding: 1.5rem;
   background: rgba(15, 23, 42, 0.48);
 }
@@ -1535,6 +1482,30 @@
 
 .successReceiptAction:disabled {
   opacity: 0.62;
+  cursor: wait;
+}
+
+.successActions {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.dangerActionButton {
+  width: 100%;
+  min-height: 3.3rem;
+  padding: 0 1rem;
+  border: 1px solid #c24135;
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #c24135;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.dangerActionButton:disabled {
+  border-color: #e4a29b;
+  color: #d98f87;
   cursor: wait;
 }
 

@@ -3,6 +3,7 @@ import {
   businessCategoryOptions,
   type BusinessCategoryOption,
 } from "@/shared/constants/business-categories";
+import { ModalShell } from "@/shared/components/ui/ModalShell";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import { BusinessCategoryIcon } from "./business-category-icons";
@@ -62,20 +63,30 @@ export function BusinessCategoryPickerModal({
   }
 
   return (
-    <div className={styles.modalBackdrop} role="presentation" onClick={onClose}>
-      <div
-        aria-modal="true"
-        className={
-          variant === "auth"
-            ? `${styles.modal} ${styles.modalAuth}`
-            : styles.modal
-        }
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <ModalShell
+      ariaLabelledBy="business-category-picker-title"
+      className={styles.modalBackdrop}
+      closeButtonClassName={
+        variant === "auth"
+          ? `${styles.modalClose} ${styles.modalCloseIconOnly}`
+          : styles.modalClose
+      }
+      closeContent={variant === "auth" ? "×" : dictionary.common.close}
+      closeLabel={dictionary.common.close}
+      isOpen={isOpen}
+      panelClassName={
+        variant === "auth"
+          ? `${styles.modal} ${styles.modalAuth}`
+          : styles.modal
+      }
+      onClose={onClose}
+    >
         <div className={styles.modalHeader}>
           <div className={styles.modalCopy}>
-            <h3 className={styles.modalTitle}>
+            <h3
+              className={styles.modalTitle}
+              id="business-category-picker-title"
+            >
               {dictionary.auth.categories.title}
             </h3>
             {showDescription ? (
@@ -84,19 +95,6 @@ export function BusinessCategoryPickerModal({
               </p>
             ) : null}
           </div>
-
-          <button
-            aria-label={dictionary.common.close}
-            className={
-              variant === "auth"
-                ? `${styles.modalClose} ${styles.modalCloseIconOnly}`
-                : styles.modalClose
-            }
-            type="button"
-            onClick={onClose}
-          >
-            {variant === "auth" ? "×" : dictionary.common.close}
-          </button>
         </div>
 
         {showSearch ? (
@@ -215,7 +213,6 @@ export function BusinessCategoryPickerModal({
             </button>
           </div>
         ) : null}
-      </div>
-    </div>
+    </ModalShell>
   );
 }

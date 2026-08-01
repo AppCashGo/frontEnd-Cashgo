@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { isRouteErrorResponse, useRouteError } from 'react-router-dom'
+import { AsyncStateBlock } from '@/shared/components/states/AsyncStateBlock'
 import styles from './RouteErrorBoundary.module.css'
 
 const CHUNK_RELOAD_STORAGE_KEY = 'cashgo:chunk-reload-attempt'
@@ -51,27 +52,22 @@ export function RouteErrorBoundary() {
     ? 'Estamos actualizando Cashgo'
     : 'No pudimos cargar esta pantalla'
   const description = shouldReloadForFreshAssets
-    ? 'Publicamos una nueva version y tu navegador tenia archivos anteriores en memoria. Recarga la pagina para tomar la version mas reciente.'
-    : 'Ocurrio un error inesperado al preparar esta vista. Recarga la pagina e intenta nuevamente.'
+    ? 'Publicamos una nueva versión y tu navegador tenía archivos anteriores en memoria. Recarga la página para tomar la versión más reciente.'
+    : 'Ocurrió un error inesperado al preparar esta vista. Recarga la página e intenta nuevamente.'
 
   return (
-    <main className={styles.page}>
-      <section className={styles.card}>
-        <p className={styles.eyebrow}>Cashgo</p>
-        <h1 className={styles.title}>{title}</h1>
-        <p className={styles.description}>{description}</p>
-        <pre className={styles.details}>{message}</pre>
-        <button
-          className={styles.action}
-          onClick={() => {
-            window.sessionStorage.removeItem(CHUNK_RELOAD_STORAGE_KEY)
-            window.location.reload()
-          }}
-          type="button"
-        >
-          Recargar pagina
-        </button>
-      </section>
-    </main>
+    <AsyncStateBlock
+      actionLabel="Recargar página"
+      description={description}
+      onAction={() => {
+        window.sessionStorage.removeItem(CHUNK_RELOAD_STORAGE_KEY)
+        window.location.reload()
+      }}
+      title={title}
+      tone="error"
+      variant="page"
+    >
+      <pre className={styles.details}>{message}</pre>
+    </AsyncStateBlock>
   )
 }

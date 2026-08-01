@@ -538,8 +538,7 @@
   color: #15202b;
 }
 
-.overlayPanel,
-.modalBackdrop {
+.overlayPanel {
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -631,6 +630,7 @@
   display: grid;
   place-items: center;
   padding: 1rem;
+  background: rgba(15, 23, 42, 0.48);
 }
 
 .modifierModal,
@@ -644,6 +644,12 @@
   border-radius: 8px;
   background: #ffffff;
   padding: 1rem;
+}
+
+.modifierModal .panelHeader,
+.moveModal .panelHeader,
+.freeSaleModal .panelHeader {
+  padding-right: 2.75rem;
 }
 
 .modifierGroup {

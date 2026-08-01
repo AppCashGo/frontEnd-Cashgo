@@ -8,7 +8,6 @@ import {
   PackageCheck,
   Search,
   SlidersVertical,
-  X,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -30,6 +29,9 @@ import type {
   BusinessTaxSettingsInput,
 } from '@/modules/settings/types/settings'
 import { supportedCurrencies } from '@/modules/settings/types/settings'
+import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
+import { ModalShell } from '@/shared/components/ui/ModalShell'
+import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
@@ -386,118 +388,101 @@ function RetailTaxSettingsPanel({
         </div>
       </details>
 
-      {isDrawerOpen ? (
-        <div
-          className={styles.drawerBackdrop}
-          role="presentation"
-          onClick={handleCloseDrawer}
-        >
-          <aside
-            aria-label="Modificar impuestos"
-            aria-modal="true"
-            className={styles.taxDrawer}
-            role="dialog"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <header className={styles.drawerHeader}>
-              <h3 className={styles.drawerTitle}>Modificar impuestos</h3>
-              <button
-                aria-label="Cerrar"
-                className={styles.drawerCloseButton}
-                type="button"
-                onClick={handleCloseDrawer}
-              >
-                <X aria-hidden="true" />
-              </button>
-            </header>
-
-            <div className={styles.drawerContent}>
-              <div className={styles.drawerSectionHeader}>
-                <span className={styles.drawerLabel}>
-                  Selecciona los productos a modificar
-                </span>
-                {hasSelectedProducts ? (
-                  <button
-                    className={styles.clearButton}
-                    type="button"
-                    onClick={handleClearSelection}
-                  >
-                    Limpiar
-                  </button>
-                ) : null}
-              </div>
-
-              <button
-                className={styles.drawerSelectionButton}
-                type="button"
-                onClick={() => setProductSelectorOpen(true)}
-              >
-                <PackageCheck aria-hidden="true" className={styles.selectionIcon} />
-                <span>{selectedProductsLabel}</span>
-                <ChevronRight aria-hidden="true" className={styles.chevronIcon} />
-              </button>
-
-              <div className={styles.drawerDivider} />
-
-              <div className={styles.drawerFieldset}>
-                <p className={styles.drawerSectionTitle}>
-                  Selecciona los impuestos aplicables
-                </p>
-                <label className={styles.drawerField}>
-                  <span className={styles.drawerLabel}>Impuesto base</span>
-                  <span className={styles.selectWrapper}>
-                    <select
-                      className={styles.drawerSelect}
-                      value={selectedTaxOptionId}
-                      onChange={(event) =>
-                        setSelectedTaxOptionId(event.target.value as TaxOptionId | '')
-                      }
-                    >
-                      <option value="">Selecciona una opción</option>
-                      {inventoryTaxOptions.map((option) => (
-                        <option key={option.id} value={option.id}>
-                          {formatTaxOptionLabel(option)}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown aria-hidden="true" className={styles.selectIcon} />
-                  </span>
-                </label>
-              </div>
-            </div>
-
-            <footer className={styles.drawerFooter}>
-              <button
-                className={styles.drawerPrimaryButton}
-                disabled={!canSaveProductTaxes}
-                type="button"
-                onClick={() => {
-                  void handleSaveProductTaxes()
-                }}
-              >
-                {updateProductTaxesMutation.isPending
-                  ? 'Guardando cambios...'
-                  : 'Guardar cambios'}
-              </button>
-              <button
-                className={styles.drawerCancelButton}
-                type="button"
-                onClick={handleCloseDrawer}
-              >
-                Cancelar
-              </button>
-            </footer>
-          </aside>
+      <SideDrawer
+        bodyClassName={styles.drawerContent}
+        className={styles.drawerOverlay}
+        closeLabel="Cerrar"
+        footer={
+          <DrawerActionFooter layout="stack">
+            <button
+              className={styles.drawerPrimaryButton}
+              disabled={!canSaveProductTaxes}
+              type="button"
+              onClick={() => {
+                void handleSaveProductTaxes()
+              }}
+            >
+              {updateProductTaxesMutation.isPending
+                ? 'Guardando cambios...'
+                : 'Guardar cambios'}
+            </button>
+            <button
+              className={styles.drawerCancelButton}
+              type="button"
+              onClick={handleCloseDrawer}
+            >
+              Cancelar
+            </button>
+          </DrawerActionFooter>
+        }
+        footerClassName={styles.drawerFooter}
+        isOpen={isDrawerOpen}
+        panelClassName={styles.taxDrawer}
+        title="Modificar impuestos"
+        onClose={handleCloseDrawer}
+      >
+        <div className={styles.drawerSectionHeader}>
+          <span className={styles.drawerLabel}>
+            Selecciona los productos a modificar
+          </span>
+          {hasSelectedProducts ? (
+            <button
+              className={styles.clearButton}
+              type="button"
+              onClick={handleClearSelection}
+            >
+              Limpiar
+            </button>
+          ) : null}
         </div>
-      ) : null}
 
-      {isProductSelectorOpen ? (
-        <div
-          aria-label="Seleccionar productos a modificar"
-          aria-modal="true"
-          className={styles.productSelectorView}
-          role="dialog"
+        <button
+          className={styles.drawerSelectionButton}
+          type="button"
+          onClick={() => setProductSelectorOpen(true)}
         >
+          <PackageCheck aria-hidden="true" className={styles.selectionIcon} />
+          <span>{selectedProductsLabel}</span>
+          <ChevronRight aria-hidden="true" className={styles.chevronIcon} />
+        </button>
+
+        <div className={styles.drawerDivider} />
+
+        <div className={styles.drawerFieldset}>
+          <p className={styles.drawerSectionTitle}>
+            Selecciona los impuestos aplicables
+          </p>
+          <label className={styles.drawerField}>
+            <span className={styles.drawerLabel}>Impuesto base</span>
+            <span className={styles.selectWrapper}>
+              <select
+                className={styles.drawerSelect}
+                value={selectedTaxOptionId}
+                onChange={(event) =>
+                  setSelectedTaxOptionId(event.target.value as TaxOptionId | '')
+                }
+              >
+                <option value="">Selecciona una opción</option>
+                {inventoryTaxOptions.map((option) => (
+                  <option key={option.id} value={option.id}>
+                    {formatTaxOptionLabel(option)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown aria-hidden="true" className={styles.selectIcon} />
+            </span>
+          </label>
+        </div>
+      </SideDrawer>
+
+      <ModalShell
+        ariaLabel="Seleccionar productos a modificar"
+        className={styles.productSelectorBackdrop}
+        isOpen={isProductSelectorOpen}
+        panelClassName={styles.productSelectorView}
+        showCloseButton={false}
+        onClose={() => setProductSelectorOpen(false)}
+      >
           <header className={styles.selectorTopbar}>
             <button
               className={styles.selectorBackButton}
@@ -608,8 +593,7 @@ function RetailTaxSettingsPanel({
               </button>
             </div>
           ) : null}
-        </div>
-      ) : null}
+      </ModalShell>
     </>
   )
 }

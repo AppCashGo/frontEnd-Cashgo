@@ -10,6 +10,7 @@ import type {
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import { getBillingCopy } from "@/modules/billing/i18n/billing-copy";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
 import styles from "./BillingFormDrawer.module.css";
 
 type BillingConfigurationDrawerProps = {
@@ -147,7 +148,7 @@ export function BillingConfigurationDrawer({
     <CashRegisterRetailDrawer
       description={copy.configDescription}
       footer={
-        <div className={styles.footerActions}>
+        <DrawerActionFooter>
           <button
             className={retailStyles.buttonOutline}
             disabled={isSubmitting}
@@ -164,7 +165,7 @@ export function BillingConfigurationDrawer({
           >
             {isSubmitting ? copy.saving : copy.configSave}
           </button>
-        </div>
+        </DrawerActionFooter>
       }
       isOpen={isOpen}
       title={copy.configTitle}

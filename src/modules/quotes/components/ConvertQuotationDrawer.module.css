@@ -109,13 +109,6 @@
   color: #0d7d3b;
 }
 
-.footerActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.75rem;
-}
-
 .errorMessage,
 .errorBanner {
   color: #c03f34;

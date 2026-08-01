@@ -3,11 +3,16 @@ import { joinClassNames } from "@/shared/utils/join-class-names";
 import styles from "./SideDrawer.module.css";
 
 type SideDrawerProps = {
+  ariaLabel?: string;
   isOpen: boolean;
   title: string;
   description?: string;
+  titleAccessory?: ReactNode;
   footer?: ReactNode;
   children: ReactNode;
+  closeButtonClassName?: string;
+  closeButtonPlacement?: "start" | "end";
+  closeContent?: ReactNode;
   closeLabel?: string;
   className?: string;
   panelClassName?: string;
@@ -17,11 +22,16 @@ type SideDrawerProps = {
 };
 
 export function SideDrawer({
+  ariaLabel,
   isOpen,
   title,
   description,
+  titleAccessory,
   footer,
   children,
+  closeButtonClassName,
+  closeButtonPlacement = "end",
+  closeContent,
   closeLabel = "Close",
   className,
   panelClassName,
@@ -33,6 +43,17 @@ export function SideDrawer({
     return null;
   }
 
+  const closeButton = (
+    <button
+      aria-label={closeLabel}
+      className={joinClassNames(styles.closeButton, closeButtonClassName)}
+      type="button"
+      onClick={onClose}
+    >
+      {closeContent ?? <>&times;</>}
+    </button>
+  );
+
   return (
     <div
       className={joinClassNames(styles.backdrop, className)}
@@ -40,25 +61,25 @@ export function SideDrawer({
       onClick={onClose}
     >
       <div
+        aria-label={ariaLabel ?? title}
         aria-modal="true"
         className={joinClassNames(styles.drawer, panelClassName)}
         role="dialog"
         onClick={(event) => event.stopPropagation()}
       >
         <div className={styles.header}>
+          {closeButtonPlacement === "start" ? closeButton : null}
+
+          {titleAccessory ? (
+            <span className={styles.titleAccessory}>{titleAccessory}</span>
+          ) : null}
+
           <div className={styles.headerCopy}>
             <h3 className={styles.title}>{title}</h3>
             {description ? <p className={styles.description}>{description}</p> : null}
           </div>
 
-          <button
-            aria-label={closeLabel}
-            className={styles.closeButton}
-            type="button"
-            onClick={onClose}
-          >
-            &times;
-          </button>
+          {closeButtonPlacement === "end" ? closeButton : null}
         </div>
 
         <div className={joinClassNames(styles.body, bodyClassName)}>{children}</div>

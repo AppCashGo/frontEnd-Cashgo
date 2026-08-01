@@ -12,6 +12,7 @@ import { useCreateManagedBusinessMutation } from "@/modules/settings/hooks/use-s
 import { CreateBusinessModal } from "@/shared/components/business/CreateBusinessModal";
 import { getBusinessNavigationPreset } from "@/shared/constants/business-categories";
 import { BrandLogo } from "@/shared/components/brand/BrandLogo";
+import { AppIcon, type AppIconName } from "@/shared/components/icons/AppIcon";
 import { LanguageSelect } from "@/shared/components/ui/LanguageSelect";
 import {
   getModuleLandingPath,
@@ -31,27 +32,7 @@ type SidebarProps = {
   onCloseMobile: () => void;
 };
 
-type SidebarIconName =
-  | "dashboard"
-  | "sales"
-  | "deliveries"
-  | "movements"
-  | "billing"
-  | "reports"
-  | "inventory"
-  | "products"
-  | "expenses"
-  | "employees"
-  | "quotes"
-  | "money"
-  | "customers"
-  | "suppliers"
-  | "settings"
-  | "help"
-  | "learn"
-  | "terms"
-  | "privacy"
-  | "logout";
+type SidebarIconName = AppIconName;
 
 type SidebarIconProps = {
   name: SidebarIconName;
@@ -59,131 +40,7 @@ type SidebarIconProps = {
 };
 
 function SidebarIcon({ name, className }: SidebarIconProps) {
-  switch (name) {
-    case "dashboard":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M4 13h6v7H4zM14 4h6v16h-6zM4 4h6v5H4zM14 13h6v7h-6z" />
-        </svg>
-      );
-    case "sales":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M7 7h10l3 5-8 8-8-8 3-5zM9 7l3 13M15 7l-3 13" />
-        </svg>
-      );
-    case "deliveries":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M3 7h11v8H3zM14 10h4l3 3v2h-7zM7 18a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3ZM18 18a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" />
-        </svg>
-      );
-    case "movements":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M6 18V6M6 6l-2 2M6 6l2 2M18 6v12M18 18l-2-2M18 18l2-2M10 9h4M10 15h4" />
-        </svg>
-      );
-    case "billing":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M7 3h10v18l-2-1-2 1-2-1-2 1-2-1zM9 8h6M9 12h6M9 16h4" />
-        </svg>
-      );
-    case "reports":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M5 19V9M12 19V5M19 19v-8M3 19h18" />
-        </svg>
-      );
-    case "inventory":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M4 7 12 3l8 4-8 4-8-4ZM4 7v10l8 4 8-4V7M8 9l8 4" />
-        </svg>
-      );
-    case "products":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M7 5h10l2 4-7 11L5 9l2-4ZM9 9h6" />
-        </svg>
-      );
-    case "expenses":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M4 7h16v10H4zM8 12h8M12 9v6" />
-        </svg>
-      );
-    case "employees":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM17 12a2.5 2.5 0 1 0 0-5M4 19a5 5 0 0 1 10 0M14 19a4 4 0 0 1 6 0" />
-        </svg>
-      );
-    case "quotes":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M7 4h10v16H7zM9 8h6M9 12h6M9 16h4M5 8h2M5 12h2M5 16h2" />
-        </svg>
-      );
-    case "money":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M4 7h16v10H4zM8 12h8M12 9v6" />
-          <circle cx="12" cy="12" r="2.5" />
-        </svg>
-      );
-    case "customers":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M12 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM5 20a7 7 0 0 1 14 0M18.5 8.5h3M20 7v3" />
-        </svg>
-      );
-    case "suppliers":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M3 7h11v8H3zM14 10h4l3 3v2h-7zM7 18a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3ZM18 18a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3Z" />
-        </svg>
-      );
-    case "settings":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7ZM4 13v-2l2.3-.6.7-1.7-1.2-2 1.4-1.4 2 1.2 1.7-.7L11 4h2l.6 2.3 1.7.7 2-1.2 1.4 1.4-1.2 2 .7 1.7L20 11v2l-2.3.6-.7 1.7 1.2 2-1.4 1.4-2-1.2-1.7.7L13 20h-2l-.6-2.3-1.7-.7-2 1.2-1.4-1.4 1.2-2-.7-1.7z" />
-        </svg>
-      );
-    case "help":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M12 18h.01M9.1 9a3 3 0 1 1 5.2 2c-.8.8-1.8 1.3-1.8 3M12 21a9 9 0 1 1 0-18 9 9 0 0 1 0 18Z" />
-        </svg>
-      );
-    case "learn":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H20v14H6.5A2.5 2.5 0 0 0 4 20.5V6.5ZM4 20.5A2.5 2.5 0 0 1 6.5 18H20M8 8h7M8 12h7" />
-        </svg>
-      );
-    case "terms":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M7 4h10v16H7zM9 8h6M9 12h6M9 16h4" />
-        </svg>
-      );
-    case "privacy":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M12 3 5 6v5c0 5 3 8 7 10 4-2 7-5 7-10V6l-7-3ZM9 11a3 3 0 1 1 6 0v2H9zM8 13h8v4H8z" />
-        </svg>
-      );
-    case "logout":
-      return (
-        <svg aria-hidden="true" className={className} viewBox="0 0 24 24">
-          <path d="M10 17 15 12 10 7M15 12H4M12 4h6v16h-6" />
-        </svg>
-      );
-    default:
-      return null;
-  }
+  return <AppIcon className={className} name={name} />;
 }
 
 function BusinessAvatar({

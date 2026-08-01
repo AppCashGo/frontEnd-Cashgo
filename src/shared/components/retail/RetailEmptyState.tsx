@@ -2,7 +2,7 @@ import styles from "./RetailUI.module.css";
 
 type RetailEmptyStateProps = {
   title: string;
-  description: string;
+  description?: string;
 };
 
 export function RetailEmptyState({
@@ -13,7 +13,9 @@ export function RetailEmptyState({
     <div className={styles.emptyState}>
       <div className={styles.emptyIcon} />
       <p className={styles.emptyTitle}>{title}</p>
-      <p className={styles.emptyDescription}>{description}</p>
+      {description ? (
+        <p className={styles.emptyDescription}>{description}</p>
+      ) : null}
     </div>
   );
 }

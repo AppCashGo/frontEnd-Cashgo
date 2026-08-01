@@ -25,6 +25,7 @@ import {
   type AssignableUserRole,
   userRoleLabels,
 } from "@/shared/constants/user-roles";
+import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { formatDate } from "@/shared/utils/format-date";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import {
@@ -130,13 +131,11 @@ export function UsersManagementPanel({
   const selectedUser = users.find((user) => user.id === selectedUserId) ?? null;
   const isEditing = selectedUser !== null;
   const isSubmitting =
-    isCreatingUser ||
-    isUpdatingUser ||
-    isUploadingUserAvatar ||
-    isDeletingUser;
+    isCreatingUser || isUpdatingUser || isUploadingUserAvatar || isDeletingUser;
   const isCurrentUserSelected = selectedUser?.id === currentUserId;
   const storedAvatarUrl = resolveApiAssetUrl(selectedUser?.avatarUrl);
   const visibleAvatarUrl = avatarPreviewUrl ?? storedAvatarUrl;
+  const { confirm, confirmationDialog } = useConfirmDialog();
   const {
     register,
     handleSubmit,
@@ -278,9 +277,12 @@ export function UsersManagementPanel({
       return;
     }
 
-    const confirmed = window.confirm(
-      `Delete ${selectedUser.name} from the workspace?`,
-    );
+    const confirmed = await confirm({
+      title: "Delete user",
+      description: `Delete ${selectedUser.name} from the workspace? This removes their access to this business.`,
+      confirmLabel: "Delete user",
+      tone: "danger",
+    });
 
     if (!confirmed) {
       return;
@@ -307,378 +309,400 @@ export function UsersManagementPanel({
   }
 
   return (
-    <SurfaceCard className={styles.card}>
-      <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Users and roles</p>
-          <h3 className={styles.title}>
-            Manage admin access and day-to-day team members from one workspace.
-          </h3>
-          <p className={styles.description}>
-            Create accounts, adjust names and roles, and keep the operational
-            team neatly organized.
-          </p>
+    <>
+      {confirmationDialog}
+      <SurfaceCard className={styles.card}>
+        <div className={styles.header}>
+          <div>
+            <p className={styles.eyebrow}>Users and roles</p>
+            <h3 className={styles.title}>
+              Manage admin access and day-to-day team members from one
+              workspace.
+            </h3>
+            <p className={styles.description}>
+              Create accounts, adjust names and roles, and keep the operational
+              team neatly organized.
+            </p>
+          </div>
+
+          <div className={styles.headerActions}>
+            {isRefreshing && !isLoading ? (
+              <span className={styles.refreshingLabel}>Refreshing...</span>
+            ) : null}
+
+            <button
+              className={styles.secondaryButton}
+              type="button"
+              onClick={handleStartCreate}
+            >
+              Create user
+            </button>
+          </div>
         </div>
 
-        <div className={styles.headerActions}>
-          {isRefreshing && !isLoading ? (
-            <span className={styles.refreshingLabel}>Refreshing...</span>
-          ) : null}
+        <label className={styles.searchField}>
+          <span className={styles.searchLabel}>Search users</span>
+          <input
+            className={styles.searchInput}
+            name="settings-user-search"
+            placeholder="Search by name, email or role"
+            type="search"
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
+          />
+        </label>
 
-          <button
-            className={styles.secondaryButton}
-            type="button"
-            onClick={handleStartCreate}
-          >
-            Create user
-          </button>
-        </div>
-      </div>
+        {errorMessage ? (
+          <div className={styles.feedbackCard} role="alert">
+            <p className={styles.feedbackTitle}>
+              Unable to load user management
+            </p>
+            <p className={styles.feedbackDescription}>{errorMessage}</p>
+            <button
+              className={styles.feedbackButton}
+              type="button"
+              onClick={onRetry}
+            >
+              Retry
+            </button>
+          </div>
+        ) : null}
 
-      <label className={styles.searchField}>
-        <span className={styles.searchLabel}>Search users</span>
-        <input
-          className={styles.searchInput}
-          name="settings-user-search"
-          placeholder="Search by name, email or role"
-          type="search"
-          value={searchValue}
-          onChange={(event) => setSearchValue(event.target.value)}
-        />
-      </label>
+        <div className={styles.workspace}>
+          <div className={styles.listColumn}>
+            {isLoading ? (
+              <div className={styles.loadingState}>
+                <p className={styles.loadingTitle}>Loading team members...</p>
+                <p className={styles.loadingDescription}>
+                  Pulling users and roles from the admin module.
+                </p>
+              </div>
+            ) : null}
 
-      {errorMessage ? (
-        <div className={styles.feedbackCard} role="alert">
-          <p className={styles.feedbackTitle}>Unable to load user management</p>
-          <p className={styles.feedbackDescription}>{errorMessage}</p>
-          <button
-            className={styles.feedbackButton}
-            type="button"
-            onClick={onRetry}
-          >
-            Retry
-          </button>
-        </div>
-      ) : null}
+            {!isLoading && !errorMessage && visibleUsers.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p className={styles.emptyTitle}>
+                  No users match the current search
+                </p>
+                <p className={styles.emptyDescription}>
+                  Try another name, email or role, or create a new user from the
+                  form on the right.
+                </p>
+              </div>
+            ) : null}
 
-      <div className={styles.workspace}>
-        <div className={styles.listColumn}>
-          {isLoading ? (
-            <div className={styles.loadingState}>
-              <p className={styles.loadingTitle}>Loading team members...</p>
-              <p className={styles.loadingDescription}>
-                Pulling users and roles from the admin module.
-              </p>
-            </div>
-          ) : null}
+            {!isLoading && !errorMessage && visibleUsers.length > 0 ? (
+              <div className={styles.userList}>
+                {visibleUsers.map((user) => {
+                  const isSelected = user.id === selectedUserId;
+                  const isCurrentUser = user.id === currentUserId;
+                  const avatarUrl = resolveApiAssetUrl(user.avatarUrl);
 
-          {!isLoading && !errorMessage && visibleUsers.length === 0 ? (
-            <div className={styles.emptyState}>
-              <p className={styles.emptyTitle}>
-                No users match the current search
-              </p>
-              <p className={styles.emptyDescription}>
-                Try another name, email or role, or create a new user from the
-                form on the right.
-              </p>
-            </div>
-          ) : null}
+                  return (
+                    <button
+                      key={user.id}
+                      className={joinClassNames(
+                        styles.userButton,
+                        isSelected && styles.userButtonActive,
+                      )}
+                      type="button"
+                      onClick={() => setSelectedUserId(user.id)}
+                    >
+                      <div className={styles.userButtonTopRow}>
+                        <div className={styles.userIdentity}>
+                          <span
+                            className={styles.userAvatar}
+                            aria-hidden="true"
+                          >
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt="" />
+                            ) : (
+                              getUserInitials(user.name)
+                            )}
+                          </span>
 
-          {!isLoading && !errorMessage && visibleUsers.length > 0 ? (
-            <div className={styles.userList}>
-              {visibleUsers.map((user) => {
-                const isSelected = user.id === selectedUserId;
-                const isCurrentUser = user.id === currentUserId;
-                const avatarUrl = resolveApiAssetUrl(user.avatarUrl);
-
-                return (
-                  <button
-                    key={user.id}
-                    className={joinClassNames(
-                      styles.userButton,
-                      isSelected && styles.userButtonActive,
-                    )}
-                    type="button"
-                    onClick={() => setSelectedUserId(user.id)}
-                  >
-                    <div className={styles.userButtonTopRow}>
-                      <div className={styles.userIdentity}>
-                        <span className={styles.userAvatar} aria-hidden="true">
-                          {avatarUrl ? (
-                            <img src={avatarUrl} alt="" />
-                          ) : (
-                            getUserInitials(user.name)
-                          )}
-                        </span>
-
-                        <div>
-                          <p className={styles.userName}>{user.name}</p>
-                          <p className={styles.userMeta}>{user.email}</p>
+                          <div>
+                            <p className={styles.userName}>{user.name}</p>
+                            <p className={styles.userMeta}>{user.email}</p>
+                          </div>
                         </div>
+
+                        <span
+                          className={joinClassNames(
+                            styles.rolePill,
+                            isAdminWorkspaceRole(user.role) &&
+                              styles.rolePillAdmin,
+                          )}
+                        >
+                          {userRoleLabels[user.role]}
+                        </span>
                       </div>
 
-                      <span
-                        className={joinClassNames(
-                          styles.rolePill,
-                          isAdminWorkspaceRole(user.role) &&
-                            styles.rolePillAdmin,
-                        )}
-                      >
-                        {userRoleLabels[user.role]}
-                      </span>
-                    </div>
-
-                    <div className={styles.userButtonFooter}>
-                      <span>Created {formatDate(user.createdAt)}</span>
-                      <span>
-                        {isCurrentUser ? "Signed in user" : "Team member"}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          ) : null}
-        </div>
-
-        <form className={styles.form} noValidate onSubmit={submitUser}>
-          <div className={styles.formHeader}>
-            <div>
-              <p className={styles.formEyebrow}>
-                {isEditing ? "Edit user" : "Create user"}
-              </p>
-              <h4 className={styles.formTitle}>
-                {isEditing
-                  ? `Update ${selectedUser.name}`
-                  : "Invite a new teammate into the workspace"}
-              </h4>
-            </div>
-
-            {isEditing ? (
-              <span className={styles.formTag}>
-                {isCurrentUserSelected ? "Current session" : selectedUser.role}
-              </span>
-            ) : null}
-          </div>
-
-          <div className={styles.avatarField}>
-            <span className={styles.avatarPreview} aria-hidden="true">
-              {visibleAvatarUrl ? (
-                <img src={visibleAvatarUrl} alt="" />
-              ) : (
-                getUserInitials(selectedUser?.name ?? "Usuario")
-              )}
-            </span>
-
-            <div className={styles.avatarCopy}>
-              <p className={styles.avatarTitle}>Foto de perfil</p>
-              <p className={styles.avatarDescription}>
-                Sube una imagen PNG, JPG o WEBP de hasta 2MB.
-              </p>
-              <div className={styles.avatarActions}>
-                <label
-                  className={joinClassNames(
-                    styles.avatarUploadButton,
-                    (isSubmitting || errorMessage !== null) &&
-                      styles.avatarUploadButtonDisabled,
-                  )}
-                  htmlFor="settings-user-avatar"
-                >
-                  {avatarFile ? "Cambiar foto seleccionada" : "Subir foto"}
-                </label>
-                {avatarPreviewUrl ? (
-                  <button
-                    className={styles.avatarClearButton}
-                    disabled={isSubmitting || errorMessage !== null}
-                    type="button"
-                    onClick={clearAvatarSelection}
-                  >
-                    Quitar seleccion
-                  </button>
-                ) : null}
+                      <div className={styles.userButtonFooter}>
+                        <span>Created {formatDate(user.createdAt)}</span>
+                        <span>
+                          {isCurrentUser ? "Signed in user" : "Team member"}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
-              <input
-                ref={avatarInputRef}
-                accept={IMAGE_UPLOAD_ACCEPT}
-                className={styles.fileInput}
-                disabled={isSubmitting || errorMessage !== null}
-                id="settings-user-avatar"
-                type="file"
-                onChange={handleAvatarChange}
-              />
-            </div>
-          </div>
-
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="settings-user-name">
-              Name
-            </label>
-            <input
-              aria-describedby={
-                errors.name ? "settings-user-name-error" : undefined
-              }
-              aria-invalid={Boolean(errors.name)}
-              className={styles.input}
-              disabled={isSubmitting || errorMessage !== null}
-              id="settings-user-name"
-              placeholder="Camila Perez"
-              type="text"
-              {...register("name")}
-            />
-            {errors.name ? (
-              <p className={styles.errorMessage} id="settings-user-name-error">
-                {errors.name.message}
-              </p>
             ) : null}
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="settings-user-email">
-              Email
-            </label>
-            <input
-              aria-describedby={
-                errors.email ? "settings-user-email-error" : undefined
-              }
-              aria-invalid={Boolean(errors.email)}
-              className={styles.input}
-              disabled={isSubmitting || errorMessage !== null}
-              id="settings-user-email"
-              placeholder="camila@cashgo.com"
-              type="email"
-              {...register("email")}
-            />
-            {errors.email ? (
-              <p className={styles.errorMessage} id="settings-user-email-error">
-                {errors.email.message}
-              </p>
-            ) : null}
-          </div>
+          <form className={styles.form} noValidate onSubmit={submitUser}>
+            <div className={styles.formHeader}>
+              <div>
+                <p className={styles.formEyebrow}>
+                  {isEditing ? "Edit user" : "Create user"}
+                </p>
+                <h4 className={styles.formTitle}>
+                  {isEditing
+                    ? `Update ${selectedUser.name}`
+                    : "Invite a new teammate into the workspace"}
+                </h4>
+              </div>
 
-          <div className={styles.inlineFields}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor="settings-user-role">
-                Role
-              </label>
-              <select
-                aria-describedby={
-                  errors.role ? "settings-user-role-error" : undefined
-                }
-                aria-invalid={Boolean(errors.role)}
-                className={styles.select}
-                disabled={
-                  isSubmitting || errorMessage !== null || isCurrentUserSelected
-                }
-                id="settings-user-role"
-                {...register("role")}
-              >
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {userRoleLabels[role]}
-                  </option>
-                ))}
-              </select>
-              {errors.role ? (
-                <p
-                  className={styles.errorMessage}
-                  id="settings-user-role-error"
-                >
-                  {errors.role.message}
-                </p>
-              ) : null}
-              {isCurrentUserSelected ? (
-                <p className={styles.helperInline}>
-                  You can update your profile details here, but role changes for
-                  the signed-in user stay locked to avoid access issues.
-                </p>
+              {isEditing ? (
+                <span className={styles.formTag}>
+                  {isCurrentUserSelected
+                    ? "Current session"
+                    : selectedUser.role}
+                </span>
               ) : null}
             </div>
 
+            <div className={styles.avatarField}>
+              <span className={styles.avatarPreview} aria-hidden="true">
+                {visibleAvatarUrl ? (
+                  <img src={visibleAvatarUrl} alt="" />
+                ) : (
+                  getUserInitials(selectedUser?.name ?? "Usuario")
+                )}
+              </span>
+
+              <div className={styles.avatarCopy}>
+                <p className={styles.avatarTitle}>Foto de perfil</p>
+                <p className={styles.avatarDescription}>
+                  Sube una imagen PNG, JPG o WEBP de hasta 2MB.
+                </p>
+                <div className={styles.avatarActions}>
+                  <label
+                    className={joinClassNames(
+                      styles.avatarUploadButton,
+                      (isSubmitting || errorMessage !== null) &&
+                        styles.avatarUploadButtonDisabled,
+                    )}
+                    htmlFor="settings-user-avatar"
+                  >
+                    {avatarFile ? "Cambiar foto seleccionada" : "Subir foto"}
+                  </label>
+                  {avatarPreviewUrl ? (
+                    <button
+                      className={styles.avatarClearButton}
+                      disabled={isSubmitting || errorMessage !== null}
+                      type="button"
+                      onClick={clearAvatarSelection}
+                    >
+                      Quitar seleccion
+                    </button>
+                  ) : null}
+                </div>
+                <input
+                  ref={avatarInputRef}
+                  accept={IMAGE_UPLOAD_ACCEPT}
+                  className={styles.fileInput}
+                  disabled={isSubmitting || errorMessage !== null}
+                  id="settings-user-avatar"
+                  type="file"
+                  onChange={handleAvatarChange}
+                />
+              </div>
+            </div>
+
             <div className={styles.field}>
-              <label className={styles.label} htmlFor="settings-user-password">
-                {isEditing ? "Reset password" : "Password"}
+              <label className={styles.label} htmlFor="settings-user-name">
+                Name
               </label>
               <input
                 aria-describedby={
-                  errors.password ? "settings-user-password-error" : undefined
+                  errors.name ? "settings-user-name-error" : undefined
                 }
-                aria-invalid={Boolean(errors.password)}
+                aria-invalid={Boolean(errors.name)}
                 className={styles.input}
                 disabled={isSubmitting || errorMessage !== null}
-                id="settings-user-password"
-                placeholder={
-                  isEditing
-                    ? "Leave blank to keep current password"
-                    : "Minimum 8 characters"
-                }
-                type="password"
-                {...register("password")}
+                id="settings-user-name"
+                placeholder="Camila Perez"
+                type="text"
+                {...register("name")}
               />
-              {errors.password ? (
+              {errors.name ? (
                 <p
                   className={styles.errorMessage}
-                  id="settings-user-password-error"
+                  id="settings-user-name-error"
                 >
-                  {errors.password.message}
+                  {errors.name.message}
                 </p>
               ) : null}
             </div>
-          </div>
 
-          {errors.root?.message ? (
-            <div className={styles.errorBanner} role="alert">
-              {errors.root.message}
-            </div>
-          ) : null}
-
-          <div className={styles.formFooter}>
-            <p className={styles.helperText}>
-              {isEditing
-                ? `User created ${formatDate(selectedUser.createdAt)} and last updated ${formatDate(selectedUser.updatedAt)}.`
-                : "New users are created immediately and can sign in as soon as credentials are shared."}
-            </p>
-
-            <div className={styles.formActions}>
-              {isEditing ? (
-                <>
-                  <button
-                    className={styles.ghostButton}
-                    type="button"
-                    onClick={handleStartCreate}
-                  >
-                    Switch to create
-                  </button>
-
-                  <button
-                    className={styles.dangerButton}
-                    disabled={isSubmitting || isCurrentUserSelected}
-                    type="button"
-                    onClick={() => {
-                      void handleDeleteUser();
-                    }}
-                  >
-                    Delete user
-                  </button>
-                </>
-              ) : null}
-
-              <button
-                className={styles.primaryButton}
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="settings-user-email">
+                Email
+              </label>
+              <input
+                aria-describedby={
+                  errors.email ? "settings-user-email-error" : undefined
+                }
+                aria-invalid={Boolean(errors.email)}
+                className={styles.input}
                 disabled={isSubmitting || errorMessage !== null}
-                type="submit"
-              >
-                {isSubmitting
-                  ? isEditing
-                    ? "Saving user..."
-                    : "Creating user..."
-                  : isEditing
-                    ? "Save user"
-                    : "Create user"}
-              </button>
+                id="settings-user-email"
+                placeholder="camila@cashgo.com"
+                type="email"
+                {...register("email")}
+              />
+              {errors.email ? (
+                <p
+                  className={styles.errorMessage}
+                  id="settings-user-email-error"
+                >
+                  {errors.email.message}
+                </p>
+              ) : null}
             </div>
-          </div>
-        </form>
-      </div>
-    </SurfaceCard>
+
+            <div className={styles.inlineFields}>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="settings-user-role">
+                  Role
+                </label>
+                <select
+                  aria-describedby={
+                    errors.role ? "settings-user-role-error" : undefined
+                  }
+                  aria-invalid={Boolean(errors.role)}
+                  className={styles.select}
+                  disabled={
+                    isSubmitting ||
+                    errorMessage !== null ||
+                    isCurrentUserSelected
+                  }
+                  id="settings-user-role"
+                  {...register("role")}
+                >
+                  {roles.map((role) => (
+                    <option key={role} value={role}>
+                      {userRoleLabels[role]}
+                    </option>
+                  ))}
+                </select>
+                {errors.role ? (
+                  <p
+                    className={styles.errorMessage}
+                    id="settings-user-role-error"
+                  >
+                    {errors.role.message}
+                  </p>
+                ) : null}
+                {isCurrentUserSelected ? (
+                  <p className={styles.helperInline}>
+                    You can update your profile details here, but role changes
+                    for the signed-in user stay locked to avoid access issues.
+                  </p>
+                ) : null}
+              </div>
+
+              <div className={styles.field}>
+                <label
+                  className={styles.label}
+                  htmlFor="settings-user-password"
+                >
+                  {isEditing ? "Reset password" : "Password"}
+                </label>
+                <input
+                  aria-describedby={
+                    errors.password ? "settings-user-password-error" : undefined
+                  }
+                  aria-invalid={Boolean(errors.password)}
+                  className={styles.input}
+                  disabled={isSubmitting || errorMessage !== null}
+                  id="settings-user-password"
+                  placeholder={
+                    isEditing
+                      ? "Leave blank to keep current password"
+                      : "Minimum 8 characters"
+                  }
+                  type="password"
+                  {...register("password")}
+                />
+                {errors.password ? (
+                  <p
+                    className={styles.errorMessage}
+                    id="settings-user-password-error"
+                  >
+                    {errors.password.message}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+
+            {errors.root?.message ? (
+              <div className={styles.errorBanner} role="alert">
+                {errors.root.message}
+              </div>
+            ) : null}
+
+            <div className={styles.formFooter}>
+              <p className={styles.helperText}>
+                {isEditing
+                  ? `User created ${formatDate(selectedUser.createdAt)} and last updated ${formatDate(selectedUser.updatedAt)}.`
+                  : "New users are created immediately and can sign in as soon as credentials are shared."}
+              </p>
+
+              <div className={styles.formActions}>
+                {isEditing ? (
+                  <>
+                    <button
+                      className={styles.ghostButton}
+                      type="button"
+                      onClick={handleStartCreate}
+                    >
+                      Switch to create
+                    </button>
+
+                    <button
+                      className={styles.dangerButton}
+                      disabled={isSubmitting || isCurrentUserSelected}
+                      type="button"
+                      onClick={() => {
+                        void handleDeleteUser();
+                      }}
+                    >
+                      Delete user
+                    </button>
+                  </>
+                ) : null}
+
+                <button
+                  className={styles.primaryButton}
+                  disabled={isSubmitting || errorMessage !== null}
+                  type="submit"
+                >
+                  {isSubmitting
+                    ? isEditing
+                      ? "Saving user..."
+                      : "Creating user..."
+                    : isEditing
+                      ? "Save user"
+                      : "Create user"}
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      </SurfaceCard>
+    </>
   );
 }

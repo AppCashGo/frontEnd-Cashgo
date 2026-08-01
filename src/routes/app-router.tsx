@@ -8,8 +8,8 @@ import {
 } from "@/routes/guards/ModuleAccessRoute";
 import { routeSegments, routePaths } from "@/routes/route-paths";
 import { MainLayout } from "@/shared/components/layout/MainLayout";
-import { ModulePlaceholder } from "@/shared/components/states/ModulePlaceholder";
 import { NotFoundPage } from "@/shared/components/states/NotFoundPage";
+import { PageLoadingState } from "@/shared/components/states/PageLoadingState";
 import { RouteErrorBoundary } from "@/shared/components/states/RouteErrorBoundary";
 
 const AuthPage = lazy(() =>
@@ -132,9 +132,7 @@ function withRouteSuspense(
   description: string,
 ) {
   return (
-    <Suspense
-      fallback={<ModulePlaceholder title={title} description={description} />}
-    >
+    <Suspense fallback={<PageLoadingState title={title} description={description} />}>
       {element}
     </Suspense>
   );

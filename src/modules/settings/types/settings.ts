@@ -18,12 +18,14 @@ export const catalogOutOfStockBehaviors = [
   "HIDE_FROM_CATALOG",
   "SHOW_UNAVAILABLE",
 ] as const;
+export const printTicketWidths = ["58mm", "80mm"] as const;
 
 export type SupportedCurrency = (typeof supportedCurrencies)[number];
 export type SettingsUserRole = AuthUser["role"];
 export type CatalogWeekdayId = (typeof catalogWeekdayIds)[number];
 export type CatalogOutOfStockBehavior =
   (typeof catalogOutOfStockBehaviors)[number];
+export type PrintTicketWidth = (typeof printTicketWidths)[number];
 
 export type CatalogBusinessHour = {
   day: CatalogWeekdayId;
@@ -52,6 +54,10 @@ export type BusinessSettings = {
   useWeightedAverageCost: boolean;
   cashRegisterOpeningReminderEnabled: boolean;
   saleCompletionSoundEnabled: boolean;
+  printTicketWidth: PrintTicketWidth;
+  printShowLogo: boolean;
+  printShowTaxDetail: boolean;
+  printFooterMessage: string;
   catalogBusinessHours: CatalogBusinessHour[] | null;
   catalogOutOfStockBehavior: CatalogOutOfStockBehavior;
   catalogPickupEnabled: boolean;
@@ -101,13 +107,21 @@ export type BusinessAdditionalSettingsInput = {
   saleCompletionSoundEnabled?: boolean;
 };
 
+export type BusinessPrintSettingsInput = {
+  printTicketWidth: PrintTicketWidth;
+  printShowLogo: boolean;
+  printShowTaxDetail: boolean;
+  printFooterMessage: string;
+};
+
 export type BusinessSettingsCreateInput = BusinessProfileInput &
   BusinessTaxSettingsInput &
   Partial<
     BusinessOperationalSettingsInput &
       BusinessVirtualCatalogSettingsInput &
       BusinessReminderSettingsInput &
-      BusinessAdditionalSettingsInput
+      BusinessAdditionalSettingsInput &
+      BusinessPrintSettingsInput
   >;
 
 export type BusinessSettingsUpdateInput = Partial<
@@ -115,7 +129,8 @@ export type BusinessSettingsUpdateInput = Partial<
     BusinessOperationalSettingsInput &
     BusinessVirtualCatalogSettingsInput &
     BusinessReminderSettingsInput &
-    BusinessAdditionalSettingsInput
+    BusinessAdditionalSettingsInput &
+    BusinessPrintSettingsInput
 >;
 
 export type SettingsUser = {

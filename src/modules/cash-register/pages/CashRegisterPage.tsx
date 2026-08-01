@@ -50,6 +50,7 @@ import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import { RetailPageLayout } from "@/shared/components/retail/RetailPageLayout";
 import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import { toDateInputValue } from "@/shared/utils/date-input";
+import { downloadBlobFile } from "@/shared/utils/download-blob-file";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import styles from "./CashRegisterRetailPage.module.css";
@@ -902,17 +903,14 @@ export function CashRegisterPage() {
             type: input.type,
           })
         : await downloadReportMutation.mutateAsync(input);
-    const downloadUrl = URL.createObjectURL(report.blob);
-    const linkElement = document.createElement("a");
 
-    linkElement.href = downloadUrl;
-    linkElement.download =
+    downloadBlobFile(
+      report.blob,
       report.filename ??
-      (input.view === "transactions"
-        ? "movements-transactions.csv"
-        : `cash-register-${input.view}.csv`);
-    linkElement.click();
-    URL.revokeObjectURL(downloadUrl);
+        (input.view === "transactions"
+          ? "movements-transactions.csv"
+          : `cash-register-${input.view}.csv`),
+    );
   }
 
   function clearFilters() {

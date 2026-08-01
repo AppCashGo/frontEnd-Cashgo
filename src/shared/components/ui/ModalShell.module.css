@@ -1,0 +1,41 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.48);
+}
+
+.panel {
+  position: relative;
+  width: min(100%, 32rem);
+  max-height: min(92dvh, 44rem);
+  overflow: auto;
+  border: 1px solid rgba(203, 213, 225, 0.94);
+  border-radius: 1rem;
+  background: #ffffff;
+  box-shadow: 0 1.6rem 4rem rgba(15, 23, 42, 0.2);
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: #111827;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.closeButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}

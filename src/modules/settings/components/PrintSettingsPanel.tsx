@@ -1,10 +1,12 @@
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
-import type { BusinessSettings } from '@/modules/settings/types/settings'
+import { type FormEvent, useEffect, useState } from 'react'
+import type {
+  BusinessPrintSettingsInput,
+  BusinessSettings,
+  PrintTicketWidth,
+} from '@/modules/settings/types/settings'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import styles from './PrintSettingsPanel.module.css'
-
-type PrintTicketWidth = '58mm' | '80mm'
 
 type PrintSettings = {
   ticketWidth: PrintTicketWidth
@@ -15,6 +17,8 @@ type PrintSettings = {
 
 type PrintSettingsPanelProps = {
   businessSettings: BusinessSettings | null
+  isSubmitting: boolean
+  onSubmit: (input: BusinessPrintSettingsInput) => Promise<void>
 }
 
 const defaultPrintSettings: PrintSettings = {
@@ -24,40 +28,30 @@ const defaultPrintSettings: PrintSettings = {
   footerMessage: 'Gracias por tu compra.',
 }
 
-function getStorageKey(businessId: string | null | undefined) {
-  return `cashgo-print-settings:${businessId ?? 'default'}`
-}
-
-function readStoredSettings(storageKey: string): PrintSettings {
-  if (typeof window === 'undefined') {
+function buildPrintSettings(
+  businessSettings: BusinessSettings | null,
+): PrintSettings {
+  if (!businessSettings) {
     return defaultPrintSettings
   }
 
-  const storedValue = window.localStorage.getItem(storageKey)
-
-  if (!storedValue) {
-    return defaultPrintSettings
-  }
-
-  try {
-    return {
-      ...defaultPrintSettings,
-      ...(JSON.parse(storedValue) as Partial<PrintSettings>),
-    }
-  } catch {
-    return defaultPrintSettings
+  return {
+    ticketWidth: businessSettings.printTicketWidth,
+    showLogo: businessSettings.printShowLogo,
+    showTaxDetail: businessSettings.printShowTaxDetail,
+    footerMessage:
+      businessSettings.printFooterMessage ||
+      defaultPrintSettings.footerMessage,
   }
 }
 
 export function PrintSettingsPanel({
   businessSettings,
+  isSubmitting,
+  onSubmit,
 }: PrintSettingsPanelProps) {
-  const storageKey = useMemo(
-    () => getStorageKey(businessSettings?.id),
-    [businessSettings?.id],
-  )
   const [settings, setSettings] = useState<PrintSettings>(() =>
-    readStoredSettings(storageKey),
+    buildPrintSettings(businessSettings),
   )
   const [feedback, setFeedback] = useState<string | null>(null)
   const sampleSubtotal = 42000
@@ -68,9 +62,9 @@ export function PrintSettingsPanel({
   const sampleTotal = sampleSubtotal + sampleTax
 
   useEffect(() => {
-    setSettings(readStoredSettings(storageKey))
+    setSettings(buildPrintSettings(businessSettings))
     setFeedback(null)
-  }, [storageKey])
+  }, [businessSettings])
 
   function updateSetting<TField extends keyof PrintSettings>(
     field: TField,
@@ -83,14 +77,19 @@ export function PrintSettingsPanel({
     setFeedback(null)
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    window.localStorage.setItem(storageKey, JSON.stringify(settings))
-    setFeedback('Configuracion de impresion guardada para este equipo.')
+    await onSubmit({
+      printTicketWidth: settings.ticketWidth,
+      printShowLogo: settings.showLogo,
+      printShowTaxDetail: settings.showTaxDetail,
+      printFooterMessage:
+        settings.footerMessage.trim() || defaultPrintSettings.footerMessage,
+    })
+    setFeedback('Configuracion de impresion guardada.')
   }
 
   function handlePrintTest() {
-    window.localStorage.setItem(storageKey, JSON.stringify(settings))
     setFeedback('Ticket de prueba listo para imprimir.')
     window.print()
   }
@@ -167,11 +166,20 @@ export function PrintSettingsPanel({
           ) : null}
 
           <div className={styles.actions}>
-            <button className={styles.secondaryButton} type="button" onClick={handlePrintTest}>
+            <button
+              className={styles.secondaryButton}
+              disabled={isSubmitting}
+              type="button"
+              onClick={handlePrintTest}
+            >
               Imprimir prueba
             </button>
-            <button className={styles.primaryButton} type="submit">
-              Guardar formato
+            <button
+              className={styles.primaryButton}
+              disabled={isSubmitting}
+              type="submit"
+            >
+              {isSubmitting ? 'Guardando...' : 'Guardar formato'}
             </button>
           </div>
         </div>

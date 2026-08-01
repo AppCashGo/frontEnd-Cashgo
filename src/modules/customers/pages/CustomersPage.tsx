@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useState } from 'react'
-import { Crown, History, ReceiptText, TrendingUp, Users, X } from 'lucide-react'
+import { Crown, History, ReceiptText, TrendingUp, Users } from 'lucide-react'
 import { CustomerDetailPanel } from '@/modules/customers/components/CustomerDetailPanel'
 import { CustomerMetricCard } from '@/modules/customers/components/CustomerMetricCard'
 import { CustomerPurchaseHistoryPanel } from '@/modules/customers/components/CustomerPurchaseHistoryPanel'
@@ -23,6 +23,9 @@ import type {
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
+import { RetailTableShell } from '@/shared/components/retail/RetailTableShell'
+import { TableStateRow } from '@/shared/components/retail/TableStateRow'
+import { ModalShell } from '@/shared/components/ui/ModalShell'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import listPageStyles from '@/shared/components/retail/RetailListPage.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
@@ -229,138 +232,122 @@ export function CustomersPage() {
               />
             </div>
 
-            <section className={retailStyles.tableCard}>
-              <div className={retailStyles.tableHeader}>
-                <h3 className={retailStyles.tableTitle}>Clientes registrados</h3>
-                {customersQuery.isFetching && !customersQuery.isLoading ? (
-                  <span className={styles.refreshingLabel}>Actualizando...</span>
-                ) : null}
-              </div>
+            <RetailTableShell
+              isRefreshing={customersQuery.isFetching && !customersQuery.isLoading}
+              title="Clientes registrados"
+            >
+              <table className={retailStyles.table}>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Celular</th>
+                    <th>Documento</th>
+                    <th>Total por cobrar</th>
+                    <th>Compras</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {customersQuery.isLoading ? (
+                    <TableStateRow
+                      colSpan={7}
+                      tone="feedback"
+                      title="Cargando clientes..."
+                    />
+                  ) : null}
 
-              <div className={retailStyles.tableScroller}>
-                <table className={retailStyles.table}>
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Celular</th>
-                      <th>Documento</th>
-                      <th>Total por cobrar</th>
-                      <th>Compras</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {customersQuery.isLoading ? (
-                      <tr>
-                        <td colSpan={7}>
-                          <div className={styles.retailFeedback}>
-                            Cargando clientes...
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null}
+                  {customersQuery.isError ? (
+                    <TableStateRow
+                      action={
+                        <button
+                          className={retailStyles.tableAction}
+                          type="button"
+                          onClick={() => {
+                            void customersQuery.refetch()
+                          }}
+                        >
+                          Reintentar
+                        </button>
+                      }
+                      colSpan={7}
+                      description="Intenta nuevamente para consultar la lista de clientes."
+                      tone="error"
+                      title="No pudimos cargar los clientes."
+                    />
+                  ) : null}
 
-                    {customersQuery.isError ? (
-                      <tr>
-                        <td colSpan={7}>
-                          <div className={styles.retailFeedback} role="alert">
-                            No pudimos cargar los clientes.
-                            <button
-                              className={styles.inlineButton}
-                              type="button"
-                              onClick={() => {
-                                void customersQuery.refetch()
-                              }}
-                            >
-                              Reintentar
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null}
-
-                    {!customersQuery.isLoading &&
-                    !customersQuery.isError &&
-                    visibleCustomers.length > 0
-                      ? visibleCustomers.map((customer) => (
-                          <tr key={customer.id}>
-                            <td>
-                              <strong className={styles.customerName}>
-                                {customer.name}
-                              </strong>
-                            </td>
-                            <td>{customer.phone ?? 'Sin celular'}</td>
-                            <td>
-                              {customer.documentNumber
-                                ? `${customer.documentType ?? 'Doc.'} ${customer.documentNumber}`
-                                : 'Sin documento'}
-                            </td>
-                            <td
+                  {!customersQuery.isLoading &&
+                  !customersQuery.isError &&
+                  visibleCustomers.length > 0
+                    ? visibleCustomers.map((customer) => (
+                        <tr key={customer.id}>
+                          <td>
+                            <strong className={styles.customerName}>
+                              {customer.name}
+                            </strong>
+                          </td>
+                          <td>{customer.phone ?? 'Sin celular'}</td>
+                          <td>
+                            {customer.documentNumber
+                              ? `${customer.documentType ?? 'Doc.'} ${customer.documentNumber}`
+                              : 'Sin documento'}
+                          </td>
+                          <td
+                            className={
+                              customer.balance > 0
+                                ? listPageStyles.statusNegative
+                                : listPageStyles.statusPositive
+                            }
+                          >
+                            {formatCurrency(customer.balance)}
+                          </td>
+                          <td>{customer.purchaseCount.toString()}</td>
+                          <td>
+                            <span
                               className={
                                 customer.balance > 0
-                                  ? listPageStyles.statusNegative
-                                  : listPageStyles.statusPositive
+                                  ? styles.statusPending
+                                  : styles.statusOk
                               }
                             >
-                              {formatCurrency(customer.balance)}
-                            </td>
-                            <td>{customer.purchaseCount.toString()}</td>
-                            <td>
-                              <span
-                                className={
-                                  customer.balance > 0
-                                    ? styles.statusPending
-                                    : styles.statusOk
-                                }
+                              {customer.balance > 0 ? 'Por cobrar' : 'Al dia'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className={styles.rowActions}>
+                              <button
+                                className={listPageStyles.detailLink}
+                                type="button"
+                                onClick={() => openCustomerDetail(customer.id)}
                               >
-                                {customer.balance > 0 ? 'Por cobrar' : 'Al dia'}
-                              </span>
-                            </td>
-                            <td>
-                              <div className={styles.rowActions}>
-                                <button
-                                  className={listPageStyles.detailLink}
-                                  type="button"
-                                  onClick={() => openCustomerDetail(customer.id)}
-                                >
-                                  Detalle
-                                </button>
-                                <button
-                                  className={listPageStyles.detailLink}
-                                  type="button"
-                                  onClick={() => openEditCustomer(customer.id)}
-                                >
-                                  Editar
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      : null}
+                                Detalle
+                              </button>
+                              <button
+                                className={listPageStyles.detailLink}
+                                type="button"
+                                onClick={() => openEditCustomer(customer.id)}
+                              >
+                                Editar
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    : null}
 
-                    {!customersQuery.isLoading &&
-                    !customersQuery.isError &&
-                    visibleCustomers.length === 0 ? (
-                      <tr>
-                        <td colSpan={7}>
-                          <div className={retailStyles.emptyState}>
-                            <div className={retailStyles.emptyIcon} />
-                            <p className={retailStyles.emptyTitle}>
-                              No encontramos clientes con esa busqueda.
-                            </p>
-                            <p className={retailStyles.emptyDescription}>
-                              Crea un cliente o limpia los filtros para ver más
-                              resultados.
-                            </p>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                  {!customersQuery.isLoading &&
+                  !customersQuery.isError &&
+                  visibleCustomers.length === 0 ? (
+                    <TableStateRow
+                      colSpan={7}
+                      description="Crea un cliente o limpia los filtros para ver más resultados."
+                      title="No encontramos clientes con esa busqueda."
+                    />
+                  ) : null}
+                </tbody>
+              </table>
+            </RetailTableShell>
           </section>
         </RetailPageLayout>
 
@@ -546,60 +533,46 @@ const CUSTOMER_PREMIUM_FEATURES = [
 
 function CustomerPremiumModal({ onClose }: { onClose: () => void }) {
   return (
-    <div
+    <ModalShell
+      ariaLabelledBy="customer-premium-title"
       className={styles.premiumBackdrop}
-      role="presentation"
-      onClick={onClose}
+      closeButtonClassName={styles.premiumCloseButton}
+      closeLabel="Cerrar beneficios de clientes"
+      isOpen
+      panelClassName={styles.premiumModal}
+      onClose={onClose}
     >
-      <section
-        aria-labelledby="customer-premium-title"
-        aria-modal="true"
-        className={styles.premiumModal}
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          aria-label="Cerrar beneficios de clientes"
-          className={styles.premiumCloseButton}
-          type="button"
-          onClick={onClose}
-        >
-          <X aria-hidden="true" />
-        </button>
+      <div className={styles.premiumIntro}>
+        <h2 id="customer-premium-title" className={styles.premiumTitle}>
+          Clientes premium, <span>control total en un solo lugar.</span>
+        </h2>
+        <p className={styles.premiumLead}>
+          Registra deudas, envia recordatorios y manten todo bajo control.
+        </p>
+      </div>
 
-        <div className={styles.premiumIntro}>
-          <h2 id="customer-premium-title" className={styles.premiumTitle}>
-            Clientes premium,{' '}
-            <span>control total en un solo lugar.</span>
-          </h2>
-          <p className={styles.premiumLead}>
-            Registra deudas, envia recordatorios y manten todo bajo control.
-          </p>
-        </div>
+      <div className={styles.premiumFeatures}>
+        {CUSTOMER_PREMIUM_FEATURES.map((feature) => {
+          const FeatureIcon = feature.icon
 
-        <div className={styles.premiumFeatures}>
-          {CUSTOMER_PREMIUM_FEATURES.map((feature) => {
-            const FeatureIcon = feature.icon
+          return (
+            <article key={feature.title} className={styles.premiumFeature}>
+              <span className={styles.premiumIcon}>
+                <FeatureIcon aria-hidden="true" />
+              </span>
+              <div>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
+              </div>
+            </article>
+          )
+        })}
+      </div>
 
-            return (
-              <article key={feature.title} className={styles.premiumFeature}>
-                <span className={styles.premiumIcon}>
-                  <FeatureIcon aria-hidden="true" />
-                </span>
-                <div>
-                  <h3>{feature.title}</h3>
-                  <p>{feature.description}</p>
-                </div>
-              </article>
-            )
-          })}
-        </div>
-
-        <button className={styles.premiumCta} type="button" onClick={onClose}>
-          <Crown aria-hidden="true" />
-          Quiero mi plan ya
-        </button>
-      </section>
-    </div>
+      <button className={styles.premiumCta} type="button" onClick={onClose}>
+        <Crown aria-hidden="true" />
+        Quiero mi plan ya
+      </button>
+    </ModalShell>
   )
 }

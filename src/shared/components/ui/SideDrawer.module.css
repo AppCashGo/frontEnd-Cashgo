@@ -25,10 +25,15 @@
   padding: 1.25rem 1.2rem 0.9rem;
 }
 
+.titleAccessory {
+  flex: 0 0 auto;
+}
+
 .headerCopy {
   display: grid;
   gap: 0.45rem;
   min-width: 0;
+  margin-right: auto;
 }
 
 .title {

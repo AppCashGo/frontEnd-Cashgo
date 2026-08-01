@@ -190,6 +190,62 @@
   text-decoration: underline;
 }
 
+.tableHeaderActions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.tableRefreshingLabel {
+  color: #66758c;
+  font-size: 0.85rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.tableStateAction {
+  display: flex;
+  justify-content: center;
+  margin-top: -1.65rem;
+  padding-bottom: 1.65rem;
+}
+
+.tableFeedback {
+  display: grid;
+  justify-items: center;
+  gap: 0.45rem;
+  padding: 1.75rem 1rem;
+  color: #66758c;
+  font-weight: 800;
+  text-align: center;
+}
+
+.tableFeedbackTitle,
+.tableFeedbackDescription {
+  margin: 0;
+}
+
+.tableFeedbackTitle {
+  color: #1f2a37;
+  font-weight: 900;
+}
+
+.tableFeedbackDescription {
+  max-width: 34rem;
+  color: #5f6d80;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.tableFeedbackAction {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.35rem;
+}
+
 .tableScroller {
   overflow-x: auto;
 }

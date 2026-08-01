@@ -28,6 +28,7 @@ import {
   type BusinessAdditionalSettingsInput,
   type BusinessProfileInput,
   type BusinessOperationalSettingsInput,
+  type BusinessPrintSettingsInput,
   type BusinessReminderSettingsInput,
   type BusinessVirtualCatalogSettingsInput,
 } from "@/modules/settings/types/settings";
@@ -70,6 +71,7 @@ export function SettingsPage() {
   const updateVirtualCatalogSettingsMutation = useUpdateBusinessSettingsMutation();
   const updateReminderSettingsMutation = useUpdateBusinessSettingsMutation();
   const updateAdditionalSettingsMutation = useUpdateBusinessSettingsMutation();
+  const updatePrintSettingsMutation = useUpdateBusinessSettingsMutation();
   const uploadBusinessLogoMutation = useUploadBusinessLogoMutation();
   const deleteBusinessSettingsMutation = useDeleteBusinessSettingsMutation();
   const createSettingsUserMutation = useCreateSettingsUserMutation();
@@ -182,6 +184,10 @@ export function SettingsPage() {
     input: BusinessAdditionalSettingsInput,
   ) {
     await updateAdditionalSettingsMutation.mutateAsync(input);
+  }
+
+  async function handlePrintSettingsSubmit(input: BusinessPrintSettingsInput) {
+    await updatePrintSettingsMutation.mutateAsync(input);
   }
 
   async function handleDeleteBusinessSettings() {
@@ -351,7 +357,11 @@ export function SettingsPage() {
         ) : null}
 
         {retailTab === "print" ? (
-          <PrintSettingsPanel businessSettings={businessSettings} />
+          <PrintSettingsPanel
+            businessSettings={businessSettings}
+            isSubmitting={updatePrintSettingsMutation.isPending}
+            onSubmit={handlePrintSettingsSubmit}
+          />
         ) : null}
       </RetailPageLayout>
     );

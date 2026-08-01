@@ -18,10 +18,12 @@ import type {
   EmployeeUpdateInput,
 } from '@/modules/employees/types/employee'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
-import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
+import { RetailTableShell } from '@/shared/components/retail/RetailTableShell'
+import { TableStateRow } from '@/shared/components/retail/TableStateRow'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
+import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { MetricCard } from '@/shared/components/ui/MetricCard'
 import { isTeamManagementRole } from '@/shared/constants/user-roles'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
@@ -96,6 +98,7 @@ export function EmployeesPage() {
   const updateEmployeeMutation = useUpdateEmployeeMutation()
   const uploadEmployeeAvatarMutation = useUploadEmployeeAvatarMutation()
   const deleteEmployeeMutation = useDeleteEmployeeMutation()
+  const { confirm, confirmationDialog } = useConfirmDialog()
 
   useEffect(() => {
     if (!selectedEmployeeId) {
@@ -116,9 +119,12 @@ export function EmployeesPage() {
     return (
       <div className={styles.page}>
         <SurfaceCard className={styles.restrictedCard}>
-          <p className={styles.restrictedEyebrow}>Acceso de gestion requerido</p>
+          <p className={styles.restrictedEyebrow}>
+            Acceso de gestion requerido
+          </p>
           <h2 className={styles.restrictedTitle}>
-            El espacio de empleados esta reservado para administradores y gerentes.
+            El espacio de empleados esta reservado para administradores y
+            gerentes.
           </h2>
           <p className={styles.restrictedDescription}>
             Inicia sesion con una cuenta que pueda crear, editar o revocar
@@ -185,9 +191,12 @@ export function EmployeesPage() {
   }
 
   async function handleDeleteEmployee(employee: Employee) {
-    const confirmed = window.confirm(
-      `Delete ${employee.name} from this business?`,
-    )
+    const confirmed = await confirm({
+      title: 'Eliminar empleado',
+      description: `¿Quieres eliminar a ${employee.name} de este negocio? Esta acción revocará su acceso al equipo.`,
+      confirmLabel: 'Eliminar',
+      tone: 'danger',
+    })
 
     if (!confirmed) {
       return
@@ -232,6 +241,7 @@ export function EmployeesPage() {
   if (isRetailPreset) {
     return (
       <>
+        {confirmationDialog}
         <RetailPageLayout
           accent="success"
           bodyVariant="flush"
@@ -247,134 +257,130 @@ export function EmployeesPage() {
           }
         >
           <section className={styles.retailEmployeesWorkspace}>
-            <div className={retailStyles.tableCard}>
-              <div className={retailStyles.tableHeader}>
-                <h3 className={retailStyles.tableTitle}>Empleados registrados</h3>
-              </div>
+            <RetailTableShell
+              isRefreshing={employeesQuery.isFetching && !employeesQuery.isLoading}
+              title="Empleados registrados"
+            >
+              <table className={retailStyles.table}>
+                <thead>
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Celular</th>
+                    <th>Rol</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employeesQuery.isLoading ? (
+                    <TableStateRow
+                      colSpan={5}
+                      tone="feedback"
+                      title="Cargando empleados..."
+                    />
+                  ) : null}
 
-              <div className={retailStyles.tableScroller}>
-                <table className={retailStyles.table}>
-                  <thead>
-                    <tr>
-                      <th>Nombre</th>
-                      <th>Celular</th>
-                      <th>Rol</th>
-                      <th>Estado</th>
-                      <th>Acciones</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {employeesQuery.isLoading ? (
-                      <tr>
-                        <td colSpan={5}>
-                          <div className={styles.retailFeedback}>
-                            Cargando empleados...
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null}
+                  {employeesQuery.isError ? (
+                    <TableStateRow
+                      action={
+                        <button
+                          className={retailStyles.tableAction}
+                          type="button"
+                          onClick={() => void handleRefresh()}
+                        >
+                          Reintentar
+                        </button>
+                      }
+                      colSpan={5}
+                      description="Intenta nuevamente para consultar la lista del equipo."
+                      tone="error"
+                      title="No pudimos cargar los empleados."
+                    />
+                  ) : null}
 
-                    {employeesQuery.isError ? (
-                      <tr>
-                        <td colSpan={5}>
-                          <div className={styles.retailFeedback} role="alert">
-                            No pudimos cargar los empleados.
-                            <button
-                              type="button"
-                              onClick={() => void handleRefresh()}
-                            >
-                              Reintentar
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : null}
+                  {!employeesQuery.isLoading &&
+                  !employeesQuery.isError &&
+                  visibleEmployees.length > 0
+                    ? visibleEmployees.map((employee) => {
+                        const canEditEmployee = employee.role !== 'OWNER'
+                        const avatarUrl = resolveApiAssetUrl(
+                          employee.avatarUrl,
+                        )
 
-                    {!employeesQuery.isLoading &&
-                    !employeesQuery.isError &&
-                    visibleEmployees.length > 0
-                      ? visibleEmployees.map((employee) => {
-                          const canEditEmployee = employee.role !== 'OWNER'
-                          const avatarUrl = resolveApiAssetUrl(employee.avatarUrl)
-
-                          return (
-                            <tr key={employee.id}>
-                              <td>
-                                <span className={styles.retailEmployeeIdentity}>
-                                  <span
-                                    className={styles.retailEmployeeAvatar}
-                                    aria-hidden="true"
-                                  >
-                                    {avatarUrl ? (
-                                      <img alt="" src={avatarUrl} />
-                                    ) : (
-                                      employee.name.charAt(0).toUpperCase()
-                                    )}
-                                  </span>
-                                  <strong className={styles.retailEmployeeName}>
-                                    {employee.name}
-                                  </strong>
-                                </span>
-                              </td>
-                              <td>{employee.phone ?? 'Sin celular'}</td>
-                              <td>
+                        return (
+                          <tr key={employee.id}>
+                            <td>
+                              <span className={styles.retailEmployeeIdentity}>
                                 <span
-                                  className={joinClassNames(
-                                    styles.retailRolePill,
-                                    getRetailEmployeeRoleTone(employee),
+                                  className={styles.retailEmployeeAvatar}
+                                  aria-hidden="true"
+                                >
+                                  {avatarUrl ? (
+                                    <img alt="" src={avatarUrl} />
+                                  ) : (
+                                    employee.name.charAt(0).toUpperCase()
                                   )}
-                                >
-                                  {getRetailEmployeeRoleLabel(employee)}
                                 </span>
-                              </td>
-                              <td>
-                                <span
-                                  className={
-                                    employee.activationStatus === 'ACTIVE'
-                                      ? styles.retailStatusActive
-                                      : styles.retailStatusPending
-                                  }
+                                <strong className={styles.retailEmployeeName}>
+                                  {employee.name}
+                                </strong>
+                              </span>
+                            </td>
+                            <td>{employee.phone ?? 'Sin celular'}</td>
+                            <td>
+                              <span
+                                className={joinClassNames(
+                                  styles.retailRolePill,
+                                  getRetailEmployeeRoleTone(employee),
+                                )}
+                              >
+                                {getRetailEmployeeRoleLabel(employee)}
+                              </span>
+                            </td>
+                            <td>
+                              <span
+                                className={
+                                  employee.activationStatus === 'ACTIVE'
+                                    ? styles.retailStatusActive
+                                    : styles.retailStatusPending
+                                }
+                              >
+                                <CheckCircle />
+                                {employee.activationStatus === 'ACTIVE'
+                                  ? 'Activo'
+                                  : 'Pendiente'}
+                              </span>
+                            </td>
+                            <td>
+                              {canEditEmployee ? (
+                                <button
+                                  className={styles.retailEditButton}
+                                  type="button"
+                                  onClick={() => startEditEmployee(employee.id)}
                                 >
-                                  <CheckCircle />
-                                  {employee.activationStatus === 'ACTIVE'
-                                    ? 'Activo'
-                                    : 'Pendiente'}
-                                </span>
-                              </td>
-                              <td>
-                                {canEditEmployee ? (
-                                  <button
-                                    className={styles.retailEditButton}
-                                    type="button"
-                                    onClick={() => startEditEmployee(employee.id)}
-                                  >
-                                    <Pencil />
-                                    Editar
-                                    <span aria-hidden="true">›</span>
-                                  </button>
-                                ) : null}
-                              </td>
-                            </tr>
-                          )
-                        })
-                      : null}
+                                  <Pencil />
+                                  Editar
+                                  <span aria-hidden="true">›</span>
+                                </button>
+                              ) : null}
+                            </td>
+                          </tr>
+                        )
+                      })
+                    : null}
 
-                    {!employeesQuery.isLoading &&
-                    !employeesQuery.isError &&
-                    visibleEmployees.length === 0 ? (
-                      <tr>
-                        <td colSpan={5}>
-                          <RetailEmptyState
-                            description="Crea empleados para asignar roles, permisos y responsabilidades dentro del negocio."
-                            title="Aun no tienes empleados creados."
-                          />
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+                  {!employeesQuery.isLoading &&
+                  !employeesQuery.isError &&
+                  visibleEmployees.length === 0 ? (
+                    <TableStateRow
+                      colSpan={5}
+                      description="Crea empleados para asignar roles, permisos y responsabilidades dentro del negocio."
+                      title="Aun no tienes empleados creados."
+                    />
+                  ) : null}
+                </tbody>
+              </table>
+            </RetailTableShell>
           </section>
         </RetailPageLayout>
 
@@ -392,107 +398,112 @@ export function EmployeesPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <section className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>Gestion del equipo</p>
-          <h2 className={styles.title}>
-            Organiza tu equipo con accesos rapidos y roles claros.
-          </h2>
-          <p className={styles.description}>
-            Crea empleados, asigna el rol operativo correcto y revisa quien ya
-            activo su acceso desde una sola vista.
-          </p>
-        </div>
+    <>
+      {confirmationDialog}
+      <div className={styles.page}>
+        <section className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>Gestion del equipo</p>
+            <h2 className={styles.title}>
+              Organiza tu equipo con accesos rapidos y roles claros.
+            </h2>
+            <p className={styles.description}>
+              Crea empleados, asigna el rol operativo correcto y revisa quien ya
+              activo su acceso desde una sola vista.
+            </p>
+          </div>
 
-        <div className={styles.heroActions}>
-          <button
-            className={styles.heroButton}
-            type="button"
-            onClick={() => {
-              setSelectedEmployeeId(null)
-            }}
-          >
-            Nuevo empleado
-          </button>
+          <div className={styles.heroActions}>
+            <button
+              className={styles.heroButton}
+              type="button"
+              onClick={() => {
+                setSelectedEmployeeId(null)
+              }}
+            >
+              Nuevo empleado
+            </button>
 
-          <button
-            className={styles.heroGhostButton}
-            type="button"
-            onClick={() => {
-              void handleRefresh()
-            }}
-          >
-            Actualizar equipo
-          </button>
-        </div>
-      </section>
+            <button
+              className={styles.heroGhostButton}
+              type="button"
+              onClick={() => {
+                void handleRefresh()
+              }}
+            >
+              Actualizar equipo
+            </button>
+          </div>
+        </section>
 
-      <div className={styles.metricsGrid}>
-        <MetricCard
-          label="Tamano del equipo"
-          value={employees.length.toString()}
-          hint="Empleados asignados actualmente al negocio activo."
-          tone="default"
-        />
-        <MetricCard
-          label="Accesos activos"
-          value={activeEmployees.toString()}
-          hint="Personas que ya iniciaron sesion con su acceso asignado."
-          tone={activeEmployees > 0 ? 'success' : 'default'}
-        />
-        <MetricCard
-          label="Pendientes"
-          value={pendingEmployees.toString()}
-          hint="Empleados que aun esperan su primer ingreso."
-          tone={pendingEmployees > 0 ? 'accent' : 'default'}
-        />
-        <MetricCard
-          label="Falta telefono"
-          value={phoneSetupNeeded.toString()}
-          hint="Perfiles que todavia necesitan telefono para poder entrar."
-          tone={phoneSetupNeeded > 0 ? 'alert' : 'default'}
-        />
-      </div>
-
-      <div className={styles.workspace}>
-        <EmployeesRoster
-          activeEmployeeId={selectedEmployeeId}
-          employees={visibleEmployees}
-          errorMessage={
-            employeesQuery.isError
-              ? getErrorMessage(
-                  employeesQuery.error,
-                  'No pudimos cargar el equipo en este momento. Intenta otra vez.',
-                )
-              : null
-          }
-          isLoading={employeesQuery.isLoading}
-          isRefreshing={employeesQuery.isFetching && !employeesQuery.isLoading}
-          presets={presets}
-          searchValue={searchValue}
-          onDeleteEmployee={(employee) => {
-            void handleDeleteEmployee(employee)
-          }}
-          onRetry={() => {
-            void handleRefresh()
-          }}
-          onSearchChange={setSearchValue}
-          onSelectEmployee={startEditEmployee}
-          onStartCreate={startCreateEmployee}
-        />
-
-        <div className={styles.drawerColumn}>
-          <EmployeeFormDrawer
-            employee={selectedEmployee}
-            isSubmitting={isSubmitting}
-            presets={presets}
-            roles={roles}
-            onStartCreate={startCreateEmployee}
-            onSubmit={handleSubmitEmployee}
+        <div className={styles.metricsGrid}>
+          <MetricCard
+            label="Tamano del equipo"
+            value={employees.length.toString()}
+            hint="Empleados asignados actualmente al negocio activo."
+            tone="default"
+          />
+          <MetricCard
+            label="Accesos activos"
+            value={activeEmployees.toString()}
+            hint="Personas que ya iniciaron sesion con su acceso asignado."
+            tone={activeEmployees > 0 ? 'success' : 'default'}
+          />
+          <MetricCard
+            label="Pendientes"
+            value={pendingEmployees.toString()}
+            hint="Empleados que aun esperan su primer ingreso."
+            tone={pendingEmployees > 0 ? 'accent' : 'default'}
+          />
+          <MetricCard
+            label="Falta telefono"
+            value={phoneSetupNeeded.toString()}
+            hint="Perfiles que todavia necesitan telefono para poder entrar."
+            tone={phoneSetupNeeded > 0 ? 'alert' : 'default'}
           />
         </div>
+
+        <div className={styles.workspace}>
+          <EmployeesRoster
+            activeEmployeeId={selectedEmployeeId}
+            employees={visibleEmployees}
+            errorMessage={
+              employeesQuery.isError
+                ? getErrorMessage(
+                    employeesQuery.error,
+                    'No pudimos cargar el equipo en este momento. Intenta otra vez.',
+                  )
+                : null
+            }
+            isLoading={employeesQuery.isLoading}
+            isRefreshing={
+              employeesQuery.isFetching && !employeesQuery.isLoading
+            }
+            presets={presets}
+            searchValue={searchValue}
+            onDeleteEmployee={(employee) => {
+              void handleDeleteEmployee(employee)
+            }}
+            onRetry={() => {
+              void handleRefresh()
+            }}
+            onSearchChange={setSearchValue}
+            onSelectEmployee={startEditEmployee}
+            onStartCreate={startCreateEmployee}
+          />
+
+          <div className={styles.drawerColumn}>
+            <EmployeeFormDrawer
+              employee={selectedEmployee}
+              isSubmitting={isSubmitting}
+              presets={presets}
+              roles={roles}
+              onStartCreate={startCreateEmployee}
+              onSubmit={handleSubmitEmployee}
+            />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

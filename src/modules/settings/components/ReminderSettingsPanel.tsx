@@ -4,7 +4,7 @@ import type {
   BusinessReminderSettingsInput,
   BusinessSettings,
 } from "@/modules/settings/types/settings";
-import { getErrorMessage } from "@/shared/utils/get-error-message";
+import { useToast } from "@/shared/hooks/use-toast";
 import styles from "./ReminderSettingsPanel.module.css";
 
 type ReminderSettingsPanelProps = {
@@ -14,11 +14,6 @@ type ReminderSettingsPanelProps = {
   isSubmitting: boolean;
   onRetry: () => void;
   onSubmit: (input: BusinessReminderSettingsInput) => Promise<void>;
-};
-
-type FeedbackMessage = {
-  tone: "success" | "error";
-  text: string;
 };
 
 export function ReminderSettingsPanel({
@@ -33,8 +28,7 @@ export function ReminderSettingsPanel({
   const [openingReminderEnabled, setOpeningReminderEnabled] = useState(
     businessSettings?.cashRegisterOpeningReminderEnabled ?? true,
   );
-  const [feedbackMessage, setFeedbackMessage] =
-    useState<FeedbackMessage | null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     setOpeningReminderEnabled(
@@ -50,26 +44,16 @@ export function ReminderSettingsPanel({
     }
 
     const previousValue = openingReminderEnabled;
-    setFeedbackMessage(null);
     setOpeningReminderEnabled(nextValue);
 
     try {
       await onSubmit({
         cashRegisterOpeningReminderEnabled: nextValue,
       });
-      setFeedbackMessage({
-        tone: "success",
-        text: "Recordatorio actualizado.",
-      });
+      toast.showSuccess("Recordatorio actualizado.");
     } catch (error) {
       setOpeningReminderEnabled(previousValue);
-      setFeedbackMessage({
-        tone: "error",
-        text: getErrorMessage(
-          error,
-          "No fue posible guardar el recordatorio.",
-        ),
-      });
+      toast.showError(error, "No fue posible guardar el recordatorio.");
     }
   }
 
@@ -124,17 +108,6 @@ export function ReminderSettingsPanel({
             />
           </label>
 
-          {feedbackMessage ? (
-            <p
-              className={
-                feedbackMessage.tone === "success"
-                  ? styles.feedbackSuccess
-                  : styles.feedbackError
-              }
-            >
-              {feedbackMessage.text}
-            </p>
-          ) : null}
         </div>
       ) : null}
     </section>

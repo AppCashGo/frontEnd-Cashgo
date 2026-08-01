@@ -7,6 +7,7 @@ import type {
 import { parseProductsImportFile } from '@/modules/products/utils/parse-products-import-csv'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { ApiError } from '@/shared/services/api-client'
+import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import styles from './ProductImportPanel.module.css'
 
 type ProductImportPanelProps = {
@@ -138,14 +139,8 @@ export function ProductImportPanel({
     const templateBlob = new Blob([csvLines.join('\n')], {
       type: 'text/csv;charset=utf-8',
     })
-    const templateUrl = URL.createObjectURL(templateBlob)
-    const linkElement = document.createElement('a')
 
-    linkElement.href = templateUrl
-    linkElement.download = 'cashgo-product-import-template.csv'
-    linkElement.click()
-
-    URL.revokeObjectURL(templateUrl)
+    downloadBlobFile(templateBlob, 'cashgo-product-import-template.csv')
   }
 
   const canImport = previewRows.length > 0 && issues.length === 0 && !isImporting

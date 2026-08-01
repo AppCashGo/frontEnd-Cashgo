@@ -1,14 +1,10 @@
 import type { Product } from '@/modules/products/types/product'
 import type {
-  DeliveryOrder,
   RestaurantOrderItem,
   RestaurantOrderModifier,
   RestaurantTableOrder,
   RestaurantWorkspaceState,
 } from '@/modules/restaurant/types/restaurant'
-
-const restaurantWorkspaceStoragePrefix = 'cashgo-restaurant-workspace'
-const restaurantDeliveriesStoragePrefix = 'cashgo-restaurant-deliveries'
 
 const defaultZoneNames = [
   'Sala principal',
@@ -178,103 +174,4 @@ export function touchTableOrder(order: RestaurantTableOrder) {
     ...order,
     updatedAt: new Date().toISOString(),
   }
-}
-
-export function createDeliveryOrder(
-  input: Omit<DeliveryOrder, 'id' | 'status' | 'createdAt' | 'updatedAt'>,
-): DeliveryOrder {
-  const now = new Date().toISOString()
-
-  return {
-    ...input,
-    id: createId('delivery'),
-    status: 'NEW',
-    createdAt: now,
-    updatedAt: now,
-  }
-}
-
-export function touchDeliveryOrder(order: DeliveryOrder): DeliveryOrder {
-  return {
-    ...order,
-    updatedAt: new Date().toISOString(),
-  }
-}
-
-function getBusinessStorageKey(prefix: string, businessId: string | undefined) {
-  return `${prefix}:${businessId ?? 'default'}`
-}
-
-export function readRestaurantWorkspace(
-  businessId: string | undefined,
-): RestaurantWorkspaceState {
-  if (typeof window === 'undefined') {
-    return createDefaultRestaurantWorkspace()
-  }
-
-  const storageKey = getBusinessStorageKey(
-    restaurantWorkspaceStoragePrefix,
-    businessId,
-  )
-  const storedValue = window.localStorage.getItem(storageKey)
-
-  if (!storedValue) {
-    return createDefaultRestaurantWorkspace()
-  }
-
-  try {
-    return JSON.parse(storedValue) as RestaurantWorkspaceState
-  } catch {
-    return createDefaultRestaurantWorkspace()
-  }
-}
-
-export function saveRestaurantWorkspace(
-  businessId: string | undefined,
-  workspace: RestaurantWorkspaceState,
-) {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  window.localStorage.setItem(
-    getBusinessStorageKey(restaurantWorkspaceStoragePrefix, businessId),
-    JSON.stringify(workspace),
-  )
-}
-
-export function readDeliveryOrders(
-  businessId: string | undefined,
-): DeliveryOrder[] {
-  if (typeof window === 'undefined') {
-    return []
-  }
-
-  const storedValue = window.localStorage.getItem(
-    getBusinessStorageKey(restaurantDeliveriesStoragePrefix, businessId),
-  )
-
-  if (!storedValue) {
-    return []
-  }
-
-  try {
-    return JSON.parse(storedValue) as DeliveryOrder[]
-  } catch {
-    return []
-  }
-}
-
-export function saveDeliveryOrders(
-  businessId: string | undefined,
-  orders: DeliveryOrder[],
-) {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  window.localStorage.setItem(
-    getBusinessStorageKey(restaurantDeliveriesStoragePrefix, businessId),
-    JSON.stringify(orders),
-  )
 }

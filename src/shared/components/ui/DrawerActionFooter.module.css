@@ -1,0 +1,28 @@
+.footer {
+  gap: 0.75rem;
+}
+
+.grid,
+.stack {
+  display: grid;
+}
+
+.grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.inline {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inline > * {
+    flex: 1 1 10rem;
+  }
+}

@@ -18,6 +18,7 @@ import {
 } from "@/modules/quotes/utils/quotation-utils";
 import type { CustomerSummary } from "@/modules/customers/types/customer";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "./ConvertQuotationDrawer.module.css";
@@ -144,7 +145,7 @@ export function ConvertQuotationDrawer({
     <CashRegisterRetailDrawer
       description={copy.convertDescription}
       footer={
-        <div className={styles.footerActions}>
+        <DrawerActionFooter layout="inline">
           <button
             className={retailStyles.buttonOutline}
             disabled={isSubmitting}
@@ -161,7 +162,7 @@ export function ConvertQuotationDrawer({
           >
             {isSubmitting ? copy.convertSubmitLoading : copy.convertSubmit}
           </button>
-        </div>
+        </DrawerActionFooter>
       }
       isOpen={isOpen}
       title={copy.convertTitle}

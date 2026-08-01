@@ -164,11 +164,6 @@
   padding-top: 0.85rem;
 }
 
-.footerActions {
-  display: grid;
-  gap: 0.65rem;
-}
-
 .documentActions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -23,6 +23,7 @@ import {
   toExpenseDateInputValue,
 } from '@/modules/expenses/utils/format-expense'
 import { MetricCard } from '@/shared/components/ui/MetricCard'
+import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './ExpensesPage.module.css'
 
@@ -44,7 +45,11 @@ function matchesExpenseSearch(expense: Expense, query: string) {
   )
 }
 
-function isExpenseWithinRange(expense: Expense, fromDate: string, toDate: string) {
+function isExpenseWithinRange(
+  expense: Expense,
+  fromDate: string,
+  toDate: string,
+) {
   const expenseDateValue = toExpenseDateInputValue(expense.expenseDate)
 
   if (fromDate && expenseDateValue < fromDate) {
@@ -66,7 +71,9 @@ export function ExpensesPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
-  const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(null)
+  const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(
+    null,
+  )
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const expensesQuery = useExpensesQuery()
   const categoriesQuery = useExpenseCategoriesQuery()
@@ -74,6 +81,7 @@ export function ExpensesPage() {
   const updateExpenseMutation = useUpdateExpenseMutation()
   const deleteExpenseMutation = useDeleteExpenseMutation()
   const createCategoryMutation = useCreateExpenseCategoryMutation()
+  const { confirm, confirmationDialog } = useConfirmDialog()
   const expenses = expensesQuery.data ?? emptyExpenses
   const categories = categoriesQuery.data ?? emptyCategories
   const selectedExpense =
@@ -103,7 +111,14 @@ export function ExpensesPage() {
             new Date(firstExpense.createdAt).getTime()
           )
         }),
-    [expenses, deferredSearchValue, selectedStatus, selectedCategoryId, fromDate, toDate],
+    [
+      expenses,
+      deferredSearchValue,
+      selectedStatus,
+      selectedCategoryId,
+      fromDate,
+      toDate,
+    ],
   )
   const totalExpenses = visibleExpenses.reduce(
     (sum, expense) => sum + expense.amount,
@@ -126,8 +141,7 @@ export function ExpensesPage() {
     deleteExpenseMutation.isPending ||
     createCategoryMutation.isPending
   const hasQueryError = expensesQuery.isError || categoriesQuery.isError
-  const error =
-    expensesQuery.error ?? categoriesQuery.error ?? null
+  const error = expensesQuery.error ?? categoriesQuery.error ?? null
 
   useEffect(() => {
     if (
@@ -139,7 +153,10 @@ export function ExpensesPage() {
   }, [expenses, selectedExpenseId])
 
   async function handleRefresh() {
-    await Promise.allSettled([expensesQuery.refetch(), categoriesQuery.refetch()])
+    await Promise.allSettled([
+      expensesQuery.refetch(),
+      categoriesQuery.refetch(),
+    ])
   }
 
   async function handleExpenseSubmit(input: ExpenseMutationInput) {
@@ -154,9 +171,12 @@ export function ExpensesPage() {
   }
 
   async function handleDeleteExpense(expense: Expense) {
-    const shouldDelete = window.confirm(
-      `¿Quieres cancelar el gasto "${expense.concept}"?`,
-    )
+    const shouldDelete = await confirm({
+      title: 'Cancelar gasto',
+      description: `¿Quieres cancelar el gasto "${expense.concept}"? El registro dejará de contar como gasto activo.`,
+      confirmLabel: 'Cancelar gasto',
+      tone: 'warning',
+    })
 
     if (!shouldDelete) {
       return
@@ -182,133 +202,138 @@ export function ExpensesPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <section className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <p className={styles.eyebrow}>Gastos</p>
-          <h2 className={styles.title}>
-            Controla y clasifica cada salida de dinero en una sola vista.
-          </h2>
-          <p className={styles.description}>
-            Registra egresos, sepáralos por categoría, detecta pendientes y
-            deja lista la base para reportes y flujo de caja diario.
-          </p>
-        </div>
+    <>
+      {confirmationDialog}
+      <div className={styles.page}>
+        <section className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <p className={styles.eyebrow}>Gastos</p>
+            <h2 className={styles.title}>
+              Controla y clasifica cada salida de dinero en una sola vista.
+            </h2>
+            <p className={styles.description}>
+              Registra egresos, sepáralos por categoría, detecta pendientes y
+              deja lista la base para reportes y flujo de caja diario.
+            </p>
+          </div>
 
-        <div className={styles.heroActions}>
-          <button
-            className={styles.heroButton}
-            type="button"
-            onClick={() => void handleRefresh()}
-          >
-            Actualizar
-          </button>
-          <button
-            className={styles.heroGhostButton}
-            type="button"
-            onClick={() => setSelectedExpenseId(null)}
-          >
-            Nuevo gasto
-          </button>
-        </div>
-      </section>
+          <div className={styles.heroActions}>
+            <button
+              className={styles.heroButton}
+              type="button"
+              onClick={() => void handleRefresh()}
+            >
+              Actualizar
+            </button>
+            <button
+              className={styles.heroGhostButton}
+              type="button"
+              onClick={() => setSelectedExpenseId(null)}
+            >
+              Nuevo gasto
+            </button>
+          </div>
+        </section>
 
-      <div className={styles.metricsGrid}>
-        <MetricCard
-          hint="Suma total de los gastos visibles con los filtros actuales."
-          label="Salida total"
-          tone="alert"
-          value={formatExpenseCurrency(totalExpenses)}
-        />
-        <MetricCard
-          hint="Gastos ya pagados y listos para reflejar operación o caja."
-          label="Pagados"
-          tone="success"
-          value={formatExpenseCurrency(totalPaid)}
-        />
-        <MetricCard
-          hint="Compromisos pendientes por desembolsar o cerrar."
-          label="Pendientes"
-          tone={totalPending > 0 ? 'accent' : 'default'}
-          value={formatExpenseCurrency(totalPending)}
-        />
-        <MetricCard
-          label="Categorías en uso"
-          value={categoriesInView.toString()}
-          hint={
-            categoriesInView > 0
-              ? `${visibleExpenses.length.toString()} movimientos visibles en este momento.`
-              : 'Crea categorías para leer mejor tus egresos.'
-          }
-        />
-      </div>
-
-      <ExpensesFiltersBar
-        categories={categories}
-        fromDate={fromDate}
-        searchValue={searchValue}
-        selectedCategoryId={selectedCategoryId}
-        selectedStatus={selectedStatus}
-        toDate={toDate}
-        onCategoryChange={setSelectedCategoryId}
-        onFromDateChange={setFromDate}
-        onReset={handleResetFilters}
-        onSearchChange={setSearchValue}
-        onStatusChange={setSelectedStatus}
-        onToDateChange={setToDate}
-      />
-
-      {hasQueryError ? (
-        <div className={styles.feedbackBanner} role="alert">
-          {getErrorMessage(
-            error,
-            'No pudimos cargar el módulo de gastos en este momento.',
-          )}
-        </div>
-      ) : null}
-
-      <div className={styles.workspace}>
-        <div className={styles.primaryColumn}>
-          <ExpensesTable
-            errorMessage={
-              expensesQuery.isError
-                ? getErrorMessage(
-                    expensesQuery.error,
-                    'No pudimos cargar los gastos del negocio activo.',
-                  )
-                : null
+        <div className={styles.metricsGrid}>
+          <MetricCard
+            hint="Suma total de los gastos visibles con los filtros actuales."
+            label="Salida total"
+            tone="alert"
+            value={formatExpenseCurrency(totalExpenses)}
+          />
+          <MetricCard
+            hint="Gastos ya pagados y listos para reflejar operación o caja."
+            label="Pagados"
+            tone="success"
+            value={formatExpenseCurrency(totalPaid)}
+          />
+          <MetricCard
+            hint="Compromisos pendientes por desembolsar o cerrar."
+            label="Pendientes"
+            tone={totalPending > 0 ? 'accent' : 'default'}
+            value={formatExpenseCurrency(totalPending)}
+          />
+          <MetricCard
+            label="Categorías en uso"
+            value={categoriesInView.toString()}
+            hint={
+              categoriesInView > 0
+                ? `${visibleExpenses.length.toString()} movimientos visibles en este momento.`
+                : 'Crea categorías para leer mejor tus egresos.'
             }
-            expenses={visibleExpenses}
-            isLoading={expensesQuery.isLoading}
-            isRefreshing={expensesQuery.isFetching && !expensesQuery.isLoading}
-            selectedExpenseId={selectedExpenseId}
-            onDeleteExpense={(expense) => {
-              void handleDeleteExpense(expense)
-            }}
-            onRetry={() => {
-              void expensesQuery.refetch()
-            }}
-            onSelectExpense={setSelectedExpenseId}
           />
         </div>
 
-        <div className={styles.secondaryColumn}>
-          <ExpenseFormPanel
-            categories={categories}
-            expense={selectedExpense}
-            isSubmitting={isSubmitting}
-            onStartCreate={() => setSelectedExpenseId(null)}
-            onSubmit={handleExpenseSubmit}
-          />
+        <ExpensesFiltersBar
+          categories={categories}
+          fromDate={fromDate}
+          searchValue={searchValue}
+          selectedCategoryId={selectedCategoryId}
+          selectedStatus={selectedStatus}
+          toDate={toDate}
+          onCategoryChange={setSelectedCategoryId}
+          onFromDateChange={setFromDate}
+          onReset={handleResetFilters}
+          onSearchChange={setSearchValue}
+          onStatusChange={setSelectedStatus}
+          onToDateChange={setToDate}
+        />
 
-          <ExpenseCategoriesPanel
-            categories={categories}
-            expenses={expenses}
-            isSubmitting={createCategoryMutation.isPending}
-            onSubmit={handleCreateCategory}
-          />
+        {hasQueryError ? (
+          <div className={styles.feedbackBanner} role="alert">
+            {getErrorMessage(
+              error,
+              'No pudimos cargar el módulo de gastos en este momento.',
+            )}
+          </div>
+        ) : null}
+
+        <div className={styles.workspace}>
+          <div className={styles.primaryColumn}>
+            <ExpensesTable
+              errorMessage={
+                expensesQuery.isError
+                  ? getErrorMessage(
+                      expensesQuery.error,
+                      'No pudimos cargar los gastos del negocio activo.',
+                    )
+                  : null
+              }
+              expenses={visibleExpenses}
+              isLoading={expensesQuery.isLoading}
+              isRefreshing={
+                expensesQuery.isFetching && !expensesQuery.isLoading
+              }
+              selectedExpenseId={selectedExpenseId}
+              onDeleteExpense={(expense) => {
+                void handleDeleteExpense(expense)
+              }}
+              onRetry={() => {
+                void expensesQuery.refetch()
+              }}
+              onSelectExpense={setSelectedExpenseId}
+            />
+          </div>
+
+          <div className={styles.secondaryColumn}>
+            <ExpenseFormPanel
+              categories={categories}
+              expense={selectedExpense}
+              isSubmitting={isSubmitting}
+              onStartCreate={() => setSelectedExpenseId(null)}
+              onSubmit={handleExpenseSubmit}
+            />
+
+            <ExpenseCategoriesPanel
+              categories={categories}
+              expenses={expenses}
+              isSubmitting={createCategoryMutation.isPending}
+              onSubmit={handleCreateCategory}
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }

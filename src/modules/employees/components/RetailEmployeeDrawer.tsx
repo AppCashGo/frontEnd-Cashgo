@@ -4,9 +4,7 @@ import {
   Check,
   ChevronDown,
   ChevronUp,
-  Upload,
   UserCheck,
-  X,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -23,11 +21,12 @@ import type {
   EmployeeUpdateInput,
 } from '@/modules/employees/types/employee'
 import type { AssignableUserRole } from '@/shared/constants/user-roles'
-import { ApiError, resolveApiAssetUrl } from '@/shared/services/api-client'
-import {
-  IMAGE_UPLOAD_ACCEPT,
-  validateImageUploadFile,
-} from '@/shared/utils/image-upload-validation'
+import { AvatarUploadField } from '@/shared/components/ui/AvatarUploadField'
+import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
+import { ModalShell } from '@/shared/components/ui/ModalShell'
+import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { useImageUploadPreview } from '@/shared/hooks/use-image-upload-preview'
+import { ApiError } from '@/shared/services/api-client'
 import styles from './RetailEmployeeDrawer.module.css'
 
 type RetailRoleOption = {
@@ -53,16 +52,6 @@ type EmployeePermissionsModalProps = {
   preset: EmployeePermissionPreset
   roleLabel: string
   onClose: () => void
-}
-
-type EmployeeConfirmationModalProps = {
-  employeeName: string
-  isSubmitting: boolean
-  phone: string
-  roleLabel: string
-  onClose: () => void
-  onConfirm: () => void
-  onEdit: () => void
 }
 
 type PendingEmployeeConfirmation = {
@@ -328,23 +317,15 @@ function EmployeePermissionsModal({
   }
 
   return (
-    <div className={styles.modalBackdrop} role="presentation" onClick={onClose}>
-      <section
-        aria-label={`Permisos de ${roleLabel.toLowerCase()}`}
-        aria-modal="true"
-        className={styles.permissionsModal}
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          aria-label="Cerrar permisos"
-          className={styles.modalClose}
-          type="button"
-          onClick={onClose}
-        >
-          <X />
-        </button>
-
+    <ModalShell
+      ariaLabel={`Permisos de ${roleLabel.toLowerCase()}`}
+      className={styles.modalBackdrop}
+      closeButtonClassName={styles.modalClose}
+      closeLabel="Cerrar permisos"
+      isOpen
+      panelClassName={styles.permissionsModal}
+      onClose={onClose}
+    >
         <div className={styles.modalHeader}>
           <h3 className={styles.modalTitle}>
             Permisos de {roleLabel.toLowerCase()}
@@ -430,79 +411,7 @@ function EmployeePermissionsModal({
         <button className={styles.modalPrimaryButton} type="button" onClick={onClose}>
           Modificar permisos
         </button>
-      </section>
-    </div>
-  )
-}
-
-function EmployeeConfirmationModal({
-  employeeName,
-  isSubmitting,
-  phone,
-  roleLabel,
-  onClose,
-  onConfirm,
-  onEdit,
-}: EmployeeConfirmationModalProps) {
-  return (
-    <div className={styles.modalBackdrop} role="presentation" onClick={onClose}>
-      <section
-        aria-label="Confirmar datos del empleado"
-        aria-modal="true"
-        className={styles.confirmationModal}
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          aria-label="Cerrar confirmacion"
-          className={styles.modalClose}
-          type="button"
-          onClick={onClose}
-        >
-          <X />
-        </button>
-
-        <div className={styles.confirmationHeader}>
-          <div className={styles.confirmationIllustration} aria-hidden="true">
-            <UserCheck />
-          </div>
-          <h3 className={styles.confirmationTitle}>
-            Confirma los datos de tu empleado
-          </h3>
-          <p className={styles.confirmationDescription}>
-            Recuerda que tu empleado deberá iniciar sesión con su número celular
-            para asociarse a tu negocio.
-          </p>
-        </div>
-
-        <div className={styles.confirmationCard}>
-          <div>
-            <strong>{employeeName}</strong>
-            <span>{formatConfirmationPhone(phone)}</span>
-          </div>
-          <span className={styles.confirmationRolePill}>{roleLabel}</span>
-        </div>
-
-        <div className={styles.confirmationActions}>
-          <button
-            className={styles.confirmationSecondaryButton}
-            disabled={isSubmitting}
-            type="button"
-            onClick={onEdit}
-          >
-            Editar
-          </button>
-          <button
-            className={styles.confirmationPrimaryButton}
-            disabled={isSubmitting}
-            type="button"
-            onClick={onConfirm}
-          >
-            {isSubmitting ? 'Creando...' : 'Confirmar'}
-          </button>
-        </div>
-      </section>
-    </div>
+    </ModalShell>
   )
 }
 
@@ -520,8 +429,6 @@ export function RetailEmployeeDrawer({
   const [permissionRole, setPermissionRole] = useState<AssignableUserRole | null>(
     null,
   )
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null)
   const [pendingConfirmation, setPendingConfirmation] =
     useState<PendingEmployeeConfirmation | null>(null)
   const {
@@ -539,11 +446,16 @@ export function RetailEmployeeDrawer({
   })
   const selectedRole = watch('role')
   const roleOptions = getAvailableRetailRoles(roles, selectedRole)
+  const drawerTitle = isEditing ? 'Editar empleado' : 'Crear empleado'
+  const formId = 'retail-employee-form'
   const permissionPreset = permissionRole
     ? getPresetForRole(presets, permissionRole)
     : null
-  const storedAvatarUrl = resolveApiAssetUrl(employee?.avatarUrl)
-  const visibleAvatarUrl = avatarPreviewUrl ?? storedAvatarUrl
+  const avatarUpload = useImageUploadPreview({
+    resetKey: `${isOpen ? 'open' : 'closed'}:${employee?.id ?? 'new'}`,
+    storedImageUrl: employee?.avatarUrl,
+  })
+  const visibleAvatarUrl = avatarUpload.visibleImageUrl
 
   useEffect(() => {
     if (!isOpen) {
@@ -553,18 +465,8 @@ export function RetailEmployeeDrawer({
     reset(getDefaultValues(employee))
     setRoleMenuOpen(false)
     setPermissionRole(null)
-    setAvatarFile(null)
-    setAvatarPreviewUrl(null)
     setPendingConfirmation(null)
   }, [employee, isOpen, reset])
-
-  useEffect(() => {
-    return () => {
-      if (avatarPreviewUrl) {
-        URL.revokeObjectURL(avatarPreviewUrl)
-      }
-    }
-  }, [avatarPreviewUrl])
 
   function selectRole(role: AssignableUserRole) {
     setValue('role', role, {
@@ -574,11 +476,7 @@ export function RetailEmployeeDrawer({
   }
 
   function handleAvatarChange(file: File | null) {
-    if (!file) {
-      return
-    }
-
-    const validationError = validateImageUploadFile(file)
+    const validationError = avatarUpload.selectFile(file)
 
     if (validationError) {
       setError('root', {
@@ -588,14 +486,6 @@ export function RetailEmployeeDrawer({
     }
 
     clearErrors('root')
-    setAvatarFile(file)
-    setAvatarPreviewUrl((currentPreviewUrl) => {
-      if (currentPreviewUrl) {
-        URL.revokeObjectURL(currentPreviewUrl)
-      }
-
-      return URL.createObjectURL(file)
-    })
   }
 
   const submitEmployee = handleSubmit(async (values) => {
@@ -609,11 +499,11 @@ export function RetailEmployeeDrawer({
             phone: normalizedPhone,
             role: values.role,
           },
-          avatarFile,
+          avatarUpload.file,
         )
       } else {
         setPendingConfirmation({
-          avatarFile,
+          avatarFile: avatarUpload.file,
           normalizedPhone,
           values: {
             ...values,
@@ -665,168 +555,139 @@ export function RetailEmployeeDrawer({
 
   return (
     <>
-      <div className={styles.drawerBackdrop} role="presentation" onClick={onClose}>
-        <aside
-          aria-label={isEditing ? 'Editar empleado' : 'Crear empleado'}
-          aria-modal="true"
-          className={styles.drawer}
-          role="dialog"
-          onClick={(event) => event.stopPropagation()}
-        >
-          <header className={styles.drawerHeader}>
-            <button
-              aria-label="Volver"
-              className={styles.backButton}
-              type="button"
-              onClick={onClose}
-            >
-              <ArrowLeft />
-            </button>
-            <h2 className={styles.drawerTitle}>
-              {isEditing ? 'Editar empleado' : 'Crear empleado'}
-            </h2>
-          </header>
+      <SideDrawer
+        ariaLabel={drawerTitle}
+        bodyClassName={styles.drawerBody}
+        className={styles.drawerBackdrop}
+        closeButtonClassName={styles.backButton}
+        closeButtonPlacement="start"
+        closeContent={<ArrowLeft />}
+        closeLabel="Volver"
+        footer={
+          <button
+            className={styles.submitButton}
+            disabled={isSubmitting}
+            form={formId}
+            type="submit"
+          >
+            {isSubmitting
+              ? isEditing
+                ? 'Guardando...'
+                : 'Creando...'
+              : isEditing
+                ? 'Guardar empleado'
+                : 'Crear empleado'}
+          </button>
+        }
+        footerClassName={styles.drawerFooter}
+        isOpen={isOpen}
+        panelClassName={styles.drawer}
+        title={drawerTitle}
+        onClose={onClose}
+      >
+        <form className={styles.form} id={formId} noValidate onSubmit={submitEmployee}>
+          <AvatarUploadField
+            alt="Avatar del empleado"
+            disabled={isSubmitting}
+            imageUrl={visibleAvatarUrl}
+            onSelectFile={handleAvatarChange}
+          />
 
-          <form className={styles.form} noValidate onSubmit={submitEmployee}>
-            <div className={styles.formBody}>
-              <label className={styles.avatarUploader}>
-                <input
-                  accept={IMAGE_UPLOAD_ACCEPT}
-                  className={styles.avatarInput}
-                  disabled={isSubmitting}
-                  type="file"
-                  onChange={(event) => {
-                    handleAvatarChange(event.target.files?.[0] ?? null)
-                    event.currentTarget.value = ''
-                  }}
-                />
-                {visibleAvatarUrl ? (
-                  <img
-                    alt="Avatar del empleado"
-                    className={styles.avatarPreview}
-                    src={visibleAvatarUrl}
-                  />
-                ) : (
-                  <span className={styles.avatarPlaceholder} aria-hidden="true">
-                    <Upload />
-                  </span>
-                )}
-                <span>{visibleAvatarUrl ? 'Cambiar avatar' : 'Cargar avatar'}</span>
-              </label>
+          <label className={styles.field}>
+            <span className={styles.label}>Nombre *</span>
+            <input
+              aria-invalid={Boolean(errors.name)}
+              className={styles.input}
+              placeholder="Martha"
+              type="text"
+              {...register('name')}
+            />
+            {errors.name ? (
+              <span className={styles.errorText}>{errors.name.message}</span>
+            ) : null}
+          </label>
 
-              <label className={styles.field}>
-                <span className={styles.label}>Nombre *</span>
-                <input
-                  aria-invalid={Boolean(errors.name)}
-                  className={styles.input}
-                  placeholder="Martha"
-                  type="text"
-                  {...register('name')}
-                />
-                {errors.name ? (
-                  <span className={styles.errorText}>{errors.name.message}</span>
-                ) : null}
-              </label>
+          <label className={styles.field}>
+            <span className={styles.label}>Numero celular de tu empleado *</span>
+            <span className={styles.phoneField}>
+              <span className={styles.countrySelect}>
+                <span className={styles.flagColombia} aria-hidden="true" />
+                <ChevronDown />
+              </span>
+              <input
+                aria-invalid={Boolean(errors.phone)}
+                className={styles.phoneInput}
+                inputMode="tel"
+                placeholder="3176469300"
+                type="tel"
+                {...register('phone')}
+              />
+            </span>
+            {errors.phone ? (
+              <span className={styles.errorText}>{errors.phone.message}</span>
+            ) : null}
+          </label>
 
-              <label className={styles.field}>
-                <span className={styles.label}>Numero celular de tu empleado *</span>
-                <span className={styles.phoneField}>
-                  <span className={styles.countrySelect}>
-                    <span className={styles.flagColombia} aria-hidden="true" />
-                    <ChevronDown />
-                  </span>
-                  <input
-                    aria-invalid={Boolean(errors.phone)}
-                    className={styles.phoneInput}
-                    inputMode="tel"
-                    placeholder="3176469300"
-                    type="tel"
-                    {...register('phone')}
-                  />
+          <div className={styles.field}>
+            <span className={styles.label}>Rol *</span>
+            <div className={styles.roleSelectWrapper}>
+              <button
+                aria-expanded={isRoleMenuOpen}
+                className={styles.roleSelectButton}
+                type="button"
+                onClick={() => setRoleMenuOpen((isOpenMenu) => !isOpenMenu)}
+              >
+                <span>
+                  {selectedRole
+                    ? getRetailRoleLabel(selectedRole)
+                    : 'Selecciona un rol'}
                 </span>
-                {errors.phone ? (
-                  <span className={styles.errorText}>{errors.phone.message}</span>
-                ) : null}
-              </label>
+                {isRoleMenuOpen ? <ChevronUp /> : <ChevronDown />}
+              </button>
 
-              <div className={styles.field}>
-                <span className={styles.label}>Rol *</span>
-                <div className={styles.roleSelectWrapper}>
-                  <button
-                    aria-expanded={isRoleMenuOpen}
-                    className={styles.roleSelectButton}
-                    type="button"
-                    onClick={() => setRoleMenuOpen((isOpenMenu) => !isOpenMenu)}
-                  >
-                    <span>
-                      {selectedRole
-                        ? getRetailRoleLabel(selectedRole)
-                        : 'Selecciona un rol'}
-                    </span>
-                    {isRoleMenuOpen ? <ChevronUp /> : <ChevronDown />}
-                  </button>
-
-                  {isRoleMenuOpen ? (
-                    <div className={styles.roleMenu}>
-                      {roleOptions.map((option) => (
-                        <div className={styles.roleOption} key={option.role}>
-                          <button
-                            className={styles.roleChoiceButton}
-                            type="button"
-                            onClick={() => {
-                              selectRole(option.role)
-                              setRoleMenuOpen(false)
-                            }}
-                          >
-                            {option.label}
-                          </button>
-                          <button
-                            className={styles.permissionLink}
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              selectRole(option.role)
-                              setPermissionRole(option.role)
-                              setRoleMenuOpen(false)
-                            }}
-                          >
-                            Ver Permisos
-                          </button>
-                        </div>
-                      ))}
+              {isRoleMenuOpen ? (
+                <div className={styles.roleMenu}>
+                  {roleOptions.map((option) => (
+                    <div className={styles.roleOption} key={option.role}>
+                      <button
+                        className={styles.roleChoiceButton}
+                        type="button"
+                        onClick={() => {
+                          selectRole(option.role)
+                          setRoleMenuOpen(false)
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                      <button
+                        className={styles.permissionLink}
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          selectRole(option.role)
+                          setPermissionRole(option.role)
+                          setRoleMenuOpen(false)
+                        }}
+                      >
+                        Ver Permisos
+                      </button>
                     </div>
-                  ) : null}
-                </div>
-                {errors.role ? (
-                  <span className={styles.errorText}>{errors.role.message}</span>
-                ) : null}
-              </div>
-
-              {errors.root?.message ? (
-                <div className={styles.errorBanner} role="alert">
-                  {errors.root.message}
+                  ))}
                 </div>
               ) : null}
             </div>
+            {errors.role ? (
+              <span className={styles.errorText}>{errors.role.message}</span>
+            ) : null}
+          </div>
 
-            <footer className={styles.drawerFooter}>
-              <button
-                className={styles.submitButton}
-                disabled={isSubmitting}
-                type="submit"
-              >
-                {isSubmitting
-                  ? isEditing
-                    ? 'Guardando...'
-                    : 'Creando...'
-                  : isEditing
-                    ? 'Guardar empleado'
-                    : 'Crear empleado'}
-              </button>
-            </footer>
-          </form>
-        </aside>
-      </div>
+          {errors.root?.message ? (
+            <div className={styles.errorBanner} role="alert">
+              {errors.root.message}
+            </div>
+          ) : null}
+        </form>
+      </SideDrawer>
 
       {permissionPreset && permissionRole ? (
         <EmployeePermissionsModal
@@ -837,17 +698,33 @@ export function RetailEmployeeDrawer({
       ) : null}
 
       {pendingConfirmation ? (
-        <EmployeeConfirmationModal
-          employeeName={pendingConfirmation.values.name}
+        <ConfirmDialog
+          cancelLabel="Editar"
+          confirmLabel="Confirmar"
+          description="Recuerda que tu empleado deberá iniciar sesión con su número celular para asociarse a tu negocio."
+          icon={<UserCheck />}
+          isOpen={Boolean(pendingConfirmation)}
           isSubmitting={isSubmitting}
-          phone={pendingConfirmation.normalizedPhone}
-          roleLabel={getRetailRoleLabel(pendingConfirmation.values.role)}
-          onClose={() => setPendingConfirmation(null)}
+          submittingLabel="Creando..."
+          title="Confirma los datos de tu empleado"
+          tone="warning"
+          onCancel={() => setPendingConfirmation(null)}
           onConfirm={() => {
             void confirmCreateEmployee()
           }}
-          onEdit={() => setPendingConfirmation(null)}
-        />
+        >
+          <div className={styles.confirmationCard}>
+            <div>
+              <strong>{pendingConfirmation.values.name}</strong>
+              <span>
+                {formatConfirmationPhone(pendingConfirmation.normalizedPhone)}
+              </span>
+            </div>
+            <span className={styles.confirmationRolePill}>
+              {getRetailRoleLabel(pendingConfirmation.values.role)}
+            </span>
+          </div>
+        </ConfirmDialog>
       ) : null}
     </>
   )

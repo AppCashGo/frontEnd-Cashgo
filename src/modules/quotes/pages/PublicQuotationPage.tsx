@@ -17,18 +17,9 @@ import {
 } from "@/modules/quotes/utils/quotation-utils";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { resolveApiAssetUrl } from "@/shared/services/api-client";
+import { downloadBlobFile } from "@/shared/utils/download-blob-file";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "./PublicQuotationPage.module.css";
-
-function downloadBlobFile(blob: Blob, filename: string) {
-  const downloadUrl = URL.createObjectURL(blob);
-  const linkElement = document.createElement("a");
-
-  linkElement.href = downloadUrl;
-  linkElement.download = filename;
-  linkElement.click();
-  URL.revokeObjectURL(downloadUrl);
-}
 
 export function PublicQuotationPage() {
   const { token } = useParams<{ token: string }>();

@@ -50,6 +50,13 @@ export type RestaurantWorkspaceState = {
   orders: Record<string, RestaurantTableOrder>
 }
 
+export type RestaurantTableOrderInput = Omit<
+  RestaurantTableOrder,
+  'status' | 'updatedAt'
+> & {
+  updatedAt?: string
+}
+
 export type DeliveryOrderStatus =
   | 'NEW'
   | 'PREPARING'
@@ -83,3 +90,14 @@ export type DeliveryOrder = {
   createdAt: string
   updatedAt: string
 }
+
+export type CreateDeliveryOrderInput = Omit<
+  DeliveryOrder,
+  'id' | 'status' | 'createdAt' | 'updatedAt'
+> & {
+  status?: DeliveryOrderStatus
+}
+
+export type UpdateDeliveryOrderInput = Partial<
+  Omit<DeliveryOrder, 'id' | 'createdAt' | 'updatedAt'>
+>

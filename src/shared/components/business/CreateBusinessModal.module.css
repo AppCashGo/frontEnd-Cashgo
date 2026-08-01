@@ -1,80 +1,19 @@
 .backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 65;
-  display: flex;
-  justify-content: flex-end;
   background: rgba(16, 24, 40, 0.42);
 }
 
 .drawer {
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
   width: min(100vw, 24.5rem);
-  height: 100vh;
-  background: #ffffff;
-  border-left: 1px solid rgba(198, 208, 220, 0.96);
-  box-shadow: -1.4rem 0 2.6rem rgba(15, 23, 42, 0.14);
-}
-
-.header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1.25rem 1.15rem 0.9rem;
-}
-
-.headerCopy {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.title {
-  margin: 0;
-  color: #1e293b;
-  font-size: 1.52rem;
-  font-weight: 900;
-}
-
-.requiredHint {
-  margin: 0;
-  color: #66758c;
-  line-height: 1.5;
-}
-
-.requiredHint {
-  font-size: 0.82rem;
-}
-
-.closeButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: #111827;
-  color: #ffffff;
-  font-size: 1.15rem;
-  font-weight: 800;
-  cursor: pointer;
 }
 
 .form {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  min-height: 0;
+  align-content: start;
+  gap: 0.9rem;
 }
 
-.formBody {
-  display: grid;
-  gap: 0.9rem;
-  min-height: 0;
+.drawerBody {
   padding: 0 1.15rem 1rem;
-  overflow-y: auto;
 }
 
 .field {
@@ -205,8 +144,7 @@
     width: 100vw;
   }
 
-  .header,
-  .formBody,
+  .drawerBody,
   .footer {
     padding-inline: 1rem;
   }

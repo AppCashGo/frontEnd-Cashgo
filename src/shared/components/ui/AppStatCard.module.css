@@ -1,0 +1,105 @@
+.body {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eef4fb;
+  color: #607084;
+}
+
+.content {
+  display: grid;
+  gap: 0.28rem;
+  min-width: 0;
+}
+
+.action {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.label,
+.value,
+.hint,
+.trend {
+  margin: 0;
+}
+
+.label {
+  color: #607084;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.value {
+  color: #1f2a37;
+  font-size: 1.55rem;
+  font-weight: 950;
+  line-height: 1.08;
+}
+
+.hint {
+  color: #5f6d80;
+  font-size: 0.88rem;
+  font-weight: 700;
+  line-height: 1.42;
+}
+
+.trend {
+  width: fit-content;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  background: #dff8ed;
+  color: #10834b;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.default .icon {
+  background: #eef4fb;
+  color: #607084;
+}
+
+.success .icon {
+  background: #dff8ed;
+  color: #159957;
+}
+
+.warning .icon {
+  background: #fff5ce;
+  color: #9a6a00;
+}
+
+.danger .icon {
+  background: #ffe4e0;
+  color: #c84035;
+}
+
+.info .icon {
+  background: #e6f1ff;
+  color: #1e75d8;
+}
+
+.accent .icon {
+  background: #e1fbf5;
+  color: #0f766e;
+}
+
+.danger .trend {
+  background: #ffe4e0;
+  color: #c84035;
+}
+
+.warning .trend {
+  background: #fff5ce;
+  color: #9a6a00;
+}

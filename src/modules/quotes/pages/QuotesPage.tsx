@@ -33,7 +33,9 @@ import { routePaths } from "@/routes/route-paths";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import { RetailPremiumBanner } from "@/shared/components/retail/RetailPremiumBanner";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
+import { downloadBlobFile } from "@/shared/utils/download-blob-file";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "./QuotesPage.module.css";
 
@@ -72,16 +74,6 @@ function getStatusClassName(status: QuotationStatusFilter) {
   return styles.statusDraft;
 }
 
-function downloadBlobFile(blob: Blob, filename: string) {
-  const downloadUrl = URL.createObjectURL(blob);
-  const linkElement = document.createElement("a");
-
-  linkElement.href = downloadUrl;
-  linkElement.download = filename;
-  linkElement.click();
-  URL.revokeObjectURL(downloadUrl);
-}
-
 export function QuotesPage() {
   const { languageCode } = useAppTranslation();
   const navigate = useNavigate();
@@ -117,6 +109,7 @@ export function QuotesPage() {
   const sendMutation = useSendQuotationMutation();
   const convertMutation = useConvertQuotationMutation();
   const downloadMutation = useDownloadQuotationDocumentMutation();
+  const { confirm, confirmationDialog } = useConfirmDialog();
   const quotations = quotationsQuery.data ?? [];
   const customers = customersQuery.data ?? [];
   const selectedQuotation = detailQuery.data ?? null;
@@ -168,11 +161,16 @@ export function QuotesPage() {
       return;
     }
 
-    const confirmed = window.confirm(
-      languageCode === "en"
-        ? "Delete this quote permanently?"
-        : "¿Eliminar esta cotización de forma permanente?",
-    );
+    const confirmed = await confirm({
+      title: languageCode === "en" ? "Delete quote" : "Eliminar cotización",
+      description:
+        languageCode === "en"
+          ? "Delete this quote permanently? This action cannot be undone."
+          : "¿Eliminar esta cotización de forma permanente? Esta acción no se puede deshacer.",
+      confirmLabel: languageCode === "en" ? "Delete" : "Eliminar",
+      cancelLabel: languageCode === "en" ? "Cancel" : "Cancelar",
+      tone: "danger",
+    });
 
     if (!confirmed) {
       return;
@@ -186,7 +184,6 @@ export function QuotesPage() {
       setActionError(getErrorMessage(error, copy.actionError));
     }
   }
-
 
   async function handleDownloadQuotation() {
     if (!selectedQuotation) {
@@ -223,7 +220,10 @@ export function QuotesPage() {
         languageCode,
         publicUrl,
       );
-      const customerPhone = quotationForShare.customer?.phone?.replace(/\D/g, "");
+      const customerPhone = quotationForShare.customer?.phone?.replace(
+        /\D/g,
+        "",
+      );
       const whatsappUrl = customerPhone
         ? `https://wa.me/${customerPhone}?text=${encodeURIComponent(text)}`
         : `https://wa.me/?text=${encodeURIComponent(text)}`;
@@ -327,223 +327,232 @@ export function QuotesPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <section className={styles.hero}>
-        <div className={styles.heroCopy}>
-          <h2 className={styles.title}>{copy.pageTitle}</h2>
-          <p className={styles.description}>{copy.pageDescription}</p>
+    <>
+      {confirmationDialog}
+      <div className={styles.page}>
+        <section className={styles.hero}>
+          <div className={styles.heroCopy}>
+            <h2 className={styles.title}>{copy.pageTitle}</h2>
+            <p className={styles.description}>{copy.pageDescription}</p>
+          </div>
+
+          <div className={styles.heroActions}>
+            <button
+              className={retailStyles.buttonDark}
+              type="button"
+              onClick={openCreatePage}
+            >
+              {copy.createButton}
+            </button>
+          </div>
+        </section>
+
+        <RetailPremiumBanner
+          description={copy.premiumDescription}
+          linkLabel={languageCode === "en" ? "View benefits" : "Ver beneficios"}
+          title={copy.premiumTitle}
+        />
+
+        {hasLoadError ? (
+          <div className={styles.errorBanner}>
+            {getErrorMessage(loadError, copy.actionError)}
+          </div>
+        ) : null}
+
+        {actionError ? (
+          <div className={styles.errorBanner}>{actionError}</div>
+        ) : null}
+
+        <div className={`${retailStyles.filtersRow} ${styles.filtersRow}`}>
+          <label
+            className={`${retailStyles.searchField} ${styles.searchField}`}
+          >
+            <input
+              className={retailStyles.input}
+              placeholder={copy.searchPlaceholder}
+              type="search"
+              value={searchValue}
+              onChange={(event) => setSearchValue(event.target.value)}
+            />
+          </label>
+
+          <label
+            className={`${retailStyles.selectField} ${styles.selectField}`}
+          >
+            <select
+              className={retailStyles.select}
+              value={selectedCustomerId}
+              onChange={(event) => setSelectedCustomerId(event.target.value)}
+            >
+              <option value="">{copy.allCustomers}</option>
+              {customers.map((customer) => (
+                <option key={customer.id} value={customer.id}>
+                  {customer.name}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label
+            className={`${retailStyles.selectField} ${styles.selectField}`}
+          >
+            <select
+              className={retailStyles.select}
+              value={selectedStatus}
+              onChange={(event) =>
+                setSelectedStatus(event.target.value as QuotationStatusFilter)
+              }
+            >
+              {statusFilters.map((status) => (
+                <option key={status} value={status}>
+                  {status === "ALL"
+                    ? copy.allStatuses
+                    : getQuotationStatusLabel(status, languageCode)}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
 
-        <div className={styles.heroActions}>
-          <button
-            className={retailStyles.buttonDark}
-            type="button"
-            onClick={openCreatePage}
-          >
-            {copy.createButton}
-          </button>
-        </div>
-      </section>
-
-      <RetailPremiumBanner
-        description={copy.premiumDescription}
-        linkLabel={languageCode === "en" ? "View benefits" : "Ver beneficios"}
-        title={copy.premiumTitle}
-      />
-
-      {hasLoadError ? (
-        <div className={styles.errorBanner}>
-          {getErrorMessage(loadError, copy.actionError)}
-        </div>
-      ) : null}
-
-      {actionError ? (
-        <div className={styles.errorBanner}>{actionError}</div>
-      ) : null}
-
-      <div className={`${retailStyles.filtersRow} ${styles.filtersRow}`}>
-        <label className={`${retailStyles.searchField} ${styles.searchField}`}>
-          <input
-            className={retailStyles.input}
-            placeholder={copy.searchPlaceholder}
-            type="search"
-            value={searchValue}
-            onChange={(event) => setSearchValue(event.target.value)}
-          />
-        </label>
-
-        <label className={`${retailStyles.selectField} ${styles.selectField}`}>
-          <select
-            className={retailStyles.select}
-            value={selectedCustomerId}
-            onChange={(event) => setSelectedCustomerId(event.target.value)}
-          >
-            <option value="">{copy.allCustomers}</option>
-            {customers.map((customer) => (
-              <option key={customer.id} value={customer.id}>
-                {customer.name}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className={`${retailStyles.selectField} ${styles.selectField}`}>
-          <select
-            className={retailStyles.select}
-            value={selectedStatus}
-            onChange={(event) =>
-              setSelectedStatus(event.target.value as QuotationStatusFilter)
-            }
-          >
-            {statusFilters.map((status) => (
-              <option key={status} value={status}>
-                {status === "ALL"
-                  ? copy.allStatuses
-                  : getQuotationStatusLabel(status, languageCode)}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <section className={retailStyles.tableCard}>
-        <div className={retailStyles.tableScroller}>
-          <table className={retailStyles.table}>
-            <thead>
-              <tr>
-                <th>{copy.columns.customer}</th>
-                <th>{copy.columns.phone}</th>
-                <th>{copy.columns.concept}</th>
-                <th>{copy.columns.status}</th>
-                <th>{copy.columns.total}</th>
-                <th>{copy.columns.actions}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {quotationsQuery.isPending ? (
+        <section className={retailStyles.tableCard}>
+          <div className={retailStyles.tableScroller}>
+            <table className={retailStyles.table}>
+              <thead>
                 <tr>
-                  <td className={styles.loadingCell} colSpan={6}>
-                    {copy.loadingList}
-                  </td>
+                  <th>{copy.columns.customer}</th>
+                  <th>{copy.columns.phone}</th>
+                  <th>{copy.columns.concept}</th>
+                  <th>{copy.columns.status}</th>
+                  <th>{copy.columns.total}</th>
+                  <th>{copy.columns.actions}</th>
                 </tr>
-              ) : quotations.length > 0 ? (
-                quotations.map((quotation) => (
-                  <tr key={quotation.id}>
-                    <td>
-                      <div className={styles.customerCell}>
-                        <strong>
-                          {quotation.customer?.name ?? copy.noCustomer}
-                        </strong>
-                        <span>{quotation.fullNumber}</span>
-                      </div>
+              </thead>
+              <tbody>
+                {quotationsQuery.isPending ? (
+                  <tr>
+                    <td className={styles.loadingCell} colSpan={6}>
+                      {copy.loadingList}
                     </td>
-                    <td>{quotation.customer?.phone ?? copy.noPhone}</td>
-                    <td>
-                      {getQuotationConceptLabel(quotation, languageCode) ??
-                        copy.conceptFallback}
-                    </td>
-                    <td>
-                      <span
-                        className={`${styles.statusPill} ${getStatusClassName(
-                          quotation.status,
-                        )}`}
-                      >
-                        {getQuotationStatusLabel(
-                          quotation.status,
-                          languageCode,
-                        )}
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles.totalCell}>
-                        <strong>
-                          {formatQuotationCurrency(
-                            quotation.total,
-                            languageCode,
-                          )}
-                        </strong>
-                        <span>
-                          {formatQuotationDateTime(
-                            quotation.createdAt,
+                  </tr>
+                ) : quotations.length > 0 ? (
+                  quotations.map((quotation) => (
+                    <tr key={quotation.id}>
+                      <td>
+                        <div className={styles.customerCell}>
+                          <strong>
+                            {quotation.customer?.name ?? copy.noCustomer}
+                          </strong>
+                          <span>{quotation.fullNumber}</span>
+                        </div>
+                      </td>
+                      <td>{quotation.customer?.phone ?? copy.noPhone}</td>
+                      <td>
+                        {getQuotationConceptLabel(quotation, languageCode) ??
+                          copy.conceptFallback}
+                      </td>
+                      <td>
+                        <span
+                          className={`${styles.statusPill} ${getStatusClassName(
+                            quotation.status,
+                          )}`}
+                        >
+                          {getQuotationStatusLabel(
+                            quotation.status,
                             languageCode,
                           )}
                         </span>
-                      </div>
-                    </td>
-                    <td>
-                      <button
-                        className={styles.actionButton}
-                        type="button"
-                        onClick={() => {
-                          clearActionError();
-                          setSelectedQuotationId(quotation.id);
-                        }}
-                      >
-                        {copy.view}
-                      </button>
+                      </td>
+                      <td>
+                        <div className={styles.totalCell}>
+                          <strong>
+                            {formatQuotationCurrency(
+                              quotation.total,
+                              languageCode,
+                            )}
+                          </strong>
+                          <span>
+                            {formatQuotationDateTime(
+                              quotation.createdAt,
+                              languageCode,
+                            )}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <button
+                          className={styles.actionButton}
+                          type="button"
+                          onClick={() => {
+                            clearActionError();
+                            setSelectedQuotationId(quotation.id);
+                          }}
+                        >
+                          {copy.view}
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={6}>
+                      <RetailEmptyState
+                        description={copy.emptyDescription}
+                        title={copy.emptyTitle}
+                      />
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={6}>
-                    <RetailEmptyState
-                      description={copy.emptyDescription}
-                      title={copy.emptyTitle}
-                    />
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-      <QuotationCreatedDrawer
-        isLoading={createdDetailQuery.isPending}
-        isOpen={createdQuotationId !== null}
-        isWorking={isWorking}
-        languageCode={languageCode}
-        quotation={createdQuotation}
-        onClose={closeCreatedDrawer}
-        onDownload={() => void handleDownloadCreatedQuotation()}
-        onPrint={() => void handlePrintCreatedQuotation()}
-        onShare={() => void handleShareCreatedQuotation()}
-      />
+        <QuotationCreatedDrawer
+          isLoading={createdDetailQuery.isPending}
+          isOpen={createdQuotationId !== null}
+          isWorking={isWorking}
+          languageCode={languageCode}
+          quotation={createdQuotation}
+          onClose={closeCreatedDrawer}
+          onDownload={() => void handleDownloadCreatedQuotation()}
+          onPrint={() => void handlePrintCreatedQuotation()}
+          onShare={() => void handleShareCreatedQuotation()}
+        />
 
-      <QuotationDetailDrawer
-        isLoading={detailQuery.isPending}
-        isOpen={selectedQuotationId !== null}
-        isWorking={isWorking}
-        languageCode={languageCode}
-        quotation={selectedQuotation}
-        onClose={() => {
-          clearActionError();
-          setSelectedQuotationId(null);
-          setIsConvertOpen(false);
-        }}
-        onConvert={() => {
-          clearActionError();
-          setIsConvertOpen(true);
-        }}
-        onDelete={handleDeleteQuotation}
-        onDownload={handleDownloadQuotation}
-        onPrint={handlePrintQuotation}
-      />
+        <QuotationDetailDrawer
+          isLoading={detailQuery.isPending}
+          isOpen={selectedQuotationId !== null}
+          isWorking={isWorking}
+          languageCode={languageCode}
+          quotation={selectedQuotation}
+          onClose={() => {
+            clearActionError();
+            setSelectedQuotationId(null);
+            setIsConvertOpen(false);
+          }}
+          onConvert={() => {
+            clearActionError();
+            setIsConvertOpen(true);
+          }}
+          onDelete={handleDeleteQuotation}
+          onDownload={handleDownloadQuotation}
+          onPrint={handlePrintQuotation}
+        />
 
-      <ConvertQuotationDrawer
-        activeCashRegisterId={currentCashRegister?.id}
-        customers={customers}
-        isOpen={isConvertOpen}
-        isSubmitting={convertMutation.isPending}
-        languageCode={languageCode}
-        quotation={selectedQuotation}
-        onClose={() => {
-          clearActionError();
-          setIsConvertOpen(false);
-        }}
-        onSubmit={handleConvertQuotation}
-      />
-    </div>
+        <ConvertQuotationDrawer
+          activeCashRegisterId={currentCashRegister?.id}
+          customers={customers}
+          isOpen={isConvertOpen}
+          isSubmitting={convertMutation.isPending}
+          languageCode={languageCode}
+          quotation={selectedQuotation}
+          onClose={() => {
+            clearActionError();
+            setIsConvertOpen(false);
+          }}
+          onSubmit={handleConvertQuotation}
+        />
+      </div>
+    </>
   );
 }

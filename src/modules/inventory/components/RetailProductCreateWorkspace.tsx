@@ -25,6 +25,9 @@ import {
 } from "@/modules/inventory/hooks/use-inventory-query";
 import { getInventoryCopy } from "@/modules/inventory/i18n/inventory-copy";
 import { resolveProductImageUrl } from "@/modules/products/utils/resolve-product-image-url";
+import { ModalShell } from "@/shared/components/ui/ModalShell";
+import { SideDrawer } from "@/shared/components/ui/SideDrawer";
+import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { formatCurrency } from "@/shared/utils/format-currency";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
@@ -322,54 +325,42 @@ function ConfirmSwitchDrawer({
   cancelLabel: string;
 }) {
   return (
-    <div
+    <ModalShell
+      ariaLabel={title}
       className={styles.confirmBackdrop}
-      role="presentation"
-      onClick={onCancel}
+      closeButtonClassName={styles.confirmClose}
+      closeContent={<CloseIcon />}
+      closeLabel="Cerrar"
+      isOpen
+      panelClassName={styles.confirmDrawer}
+      onClose={onCancel}
     >
-      <aside
-        aria-label={title}
-        aria-modal="true"
-        className={styles.confirmDrawer}
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
-      >
+      <div className={styles.confirmIconWrap}>
+        <WarningIcon />
+      </div>
+
+      <div className={styles.confirmCopy}>
+        <h3 className={styles.confirmTitle}>{title}</h3>
+        <p className={styles.confirmDescription}>{description}</p>
+      </div>
+
+      <div className={styles.confirmActions}>
         <button
-          aria-label="Cerrar"
-          className={styles.confirmClose}
+          className={styles.confirmPrimary}
+          type="button"
+          onClick={onConfirm}
+        >
+          {confirmLabel}
+        </button>
+        <button
+          className={styles.confirmSecondary}
           type="button"
           onClick={onCancel}
         >
-          <CloseIcon />
+          {cancelLabel}
         </button>
-
-        <div className={styles.confirmIconWrap}>
-          <WarningIcon />
-        </div>
-
-        <div className={styles.confirmCopy}>
-          <h3 className={styles.confirmTitle}>{title}</h3>
-          <p className={styles.confirmDescription}>{description}</p>
-        </div>
-
-        <div className={styles.confirmActions}>
-          <button
-            className={styles.confirmPrimary}
-            type="button"
-            onClick={onConfirm}
-          >
-            {confirmLabel}
-          </button>
-          <button
-            className={styles.confirmSecondary}
-            type="button"
-            onClick={onCancel}
-          >
-            {cancelLabel}
-          </button>
-        </div>
-      </aside>
-    </div>
+      </div>
+    </ModalShell>
   );
 }
 
@@ -542,110 +533,90 @@ function CategoryCreateDrawer({
   const canSubmit = name.trim().length >= 2 && !isSubmitting;
 
   return (
-    <div
+    <SideDrawer
+      bodyClassName={styles.categoryDrawerBody}
       className={styles.categoryDrawerBackdrop}
-      role="presentation"
-      onClick={onClose}
+      closeButtonClassName={styles.categoryDrawerClose}
+      closeContent={<CloseIcon />}
+      closeLabel="Cerrar"
+      footer={
+        <button
+          className={styles.categoryDrawerSubmit}
+          disabled={!canSubmit}
+          type="button"
+          onClick={onSubmit}
+        >
+          {copy.createCategorySubmit}
+        </button>
+      }
+      footerClassName={styles.categoryDrawerFooter}
+      isOpen
+      panelClassName={styles.categoryDrawer}
+      title={copy.categories}
+      onClose={onClose}
     >
-      <aside
-        aria-label={copy.createCategorySubmit}
-        aria-modal="true"
-        className={styles.categoryDrawer}
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
+      <label className={styles.field}>
+        <span className={styles.label}>
+          {copy.categoryName}
+          <span className={styles.required}>*</span>
+        </span>
+        <input
+          className={styles.input}
+          placeholder={copy.categoryNamePlaceholder}
+          type="text"
+          value={name}
+          onChange={(event) => onNameChange(event.target.value)}
+        />
+      </label>
+
+      <button
+        className={styles.categoryVisibilityCard}
+        type="button"
+        onClick={onToggleVisibility}
       >
-        <header className={styles.categoryDrawerHeader}>
-          <h3 className={styles.categoryDrawerTitle}>{copy.categories}</h3>
-          <button
-            aria-label="Cerrar"
-            className={styles.categoryDrawerClose}
-            type="button"
-            onClick={onClose}
-          >
-            <CloseIcon />
-          </button>
-        </header>
+        <CatalogIcon />
+        <span className={styles.categoryVisibilityCopy}>
+          <strong>{copy.showInStore}</strong>
+          <span>{copy.showInStoreHint}</span>
+        </span>
+        <span
+          className={
+            isVisibleInCatalog ? styles.toggleTrackActive : styles.toggleTrack
+          }
+        >
+          <span className={styles.toggleThumb} />
+        </span>
+      </button>
 
-        <div className={styles.categoryDrawerBody}>
-          <label className={styles.field}>
-            <span className={styles.label}>
-              {copy.categoryName}
-              <span className={styles.required}>*</span>
-            </span>
+      <label className={styles.categoryProductSearch}>
+        <SearchIcon />
+        <input
+          className={styles.categoryProductSearchInput}
+          placeholder={copy.searchProduct}
+          type="search"
+          value={productSearchTerm}
+          onChange={(event) => onProductSearchChange(event.target.value)}
+        />
+      </label>
+
+      <div className={styles.categoryProductList}>
+        {products.map((product) => (
+          <label className={styles.categoryProductRow} key={product.id}>
             <input
-              className={styles.input}
-              placeholder={copy.categoryNamePlaceholder}
-              type="text"
-              value={name}
-              onChange={(event) => onNameChange(event.target.value)}
+              checked={selectedProductIds.includes(product.id)}
+              type="checkbox"
+              onChange={() => onToggleProduct(product.id)}
             />
-          </label>
-
-          <button
-            className={styles.categoryVisibilityCard}
-            type="button"
-            onClick={onToggleVisibility}
-          >
-            <CatalogIcon />
-            <span className={styles.categoryVisibilityCopy}>
-              <strong>{copy.showInStore}</strong>
-              <span>{copy.showInStoreHint}</span>
+            <span className={styles.categoryProductName}>{product.name}</span>
+            <span className={styles.categoryProductPrice}>
+              {formatCurrency(product.price)}
             </span>
-            <span
-              className={
-                isVisibleInCatalog
-                  ? styles.toggleTrackActive
-                  : styles.toggleTrack
-              }
-            >
-              <span className={styles.toggleThumb} />
-            </span>
-          </button>
-
-          <label className={styles.categoryProductSearch}>
-            <SearchIcon />
-            <input
-              className={styles.categoryProductSearchInput}
-              placeholder={copy.searchProduct}
-              type="search"
-              value={productSearchTerm}
-              onChange={(event) => onProductSearchChange(event.target.value)}
-            />
           </label>
+        ))}
+      </div>
 
-          <div className={styles.categoryProductList}>
-            {products.map((product) => (
-              <label className={styles.categoryProductRow} key={product.id}>
-                <input
-                  checked={selectedProductIds.includes(product.id)}
-                  type="checkbox"
-                  onChange={() => onToggleProduct(product.id)}
-                />
-                <span className={styles.categoryProductName}>
-                  {product.name}
-                </span>
-                <span className={styles.categoryProductPrice}>
-                  {formatCurrency(product.price)}
-                </span>
-              </label>
-            ))}
-          </div>
-
-          {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
-        </div>
-
-        <footer className={styles.categoryDrawerFooter}>
-          <button
-            className={styles.categoryDrawerSubmit}
-            disabled={!canSubmit}
-            type="button"
-            onClick={onSubmit}
-          >
-            {copy.createCategorySubmit}
-          </button>
-        </footer>
-      </aside>
-    </div>
+      {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
+    </SideDrawer>
   );
 }
 
@@ -671,59 +642,47 @@ function ProductImagePreviewDialog({
   }
 
   return (
-    <div
+    <ModalShell
+      ariaLabel="Vista previa de imagen"
       className={styles.imagePreviewBackdrop}
-      role="presentation"
-      onClick={onClose}
+      closeButtonClassName={styles.imagePreviewClose}
+      closeContent={<CloseIcon />}
+      closeLabel="Cerrar vista previa"
+      isOpen
+      panelClassName={styles.imagePreviewDialog}
+      onClose={onClose}
     >
-      <aside
-        aria-label="Vista previa de imagen"
-        aria-modal="true"
-        className={styles.imagePreviewDialog}
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <button
-          aria-label="Cerrar vista previa"
-          className={styles.imagePreviewClose}
-          type="button"
-          onClick={onClose}
-        >
-          <CloseIcon />
-        </button>
+      <div className={styles.imagePreviewFrame}>
+        <img
+          alt={`Imagen ${selectedIndex + 1} del producto`}
+          className={styles.imagePreviewMedia}
+          src={resolvedCurrentImage}
+        />
+      </div>
 
-        <div className={styles.imagePreviewFrame}>
-          <img
-            alt={`Imagen ${selectedIndex + 1} del producto`}
-            className={styles.imagePreviewMedia}
-            src={resolvedCurrentImage}
-          />
+      {images.length > 1 ? (
+        <div className={styles.imagePreviewActions}>
+          <button
+            disabled={!canGoBack}
+            type="button"
+            onClick={() => onSelect(selectedIndex - 1)}
+          >
+            Anterior
+          </button>
+          <button
+            disabled={!canGoForward}
+            type="button"
+            onClick={() => onSelect(selectedIndex + 1)}
+          >
+            Siguiente
+          </button>
         </div>
+      ) : null}
 
-        {images.length > 1 ? (
-          <div className={styles.imagePreviewActions}>
-            <button
-              disabled={!canGoBack}
-              type="button"
-              onClick={() => onSelect(selectedIndex - 1)}
-            >
-              Anterior
-            </button>
-            <button
-              disabled={!canGoForward}
-              type="button"
-              onClick={() => onSelect(selectedIndex + 1)}
-            >
-              Siguiente
-            </button>
-          </div>
-        ) : null}
-
-        <span className={styles.imagePreviewCounter}>
-          {selectedIndex + 1} de {images.length}
-        </span>
-      </aside>
-    </div>
+      <span className={styles.imagePreviewCounter}>
+        {selectedIndex + 1} de {images.length}
+      </span>
+    </ModalShell>
   );
 }
 
@@ -742,6 +701,7 @@ export function RetailProductCreateWorkspace({
   const updateProductMutation = useUpdateProductMutation();
   const deleteProductMutation = useDeleteProductMutation();
   const uploadProductImagesMutation = useUploadProductImagesMutation();
+  const { confirm, confirmationDialog } = useConfirmDialog();
   const categories = useMemo(
     () => categoriesQuery.data ?? [],
     [categoriesQuery.data],
@@ -1259,9 +1219,13 @@ export function RetailProductCreateWorkspace({
       return;
     }
 
-    const shouldDelete = window.confirm(
-      "Este producto se marcará como inactivo y dejará de mostrarse en inventario. ¿Quieres continuar?",
-    );
+    const shouldDelete = await confirm({
+      title: "Eliminar producto",
+      description:
+        "Este producto se marcará como inactivo y dejará de mostrarse en inventario. ¿Quieres continuar?",
+      confirmLabel: "Eliminar producto",
+      tone: "danger",
+    });
 
     if (!shouldDelete) {
       return;
@@ -1295,6 +1259,7 @@ export function RetailProductCreateWorkspace({
 
   return (
     <>
+      {confirmationDialog}
       <div className={styles.page}>
         <header className={styles.pageHeader}>
           <button className={styles.backButton} type="button" onClick={onBack}>

@@ -15,6 +15,7 @@ import {
   useDeleteInventoryCategoryMutation,
   useInventoryCategoriesQuery,
   useInventoryLowStockQuery,
+  useCreateInventoryAdjustmentMutation,
   useRegisterInventoryPurchaseMutation,
   useUpdateInventoryCategoryMutation,
   useUpdateInventoryProductTaxesMutation,
@@ -23,8 +24,10 @@ import { getInventoryCopy } from '@/modules/inventory/i18n/inventory-copy'
 import { exportInventoryReport } from '@/modules/inventory/services/inventory-api'
 import { inventoryTaxOptions } from '@/modules/inventory/constants/inventory-tax-options'
 import type {
+  InventoryAdjustmentInput,
   InventoryProductCategory,
   InventoryProductCategoryInput,
+  ManualInventoryAdjustmentType,
 } from '@/modules/inventory/types/inventory'
 import type {
   Product,
@@ -41,6 +44,9 @@ import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
+import { ModalShell } from '@/shared/components/ui/ModalShell'
+import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './RetailInventoryWorkspace.module.css'
@@ -71,6 +77,13 @@ type PurchaseFormState = {
   productId: string
   quantity: string
   unitCost: string
+  reason: string
+}
+
+type AdjustmentFormState = {
+  productId: string
+  type: ManualInventoryAdjustmentType
+  quantity: string
   reason: string
 }
 
@@ -113,6 +126,15 @@ function createDefaultPurchaseFormState(): PurchaseFormState {
   }
 }
 
+function createDefaultAdjustmentFormState(): AdjustmentFormState {
+  return {
+    productId: '',
+    type: 'OUT',
+    quantity: '1',
+    reason: '',
+  }
+}
+
 function createDefaultTaxFormState(): TaxFormState {
   return {
     selectedOptionId: '',
@@ -131,6 +153,13 @@ function parsePositiveNumber(value: string) {
   const parsedValue = Number(normalizedValue)
 
   return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : 0
+}
+
+function parseNonNegativeNumber(value: string) {
+  const normalizedValue = value.replace(',', '.')
+  const parsedValue = Number(normalizedValue)
+
+  return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : -1
 }
 
 function formatEditableNumber(value: number) {
@@ -234,40 +263,22 @@ function clampPercentage(value: number) {
   return Math.max(0, Math.min(999, value))
 }
 
-function downloadBlobFile(blob: Blob, filename: string) {
-  const objectUrl = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = objectUrl
-  anchor.download = filename
-  anchor.click()
-  URL.revokeObjectURL(objectUrl)
-}
-
 function DrawerShell({ title, onClose, children, footer }: DrawerShellProps) {
   return (
-    <div className={styles.drawerBackdrop} role="presentation" onClick={onClose}>
-      <aside
-        aria-label={title}
-        aria-modal="true"
-        className={styles.drawer}
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className={styles.drawerHeader}>
-          <h3 className={styles.drawerTitle}>{title}</h3>
-          <button
-            aria-label="Cerrar"
-            className={styles.drawerClose}
-            type="button"
-            onClick={onClose}
-          >
-            ×
-          </button>
-        </div>
-        <div className={styles.drawerBody}>{children}</div>
-        {footer ? <div className={styles.drawerFooter}>{footer}</div> : null}
-      </aside>
-    </div>
+    <SideDrawer
+      bodyClassName={styles.drawerBody}
+      className={styles.drawerBackdrop}
+      closeButtonClassName={styles.drawerClose}
+      closeLabel="Cerrar"
+      footer={footer}
+      footerClassName={styles.drawerFooter}
+      isOpen
+      panelClassName={styles.drawer}
+      title={title}
+      onClose={onClose}
+    >
+      {children}
+    </SideDrawer>
   )
 }
 
@@ -312,6 +323,15 @@ function TaxIcon() {
   )
 }
 
+function AdjustmentIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.iconSvg} viewBox="0 0 24 24">
+      <path d="M7 7h11m0 0-3-3m3 3-3 3M17 17H6m0 0 3 3m-3-3 3-3" />
+      <path d="M4 4v16m16-16v16" />
+    </svg>
+  )
+}
+
 function DownloadIcon() {
   return (
     <svg aria-hidden="true" className={styles.iconSvg} viewBox="0 0 24 24">
@@ -339,6 +359,7 @@ export function RetailInventoryWorkspace() {
   const createCategoryMutation = useCreateInventoryCategoryMutation()
   const deleteCategoryMutation = useDeleteInventoryCategoryMutation()
   const updateCategoryMutation = useUpdateInventoryCategoryMutation()
+  const createAdjustmentMutation = useCreateInventoryAdjustmentMutation()
   const updateProductTaxesMutation = useUpdateInventoryProductTaxesMutation()
   const updateProductMutation = useUpdateProductMutation()
   const registerPurchaseMutation = useRegisterInventoryPurchaseMutation()
@@ -375,6 +396,7 @@ export function RetailInventoryWorkspace() {
   const [isTaxPickerOpen, setTaxPickerOpen] = useState(false)
   const [isTaxOptionsOpen, setTaxOptionsOpen] = useState(false)
   const [isPurchaseDrawerOpen, setPurchaseDrawerOpen] = useState(false)
+  const [isAdjustmentDrawerOpen, setAdjustmentDrawerOpen] = useState(false)
   const [shareCatalogPhone, setShareCatalogPhone] = useState('')
   const [activeInventoryFilter, setActiveInventoryFilter] =
     useState<InventoryFilter>('ALL')
@@ -388,6 +410,8 @@ export function RetailInventoryWorkspace() {
   const [purchaseFormState, setPurchaseFormState] = useState<PurchaseFormState>(
     createDefaultPurchaseFormState(),
   )
+  const [adjustmentFormState, setAdjustmentFormState] =
+    useState<AdjustmentFormState>(createDefaultAdjustmentFormState())
   const [taxFormState, setTaxFormState] = useState<TaxFormState>(
     createDefaultTaxFormState(),
   )
@@ -401,6 +425,9 @@ export function RetailInventoryWorkspace() {
   const isProductWorkspaceOpen = isManualCreateDrawerOpen || Boolean(productId)
   const activeTaxOption = inventoryTaxOptions.find(
     (option) => option.id === taxFormState.selectedOptionId,
+  )
+  const selectedAdjustmentProduct = products.find(
+    (product) => product.id === adjustmentFormState.productId,
   )
 
   useEffect(() => {
@@ -875,6 +902,46 @@ export function RetailInventoryWorkspace() {
     }
   }
 
+  async function handleRegisterAdjustment() {
+    resetFeedback()
+
+    const quantity =
+      adjustmentFormState.type === 'ADJUSTMENT'
+        ? parseNonNegativeNumber(adjustmentFormState.quantity)
+        : parsePositiveNumber(adjustmentFormState.quantity)
+
+    if (!adjustmentFormState.productId || quantity < 0) {
+      setFeedbackMessage({
+        tone: 'error',
+        text: copy.adjustmentValidation,
+      })
+      return
+    }
+
+    const input: InventoryAdjustmentInput = {
+      productId: adjustmentFormState.productId,
+      type: adjustmentFormState.type,
+      quantity,
+      reason: normalizeOptionalText(adjustmentFormState.reason),
+    }
+
+    try {
+      await createAdjustmentMutation.mutateAsync(input)
+
+      setAdjustmentDrawerOpen(false)
+      setAdjustmentFormState(createDefaultAdjustmentFormState())
+      setFeedbackMessage({
+        tone: 'success',
+        text: copy.adjustmentSuccess,
+      })
+    } catch (error) {
+      setFeedbackMessage({
+        tone: 'error',
+        text: getErrorMessage(error, 'No fue posible ajustar el inventario.'),
+      })
+    }
+  }
+
   async function handleSaveTaxes() {
     resetFeedback()
 
@@ -1121,6 +1188,13 @@ export function RetailInventoryWorkspace() {
               onClick={() => setPurchaseDrawerOpen(true)}
             >
               <BoxIcon />
+            </IconButton>
+            <IconButton
+              label={copy.adjustInventory}
+              tooltip={copy.adjustInventory}
+              onClick={() => setAdjustmentDrawerOpen(true)}
+            >
+              <AdjustmentIcon />
             </IconButton>
             <IconButton
               label={copy.productTaxes}
@@ -1498,68 +1572,54 @@ export function RetailInventoryWorkspace() {
         </DrawerShell>
       ) : null}
 
-      {isSharePhoneModalOpen ? (
-        <div
-          className={styles.centeredModalBackdrop}
-          role="presentation"
-          onClick={() => setSharePhoneModalOpen(false)}
-        >
-          <div
-            aria-label={copy.shareCatalogPhoneTitle}
-            aria-modal="true"
-            className={styles.centeredModal}
-            role="dialog"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className={styles.drawerHeader}>
-              <h3 className={styles.drawerTitle}>{copy.shareCatalogPhoneTitle}</h3>
-              <button
-                aria-label="Cerrar"
-                className={styles.drawerClose}
-                type="button"
-                onClick={() => setSharePhoneModalOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-
-            <p className={styles.drawerDescription}>
-              {copy.shareCatalogPhoneDescription}
-            </p>
-
-            <label className={styles.fieldGroup}>
-              <span className={styles.fieldLabel}>{copy.shareCatalogPhoneLabel}</span>
-              <div className={styles.phoneInputWrap}>
-                <span className={styles.phonePrefix}>CO</span>
-                <input
-                  className={styles.textInput}
-                  inputMode="tel"
-                  placeholder={copy.shareCatalogPhonePlaceholder}
-                  type="tel"
-                  value={shareCatalogPhone}
-                  onChange={(event) => setShareCatalogPhone(event.target.value)}
-                />
-              </div>
-            </label>
-
-            <div className={styles.phoneModalActions}>
-              <button
-                className={retailStyles.buttonDark}
-                disabled={
-                  normalizePhone(shareCatalogPhone).length < 7 ||
-                  updateBusinessSettingsMutation.isPending
-                }
-                type="button"
-                onClick={() => {
-                  void handleUpdatePhoneAndShareCatalog()
-                }}
-              >
-                {copy.shareCatalogPhoneSubmit}
-              </button>
-            </div>
-          </div>
+      <ModalShell
+        ariaLabel={copy.shareCatalogPhoneTitle}
+        className={styles.centeredModalBackdrop}
+        closeButtonClassName={styles.drawerClose}
+        closeLabel="Cerrar"
+        isOpen={isSharePhoneModalOpen}
+        panelClassName={styles.centeredModal}
+        onClose={() => setSharePhoneModalOpen(false)}
+      >
+        <div className={styles.drawerHeader}>
+          <h3 className={styles.drawerTitle}>{copy.shareCatalogPhoneTitle}</h3>
         </div>
-      ) : null}
+
+        <p className={styles.drawerDescription}>
+          {copy.shareCatalogPhoneDescription}
+        </p>
+
+        <label className={styles.fieldGroup}>
+          <span className={styles.fieldLabel}>{copy.shareCatalogPhoneLabel}</span>
+          <div className={styles.phoneInputWrap}>
+            <span className={styles.phonePrefix}>CO</span>
+            <input
+              className={styles.textInput}
+              inputMode="tel"
+              placeholder={copy.shareCatalogPhonePlaceholder}
+              type="tel"
+              value={shareCatalogPhone}
+              onChange={(event) => setShareCatalogPhone(event.target.value)}
+            />
+          </div>
+        </label>
+
+        <div className={styles.phoneModalActions}>
+          <button
+            className={retailStyles.buttonDark}
+            disabled={
+              normalizePhone(shareCatalogPhone).length < 7 ||
+              updateBusinessSettingsMutation.isPending
+            }
+            type="button"
+            onClick={() => {
+              void handleUpdatePhoneAndShareCatalog()
+            }}
+          >
+            {copy.shareCatalogPhoneSubmit}
+          </button>
+        </div>
+      </ModalShell>
 
       {isTaxesDrawerOpen ? (
         <DrawerShell
@@ -1669,114 +1729,234 @@ export function RetailInventoryWorkspace() {
             ) : null}
           </div>
 
-          {isTaxPickerOpen ? (
-            <div className={styles.selectorBackdrop} role="presentation">
-              <div className={styles.selectorPanel}>
-                <div className={styles.selectorHeader}>
+          <ModalShell
+            ariaLabel={copy.selectProductsToModify}
+            className={styles.selectorBackdrop}
+            isOpen={isTaxPickerOpen}
+            panelClassName={styles.selectorPanel}
+            showCloseButton={false}
+            onClose={() => setTaxPickerOpen(false)}
+          >
+            <div className={styles.selectorHeader}>
+              <button
+                className={styles.backButton}
+                type="button"
+                onClick={() => setTaxPickerOpen(false)}
+              >
+                ← {copy.selectProductsToModify}
+              </button>
+            </div>
+
+            <div className={styles.selectorFilters}>
+              <label className={styles.searchFieldDrawer}>
+                <input
+                  className={styles.searchInput}
+                  placeholder={copy.searchProduct}
+                  type="search"
+                  value={taxProductSearchTerm}
+                  onChange={(event) => setTaxProductSearchTerm(event.target.value)}
+                />
+              </label>
+
+              <div className={styles.chipsRow}>
+                <button
+                  className={
+                    taxPickerCategoryId === null ? styles.chipActive : styles.chip
+                  }
+                  type="button"
+                  onClick={() => setTaxPickerCategoryId(null)}
+                >
+                  {copy.allChip}
+                </button>
+                {categories.map((category) => (
                   <button
-                    className={styles.backButton}
+                    className={
+                      taxPickerCategoryId === category.id
+                        ? styles.chipActive
+                        : styles.chip
+                    }
+                    key={category.id}
                     type="button"
-                    onClick={() => setTaxPickerOpen(false)}
+                    onClick={() => setTaxPickerCategoryId(category.id)}
                   >
-                    ← {copy.selectProductsToModify}
+                    {category.name}
                   </button>
-                </div>
-
-                <div className={styles.selectorFilters}>
-                  <label className={styles.searchFieldDrawer}>
-                    <input
-                      className={styles.searchInput}
-                      placeholder={copy.searchProduct}
-                      type="search"
-                      value={taxProductSearchTerm}
-                      onChange={(event) => setTaxProductSearchTerm(event.target.value)}
-                    />
-                  </label>
-
-                  <div className={styles.chipsRow}>
-                    <button
-                      className={
-                        taxPickerCategoryId === null
-                          ? styles.chipActive
-                          : styles.chip
-                      }
-                      type="button"
-                      onClick={() => setTaxPickerCategoryId(null)}
-                    >
-                      {copy.allChip}
-                    </button>
-                    {categories.map((category) => (
-                      <button
-                        className={
-                          taxPickerCategoryId === category.id
-                            ? styles.chipActive
-                            : styles.chip
-                        }
-                        key={category.id}
-                        type="button"
-                        onClick={() => setTaxPickerCategoryId(category.id)}
-                      >
-                        {category.name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className={styles.selectorTable}>
-                  <table className={styles.selectionTable}>
-                    <thead>
-                      <tr>
-                        <th />
-                        <th>{copy.productColumn}</th>
-                        <th>{copy.priceColumn}</th>
-                        <th>{copy.costColumn}</th>
-                        <th>{copy.taxBase}</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {taxPickerProducts.map((product) => (
-                        <tr key={product.id}>
-                          <td>
-                            <input
-                              checked={taxFormState.productIds.includes(product.id)}
-                              type="checkbox"
-                              onChange={() =>
-                                setTaxFormState((currentState) => ({
-                                  ...currentState,
-                                  productIds: currentState.productIds.includes(
-                                    product.id,
-                                  )
-                                    ? currentState.productIds.filter(
-                                        (currentProductId) =>
-                                          currentProductId !== product.id,
-                                      )
-                                    : [...currentState.productIds, product.id],
-                                }))
-                              }
-                            />
-                          </td>
-                          <td>{product.name}</td>
-                          <td>{formatCurrency(product.price)}</td>
-                          <td>{formatCurrency(product.cost)}</td>
-                          <td>{product.taxLabel ?? copy.selectOption}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className={styles.selectorFooter}>
-                  <button
-                    className={retailStyles.buttonDark}
-                    type="button"
-                    onClick={() => setTaxPickerOpen(false)}
-                  >
-                    {copy.continue}
-                  </button>
-                </div>
+                ))}
               </div>
             </div>
-          ) : null}
+
+            <div className={styles.selectorTable}>
+              <table className={styles.selectionTable}>
+                <thead>
+                  <tr>
+                    <th />
+                    <th>{copy.productColumn}</th>
+                    <th>{copy.priceColumn}</th>
+                    <th>{copy.costColumn}</th>
+                    <th>{copy.taxBase}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {taxPickerProducts.map((product) => (
+                    <tr key={product.id}>
+                      <td>
+                        <input
+                          checked={taxFormState.productIds.includes(product.id)}
+                          type="checkbox"
+                          onChange={() =>
+                            setTaxFormState((currentState) => ({
+                              ...currentState,
+                              productIds: currentState.productIds.includes(product.id)
+                                ? currentState.productIds.filter(
+                                    (currentProductId) =>
+                                      currentProductId !== product.id,
+                                  )
+                                : [...currentState.productIds, product.id],
+                            }))
+                          }
+                        />
+                      </td>
+                      <td>{product.name}</td>
+                      <td>{formatCurrency(product.price)}</td>
+                      <td>{formatCurrency(product.cost)}</td>
+                      <td>{product.taxLabel ?? copy.selectOption}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className={styles.selectorFooter}>
+              <button
+                className={retailStyles.buttonDark}
+                type="button"
+                onClick={() => setTaxPickerOpen(false)}
+              >
+                {copy.continue}
+              </button>
+            </div>
+          </ModalShell>
+        </DrawerShell>
+      ) : null}
+
+      {isAdjustmentDrawerOpen ? (
+        <DrawerShell
+          footer={
+            <button
+              className={retailStyles.buttonDark}
+              disabled={
+                !adjustmentFormState.productId ||
+                (adjustmentFormState.type === 'ADJUSTMENT'
+                  ? parseNonNegativeNumber(adjustmentFormState.quantity) < 0
+                  : parsePositiveNumber(adjustmentFormState.quantity) <= 0) ||
+                createAdjustmentMutation.isPending
+              }
+              type="button"
+              onClick={() => {
+                void handleRegisterAdjustment()
+              }}
+            >
+              {copy.adjustmentSubmit}
+            </button>
+          }
+          title={copy.adjustmentTitle}
+          onClose={() => setAdjustmentDrawerOpen(false)}
+        >
+          <div className={styles.drawerStack}>
+            <p className={styles.drawerDescription}>
+              {copy.adjustmentDescription}
+            </p>
+
+            <label className={styles.fieldGroup}>
+              <span className={styles.fieldLabel}>{copy.purchaseProduct}</span>
+              <select
+                className={styles.selectInput}
+                value={adjustmentFormState.productId}
+                onChange={(event) =>
+                  setAdjustmentFormState((currentState) => ({
+                    ...currentState,
+                    productId: event.target.value,
+                  }))
+                }
+              >
+                <option value="">{copy.selectOption}</option>
+                {products.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className={styles.fieldGroup}>
+              <span className={styles.fieldLabel}>
+                {copy.adjustmentMovementType}
+              </span>
+              <select
+                className={styles.selectInput}
+                value={adjustmentFormState.type}
+                onChange={(event) =>
+                  setAdjustmentFormState((currentState) => ({
+                    ...currentState,
+                    type: event.target.value as ManualInventoryAdjustmentType,
+                  }))
+                }
+              >
+                <option value="OUT">{copy.adjustmentTypeOut}</option>
+                <option value="ADJUSTMENT">
+                  {copy.adjustmentTypeAdjustment}
+                </option>
+                <option value="IN">{copy.adjustmentTypeIn}</option>
+              </select>
+            </label>
+
+            <label className={styles.fieldGroup}>
+              <span className={styles.fieldLabel}>
+                {adjustmentFormState.type === 'ADJUSTMENT'
+                  ? copy.adjustmentTargetStock
+                  : copy.adjustmentQuantity}
+              </span>
+              <input
+                className={styles.textInput}
+                inputMode="numeric"
+                min={adjustmentFormState.type === 'ADJUSTMENT' ? '0' : '1'}
+                type="number"
+                value={adjustmentFormState.quantity}
+                onChange={(event) =>
+                  setAdjustmentFormState((currentState) => ({
+                    ...currentState,
+                    quantity: event.target.value,
+                  }))
+                }
+              />
+            </label>
+
+            {selectedAdjustmentProduct ? (
+              <div className={styles.adjustmentSummary}>
+                <span>{copy.adjustmentCurrentStock}</span>
+                <strong>
+                  {selectedAdjustmentProduct.stock.toString()}{' '}
+                  {copy.adjustmentStockUnit}
+                </strong>
+              </div>
+            ) : null}
+
+            <label className={styles.fieldGroup}>
+              <span className={styles.fieldLabel}>{copy.adjustmentReason}</span>
+              <textarea
+                className={styles.textareaInput}
+                placeholder={copy.adjustmentReasonPlaceholder}
+                rows={4}
+                value={adjustmentFormState.reason}
+                onChange={(event) =>
+                  setAdjustmentFormState((currentState) => ({
+                    ...currentState,
+                    reason: event.target.value,
+                  }))
+                }
+              />
+            </label>
+          </div>
         </DrawerShell>
       ) : null}
 

@@ -14,7 +14,6 @@ import {
   Phone,
   ReceiptText,
   TrendingUp,
-  Upload,
 } from 'lucide-react'
 import type {
   CustomerDetail,
@@ -29,11 +28,11 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { formatDateTime } from '@/shared/utils/format-date-time'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
-import {
-  IMAGE_UPLOAD_ACCEPT,
-  validateImageUploadFile,
-} from '@/shared/utils/image-upload-validation'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
+import { AvatarUploadField } from '@/shared/components/ui/AvatarUploadField'
+import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
+import { useImageUploadPreview } from '@/shared/hooks/use-image-upload-preview'
+import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './RetailCustomerDrawer.module.css'
 
@@ -253,18 +252,16 @@ function openReceipt(
 ) {
   const receiptHtml = buildReceiptHtml(receipt, brand)
   const receiptBlob = new Blob([receiptHtml], { type: 'text/html' })
-  const receiptUrl = URL.createObjectURL(receiptBlob)
 
   if (action === 'download') {
-    const linkElement = document.createElement('a')
-
-    linkElement.href = receiptUrl
-    linkElement.download = `comprobante-cliente-${receipt.saleNumber}.html`
-    linkElement.click()
-    URL.revokeObjectURL(receiptUrl)
+    downloadBlobFile(
+      receiptBlob,
+      `comprobante-cliente-${receipt.saleNumber}.html`,
+    )
     return
   }
 
+  const receiptUrl = URL.createObjectURL(receiptBlob)
   const printWindow = window.open(receiptUrl, '_blank', 'noopener,noreferrer')
 
   if (!printWindow) {
@@ -297,8 +294,6 @@ export function RetailCustomerDrawer({
   onSubmitCustomer,
 }: RetailCustomerDrawerProps) {
   const [form, setForm] = useState<CustomerFormState>(EMPTY_FORM)
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
   const [paymentForm, setPaymentForm] = useState<PaymentFormState>({
     receivableId: '',
@@ -342,9 +337,12 @@ export function RetailCustomerDrawer({
       : mode === 'edit'
         ? 'Editar cliente'
         : 'Detalle del cliente'
-  const storedAvatarUrl = resolveApiAssetUrl(customer?.avatarUrl)
-  const visibleAvatarUrl =
-    avatarPreviewUrl ?? (mode === 'create' ? null : storedAvatarUrl)
+  const avatarUpload = useImageUploadPreview({
+    hideStoredImage: mode === 'create',
+    resetKey: `${isOpen ? 'open' : 'closed'}:${mode}:${customer?.id ?? 'new'}`,
+    storedImageUrl: customer?.avatarUrl,
+  })
+  const visibleAvatarUrl = avatarUpload.visibleImageUrl
   const receiptBrand = useMemo<PaymentReceiptBrand>(
     () => ({
       businessName:
@@ -366,20 +364,10 @@ export function RetailCustomerDrawer({
     }
 
     setForm(toFormState(mode === 'create' ? null : customer))
-    setAvatarFile(null)
-    setAvatarPreviewUrl(null)
     setFormError(null)
     setPaymentError(null)
     setLastReceipt(null)
   }, [customer, isOpen, mode])
-
-  useEffect(() => {
-    return () => {
-      if (avatarPreviewUrl) {
-        URL.revokeObjectURL(avatarPreviewUrl)
-      }
-    }
-  }, [avatarPreviewUrl])
 
   useEffect(() => {
     if (!isOpen || mode !== 'detail') {
@@ -410,11 +398,7 @@ export function RetailCustomerDrawer({
   }
 
   function handleAvatarChange(file: File | null) {
-    if (!file) {
-      return
-    }
-
-    const validationError = validateImageUploadFile(file)
+    const validationError = avatarUpload.selectFile(file)
 
     if (validationError) {
       setFormError(validationError)
@@ -422,14 +406,6 @@ export function RetailCustomerDrawer({
     }
 
     setFormError(null)
-    setAvatarFile(file)
-    setAvatarPreviewUrl((currentPreviewUrl) => {
-      if (currentPreviewUrl) {
-        URL.revokeObjectURL(currentPreviewUrl)
-      }
-
-      return URL.createObjectURL(file)
-    })
   }
 
   async function handleSubmitCustomer(event: FormEvent<HTMLFormElement>) {
@@ -461,7 +437,7 @@ export function RetailCustomerDrawer({
         notes: normalizeOptionalText(form.notes),
         balance,
       },
-      avatarFile,
+      avatarUpload.file,
     )
   }
 
@@ -518,30 +494,12 @@ export function RetailCustomerDrawer({
   function renderForm() {
     return (
       <form className={styles.form} onSubmit={handleSubmitCustomer}>
-        <label className={styles.avatarUploader}>
-          <input
-            accept={IMAGE_UPLOAD_ACCEPT}
-            className={styles.avatarInput}
-            disabled={isSubmitting}
-            type="file"
-            onChange={(event) => {
-              handleAvatarChange(event.target.files?.[0] ?? null)
-              event.currentTarget.value = ''
-            }}
-          />
-          {visibleAvatarUrl ? (
-            <img
-              alt="Avatar del cliente"
-              className={styles.avatarPreview}
-              src={visibleAvatarUrl}
-            />
-          ) : (
-            <span className={styles.avatarPlaceholder} aria-hidden="true">
-              <Upload />
-            </span>
-          )}
-          <span>{visibleAvatarUrl ? 'Cambiar avatar' : 'Cargar avatar'}</span>
-        </label>
+        <AvatarUploadField
+          alt="Avatar del cliente"
+          disabled={isSubmitting}
+          imageUrl={visibleAvatarUrl}
+          onSelectFile={handleAvatarChange}
+        />
 
         <label className={styles.field}>
           <span>Nombre *</span>
@@ -686,8 +644,8 @@ export function RetailCustomerDrawer({
       <div className={styles.detail}>
         <section className={styles.profileCard}>
           <div className={styles.avatar} aria-hidden="true">
-            {storedAvatarUrl ? (
-              <img alt="" className={styles.avatarImage} src={storedAvatarUrl} />
+            {visibleAvatarUrl ? (
+              <img alt="" className={styles.avatarImage} src={visibleAvatarUrl} />
             ) : (
               customer.name.charAt(0).toUpperCase()
             )}
@@ -942,7 +900,7 @@ export function RetailCustomerDrawer({
       bodyClassName={styles.drawerBody}
       footer={
         mode === 'detail' && customer ? (
-          <div className={styles.footerActions}>
+          <DrawerActionFooter>
             <button
               className={styles.secondaryButton}
               type="button"
@@ -953,7 +911,7 @@ export function RetailCustomerDrawer({
             <button className={styles.primaryButton} type="button" onClick={onClose}>
               Listo
             </button>
-          </div>
+          </DrawerActionFooter>
         ) : null
       }
       isOpen={isOpen}
