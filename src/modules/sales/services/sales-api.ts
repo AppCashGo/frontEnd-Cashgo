@@ -37,5 +37,6 @@ export async function cancelSale(saleId: string, input: CancelSaleInput = {}) {
 export function downloadSaleReceipt(saleId: string) {
   return getBlob(`/sales/${saleId}/receipt`, {
     accept: 'text/html',
+    accessToken: getAuthAccessToken(),
   })
 }

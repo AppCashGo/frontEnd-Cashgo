@@ -1487,7 +1487,10 @@
 
 .changeModalCard {
   position: relative;
+  display: flex;
   width: min(36rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid rgba(192, 204, 218, 0.9);
   border-radius: 1rem;
@@ -1515,6 +1518,7 @@
 }
 
 .changeModalHeader {
+  flex: 0 0 auto;
   padding: 2rem 2.4rem 1.65rem;
   border-bottom: 1px solid rgba(192, 204, 218, 0.75);
 }
@@ -1537,7 +1541,10 @@
 
 .changeModalBody {
   display: grid;
+  min-height: 0;
   gap: 1.45rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 2rem 2.4rem;
 }
 
@@ -1677,6 +1684,7 @@
 .changeModalActions {
   display: grid;
   grid-template-columns: 1fr 1.7fr;
+  flex: 0 0 auto;
   gap: 0.75rem;
   padding: 1.35rem 2.4rem 1.55rem;
   border-top: 1px solid rgba(192, 204, 218, 0.75);
@@ -1883,6 +1891,72 @@
   color: #64748b;
   text-align: center;
   font-weight: 600;
+}
+
+@media (max-height: 760px) {
+  .changeModalCard {
+    max-height: calc(100dvh - 1rem);
+  }
+
+  .changeModalHeader {
+    padding: 1.35rem 1.8rem 1rem;
+  }
+
+  .changeModalTitle {
+    font-size: 1.45rem;
+  }
+
+  .changeModalSubtitle {
+    font-size: 0.92rem;
+  }
+
+  .changeModalBody {
+    gap: 0.9rem;
+    padding: 1.1rem 1.8rem;
+  }
+
+  .changeSaleCard {
+    padding: 0.9rem 1rem;
+  }
+
+  .changeSaleIcon {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .changeInputGroup {
+    gap: 0.45rem;
+  }
+
+  .changeInputBox {
+    min-height: 3.45rem;
+  }
+
+  .changeExactButton {
+    min-height: 2.45rem;
+  }
+
+  .changeReturnCard {
+    min-height: 6.75rem;
+    padding: 1rem;
+  }
+
+  .changeReturnCard strong {
+    font-size: clamp(2rem, 6vh, 3rem);
+  }
+
+  .changeQuickAmountButton {
+    min-height: 2.55rem;
+  }
+
+  .changeModalActions {
+    padding: 0.9rem 1.8rem 1rem;
+  }
+
+  .changeCancelButton,
+  .changeConfirmButton {
+    min-height: 3rem;
+  }
 }
 
 @media (max-width: 560px) {
