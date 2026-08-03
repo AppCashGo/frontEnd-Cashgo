@@ -1212,7 +1212,7 @@ export function RetailSalesWorkspace() {
     setPaymentOption('CASH')
     setPaymentSplits(createCatalogPaymentSplits(1, 0))
     setReceiptNote('')
-    setPaymentDetailsOpen(true)
+    setPaymentDetailsOpen(false)
     setChangeModalOpen(false)
     setAmountTenderedInput('')
   }

@@ -1622,3 +1622,695 @@
     padding: 1.4rem;
   }
 }
+
+/* Stitch-inspired retail sales refresh. Kept at the end to avoid touching the
+   existing business flow while aligning the module with the new design system. */
+.page,
+.workspace {
+  --sales-primary: #2563eb;
+  --sales-primary-dark: #0b55d9;
+  --sales-secondary: #4f46e5;
+  --sales-tertiary: #0f172a;
+  --sales-neutral: #64748b;
+  --sales-border: rgba(148, 163, 184, 0.34);
+  --sales-border-strong: rgba(100, 116, 139, 0.42);
+  --sales-surface: rgba(255, 255, 255, 0.94);
+  --sales-soft: #f8fbff;
+  --sales-success: #16a34a;
+  --sales-danger: #dc2626;
+  color: var(--sales-tertiary);
+  font-family: Inter, "Plus Jakarta Sans", "Segoe UI", sans-serif;
+}
+
+.headerCashButton,
+.cashRegisterStatusButton,
+.quickSaleButton,
+.quickExpenseButton {
+  min-height: 3rem;
+  border-radius: 0.82rem;
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.headerCashButton {
+  min-width: 10.75rem;
+  border: 0;
+  background: var(--sales-tertiary, #0f172a);
+  color: #ffffff;
+  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.18);
+}
+
+.headerCashButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 1.15rem 2.25rem rgba(15, 23, 42, 0.22);
+}
+
+.cashRegisterStatusButton {
+  min-width: 11rem;
+  border: 1px solid rgba(15, 23, 42, 0.86);
+  background: #ffffff;
+  color: var(--sales-tertiary, #0f172a);
+  box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.06);
+}
+
+.cashRegisterStatusButton:hover,
+.cashRegisterStatusButton:focus-visible {
+  border-color: var(--sales-primary, #2563eb);
+  color: var(--sales-primary, #2563eb);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.cashRegisterMenuList {
+  top: calc(100% + 0.45rem);
+  min-width: 13rem;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 1.35rem 2.7rem rgba(15, 23, 42, 0.18);
+}
+
+.cashRegisterMenuItem {
+  min-height: 3rem;
+  color: #334155;
+  font-size: 0.92rem;
+  font-weight: 700;
+}
+
+.cashRegisterMenuItem:hover {
+  background: #eef5ff;
+  color: var(--sales-primary, #2563eb);
+}
+
+.headerActionDivider {
+  width: 1px;
+  height: 3.25rem;
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.quickSaleButton {
+  min-width: 12.5rem;
+  border: 0;
+  background: var(--sales-primary, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 1rem 2rem rgba(37, 99, 235, 0.2);
+}
+
+.quickSaleButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--sales-primary-dark, #0b55d9);
+  box-shadow: 0 1.15rem 2.3rem rgba(37, 99, 235, 0.24);
+}
+
+.quickExpenseButton {
+  min-width: 12rem;
+  border: 0;
+  background: var(--sales-danger, #dc2626);
+  color: #ffffff;
+  box-shadow: 0 1rem 2rem rgba(220, 38, 38, 0.16);
+}
+
+.quickExpenseButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: #b91c1c;
+}
+
+.feedbackBanner {
+  border: 1px solid rgba(79, 70, 229, 0.22);
+  border-radius: 1.15rem;
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.98), rgba(238, 242, 255, 0.9));
+  color: #334155;
+  box-shadow: 0 1rem 2.4rem rgba(37, 99, 235, 0.08);
+}
+
+.workspace {
+  gap: clamp(1rem, 1.8vw, 1.4rem);
+  min-height: 0;
+  background:
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.06), transparent 24rem),
+    linear-gradient(180deg, rgba(248, 251, 255, 0.55), rgba(255, 255, 255, 0));
+}
+
+.catalogColumn {
+  gap: 1.1rem;
+  min-width: 0;
+}
+
+.toolbar {
+  display: grid;
+  grid-template-columns: auto minmax(0, 38rem);
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.toolbar label {
+  min-height: 3.15rem;
+  border-color: rgba(148, 163, 184, 0.34);
+  border-radius: 0.95rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 0.9rem 1.8rem rgba(15, 23, 42, 0.04);
+}
+
+.toolbar input {
+  color: var(--sales-tertiary);
+  font-size: 0.95rem;
+}
+
+.iconButton {
+  width: 3.15rem;
+  height: 3.15rem;
+  border: 0;
+  border-radius: 0.95rem;
+  background: var(--sales-tertiary, #0f172a);
+  color: #ffffff;
+  box-shadow: 0 1rem 1.8rem rgba(15, 23, 42, 0.14);
+}
+
+.iconButton:hover,
+.iconButton:focus-visible {
+  background: var(--sales-primary, #2563eb);
+}
+
+.filtersRow {
+  gap: 0.65rem;
+}
+
+.filterChip {
+  min-height: 2.35rem;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.9);
+  color: #475569;
+  font-weight: 800;
+  box-shadow: 0 0.55rem 1.1rem rgba(15, 23, 42, 0.03);
+}
+
+.filterChip:hover {
+  border-color: rgba(37, 99, 235, 0.45);
+  color: var(--sales-primary, #2563eb);
+}
+
+.filterChipActive {
+  border-color: rgba(37, 99, 235, 0.42);
+  background: #eef5ff;
+  color: var(--sales-primary, #2563eb);
+  box-shadow: inset 3px 0 0 var(--sales-primary, #2563eb), 0 0.65rem 1.2rem rgba(37, 99, 235, 0.08);
+}
+
+.productsGrid {
+  grid-template-columns: repeat(auto-fill, minmax(10.8rem, 13rem));
+  gap: clamp(0.9rem, 1.6vw, 1.15rem);
+  align-items: stretch;
+}
+
+.createCard,
+.productCard {
+  min-height: 14.2rem;
+  border-radius: 1.05rem;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.createCard {
+  border: 1.5px dashed rgba(37, 99, 235, 0.5);
+  background: linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(255, 255, 255, 0.95));
+  color: var(--sales-tertiary, #0f172a);
+}
+
+.createCard:hover,
+.createCard:focus-visible {
+  border-color: var(--sales-primary, #2563eb);
+  background: #eef5ff;
+  box-shadow: 0 1.2rem 2.4rem rgba(37, 99, 235, 0.12);
+  transform: translateY(-2px);
+}
+
+.createPlus {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-color: currentColor;
+  color: var(--sales-primary, #2563eb);
+}
+
+.createTitle {
+  color: var(--sales-tertiary, #0f172a);
+  font-size: 1.15rem;
+  line-height: 1.16;
+}
+
+.productCard {
+  border: 1px solid var(--sales-border, rgba(148, 163, 184, 0.34));
+  background: var(--sales-surface, rgba(255, 255, 255, 0.94));
+  color: var(--sales-tertiary, #0f172a);
+  box-shadow: 0 1.1rem 2.2rem rgba(15, 23, 42, 0.06);
+}
+
+.productCard:hover,
+.productCard:focus-visible {
+  border-color: rgba(37, 99, 235, 0.36);
+  box-shadow: 0 1.35rem 2.8rem rgba(37, 99, 235, 0.12);
+  transform: translateY(-2px);
+}
+
+.productCardSelected {
+  border-color: rgba(37, 99, 235, 0.5);
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.94), rgba(255, 255, 255, 0.98));
+}
+
+.productCounter {
+  top: 0.8rem;
+  right: 0.8rem;
+  border-radius: 0.7rem;
+  background: var(--sales-tertiary, #0f172a);
+  box-shadow: 0 0.85rem 1.5rem rgba(15, 23, 42, 0.18);
+}
+
+.productPreview,
+.productPreviewWithImage {
+  width: min(7.9rem, 76%);
+  border-radius: 1rem;
+}
+
+.productPreview {
+  background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+}
+
+.productPreviewMark {
+  color: var(--sales-secondary, #4f46e5);
+  opacity: 0.42;
+}
+
+.productPrice {
+  color: var(--sales-tertiary, #0f172a);
+  font-size: 1.32rem;
+  letter-spacing: 0;
+}
+
+.productName {
+  color: #334155;
+  font-size: 0.96rem;
+}
+
+.stockPill,
+.stockPillLow,
+.stockPillOut {
+  border-radius: 999px;
+  font-weight: 900;
+}
+
+.stockPill {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.stockPillLow {
+  background: #ffedd5;
+  color: #c2410c;
+}
+
+.stockPillOut {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.checkoutColumn {
+  min-width: 0;
+}
+
+.checkoutPanel {
+  overflow: hidden;
+  border: 0;
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 1.25rem 2.8rem rgba(15, 23, 42, 0.08);
+}
+
+.panelHeader {
+  min-height: 4rem;
+  padding: 1rem 1.15rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.panelTitle {
+  color: var(--sales-tertiary, #0f172a);
+  font-size: 1.12rem;
+}
+
+.inlineAction {
+  color: var(--sales-tertiary, #0f172a);
+  font-weight: 900;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+.inlineAction:hover:not(:disabled) {
+  color: var(--sales-primary, #2563eb);
+}
+
+.panelBody {
+  padding: 0;
+  scrollbar-gutter: stable;
+}
+
+.paymentPanel .panelBody {
+  padding: 1rem 1.15rem 1.25rem;
+}
+
+.cartList {
+  padding: 1rem 1.05rem 0.8rem;
+}
+
+.cartItem {
+  padding: 0 0 1.05rem;
+  border-color: rgba(148, 163, 184, 0.24);
+}
+
+.cartItemInfo {
+  gap: 0.8rem;
+}
+
+.cartItemName {
+  color: var(--sales-tertiary, #0f172a);
+  font-size: 1rem;
+}
+
+.cartItemMeta {
+  color: var(--sales-neutral, #64748b);
+}
+
+.cartItemPreview {
+  border-radius: 0.75rem;
+  background: #eef2ff;
+}
+
+.deleteButton {
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  border-radius: 0.85rem;
+  background: #ffffff;
+  color: var(--sales-danger, #dc2626);
+}
+
+.deleteButton:hover {
+  background: #fef2f2;
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.08);
+}
+
+.quantityControls,
+.lineTotalBox {
+  min-height: 3rem;
+  border: 1px solid rgba(148, 163, 184, 0.44);
+  border-radius: 0.95rem;
+  background: #ffffff;
+}
+
+.quantityButton {
+  color: var(--sales-tertiary, #0f172a);
+}
+
+.quantityButton:hover:not(:disabled) {
+  color: var(--sales-primary, #2563eb);
+}
+
+.lineTotalBox {
+  color: var(--sales-tertiary, #0f172a);
+  font-size: 1.05rem;
+}
+
+.cartItemTotal {
+  color: #475569;
+  font-size: 1rem;
+}
+
+.panelFooter {
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 251, 255, 0.98));
+  box-shadow: 0 -1rem 2rem rgba(15, 23, 42, 0.05);
+}
+
+.continueButton,
+.primaryActionButton {
+  min-height: 3.35rem;
+  border-radius: 0.95rem;
+  background: var(--sales-tertiary, #0f172a);
+  color: #ffffff;
+  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.18);
+}
+
+.continueButton:not(:disabled):hover,
+.primaryActionButton:not(:disabled):hover {
+  transform: translateY(-1px);
+  background: var(--sales-primary, #2563eb);
+  box-shadow: 0 1.2rem 2.4rem rgba(37, 99, 235, 0.22);
+}
+
+.continueBadge {
+  border-radius: 0.72rem;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.paymentHeader {
+  gap: 0.85rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.26);
+}
+
+.backButton {
+  color: var(--sales-tertiary, #0f172a);
+}
+
+.backButton:hover,
+.backButton:focus-visible {
+  color: var(--sales-primary, #2563eb);
+}
+
+.paymentTitle {
+  font-size: clamp(1.55rem, 3vw, 2.1rem);
+  letter-spacing: 0;
+}
+
+.segmentedControl {
+  padding: 0.25rem;
+  border: 1px solid rgba(148, 163, 184, 0.32);
+  border-radius: 0.9rem;
+  background: #f8fbff;
+}
+
+.segmentButton {
+  min-height: 2.75rem;
+  border-radius: 0.72rem;
+  color: #475569;
+}
+
+.segmentButtonActive {
+  background: var(--sales-primary, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 0.75rem 1.5rem rgba(37, 99, 235, 0.18);
+}
+
+.fieldLabel,
+.paymentSplitLabel,
+.paymentMethodGroupTitle,
+.paymentNoteGroup label {
+  color: var(--sales-tertiary, #0f172a);
+  font-weight: 900;
+}
+
+.input,
+.select,
+.textarea {
+  min-height: 3.15rem;
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 0.9rem;
+  background: #ffffff;
+  color: var(--sales-tertiary, #0f172a);
+  box-shadow: 0 0.75rem 1.35rem rgba(15, 23, 42, 0.035);
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--sales-primary, #2563eb);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.linkButton {
+  color: var(--sales-tertiary, #0f172a);
+  font-weight: 900;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.18em;
+}
+
+.linkButton:hover:not(:disabled) {
+  color: var(--sales-primary, #2563eb);
+}
+
+.splitButton {
+  min-height: 3.05rem;
+  border: 1.5px solid rgba(148, 163, 184, 0.42);
+  border-radius: 0.85rem;
+  background: #ffffff;
+  color: #334155;
+}
+
+.splitButtonActive {
+  border-color: var(--sales-primary, #2563eb);
+  background: var(--sales-primary, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 0.9rem 1.8rem rgba(37, 99, 235, 0.18);
+}
+
+.paymentMethodsGrid {
+  gap: 0.8rem;
+}
+
+.paymentMethodCard {
+  min-height: 7.4rem;
+  border: 1.5px solid rgba(148, 163, 184, 0.42);
+  border-radius: 1rem;
+  background: #ffffff;
+  color: var(--sales-tertiary, #0f172a);
+  box-shadow: 0 0.85rem 1.6rem rgba(15, 23, 42, 0.035);
+}
+
+.paymentMethodCard:hover {
+  border-color: rgba(37, 99, 235, 0.45);
+  transform: translateY(-1px);
+}
+
+.paymentMethodCardActive {
+  border-color: var(--sales-primary, #2563eb);
+  background: #f8fbff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1), 0 0.95rem 1.8rem rgba(37, 99, 235, 0.1);
+}
+
+.paymentMethodCheck {
+  background: var(--sales-primary, #2563eb);
+}
+
+.paymentMethodLabel {
+  color: #475569;
+  font-size: 0.98rem;
+  line-height: 1.22;
+}
+
+.paymentMethodCardActive .paymentMethodLabel {
+  color: var(--sales-tertiary, #0f172a);
+}
+
+.paymentSummary,
+.paymentDetailRow {
+  border-color: rgba(148, 163, 184, 0.24);
+}
+
+.paymentSummaryHeader {
+  min-height: 2.9rem;
+}
+
+.paymentSummaryTitle {
+  color: var(--sales-tertiary, #0f172a);
+  font-size: 1.08rem;
+}
+
+.paymentSummaryValue {
+  color: var(--sales-primary, #2563eb);
+}
+
+.saleSuccessDrawerContent,
+.drawer,
+.modalCard {
+  border-color: rgba(148, 163, 184, 0.28);
+  box-shadow: 0 1.5rem 3rem rgba(15, 23, 42, 0.16);
+}
+
+@media (min-width: 1100px) {
+  .workspace {
+    --sales-layout-header-height: 6.35rem;
+    --sales-body-offset: 30px;
+    --sales-main-vertical-padding: 2.35rem;
+    --sales-workspace-height: calc(
+      100dvh - var(--sales-layout-header-height) - var(--sales-body-offset) -
+        var(--sales-main-vertical-padding)
+    );
+    grid-template-columns: minmax(0, 1fr) minmax(24rem, 30rem);
+    gap: clamp(1rem, 1.65vw, 1.4rem);
+    height: var(--sales-workspace-height);
+    min-height: 0;
+  }
+
+  .catalogColumn {
+    height: 100%;
+    padding: 0 clamp(0.5rem, 1vw, 0.9rem) 1rem 0;
+    overflow-y: auto;
+    scrollbar-gutter: stable;
+  }
+
+  .checkoutColumn {
+    position: sticky;
+    top: calc(var(--sales-layout-header-height) + var(--sales-body-offset));
+    align-self: stretch;
+    height: 100%;
+    padding: 0 0 1rem;
+    overflow: hidden;
+    border-left: 1px solid rgba(148, 163, 184, 0.22);
+    background:
+      radial-gradient(circle at top right, rgba(79, 70, 229, 0.06), transparent 18rem),
+      #ffffff;
+  }
+
+  .checkoutPanel {
+    height: 100%;
+    border-radius: 1rem;
+  }
+
+  .productsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(11.25rem, 13.2rem));
+  }
+}
+
+@media (max-width: 900px) {
+  .toolbar {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .quickSaleButton,
+  .quickExpenseButton,
+  .headerCashButton,
+  .cashRegisterStatusButton {
+    min-width: 0;
+  }
+
+  .checkoutPanel {
+    border: 1px solid rgba(148, 163, 184, 0.28);
+  }
+}
+
+@media (max-width: 720px) {
+  .workspace {
+    background: transparent;
+  }
+
+  .toolbar {
+    gap: 0.65rem;
+  }
+
+  .productsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .createCard,
+  .productCard {
+    min-height: 12.8rem;
+  }
+
+  .productPrice {
+    font-size: 1.12rem;
+  }
+
+  .paymentPanel .panelBody {
+    padding: 0.9rem;
+  }
+}
