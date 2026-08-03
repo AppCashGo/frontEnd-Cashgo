@@ -1,7 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { Crown } from 'lucide-react'
+import {
+  Banknote,
+  CheckCircle,
+  CheckCircle2,
+  Crown,
+  Download,
+  Printer,
+} from 'lucide-react'
 import {
   CashRegisterSessionDrawer,
   type CashRegisterDrawerMode,
@@ -29,7 +36,6 @@ import { matchesProductSearch } from '@/modules/products/utils/matches-product-s
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
 import { useSuppliersQuery } from '@/modules/suppliers/hooks/use-suppliers-query'
 import {
-  useCancelSaleMutation,
   useCreateSaleMutation,
   useSalesQuery,
 } from '@/modules/sales/hooks/use-create-sale-mutation'
@@ -48,8 +54,6 @@ import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
-import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
-import { useToast } from '@/shared/hooks/use-toast'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import styles from './RetailSalesWorkspace.module.css'
 
@@ -138,6 +142,7 @@ const paymentOptions: Array<{
 
 const paymentSplitOptions = ['1', '2', '3', '4', '5', '6', 'Otro'] as const
 type PaymentSplitOption = (typeof paymentSplitOptions)[number]
+const changeCalculatorQuickAmounts = [1000, 2000, 5000, 10000] as const
 const defaultSortOption: ProductSortOption = 'NAME_ASC'
 let cashRegisterAudioContext: AudioContext | null = null
 
@@ -667,54 +672,107 @@ function ChangeCalculatorModal({
 }: ChangeCalculatorModalProps) {
   const amountTendered = parseAmountInput(amountTenderedInput)
   const changeTotal = Math.max(amountTendered - saleTotal, 0)
+  const canConfirm = amountTendered >= saleTotal && !isSubmitting
+
+  function handleExactPayment() {
+    onAmountTenderedChange(formatEditableNumber(saleTotal))
+  }
+
+  function handleQuickAmount(amount: number) {
+    onAmountTenderedChange(formatEditableNumber(amountTendered + amount))
+  }
 
   return (
     <ModalShell
       ariaLabel="Calcula el cambio de tu venta"
       className={styles.modalBackdrop}
-      closeButtonClassName={styles.modalClose}
+      closeButtonClassName={styles.changeModalClose}
       closeLabel="Cerrar"
       isOpen
-      panelClassName={styles.modalCard}
+      panelClassName={styles.changeModalCard}
       onClose={onClose}
     >
-        <h3 className={styles.modalTitle}>Calcula el cambio de tu venta</h3>
+      <div className={styles.changeModalHeader}>
+        <h3 className={styles.changeModalTitle}>Calcula el cambio de tu venta</h3>
+        <p className={styles.changeModalSubtitle}>
+          Finaliza la transacción en efectivo
+        </p>
+      </div>
 
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>Valor de la venta</span>
-          <input
-            className={styles.input}
-            readOnly
-            type="text"
-            value={formatCurrency(saleTotal)}
-          />
+      <div className={styles.changeModalBody}>
+        <div className={styles.changeSaleCard}>
+          <div>
+            <span className={styles.changeSaleCardLabel}>VALOR DE LA VENTA</span>
+            <strong className={styles.changeSaleCardAmount}>
+              {formatCurrency(saleTotal)}
+            </strong>
+          </div>
+          <span className={styles.changeSaleIcon}>
+            <Banknote size={28} aria-hidden="true" />
+          </span>
+        </div>
+
+        <label className={styles.changeInputGroup}>
+          <span className={styles.changeInputLabel}>
+            ¿Con cuánto paga tu cliente?
+          </span>
+          <span className={styles.changeInputBox}>
+            <span className={styles.changeCurrencyPrefix}>$</span>
+            <input
+              className={styles.changeInput}
+              inputMode="decimal"
+              placeholder="0"
+              type="text"
+              value={amountTenderedInput}
+              onChange={(event) => onAmountTenderedChange(event.target.value)}
+            />
+            <button
+              className={styles.changeExactButton}
+              type="button"
+              onClick={handleExactPayment}
+            >
+              Exacto
+            </button>
+          </span>
         </label>
 
-        <label className={styles.field}>
-          <span className={styles.fieldLabel}>¿Con cuánto paga tu cliente?</span>
-          <input
-            className={styles.input}
-            inputMode="decimal"
-            placeholder="$ 0"
-            type="text"
-            value={amountTenderedInput}
-            onChange={(event) => onAmountTenderedChange(event.target.value)}
-          />
-        </label>
-
-        <div className={styles.modalSummary}>
-          <span>Valor a devolver</span>
+        <div className={styles.changeReturnCard}>
+          <span>VALOR A DEVOLVER</span>
           <strong>{formatCurrency(changeTotal)}</strong>
         </div>
 
+        <div className={styles.changeQuickAmounts}>
+          {changeCalculatorQuickAmounts.map((amount) => (
+            <button
+              key={amount}
+              className={styles.changeQuickAmountButton}
+              type="button"
+              onClick={() => handleQuickAmount(amount)}
+            >
+              {formatCurrency(amount).replace(/,00$/, '')}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.changeModalActions}>
         <button
-          className={styles.modalConfirmButton}
-          disabled={isSubmitting}
+          className={styles.changeCancelButton}
+          type="button"
+          onClick={onClose}
+        >
+          Cancelar
+        </button>
+        <button
+          className={styles.changeConfirmButton}
+          disabled={!canConfirm}
           type="button"
           onClick={onConfirm}
         >
-          {isSubmitting ? 'Creando venta...' : 'Confirmar'}
+          {isSubmitting ? 'Confirmando...' : 'Confirmar Pago'}
+          <CheckCircle size={18} aria-hidden="true" />
         </button>
+      </div>
     </ModalShell>
   )
 }
@@ -817,21 +875,12 @@ function ProductSortDrawer({
   )
 }
 
-type SaleSuccessDrawerProps = {
+type SaleSuccessModalProps = {
   sale: SaleReceipt
-  cancelErrorMessage: string | null
-  isCanceling: boolean
-  onCancel: () => void
   onClose: () => void
 }
 
-function SaleSuccessDrawer({
-  sale,
-  cancelErrorMessage,
-  isCanceling,
-  onCancel,
-  onClose,
-}: SaleSuccessDrawerProps) {
+function SaleSuccessModal({ sale, onClose }: SaleSuccessModalProps) {
   const receiptMutation = useMutation({
     mutationFn: async (mode: 'download' | 'print') => {
       const { blob, filename } = await downloadSaleReceipt(sale.id)
@@ -861,76 +910,85 @@ function SaleSuccessDrawer({
     : null
 
   return (
-    <DrawerShell title="¡Creaste una venta!" onClose={onClose}>
-      <div className={styles.successIcon}>✓</div>
-      <div className={styles.successBlock}>
-        <p className={styles.successDescription}>
-          Se registró en tu balance por un valor de{' '}
-          <strong>{formatCurrency(sale.total)}</strong>
-        </p>
-        <div className={styles.successSummary}>
-          <p className={styles.successSummaryLabel}>Venta registrada</p>
-          <p className={styles.successSummaryValue}>{sale.saleNumber}</p>
+    <ModalShell
+      ariaLabel="Venta creada con éxito"
+      className={styles.modalBackdrop}
+      closeButtonClassName={styles.saleSuccessCloseButton}
+      closeLabel="Cerrar"
+      isOpen
+      panelClassName={styles.saleSuccessModal}
+      onClose={onClose}
+    >
+      <div className={styles.saleSuccessModalBody}>
+        <div className={styles.saleSuccessIcon}>
+          <CheckCircle2 size={52} aria-hidden="true" />
         </div>
-        <div className={styles.successReceiptCard}>
-          <h4 className={styles.successReceiptTitle}>Comprobante</h4>
-          <p className={styles.successReceiptDescription}>
-            Puedes descargar o imprimir el comprobante de esta venta.
-          </p>
-          {receiptErrorMessage ? (
-            <p className={styles.successReceiptError}>{receiptErrorMessage}</p>
-          ) : null}
+        <h3 className={styles.saleSuccessTitle}>¡Creaste una venta!</h3>
+        <p className={styles.saleSuccessDescription}>
+          La transacción se ha procesado correctamente y ha sido registrada en
+          el inventario.
+        </p>
+
+        <div className={styles.saleSuccessValueCard}>
+          <div className={styles.saleSuccessIdRow}>
+            <span>ID DE VENTA</span>
+            <strong>{sale.saleNumber}</strong>
+          </div>
+          <div className={styles.saleSuccessDivider} />
+          <div className={styles.saleSuccessAmountRow}>
+            <span>Valor Total</span>
+            <strong>{formatCurrency(sale.total)}</strong>
+          </div>
+        </div>
+
+        {receiptErrorMessage ? (
+          <p className={styles.saleSuccessError}>{receiptErrorMessage}</p>
+        ) : null}
+
+        <div className={styles.saleSuccessActionsRow}>
           <button
-            className={styles.successReceiptAction}
+            className={styles.saleSuccessSecondaryButton}
             disabled={receiptMutation.isPending}
             type="button"
             onClick={() => {
               void receiptMutation.mutateAsync('print')
             }}
           >
-            <span>Imprimir comprobante</span>
+            <Printer size={18} aria-hidden="true" />
+            Imprimir comprobante
           </button>
           <button
-            className={styles.successReceiptAction}
+            className={styles.saleSuccessSecondaryButton}
             disabled={receiptMutation.isPending}
             type="button"
             onClick={() => {
               void receiptMutation.mutateAsync('download')
             }}
           >
-            <span>Descargar comprobante</span>
+            <Download size={18} aria-hidden="true" />
+            Descargar comprobante
           </button>
         </div>
-      </div>
-      <div className={styles.successActions}>
-        {cancelErrorMessage ? (
-          <p className={styles.successReceiptError}>{cancelErrorMessage}</p>
-        ) : null}
+
         <button
-          className={styles.dangerActionButton}
-          disabled={isCanceling}
-          type="button"
-          onClick={onCancel}
-        >
-          {isCanceling ? 'Cancelando venta...' : 'Cancelar venta'}
-        </button>
-        <button
-          className={styles.primaryActionButton}
+          className={styles.saleSuccessPrimaryButton}
           type="button"
           onClick={onClose}
         >
           Seguir vendiendo
         </button>
       </div>
-    </DrawerShell>
+
+      <p className={styles.saleSuccessFooterNote}>
+        Un resumen ha sido enviado al correo del cliente vinculado.
+      </p>
+    </ModalShell>
   )
 }
 
 export function RetailSalesWorkspace() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const { confirm, confirmationDialog } = useConfirmDialog()
-  const toast = useToast()
   const [searchValue, setSearchValue] = useState('')
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [saleStep, setSaleStep] = useState<RetailStep>('CATALOG')
@@ -979,7 +1037,6 @@ export function RetailSalesWorkspace() {
   const createCashRegisterManualEntryMutation =
     useCreateCashRegisterManualEntryMutation()
   const createSaleMutation = useCreateSaleMutation()
-  const cancelSaleMutation = useCancelSaleMutation()
   const salesQuery = useSalesQuery()
   const expenseCategoriesQuery = useExpenseCategoriesQuery()
   const createExpenseMutation = useCreateExpenseMutation()
@@ -1035,9 +1092,6 @@ export function RetailSalesWorkspace() {
   } = useSaleCart(products, {
     allowSaleWithoutStock,
   })
-  const cancelSaleErrorMessage = cancelSaleMutation.error
-    ? getErrorMessage(cancelSaleMutation.error, 'No pudimos cancelar la venta.')
-    : null
 
   const visibleCategories = useMemo(() => {
     const usedCategoryIds = new Set(
@@ -1605,13 +1659,8 @@ export function RetailSalesWorkspace() {
       return
     }
 
-    if (
-      quickSaleForm.settlement === 'CREDIT' &&
-      quickSaleForm.customerId.trim().length === 0
-    ) {
-      markCheckoutError(
-        'Selecciona un cliente antes de registrar una venta libre a crédito.',
-      )
+    if (quickSaleForm.customerId.trim().length === 0) {
+      markCheckoutError('Selecciona un cliente antes de registrar la venta libre.')
       return
     }
 
@@ -1706,38 +1755,6 @@ export function RetailSalesWorkspace() {
           'No pudimos registrar el gasto en este momento.',
         ),
       )
-    }
-  }
-
-  async function handleCancelCompletedSale() {
-    if (!completedSale || cancelSaleMutation.isPending) {
-      return
-    }
-
-    const confirmed = await confirm({
-      cancelLabel: 'Volver',
-      confirmLabel: 'Cancelar venta',
-      description:
-        'La venta quedará anulada, se revertirá el movimiento registrado y el inventario volverá a su cantidad anterior.',
-      title: '¿Quieres cancelar esta venta?',
-      tone: 'danger',
-    })
-
-    if (!confirmed) {
-      return
-    }
-
-    try {
-      await cancelSaleMutation.mutateAsync({
-        saleId: completedSale.id,
-        input: {
-          reason: 'Cancelada desde el comprobante de venta',
-        },
-      })
-      clearCheckoutFeedback()
-      toast.showSuccess('Venta cancelada correctamente.')
-    } catch (error) {
-      toast.showError(error, 'No pudimos cancelar la venta.')
     }
   }
 
@@ -2528,10 +2545,7 @@ export function RetailSalesWorkspace() {
             ) : null}
 
             <label className={styles.field}>
-              <span className={styles.fieldLabel}>
-                Agrega un cliente a la venta
-                {quickSaleForm.settlement === 'CREDIT' ? ' *' : ''}
-              </span>
+              <span className={styles.fieldLabel}>Agrega un cliente a la venta *</span>
               <select
                 className={styles.select}
                 value={quickSaleForm.customerId}
@@ -2572,8 +2586,7 @@ export function RetailSalesWorkspace() {
               disabled={
                 createSaleMutation.isPending ||
                 quickSaleAmount <= 0 ||
-                (quickSaleForm.settlement === 'CREDIT' &&
-                  quickSaleForm.customerId.trim().length === 0)
+                quickSaleForm.customerId.trim().length === 0
               }
               type="button"
               onClick={() => {
@@ -2785,18 +2798,11 @@ export function RetailSalesWorkspace() {
       ) : null}
 
       {completedSale ? (
-        <SaleSuccessDrawer
-          cancelErrorMessage={cancelSaleErrorMessage}
-          isCanceling={cancelSaleMutation.isPending}
+        <SaleSuccessModal
           sale={completedSale}
-          onCancel={() => {
-            void handleCancelCompletedSale()
-          }}
           onClose={() => clearCheckoutFeedback()}
         />
       ) : null}
-
-      {confirmationDialog}
 
       {isChangeModalOpen ? (
         <ChangeCalculatorModal
