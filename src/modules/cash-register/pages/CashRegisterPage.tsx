@@ -1,19 +1,31 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
-  Banknote,
+  ArrowRight,
+  BarChart3,
   Calendar,
   ChevronDown,
   ChevronUp,
-  Crown,
+  CircleDollarSign,
+  CreditCard,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  HandCoins,
   Search,
   SlidersHorizontal,
+  Sparkles,
+  Store,
   TrendingUp,
   Wallet,
 } from "lucide-react";
 import { CashRegisterHistoryList } from "@/modules/cash-register/components/CashRegisterHistoryList";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
 import { CashRegisterRetailTransactionsTable } from "@/modules/cash-register/components/CashRegisterRetailTransactionsTable";
+import {
+  MovementCreateDrawer,
+  type MovementCreateInput,
+} from "@/modules/cash-register/components/MovementCreateDrawer";
 import {
   CashRegisterSessionDrawer,
   type CashRegisterDrawerMode,
@@ -43,6 +55,8 @@ import {
 } from "@/modules/cash-register/utils/format-cash-register";
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
 import { useEmployeesQuery } from "@/modules/employees/hooks/use-employees-query";
+import { useCreateExpenseMutation } from "@/modules/expenses/hooks/use-expenses-query";
+import { useCreateSaleMutation } from "@/modules/sales/hooks/use-create-sale-mutation";
 import { useBusinessSettingsQuery } from "@/modules/settings/hooks/use-settings-query";
 import { useSuppliersQuery } from "@/modules/suppliers/hooks/use-suppliers-query";
 import { AppIcon } from "@/shared/components/icons/AppIcon";
@@ -282,7 +296,7 @@ function SummaryCard({
   tone?: "balance" | "sales" | "expenses" | "neutral";
 }) {
   const Icon =
-    tone === "balance" ? TrendingUp : tone === "expenses" ? Wallet : Banknote;
+    tone === "balance" ? TrendingUp : tone === "expenses" ? Wallet : CircleDollarSign;
 
   return (
     <article className={styles.summaryCard}>
@@ -556,29 +570,55 @@ function ReportsDrawer({
     >
       {reportStep === "menu" ? (
         <div className={styles.reportOptions}>
-          <button className={styles.reportOption} type="button" onClick={() => onSelectStep("balance")}>
-            <span className={styles.reportIcon}>▤</span>
+          <div className={styles.reportIntro}>
+            <span className={styles.reportIntroIcon}>
+              <Sparkles />
+            </span>
+            <span>
+              <strong>Convierte tus movimientos en decisiones</strong>
+              <small>Reportes listos para analizar, compartir o archivar.</small>
+            </span>
+          </div>
+
+          <button
+            className={joinClassNames(styles.reportOption, styles.reportOptionBalance)}
+            type="button"
+            onClick={() => onSelectStep("balance")}
+          >
+            <span className={joinClassNames(styles.reportIcon, styles.reportIconBalance)}>
+              <BarChart3 />
+            </span>
             <span>
               <strong>Reporte de balance</strong>
-              <small>Ingresos y egresos</small>
+              <small>Ventas, ingresos, egresos y resultado del periodo</small>
             </span>
-            <span>›</span>
+            <ArrowRight className={styles.reportArrow} />
           </button>
-          <button className={styles.reportOption} type="button" onClick={() => onSelectStep("debts")}>
-            <span className={styles.reportIcon}>%</span>
+
+          <button
+            className={joinClassNames(styles.reportOption, styles.reportOptionDebts)}
+            type="button"
+            onClick={() => onSelectStep("debts")}
+          >
+            <span className={joinClassNames(styles.reportIcon, styles.reportIconDebts)}>
+              <HandCoins />
+            </span>
             <span>
               <strong>Reporte de deudas</strong>
-              <small>Por cobrar y por pagar</small>
+              <small>Cuentas por cobrar, compromisos y saldos pendientes</small>
             </span>
-            <span>›</span>
+            <ArrowRight className={styles.reportArrow} />
           </button>
+
           <button className={styles.reportOptionMuted} disabled type="button">
-            <span className={styles.reportIcon}>▦</span>
+            <span className={joinClassNames(styles.reportIcon, styles.reportIconTerminal)}>
+              <CreditCard />
+            </span>
             <span>
               <strong>Reporte de datáfono Treinta</strong>
               <small>Disponible cuando integres datáfono</small>
             </span>
-            <span>›</span>
+            <span className={styles.comingSoonPill}>Próximamente</span>
           </button>
         </div>
       ) : (
@@ -597,7 +637,9 @@ function ReportsDrawer({
               void (reportStep === "balance" ? onDownloadBalance() : onDownloadDebts())
             }
           >
-            <span className={styles.pdfIcon}>XLS</span>
+            <span className={joinClassNames(styles.exportIcon, styles.exportIconExcel)}>
+              <FileSpreadsheet />
+            </span>
             <span>
               <strong>
                 {reportStep === "balance"
@@ -606,10 +648,12 @@ function ReportsDrawer({
               </strong>
               <small>{isSubmitting ? "Preparando archivo..." : "Archivo CSV compatible con Excel"}</small>
             </span>
-            <span>›</span>
+            <Download className={styles.reportArrow} />
           </button>
           <button className={styles.reportOption} type="button" onClick={onPrintReport}>
-            <span className={styles.pdfIcon}>PDF</span>
+            <span className={joinClassNames(styles.exportIcon, styles.exportIconPdf)}>
+              <FileText />
+            </span>
             <span>
               <strong>
                 {reportStep === "balance"
@@ -618,7 +662,7 @@ function ReportsDrawer({
               </strong>
               <small>Usa la opción Guardar como PDF del navegador</small>
             </span>
-            <span>›</span>
+            <Download className={styles.reportArrow} />
           </button>
         </div>
       )}
@@ -641,6 +685,8 @@ export function CashRegisterPage() {
   const [selectionDrawerType, setSelectionDrawerType] =
     useState<SelectionDrawerType | null>(null);
   const [isReportDrawerOpen, setReportDrawerOpen] = useState(false);
+  const [isMovementCreateDrawerOpen, setMovementCreateDrawerOpen] =
+    useState(false);
   const [reportStep, setReportStep] = useState<ReportStep>("menu");
   const [selectedPaymentFilters, setSelectedPaymentFilters] = useState<string[]>([]);
   const [selectedSaleOrigins, setSelectedSaleOrigins] = useState<string[]>([]);
@@ -669,6 +715,8 @@ export function CashRegisterPage() {
   const openMutation = useOpenCashRegisterMutation();
   const closeMutation = useCloseCashRegisterMutation();
   const manualEntryMutation = useCreateCashRegisterManualEntryMutation();
+  const createExpenseMutation = useCreateExpenseMutation();
+  const createSaleMutation = useCreateSaleMutation();
   const downloadReportMutation = useDownloadCashRegisterReportMutation();
   const downloadMovementsReportMutation = useDownloadMovementsReportMutation();
   const currentSession = currentSessionQuery.data ?? null;
@@ -815,6 +863,10 @@ export function CashRegisterPage() {
     openMutation.isPending ||
     closeMutation.isPending ||
     manualEntryMutation.isPending;
+  const isCreatingMovement =
+    manualEntryMutation.isPending ||
+    createExpenseMutation.isPending ||
+    createSaleMutation.isPending;
   const isLoading =
     currentSessionQuery.isLoading ||
     assigneesQuery.isLoading ||
@@ -940,11 +992,47 @@ export function CashRegisterPage() {
     setReportDrawerOpen(true);
   }
 
+  async function handleCreateMovement(input: MovementCreateInput) {
+    if (input.kind === "income") {
+      await manualEntryMutation.mutateAsync({
+        type: "INCOME",
+        amount: input.amount,
+        reason: input.concept,
+      });
+      return;
+    }
+
+    if (input.kind === "receivables") {
+      await createSaleMutation.mutateAsync({
+        manualSubtotal: input.amount,
+        customerId: input.partyId,
+        notes: input.concept,
+        saleDate: input.movementDate,
+        dueDate: input.dueDate,
+        payments: [],
+      });
+      return;
+    }
+
+    await createExpenseMutation.mutateAsync({
+      concept: input.concept,
+      supplierId: input.partyId ?? null,
+      amount: input.amount,
+      paymentMethod: input.kind === "payables" ? "CREDIT" : input.paymentMethod,
+      status: input.kind === "payables" ? "PENDING" : "PAID",
+      expenseDate: input.movementDate,
+      notes: null,
+    });
+  }
+
   return (
     <>
       <RetailPageLayout
-        accent="success"
+        accent="default"
+        bodyClassName={styles.retailBody}
         bodyVariant="flush"
+        className={styles.page}
+        headerClassName={styles.topBar}
         title="Movimientos"
         actions={
           <>
@@ -960,7 +1048,7 @@ export function CashRegisterPage() {
                 type="button"
                 onClick={() => setCashRegisterMenuOpen((isOpen) => !isOpen)}
               >
-                <Crown />
+                <Store />
                 Caja abierta
                 {isCashRegisterMenuOpen ? <ChevronUp /> : <ChevronDown />}
               </button>
@@ -992,7 +1080,7 @@ export function CashRegisterPage() {
               type="button"
               onClick={() => openSessionDrawer("manage")}
             >
-              <Crown />
+              <Store />
               Abrir caja
             </button>
           )}
@@ -1002,7 +1090,7 @@ export function CashRegisterPage() {
             type="button"
             onClick={openReportsDrawer}
           >
-            <Crown />
+            <Download />
             Descargar reporte
           </button>
           </>
@@ -1026,6 +1114,26 @@ export function CashRegisterPage() {
             Cierres de caja
           </button>
         </div>
+
+        {activeTab === "transactions" ? (
+          <div className={styles.summaryGrid}>
+            <SummaryCard
+              label="Balance"
+              tone="balance"
+              value={formatCashRegisterCurrency(movementsOverview?.balance ?? 0)}
+            />
+            <SummaryCard
+              label="Ventas totales"
+              tone="sales"
+              value={formatCashRegisterCurrency(movementsOverview?.salesTotal ?? 0)}
+            />
+            <SummaryCard
+              label="Gastos totales"
+              tone="expenses"
+              value={formatCashRegisterCurrency(movementsOverview?.expensesTotal ?? 0)}
+            />
+          </div>
+        ) : null}
 
         <div
           className={joinClassNames(
@@ -1084,25 +1192,7 @@ export function CashRegisterPage() {
         </div>
 
         {activeTab === "transactions" ? (
-          <>
-            <div className={styles.summaryGrid}>
-              <SummaryCard
-                label="Balance"
-                tone="balance"
-                value={formatCashRegisterCurrency(movementsOverview?.balance ?? 0)}
-              />
-              <SummaryCard
-                label="Ventas totales"
-                tone="sales"
-                value={formatCashRegisterCurrency(movementsOverview?.salesTotal ?? 0)}
-              />
-              <SummaryCard
-                label="Gastos totales"
-                tone="expenses"
-                value={formatCashRegisterCurrency(movementsOverview?.expensesTotal ?? 0)}
-              />
-            </div>
-
+          <section className={styles.ledgerCard}>
             <div className={styles.ledgerTabs}>
               {ledgerTabs.map((tab) => (
                 <button
@@ -1149,17 +1239,17 @@ export function CashRegisterPage() {
                 <CashRegisterRetailTransactionsTable
                   emptyActionLabel="Crear un movimiento"
                   transactions={visibleTransactions}
-                  onEmptyAction={() => setSessionDrawerOpen(true)}
+                  onEmptyAction={() => setMovementCreateDrawerOpen(true)}
                 />
               </div>
             ) : (
               <CashRegisterRetailTransactionsTable
                 emptyActionLabel="Crear un movimiento"
                 transactions={visibleTransactions}
-                onEmptyAction={() => setSessionDrawerOpen(true)}
+                onEmptyAction={() => setMovementCreateDrawerOpen(true)}
               />
             )}
-          </>
+          </section>
         ) : (
           <>
             {hasClosuresError ? (
@@ -1204,6 +1294,18 @@ export function CashRegisterPage() {
           await manualEntryMutation.mutateAsync(input);
         }}
         onOpenSession={handleOpen}
+      />
+
+      <MovementCreateDrawer
+        canCreateIncome={Boolean(currentSession)}
+        customers={customersQuery.data ?? []}
+        isOpen={isMovementCreateDrawerOpen}
+        isSubmitting={isCreatingMovement}
+        kind={activeLedgerTab}
+        movementDate={selectedDate}
+        suppliers={suppliersQuery.data ?? []}
+        onClose={() => setMovementCreateDrawerOpen(false)}
+        onSubmit={handleCreateMovement}
       />
 
       <MovementFiltersDrawer
