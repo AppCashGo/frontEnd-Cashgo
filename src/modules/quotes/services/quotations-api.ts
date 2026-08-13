@@ -43,6 +43,62 @@ function toSearchParams(filters: QuotationFilters) {
   return queryString ? `?${queryString}` : "";
 }
 
+type SerializedNodeBuffer = {
+  type: "Buffer";
+  data: number[];
+};
+
+function isSerializedNodeBuffer(value: unknown): value is SerializedNodeBuffer {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const type = Reflect.get(value, "type");
+  const data = Reflect.get(value, "data");
+
+  return (
+    type === "Buffer" &&
+    Array.isArray(data) &&
+    data.every(
+      (byte) => Number.isInteger(byte) && byte >= 0 && byte <= 255,
+    )
+  );
+}
+
+async function normalizePdfResponse(result: {
+  blob: Blob;
+  filename: string | null;
+}) {
+  const signature = await result.blob.slice(0, 5).text();
+
+  if (signature === "%PDF-") {
+    return result;
+  }
+
+  try {
+    const payload = JSON.parse(await result.blob.text()) as unknown;
+
+    if (isSerializedNodeBuffer(payload)) {
+      const pdfBlob = new Blob([new Uint8Array(payload.data)], {
+        type: "application/pdf",
+      });
+
+      if ((await pdfBlob.slice(0, 5).text()) === "%PDF-") {
+        return {
+          ...result,
+          blob: pdfBlob,
+        };
+      }
+    }
+  } catch {
+    // The response was neither a PDF nor the legacy serialized Buffer payload.
+  }
+
+  throw new Error(
+    "El documento recibido no es un PDF válido. Intenta nuevamente.",
+  );
+}
+
 export function getQuotations(filters: QuotationFilters) {
   return getJson<QuotationSummary[]>(`/quotations${toSearchParams(filters)}`);
 }
@@ -107,10 +163,12 @@ export function convertQuotationToSale(
   );
 }
 
-export function downloadQuotationDocument(quotationId: string) {
-  return getBlob(`/quotations/${quotationId}/pdf`, {
+export async function downloadQuotationDocument(quotationId: string) {
+  const result = await getBlob(`/quotations/${quotationId}/pdf`, {
     accept: "application/pdf",
   });
+
+  return normalizePdfResponse(result);
 }
 
 const publicRequestOptions = {
@@ -141,9 +199,11 @@ export function rejectPublicQuotation(publicToken: string) {
   );
 }
 
-export function downloadPublicQuotationDocument(publicToken: string) {
-  return getBlob(`/quotations/public/${publicToken}/pdf`, {
+export async function downloadPublicQuotationDocument(publicToken: string) {
+  const result = await getBlob(`/quotations/public/${publicToken}/pdf`, {
     accept: "application/pdf",
     ...publicRequestOptions,
   });
+
+  return normalizePdfResponse(result);
 }
