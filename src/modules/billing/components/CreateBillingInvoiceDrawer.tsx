@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Search } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { useForm } from "react-hook-form";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
@@ -143,12 +144,19 @@ export function CreateBillingInvoiceDrawer({
         <section className={styles.section}>
           <label className={styles.field}>
             <span className={styles.fieldLabel}>{copy.createInvoiceSearch}</span>
-            <input
-              className={styles.input}
-              type="search"
-              value={searchValue}
-              onChange={(event) => setSearchValue(event.target.value)}
-            />
+            <div className={styles.searchInput}>
+              <Search />
+              <input
+                placeholder={
+                  languageCode === "en"
+                    ? "E.g. SAL-000025 or customer name"
+                    : "Ej. SAL-000025 o nombre del cliente"
+                }
+                type="search"
+                value={searchValue}
+                onChange={(event) => setSearchValue(event.target.value)}
+              />
+            </div>
           </label>
 
           <label className={styles.field}>
@@ -206,7 +214,7 @@ export function CreateBillingInvoiceDrawer({
         ) : null}
 
         <section className={styles.section}>
-          <h4 className={styles.sectionTitle}>{copy.tableTitle}</h4>
+          <h4 className={styles.sectionEyebrow}>{copy.createInvoiceAvailableSales}</h4>
 
           {availableSalesQuery.isLoading ? (
             <div className={styles.emptyState}>

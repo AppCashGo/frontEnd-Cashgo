@@ -13,6 +13,14 @@ import retailStyles from "@/shared/components/retail/RetailUI.module.css";
 import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
 import styles from "./BillingFormDrawer.module.css";
 
+const taxResponsibilityOptions = [
+  "No responsable de IVA",
+  "Responsable de IVA",
+  "Régimen simple de tributación",
+  "Gran contribuyente",
+  "Autorretenedor",
+];
+
 type BillingConfigurationDrawerProps = {
   languageCode: AppLanguageCode;
   configuration: BillingConfiguration | null;
@@ -104,12 +112,18 @@ export function BillingConfigurationDrawer({
     register,
     reset,
     handleSubmit,
+    watch,
     setError,
     formState: { errors },
   } = useForm<BillingConfigurationFormValues>({
     resolver: zodResolver(getBillingConfigurationFormSchema(languageCode)),
     defaultValues: getDefaultValues(configuration),
   });
+  const selectedTaxResponsibility = watch("taxResponsibility");
+  const hasCustomTaxResponsibility = Boolean(
+    selectedTaxResponsibility &&
+      !taxResponsibilityOptions.includes(selectedTaxResponsibility),
+  );
 
   useEffect(() => {
     reset(getDefaultValues(configuration));
@@ -234,11 +248,17 @@ export function BillingConfigurationDrawer({
               <span className={styles.fieldLabel}>
                 {copy.configTaxResponsibility}
               </span>
-              <input
-                className={styles.input}
-                type="text"
-                {...register("taxResponsibility")}
-              />
+              <select className={styles.select} {...register("taxResponsibility")}>
+                <option value="">Seleccionar...</option>
+                {hasCustomTaxResponsibility ? (
+                  <option value={selectedTaxResponsibility}>
+                    {selectedTaxResponsibility}
+                  </option>
+                ) : null}
+                {taxResponsibilityOptions.map((option) => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
             </label>
 
             <label className={styles.field}>

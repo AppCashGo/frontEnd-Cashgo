@@ -235,29 +235,60 @@ export function QuotesPage() {
   }
 
   async function printQuotationDocument(quotation: QuotationDetail) {
+    const printWindow = window.open(
+      "",
+      "_blank",
+      "width=840,height=960",
+    );
+
+    if (!printWindow) {
+      setActionError(
+        languageCode === "en"
+          ? "Allow pop-ups to print the quote."
+          : "Permite las ventanas emergentes para imprimir la cotización.",
+      );
+      return;
+    }
+
+    printWindow.opener = null;
+
+    printWindow.document.write(
+      `<p style="font:16px Arial;padding:32px">${
+        languageCode === "en"
+          ? "Preparing quote..."
+          : "Preparando cotización..."
+      }</p>`,
+    );
+    printWindow.document.close();
+
     try {
       clearActionError();
       const { blob } = await downloadMutation.mutateAsync(quotation.id);
       const printableUrl = URL.createObjectURL(blob);
-      const printWindow = window.open(
-        printableUrl,
-        "_blank",
-        "width=840,height=960",
-      );
+      const printableFrame = printWindow.document.createElement("iframe");
 
-      if (printWindow) {
-        printWindow.addEventListener(
-          "load",
-          () => {
-            printWindow.focus();
-            printWindow.print();
-          },
-          { once: true },
-        );
-      }
+      printWindow.document.body.innerHTML = "";
+      printWindow.document.body.style.margin = "0";
+      printableFrame.title = quotation.fullNumber;
+      printableFrame.src = printableUrl;
+      printableFrame.style.width = "100vw";
+      printableFrame.style.height = "100vh";
+      printableFrame.style.border = "0";
+      printableFrame.addEventListener(
+        "load",
+        () => {
+          window.setTimeout(() => {
+            printableFrame.contentWindow?.focus();
+            printableFrame.contentWindow?.print();
+          }, 250);
+        },
+        { once: true },
+      );
+      printWindow.document.body.appendChild(printableFrame);
 
       window.setTimeout(() => URL.revokeObjectURL(printableUrl), 60_000);
     } catch (error) {
+      printWindow.close();
       setActionError(getErrorMessage(error, copy.actionError));
     }
   }

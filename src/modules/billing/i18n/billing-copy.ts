@@ -12,7 +12,7 @@ const billingCopy = {
     pageTitle: "Facturación",
     pageDescription:
       "Consulta comprobantes, controla cobros pendientes y descarga soportes del negocio.",
-    createButton: "Crear factura",
+    createButton: "Facturar venta",
     configureButton: "Configuración fiscal",
     exportButton: "Descargar reporte",
     searchPlaceholder: "Buscar comprobante o cliente",
@@ -55,6 +55,7 @@ const billingCopy = {
     createInvoiceEmptyDescription:
       "Primero registra una venta y luego podrás convertirla en recibo, documento POS o factura.",
     createInvoiceSelected: "Venta seleccionada",
+    createInvoiceAvailableSales: "Ventas disponibles",
     availableSaleCustomer: "Cliente",
     availableSaleBalance: "Saldo pendiente",
     availableSaleDate: "Fecha",
@@ -148,7 +149,7 @@ const billingCopy = {
     pageTitle: "Billing",
     pageDescription:
       "Review receipts, control pending collections and download business support documents.",
-    createButton: "Create invoice",
+    createButton: "Invoice sale",
     configureButton: "Fiscal settings",
     exportButton: "Download report",
     searchPlaceholder: "Search receipt or customer",
@@ -191,6 +192,7 @@ const billingCopy = {
     createInvoiceEmptyDescription:
       "Register a sale first and then you can convert it into a receipt, POS document or invoice.",
     createInvoiceSelected: "Selected sale",
+    createInvoiceAvailableSales: "Available sales",
     availableSaleCustomer: "Customer",
     availableSaleBalance: "Outstanding balance",
     availableSaleDate: "Date",

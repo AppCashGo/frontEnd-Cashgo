@@ -1,4 +1,5 @@
 import { useDeferredValue, useMemo, useState } from "react";
+import { Download, FileCog, ReceiptText } from "lucide-react";
 import { BillingConfigurationDrawer } from "@/modules/billing/components/BillingConfigurationDrawer";
 import { BillingDocumentDrawer } from "@/modules/billing/components/BillingDocumentDrawer";
 import { CreateBillingInvoiceDrawer } from "@/modules/billing/components/CreateBillingInvoiceDrawer";
@@ -214,24 +215,27 @@ export function BillingPage() {
 
         <div className={styles.heroActions}>
           <button
-            className={retailStyles.buttonOutline}
+            className={`${retailStyles.buttonOutline} ${styles.configurationButton}`}
             type="button"
             onClick={() => setIsConfigurationOpen(true)}
           >
+            <FileCog />
             {copy.configureButton}
           </button>
           <button
-            className={retailStyles.buttonOutline}
+            className={`${retailStyles.buttonOutline} ${styles.exportButton}`}
             type="button"
             onClick={() => void handleDownloadReport()}
           >
+            <Download />
             {copy.exportButton}
           </button>
           <button
-            className={retailStyles.buttonDark}
+            className={`${retailStyles.buttonDark} ${styles.invoiceButton}`}
             type="button"
             onClick={() => setIsCreateInvoiceOpen(true)}
           >
+            <ReceiptText />
             {copy.createButton}
           </button>
         </div>
