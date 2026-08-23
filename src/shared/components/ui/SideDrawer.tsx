@@ -5,6 +5,7 @@ import styles from "./SideDrawer.module.css";
 type SideDrawerProps = {
   ariaLabel?: string;
   isOpen: boolean;
+  isCloseDisabled?: boolean;
   title: string;
   description?: string;
   titleAccessory?: ReactNode;
@@ -24,6 +25,7 @@ type SideDrawerProps = {
 export function SideDrawer({
   ariaLabel,
   isOpen,
+  isCloseDisabled = false,
   title,
   description,
   titleAccessory,
@@ -47,6 +49,7 @@ export function SideDrawer({
     <button
       aria-label={closeLabel}
       className={joinClassNames(styles.closeButton, closeButtonClassName)}
+      disabled={isCloseDisabled}
       type="button"
       onClick={onClose}
     >
@@ -58,7 +61,11 @@ export function SideDrawer({
     <div
       className={joinClassNames(styles.backdrop, className)}
       role="presentation"
-      onClick={onClose}
+      onClick={() => {
+        if (!isCloseDisabled) {
+          onClose();
+        }
+      }}
     >
       <div
         aria-label={ariaLabel ?? title}

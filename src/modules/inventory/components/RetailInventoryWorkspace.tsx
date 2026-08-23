@@ -41,10 +41,12 @@ import {
 import { buildConfiguredCatalogUrl } from '@/modules/settings/utils/virtual-catalog'
 import { routePaths, routeSegments } from '@/routes/route-paths'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
+import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
+import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -96,6 +98,7 @@ type TaxFormState = {
 type DrawerShellProps = {
   title: string
   titleAccessory?: ReactNode
+  isBusy?: boolean
   onClose: () => void
   children: ReactNode
   footer?: ReactNode
@@ -266,6 +269,7 @@ function clampPercentage(value: number) {
 function DrawerShell({
   title,
   titleAccessory,
+  isBusy = false,
   onClose,
   children,
   footer,
@@ -279,6 +283,7 @@ function DrawerShell({
       footer={footer}
       footerClassName={styles.drawerFooter}
       isOpen
+      isCloseDisabled={isBusy}
       panelClassName={styles.drawer}
       title={title}
       titleAccessory={titleAccessory}
@@ -387,6 +392,7 @@ function SearchIcon() {
 export function RetailInventoryWorkspace() {
   const { languageCode } = useAppTranslation()
   const copy = getInventoryCopy(languageCode)
+  const { confirm, confirmationDialog } = useConfirmDialog()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const productsQuery = useProductsQuery()
@@ -842,6 +848,21 @@ export function RetailInventoryWorkspace() {
       return
     }
 
+    const shouldDelete = await confirm({
+      cancelLabel: copy.cancel,
+      confirmLabel: copy.deleteCategory,
+      description: copy.deleteCategoryDescription.replace(
+        '{name}',
+        categoryEditorState.name,
+      ),
+      title: copy.deleteCategoryTitle,
+      tone: 'danger',
+    })
+
+    if (!shouldDelete) {
+      return
+    }
+
     resetFeedback()
 
     try {
@@ -1062,36 +1083,59 @@ export function RetailInventoryWorkspace() {
   }
 
   const categoryEditorFooter = isCategoryEditorOpen ? (
-    <>
-      <button
-        className={retailStyles.buttonDark}
-        disabled={
-          categoryEditorState.name.trim().length < 2 ||
-          createCategoryMutation.isPending ||
-          updateCategoryMutation.isPending
-        }
-        type="button"
-        onClick={() => {
-          void handleSaveCategory()
-        }}
-      >
-        {categoryEditorState.id
-          ? copy.updateCategorySubmit
-          : copy.createCategorySubmit}
-      </button>
+    <div className={styles.categoryEditorFooter}>
+      <DrawerActionFooter>
+        <button
+          className={retailStyles.buttonOutline}
+          disabled={
+            createCategoryMutation.isPending ||
+            updateCategoryMutation.isPending ||
+            deleteCategoryMutation.isPending
+          }
+          type="button"
+          onClick={handleCloseCategoryEditor}
+        >
+          {copy.cancel}
+        </button>
+        <button
+          className={retailStyles.buttonDark}
+          disabled={
+            categoryEditorState.name.trim().length < 2 ||
+            createCategoryMutation.isPending ||
+            updateCategoryMutation.isPending ||
+            deleteCategoryMutation.isPending
+          }
+          type="button"
+          onClick={() => {
+            void handleSaveCategory()
+          }}
+        >
+          {createCategoryMutation.isPending || updateCategoryMutation.isPending
+            ? copy.saving
+            : categoryEditorState.id
+              ? copy.updateCategorySubmit
+              : copy.createCategorySubmit}
+        </button>
+      </DrawerActionFooter>
       {categoryEditorState.id ? (
         <button
-          className={styles.deleteCategoryButton}
-          disabled={deleteCategoryMutation.isPending}
+          className={retailStyles.buttonDanger}
+          disabled={
+            createCategoryMutation.isPending ||
+            updateCategoryMutation.isPending ||
+            deleteCategoryMutation.isPending
+          }
           type="button"
           onClick={() => {
             void handleDeleteCategory()
           }}
         >
-          {copy.deleteCategory}
+          {deleteCategoryMutation.isPending
+            ? copy.deleting
+            : copy.deleteCategory}
         </button>
       ) : null}
-    </>
+    </div>
   ) : undefined
 
   if (isProductWorkspaceOpen) {
@@ -1113,7 +1157,7 @@ export function RetailInventoryWorkspace() {
       actions={
         <>
           <button
-            className={styles.headerSecondaryButton}
+            className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
             type="button"
             onClick={() => {
               resetFeedback()
@@ -1128,7 +1172,7 @@ export function RetailInventoryWorkspace() {
             <button
               aria-expanded={isCreateMenuOpen}
               aria-haspopup="menu"
-              className={styles.headerPrimaryButton}
+              className={`${retailStyles.buttonDark} ${styles.headerCoreButton}`}
               type="button"
               onClick={() => setCreateMenuOpen((currentValue) => !currentValue)}
             >
@@ -1202,7 +1246,7 @@ export function RetailInventoryWorkspace() {
           </div>
 
           <button
-            className={styles.bannerAction}
+            className={retailStyles.buttonDanger}
             type="button"
             onClick={() => {
               setActiveInventoryFilter('LOW')
@@ -1571,6 +1615,11 @@ export function RetailInventoryWorkspace() {
       {isCategoriesDrawerOpen ? (
         <DrawerShell
           footer={categoryEditorFooter}
+          isBusy={
+            createCategoryMutation.isPending ||
+            updateCategoryMutation.isPending ||
+            deleteCategoryMutation.isPending
+          }
           title={copy.categories}
           onClose={() => {
             setCategoriesDrawerOpen(false)
@@ -1718,6 +1767,7 @@ export function RetailInventoryWorkspace() {
         closeButtonClassName={styles.drawerClose}
         closeLabel="Cerrar"
         isOpen={isSharePhoneModalOpen}
+        isCloseDisabled={updateBusinessSettingsMutation.isPending}
         panelClassName={styles.centeredModal}
         onClose={() => setSharePhoneModalOpen(false)}
       >
@@ -1756,7 +1806,9 @@ export function RetailInventoryWorkspace() {
               void handleUpdatePhoneAndShareCatalog()
             }}
           >
-            {copy.shareCatalogPhoneSubmit}
+            {updateBusinessSettingsMutation.isPending
+              ? copy.updating
+              : copy.shareCatalogPhoneSubmit}
           </button>
         </div>
       </ModalShell>
@@ -1764,26 +1816,34 @@ export function RetailInventoryWorkspace() {
       {isTaxesDrawerOpen ? (
         <DrawerShell
           footer={
-            <>
+            <DrawerActionFooter>
               <button
-                className={styles.footerCancelButton}
+                className={retailStyles.buttonOutline}
+                disabled={updateProductTaxesMutation.isPending}
                 type="button"
                 onClick={handleCloseTaxesDrawer}
               >
                 {copy.cancel}
               </button>
               <button
-                className={styles.drawerPrimaryButton}
-                disabled={!activeTaxOption || taxFormState.productIds.length === 0}
+                className={retailStyles.buttonDark}
+                disabled={
+                  !activeTaxOption ||
+                  taxFormState.productIds.length === 0 ||
+                  updateProductTaxesMutation.isPending
+                }
                 type="button"
                 onClick={() => {
                   void handleSaveTaxes()
                 }}
               >
-                {copy.saveChanges}
+                {updateProductTaxesMutation.isPending
+                  ? copy.updating
+                  : copy.saveChanges}
               </button>
-            </>
+            </DrawerActionFooter>
           }
+          isBusy={updateProductTaxesMutation.isPending}
           title={copy.productTaxes}
           onClose={handleCloseTaxesDrawer}
         >
@@ -1993,16 +2053,17 @@ export function RetailInventoryWorkspace() {
       {isAdjustmentDrawerOpen ? (
         <DrawerShell
           footer={
-            <>
+            <DrawerActionFooter>
               <button
-                className={styles.footerCancelButton}
+                className={retailStyles.buttonOutline}
+                disabled={createAdjustmentMutation.isPending}
                 type="button"
                 onClick={handleCloseAdjustmentDrawer}
               >
                 {copy.cancel}
               </button>
               <button
-                className={styles.drawerPrimaryButton}
+                className={retailStyles.buttonDark}
                 disabled={
                   !adjustmentFormState.productId ||
                   (adjustmentFormState.type === 'ADJUSTMENT'
@@ -2015,10 +2076,13 @@ export function RetailInventoryWorkspace() {
                   void handleRegisterAdjustment()
                 }}
               >
-                {copy.adjustmentSubmit}
+                {createAdjustmentMutation.isPending
+                  ? copy.saving
+                  : copy.adjustmentSubmit}
               </button>
-            </>
+            </DrawerActionFooter>
           }
+          isBusy={createAdjustmentMutation.isPending}
           title={copy.adjustmentTitle}
           onClose={handleCloseAdjustmentDrawer}
         >
@@ -2128,16 +2192,17 @@ export function RetailInventoryWorkspace() {
             </span>
           }
           footer={
-            <>
+            <DrawerActionFooter>
               <button
-                className={styles.footerCancelButton}
+                className={retailStyles.buttonOutline}
+                disabled={registerPurchaseMutation.isPending}
                 type="button"
                 onClick={handleClosePurchaseDrawer}
               >
                 {copy.cancel}
               </button>
               <button
-                className={styles.drawerPrimaryButton}
+                className={retailStyles.buttonDark}
                 disabled={
                   !purchaseFormState.productId ||
                   parsePositiveNumber(purchaseFormState.quantity) <= 0 ||
@@ -2149,10 +2214,13 @@ export function RetailInventoryWorkspace() {
                   void handleRegisterPurchase()
                 }}
               >
-                ◉ {copy.purchaseSubmit}
+                {registerPurchaseMutation.isPending
+                  ? copy.registering
+                  : copy.purchaseSubmit}
               </button>
-            </>
+            </DrawerActionFooter>
           }
+          isBusy={registerPurchaseMutation.isPending}
           title={copy.purchaseTitle}
           onClose={handleClosePurchaseDrawer}
         >
@@ -2245,6 +2313,7 @@ export function RetailInventoryWorkspace() {
         </DrawerShell>
       ) : null}
 
+      {confirmationDialog}
     </RetailPageLayout>
   )
 }

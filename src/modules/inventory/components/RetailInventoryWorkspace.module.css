@@ -650,23 +650,9 @@
   text-align: right;
 }
 
-.linkButton,
-.footerCancelButton,
 .backButton {
   width: fit-content;
   color: #4f637d;
-  font-weight: 800;
-}
-
-.footerCancelButton {
-  margin: 0 auto;
-  color: #cf382d;
-}
-
-.deleteCategoryButton {
-  width: fit-content;
-  margin: 0 auto;
-  color: #cf382d;
   font-weight: 800;
 }
 
@@ -928,42 +914,8 @@
   background: #f8fafc;
 }
 
-.headerSecondaryButton,
-.headerPrimaryButton,
-.drawerPrimaryButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  min-height: 2.9rem;
-  padding: 0.72rem 1.15rem;
-  border-radius: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-}
-
-.headerSecondaryButton {
-  border: 1px solid #c5cede;
-  background: #ffffff;
-  color: #172033;
-  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.05);
-}
-
-.headerPrimaryButton,
-.drawerPrimaryButton {
-  border: 1px solid #0758d1;
-  background: #0758d1;
-  color: #ffffff;
-  box-shadow: 0 3px 8px rgba(7, 88, 209, 0.2);
-}
-
-.headerPrimaryButton:disabled,
-.drawerPrimaryButton:disabled {
-  border-color: #aeb9ca;
-  background: #d6dce6;
-  box-shadow: none;
-  color: #7b8799;
-  cursor: not-allowed;
+.headerCoreButton {
+  min-width: 10rem;
 }
 
 .buttonPlus {
@@ -1013,16 +965,6 @@
 .bannerDescription {
   max-width: 62rem;
   color: #b83232;
-}
-
-.bannerAction {
-  flex: 0 0 auto;
-  min-height: 2.4rem;
-  padding: 0.55rem 1.35rem;
-  border-radius: 0.55rem;
-  background: #c51616;
-  color: #ffffff;
-  font-weight: 850;
 }
 
 .bannerClose {
@@ -1327,10 +1269,14 @@
   padding: 1rem 1.7rem;
 }
 
-.drawerFooter .footerCancelButton {
-  margin: 0;
-  padding: 0.75rem 1rem;
-  color: #505a6d;
+.drawerFooter > * {
+  width: 100%;
+}
+
+.categoryEditorFooter {
+  display: grid;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .drawerTitleIcon {
@@ -1707,8 +1653,7 @@
 }
 
 @media (max-width: 480px) {
-  .headerSecondaryButton,
-  .headerPrimaryButton,
+  .headerCoreButton,
   .dropdownGroup,
   .dropdownMenu {
     width: 100%;
@@ -1720,8 +1665,7 @@
   }
 
   .drawerFooter {
-    display: grid;
-    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
+    display: block;
     padding-right: 1rem;
     padding-left: 1rem;
   }
