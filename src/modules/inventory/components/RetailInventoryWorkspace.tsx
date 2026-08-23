@@ -375,6 +375,15 @@ function MoreIcon() {
   )
 }
 
+function SearchIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.searchIcon} viewBox="0 0 24 24">
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="m15.5 15.5 4 4" />
+    </svg>
+  )
+}
+
 export function RetailInventoryWorkspace() {
   const { languageCode } = useAppTranslation()
   const copy = getInventoryCopy(languageCode)
@@ -1256,7 +1265,7 @@ export function RetailInventoryWorkspace() {
         <div className={styles.tableToolbar}>
           <div className={styles.tableFilters}>
             <label className={styles.tableSearch}>
-              <span aria-hidden="true">⌕</span>
+              <SearchIcon />
               <input
                 placeholder={copy.searchPlaceholder}
                 type="search"
@@ -1620,6 +1629,7 @@ export function RetailInventoryWorkspace() {
               </button>
 
               <label className={styles.searchFieldDrawer}>
+                <SearchIcon />
                 <input
                   className={styles.searchInput}
                   placeholder={copy.searchProduct}
@@ -1660,6 +1670,7 @@ export function RetailInventoryWorkspace() {
               </button>
 
               <label className={styles.searchFieldDrawer}>
+                <SearchIcon />
                 <input
                   className={styles.searchInput}
                   placeholder={copy.searchCategory}
@@ -1888,6 +1899,7 @@ export function RetailInventoryWorkspace() {
 
             <div className={styles.selectorFilters}>
               <label className={styles.searchFieldDrawer}>
+                <SearchIcon />
                 <input
                   className={styles.searchInput}
                   placeholder={copy.searchProduct}
