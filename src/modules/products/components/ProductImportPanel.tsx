@@ -64,15 +64,15 @@ function getErrorMessage(error: unknown) {
     return error.message
   }
 
-  return 'The inventory import could not be completed right now.'
+  return 'No pudimos completar la importación en este momento.'
 }
 
 function formatBoolean(value: boolean | undefined) {
   if (value === undefined) {
-    return 'Default'
+    return 'Predeterminado'
   }
 
-  return value ? 'Active' : 'Inactive'
+  return value ? 'Activo' : 'Inactivo'
 }
 
 export function ProductImportPanel({
@@ -149,11 +149,11 @@ export function ProductImportPanel({
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
         <div>
-          <p className={styles.eyebrow}>Bulk upload</p>
-          <h2 className={styles.title}>Load inventory from CSV</h2>
+          <p className={styles.eyebrow}>Carga masiva</p>
+          <h2 className={styles.title}>Importa tu catálogo</h2>
           <p className={styles.description}>
-            Upload an Excel or CSV file, preview the rows and import products in
-            one pass. Existing products match by SKU first and then by exact name.
+            Sube un archivo Excel o CSV, revisa la vista previa e importa los
+            productos. Los existentes se identifican primero por SKU y luego por nombre.
           </p>
         </div>
 
@@ -163,14 +163,14 @@ export function ProductImportPanel({
             type="button"
             onClick={handleDownloadTemplate}
           >
-            Download template
+            Descargar plantilla
           </button>
           <button
             className={styles.secondaryButton}
             type="button"
             onClick={() => fileInputRef.current?.click()}
           >
-            Choose file
+            Elegir archivo
           </button>
         </div>
       </div>
@@ -178,11 +178,11 @@ export function ProductImportPanel({
       <div className={styles.dropzone}>
         <div className={styles.dropzoneCopy}>
           <p className={styles.dropzoneTitle}>
-            {fileName ? fileName : 'Bring your inventory file here'}
+            {fileName ? fileName : 'Selecciona tu archivo de productos'}
           </p>
           <p className={styles.dropzoneDescription}>
-            Accepted columns: name, price, stock, sku, cost, minStock, unit and
-            isActive. File types: .csv, .xlsx and .xls.
+            Columnas admitidas: name, price, stock, sku, cost, minStock, unit e
+            isActive. Formatos: .csv, .xlsx y .xls.
           </p>
         </div>
 
@@ -192,7 +192,7 @@ export function ProductImportPanel({
             type="button"
             onClick={() => fileInputRef.current?.click()}
           >
-            {fileName ? 'Replace file' : 'Upload file'}
+            {fileName ? 'Reemplazar archivo' : 'Subir archivo'}
           </button>
 
           <button
@@ -201,7 +201,7 @@ export function ProductImportPanel({
             type="button"
             onClick={handleClear}
           >
-            Clear
+            Limpiar
           </button>
         </div>
 
@@ -218,22 +218,22 @@ export function ProductImportPanel({
 
       <div className={styles.tipGrid}>
         <div className={styles.tipCard}>
-          <strong>1. Prepare the file</strong>
-          <span>Use the template or export a CSV from your spreadsheet.</span>
+          <strong>1. Prepara el archivo</strong>
+          <span>Usa la plantilla o exporta un CSV desde tu hoja de cálculo.</span>
         </div>
         <div className={styles.tipCard}>
-          <strong>2. Review the preview</strong>
-          <span>Cashgo validates prices, stock, SKU and unit before import.</span>
+          <strong>2. Revisa la vista previa</strong>
+          <span>Cashgo valida precios, stock, SKU y unidad antes de importar.</span>
         </div>
         <div className={styles.tipCard}>
-          <strong>3. Sync the catalog</strong>
-          <span>Rows create or update products and adjust stock automatically.</span>
+          <strong>3. Sincroniza el catálogo</strong>
+          <span>Las filas crean o actualizan productos y ajustan su stock.</span>
         </div>
       </div>
 
       {issues.length > 0 ? (
         <div className={styles.issueBox} role="alert">
-          <p className={styles.issueTitle}>We found a few things to fix first</p>
+          <p className={styles.issueTitle}>Hay datos que debes corregir primero</p>
           <ul className={styles.issueList}>
             {issues.map((issue) => (
               <li key={issue}>{issue}</li>
@@ -246,10 +246,9 @@ export function ProductImportPanel({
         <div className={styles.previewSection}>
           <div className={styles.previewHeader}>
             <div>
-              <p className={styles.previewEyebrow}>Preview</p>
+              <p className={styles.previewEyebrow}>Vista previa</p>
               <h3 className={styles.previewTitle}>
-                {previewRows.length} row{previewRows.length === 1 ? '' : 's'} ready
-                to import
+                {previewRows.length} fila{previewRows.length === 1 ? '' : 's'} lista{previewRows.length === 1 ? '' : 's'} para importar
               </h3>
             </div>
 
@@ -261,7 +260,7 @@ export function ProductImportPanel({
                 void handleImport()
               }}
             >
-              {isImporting ? 'Importing inventory...' : 'Import inventory'}
+              {isImporting ? 'Importando productos...' : 'Importar productos'}
             </button>
           </div>
 
@@ -269,13 +268,13 @@ export function ProductImportPanel({
             <table className={styles.previewTable}>
               <thead>
                 <tr>
-                  <th scope="col">Row</th>
-                  <th scope="col">Product</th>
+                  <th scope="col">Fila</th>
+                  <th scope="col">Producto</th>
                   <th scope="col">SKU</th>
-                  <th scope="col">Price</th>
+                  <th scope="col">Precio</th>
                   <th scope="col">Stock</th>
-                  <th scope="col">Unit</th>
-                  <th scope="col">Status</th>
+                  <th scope="col">Unidad</th>
+                  <th scope="col">Estado</th>
                 </tr>
               </thead>
               <tbody>
@@ -285,14 +284,14 @@ export function ProductImportPanel({
                     <td>
                       <div className={styles.productCell}>
                         <strong>{row.name}</strong>
-                        <span>{row.description ?? 'No description'}</span>
+                        <span>{row.description ?? 'Sin descripción'}</span>
                       </div>
                     </td>
-                    <td>{row.sku ?? 'No SKU'}</td>
+                    <td>{row.sku ?? 'Sin SKU'}</td>
                     <td>{row.price}</td>
                     <td>
                       {row.stock}
-                      {row.minStock !== undefined ? ` / min ${row.minStock}` : ''}
+                      {row.minStock !== undefined ? ` / mín. ${row.minStock}` : ''}
                     </td>
                     <td>{row.unit ?? 'UNIT'}</td>
                     <td>{formatBoolean(row.isActive)}</td>
@@ -304,8 +303,8 @@ export function ProductImportPanel({
 
           {previewRows.length > 6 ? (
             <p className={styles.previewFootnote}>
-              Showing the first 6 rows of {previewRows.length}. The full file
-              will be imported.
+              Mostrando las primeras 6 filas de {previewRows.length}. Se
+              importará el archivo completo.
             </p>
           ) : null}
         </div>
@@ -313,7 +312,7 @@ export function ProductImportPanel({
 
       {submitError ? (
         <div className={styles.issueBox} role="alert">
-          <p className={styles.issueTitle}>Import failed</p>
+          <p className={styles.issueTitle}>La importación falló</p>
           <p className={styles.submitError}>{submitError}</p>
         </div>
       ) : null}
@@ -323,17 +322,17 @@ export function ProductImportPanel({
           <div className={styles.resultSummary}>
             <div>
               <span className={styles.resultValue}>{result.createdCount}</span>
-              <span className={styles.resultLabel}>Created</span>
+              <span className={styles.resultLabel}>Creados</span>
             </div>
             <div>
               <span className={styles.resultValue}>{result.updatedCount}</span>
-              <span className={styles.resultLabel}>Updated</span>
+              <span className={styles.resultLabel}>Actualizados</span>
             </div>
             <div>
               <span className={styles.resultValue}>
                 {result.stockAdjustedCount}
               </span>
-              <span className={styles.resultLabel}>Stock adjusted</span>
+              <span className={styles.resultLabel}>Stock ajustado</span>
             </div>
           </div>
 
@@ -341,7 +340,7 @@ export function ProductImportPanel({
             {result.results.slice(0, 5).map((line) => (
               <div className={styles.resultItem} key={`${line.rowNumber}-${line.productId}`}>
                 <strong>
-                  Row {line.rowNumber} · {line.productName}
+                  Fila {line.rowNumber} · {line.productName}
                 </strong>
                 <span>{line.message}</span>
               </div>

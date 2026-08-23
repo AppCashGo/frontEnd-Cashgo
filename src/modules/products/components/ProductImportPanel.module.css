@@ -2,6 +2,8 @@
   display: grid;
   gap: 1rem;
   padding: 1.25rem;
+  border: 0;
+  box-shadow: none;
 }
 
 .header {
@@ -15,7 +17,7 @@
   font-size: 0.78rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--color-accent-dark);
+  color: #1f5fd1;
 }
 
 .title {
@@ -41,11 +43,11 @@
   display: grid;
   gap: 1rem;
   padding: 1rem;
-  border: 1px dashed rgba(196, 106, 45, 0.38);
+  border: 1px dashed #8caddf;
   border-radius: 22px;
   background:
-    radial-gradient(circle at top right, rgba(196, 106, 45, 0.18), transparent 26%),
-    rgba(255, 250, 243, 0.72);
+    radial-gradient(circle at top right, rgba(37, 99, 235, 0.12), transparent 26%),
+    #f7faff;
 }
 
 .dropzoneTitle {
@@ -220,8 +222,8 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, var(--color-accent), #d78943);
-  color: #fffdf8;
+  background: #1f2a37;
+  color: #ffffff;
 }
 
 .secondaryButton,
