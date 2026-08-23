@@ -52,6 +52,7 @@ import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './RetailInventoryWorkspace.module.css'
 
 type InventoryFilter = 'ALL' | 'LOW'
+type InventorySort = 'STOCK_ASC' | 'STOCK_DESC'
 
 type FeedbackTone = 'success' | 'info' | 'error'
 
@@ -94,6 +95,7 @@ type TaxFormState = {
 
 type DrawerShellProps = {
   title: string
+  titleAccessory?: ReactNode
   onClose: () => void
   children: ReactNode
   footer?: ReactNode
@@ -105,8 +107,6 @@ type IconButtonProps = {
   onClick: () => void
   children: ReactNode
 }
-
-const inventoryFilterOptions: InventoryFilter[] = ['ALL', 'LOW']
 
 function createDefaultCategoryEditorState(): CategoryEditorState {
   return {
@@ -120,7 +120,7 @@ function createDefaultCategoryEditorState(): CategoryEditorState {
 function createDefaultPurchaseFormState(): PurchaseFormState {
   return {
     productId: '',
-    quantity: '1',
+    quantity: '',
     unitCost: '',
     reason: '',
   }
@@ -263,7 +263,13 @@ function clampPercentage(value: number) {
   return Math.max(0, Math.min(999, value))
 }
 
-function DrawerShell({ title, onClose, children, footer }: DrawerShellProps) {
+function DrawerShell({
+  title,
+  titleAccessory,
+  onClose,
+  children,
+  footer,
+}: DrawerShellProps) {
   return (
     <SideDrawer
       bodyClassName={styles.drawerBody}
@@ -275,6 +281,7 @@ function DrawerShell({ title, onClose, children, footer }: DrawerShellProps) {
       isOpen
       panelClassName={styles.drawer}
       title={title}
+      titleAccessory={titleAccessory}
       onClose={onClose}
     >
       {children}
@@ -348,6 +355,25 @@ function ChevronRightIcon() {
   )
 }
 
+function AlertIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.alertIcon} viewBox="0 0 24 24">
+      <path d="M12 3 2.8 20h18.4L12 3Z" />
+      <path d="M12 9v5m0 3h.01" />
+    </svg>
+  )
+}
+
+function MoreIcon() {
+  return (
+    <svg aria-hidden="true" className={styles.moreIcon} viewBox="0 0 24 24">
+      <circle cx="12" cy="5" r="1.5" />
+      <circle cx="12" cy="12" r="1.5" />
+      <circle cx="12" cy="19" r="1.5" />
+    </svg>
+  )
+}
+
 export function RetailInventoryWorkspace() {
   const { languageCode } = useAppTranslation()
   const copy = getInventoryCopy(languageCode)
@@ -387,7 +413,6 @@ export function RetailInventoryWorkspace() {
   const [categorySearchTerm, setCategorySearchTerm] = useState('')
   const [assignedProductSearchTerm, setAssignedProductSearchTerm] = useState('')
   const [taxProductSearchTerm, setTaxProductSearchTerm] = useState('')
-  const [isCatalogMenuOpen, setCatalogMenuOpen] = useState(false)
   const [isCreateMenuOpen, setCreateMenuOpen] = useState(false)
   const [isCategoriesDrawerOpen, setCategoriesDrawerOpen] = useState(false)
   const [isCategoryEditorOpen, setCategoryEditorOpen] = useState(false)
@@ -400,6 +425,7 @@ export function RetailInventoryWorkspace() {
   const [shareCatalogPhone, setShareCatalogPhone] = useState('')
   const [activeInventoryFilter, setActiveInventoryFilter] =
     useState<InventoryFilter>('ALL')
+  const [inventorySort, setInventorySort] = useState<InventorySort>('STOCK_ASC')
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [taxPickerCategoryId, setTaxPickerCategoryId] = useState<string | null>(
     null,
@@ -429,6 +455,9 @@ export function RetailInventoryWorkspace() {
   const selectedAdjustmentProduct = products.find(
     (product) => product.id === adjustmentFormState.productId,
   )
+  const estimatedPurchaseTotal =
+    parsePositiveNumber(purchaseFormState.quantity) *
+    parsePositiveNumber(purchaseFormState.unitCost)
 
   useEffect(() => {
     setShareCatalogPhone(businessSettings?.phone ?? '')
@@ -467,10 +496,16 @@ export function RetailInventoryWorkspace() {
       .filter((product) =>
         activeInventoryFilter === 'LOW' ? isProductLowStock(product) : true,
       )
-      .sort((firstProduct, secondProduct) =>
-        firstProduct.name.localeCompare(secondProduct.name),
-      )
-  }, [activeCategoryId, activeInventoryFilter, products, searchTerm])
+      .sort((firstProduct, secondProduct) => {
+        const stockDifference = firstProduct.stock - secondProduct.stock
+
+        if (stockDifference !== 0) {
+          return inventorySort === 'STOCK_ASC' ? stockDifference : -stockDifference
+        }
+
+        return firstProduct.name.localeCompare(secondProduct.name)
+      })
+  }, [activeCategoryId, activeInventoryFilter, inventorySort, products, searchTerm])
 
   const filteredCategories = useMemo(() => {
     const normalizedSearchTerm = categorySearchTerm.trim().toLowerCase()
@@ -798,7 +833,6 @@ export function RetailInventoryWorkspace() {
 
     if (!businessSettings?.phone) {
       setShareCatalogPhoneModalOpen()
-      setCatalogMenuOpen(false)
       return
     }
 
@@ -822,7 +856,6 @@ export function RetailInventoryWorkspace() {
         tone: 'info',
         text: copy.shareSuccess,
       })
-      setCatalogMenuOpen(false)
     } catch (error) {
       setFeedbackMessage({
         tone: 'error',
@@ -859,11 +892,6 @@ export function RetailInventoryWorkspace() {
         ),
       })
     }
-  }
-
-  function handleConfigureCatalog() {
-    setCatalogMenuOpen(false)
-    navigate(routePaths.settings)
   }
 
   async function handleRegisterPurchase() {
@@ -976,12 +1004,6 @@ export function RetailInventoryWorkspace() {
     }
   }
 
-  const selectedTaxProductsLabel = `${taxFormState.productIds.length.toString()} ${
-    taxFormState.productIds.length === 1
-      ? copy.selectedProducts
-      : copy.selectedProductsPlural
-  }`
-
   const categoryEditorFooter = isCategoryEditorOpen ? (
     <>
       <button
@@ -1038,21 +1060,13 @@ export function RetailInventoryWorkspace() {
 
   return (
     <RetailPageLayout
+      bodyClassName={styles.dashboardBody}
       title={copy.title}
-      meta={
-        <>
-          <span>
-            {copy.totalReferences} {products.length.toString()}
-          </span>
-          <span>
-            {copy.totalInventoryCost} {formatCurrency(totalInventoryCost)}
-          </span>
-        </>
-      }
+      meta={<span>{copy.pageDescription}</span>}
       actions={
         <>
           <button
-            className={retailStyles.buttonOutline}
+            className={styles.headerSecondaryButton}
             type="button"
             onClick={() => {
               resetFeedback()
@@ -1065,12 +1079,13 @@ export function RetailInventoryWorkspace() {
 
           <div className={styles.dropdownGroup}>
             <button
-              className={retailStyles.buttonDark}
+              className={styles.headerPrimaryButton}
               type="button"
               onClick={() => setCreateMenuOpen((currentValue) => !currentValue)}
             >
-              <BoxIcon />
-              <span>{copy.createProducts}</span>
+              <span className={styles.buttonPlus}>+</span>
+              <span>{copy.createProduct}</span>
+              <span className={styles.buttonChevron}>⌄</span>
             </button>
 
             {isCreateMenuOpen ? (
@@ -1120,14 +1135,31 @@ export function RetailInventoryWorkspace() {
 
       {isPremiumBannerVisible && lowStockAlerts.length > 0 ? (
         <section className={styles.banner}>
-          <div className={styles.bannerCopy}>
-            <p className={styles.bannerTitle}>{copy.premiumTitle}</p>
-            <p className={styles.bannerDescription}>{copy.premiumDescription}</p>
-            <span className={styles.bannerLink}>{copy.premiumLink}</span>
+          <div className={styles.bannerLead}>
+            <AlertIcon />
+            <div className={styles.bannerCopy}>
+              <p className={styles.bannerTitle}>{copy.lowStockAlertTitle}</p>
+              <p className={styles.bannerDescription}>
+                {copy.lowStockAlertDescription.replace(
+                  '{count}',
+                  lowStockAlerts.length.toString(),
+                )}
+              </p>
+            </div>
           </div>
 
           <button
-            aria-label="Cerrar banner"
+            className={styles.bannerAction}
+            type="button"
+            onClick={() => {
+              setActiveInventoryFilter('LOW')
+              setActiveCategoryId(null)
+            }}
+          >
+            {copy.viewProducts}
+          </button>
+          <button
+            aria-label="Cerrar alerta"
             className={styles.bannerClose}
             type="button"
             onClick={() => setPremiumBannerVisible(false)}
@@ -1137,122 +1169,129 @@ export function RetailInventoryWorkspace() {
         </section>
       ) : null}
 
-      <section className={styles.filtersSection}>
-        <div className={styles.filtersRow}>
-          <label className={styles.searchField}>
-            <input
-              className={styles.searchInput}
-              placeholder={copy.searchPlaceholder}
-              type="search"
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-            />
-          </label>
-
-          <div className={styles.catalogMenuGroup}>
-            <button
-              className={styles.catalogButton}
-              type="button"
-              onClick={() => setCatalogMenuOpen((currentValue) => !currentValue)}
-            >
-              <BoxIcon />
-              <span>{copy.virtualCatalog}</span>
-            </button>
-
-            {isCatalogMenuOpen ? (
-              <div className={styles.catalogMenu}>
-                <button
-                  className={styles.dropdownButton}
-                  type="button"
-                  onClick={() => {
-                    void handleShareCatalog()
-                  }}
-                >
-                  {copy.shareCatalog}
-                </button>
-                <button
-                  className={styles.dropdownButton}
-                  type="button"
-                  onClick={handleConfigureCatalog}
-                >
-                  {copy.configureCatalog}
-                </button>
-              </div>
-            ) : null}
+      <section className={styles.summaryGrid}>
+        <article className={styles.summaryCard}>
+          <div className={styles.summaryCardHeader}>
+            <span className={styles.summaryIcon}><BoxIcon /></span>
+            <span>{copy.totalReferences}</span>
           </div>
+          <strong>{products.length.toLocaleString()}</strong>
+          <small>{copy.referencesHint}</small>
+        </article>
 
-          <div className={styles.tableActions}>
-            <IconButton
-              label={copy.registerPurchase}
-              tooltip={copy.registerPurchase}
-              onClick={() => setPurchaseDrawerOpen(true)}
-            >
-              <BoxIcon />
-            </IconButton>
-            <IconButton
-              label={copy.adjustInventory}
-              tooltip={copy.adjustInventory}
-              onClick={() => setAdjustmentDrawerOpen(true)}
-            >
-              <AdjustmentIcon />
-            </IconButton>
-            <IconButton
-              label={copy.productTaxes}
-              tooltip={copy.productTaxes}
-              onClick={() => setTaxesDrawerOpen(true)}
-            >
-              <TaxIcon />
-            </IconButton>
-            <IconButton
-              label={copy.downloadInventory}
-              tooltip={copy.downloadInventory}
-              onClick={() => {
-                void handleDownloadInventory()
-              }}
-            >
-              <DownloadIcon />
-            </IconButton>
+        <article className={styles.summaryCard}>
+          <div className={styles.summaryCardHeader}>
+            <span className={`${styles.summaryIcon} ${styles.summaryIconGreen}`}>
+              <span>$</span>
+            </span>
+            <span>{copy.totalInventoryCost}</span>
           </div>
-        </div>
+          <strong>{formatCurrency(totalInventoryCost)}</strong>
+          <small>{copy.inventoryValuationHint}</small>
+        </article>
 
-        <div className={styles.chipsRow}>
-          {inventoryFilterOptions.map((filterValue) => (
-            <button
-              key={filterValue}
-              className={
-                activeInventoryFilter === filterValue && activeCategoryId === null
-                  ? styles.chipActive
-                  : styles.chip
-              }
-              type="button"
-              onClick={() => {
-                setActiveInventoryFilter(filterValue)
-                setActiveCategoryId(null)
-              }}
-            >
-              {filterValue === 'ALL' ? copy.allChip : copy.lowStockChip}
-            </button>
-          ))}
-
-          {categories.map((category) => (
-            <button
-              key={category.id}
-              className={
-                activeCategoryId === category.id ? styles.chipActive : styles.chip
-              }
-              type="button"
-              onClick={() => {
-                setActiveCategoryId(category.id)
-                setActiveInventoryFilter('ALL')
-              }}
-            >
-              {category.name}
-            </button>
-          ))}
-        </div>
+        <article className={styles.promoCard}>
+          <span className={styles.promoBadge}>{copy.newModule}</span>
+          <strong>{copy.auditTitle}</strong>
+          <p>{copy.auditDescription}</p>
+        </article>
       </section>
 
       <section className={retailStyles.tableCard}>
+        <div className={styles.tableToolbar}>
+          <div className={styles.tableFilters}>
+            <label className={styles.tableSearch}>
+              <span aria-hidden="true">⌕</span>
+              <input
+                placeholder={copy.searchPlaceholder}
+                type="search"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+              />
+            </label>
+            <label className={styles.compactSelectWrap}>
+              <span aria-hidden="true">≡</span>
+              <select
+                aria-label={copy.categories}
+                className={styles.compactSelect}
+                value={activeCategoryId ?? ''}
+                onChange={(event) => {
+                  setActiveCategoryId(event.target.value || null)
+                  setActiveInventoryFilter('ALL')
+                }}
+              >
+                <option value="">{copy.allCategories}</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className={styles.compactSelectWrap}>
+              <span aria-hidden="true">↕</span>
+              <select
+                aria-label={copy.stockOrder}
+                className={styles.compactSelect}
+                value={inventorySort}
+                onChange={(event) => setInventorySort(event.target.value as InventorySort)}
+              >
+                <option value="STOCK_ASC">{copy.stockAscending}</option>
+                <option value="STOCK_DESC">{copy.stockDescending}</option>
+              </select>
+            </label>
+          </div>
+
+          <div className={styles.tableToolbarRight}>
+            <span className={styles.resultsCount}>
+              {copy.showingCount
+                .replace('{visible}', visibleProducts.length.toString())
+                .replace('{total}', products.length.toString())}
+            </span>
+            <div className={styles.tableActions}>
+              <IconButton
+                label={copy.virtualCatalog}
+                tooltip={copy.virtualCatalog}
+                onClick={() => {
+                  void handleShareCatalog()
+                }}
+              >
+                <BoxIcon />
+              </IconButton>
+              <IconButton
+                label={copy.registerPurchase}
+                tooltip={copy.registerPurchase}
+                onClick={() => setPurchaseDrawerOpen(true)}
+              >
+                <BoxIcon />
+              </IconButton>
+              <IconButton
+                label={copy.adjustInventory}
+                tooltip={copy.adjustInventory}
+                onClick={() => setAdjustmentDrawerOpen(true)}
+              >
+                <AdjustmentIcon />
+              </IconButton>
+              <IconButton
+                label={copy.productTaxes}
+                tooltip={copy.productTaxes}
+                onClick={() => setTaxesDrawerOpen(true)}
+              >
+                <TaxIcon />
+              </IconButton>
+              <IconButton
+                label={copy.downloadInventory}
+                tooltip={copy.downloadInventory}
+                onClick={() => {
+                  void handleDownloadInventory()
+                }}
+              >
+                <DownloadIcon />
+              </IconButton>
+            </div>
+          </div>
+        </div>
         <div className={styles.tableScroller}>
           <table className={styles.table}>
             <thead>
@@ -1261,7 +1300,8 @@ export function RetailInventoryWorkspace() {
                 <th>{copy.priceColumn}</th>
                 <th>{copy.costColumn}</th>
                 <th>{copy.stockColumn}</th>
-                <th>{copy.gainColumn}</th>
+                <th>{copy.marginColumn}</th>
+                <th aria-label={copy.actionsColumn} />
               </tr>
             </thead>
             <tbody>
@@ -1279,7 +1319,7 @@ export function RetailInventoryWorkspace() {
                 return (
                   <tr
                     key={product.id}
-                    className={styles.tableRowClickable}
+                    className={`${styles.tableRowClickable} ${isLowStock ? styles.tableRowLowStock : ''}`}
                     role="button"
                     tabIndex={0}
                     onClick={() => handleOpenEditProduct(product.id)}
@@ -1403,11 +1443,23 @@ export function RetailInventoryWorkspace() {
                     </td>
                     <td>
                       <div className={styles.gainCell}>
-                        <span>{formatCurrency(gain)}</span>
                         <span className={styles.marginPill}>
-                          {`${Math.round(margin).toString()}%`}
+                          {`${margin.toFixed(1)}%`}
                         </span>
                       </div>
+                    </td>
+                    <td>
+                      <button
+                        aria-label={`${copy.editProduct}: ${product.name}`}
+                        className={styles.rowActionButton}
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          handleOpenEditProduct(product.id)
+                        }}
+                      >
+                        <MoreIcon />
+                      </button>
                     </td>
                   </tr>
                 )
@@ -1530,11 +1582,15 @@ export function RetailInventoryWorkspace() {
           ) : (
             <div className={styles.drawerStack}>
               <button
-                className={retailStyles.buttonOutline}
+                className={styles.createCategoryCard}
                 type="button"
                 onClick={handleOpenCreateCategory}
               >
-                {copy.createCategory}
+                <span className={styles.createCategoryIcon}>+</span>
+                <span>
+                  <strong>{copy.createCategory}</strong>
+                  <small>{copy.createCategoryHint}</small>
+                </span>
               </button>
 
               <label className={styles.searchFieldDrawer}>
@@ -1558,6 +1614,13 @@ export function RetailInventoryWorkspace() {
                     <div className={styles.categoryCardCopy}>
                       <span className={styles.categoryCardTitle}>{category.name}</span>
                       <span className={styles.categoryCardMeta}>
+                        <span
+                          className={
+                            category.isVisibleInCatalog
+                              ? styles.statusDotVisible
+                              : styles.statusDotHidden
+                          }
+                        />
                         {category.isVisibleInCatalog
                           ? copy.visibilityYes
                           : copy.visibilityNo}
@@ -1626,7 +1689,14 @@ export function RetailInventoryWorkspace() {
           footer={
             <>
               <button
-                className={retailStyles.buttonMuted}
+                className={styles.footerCancelButton}
+                type="button"
+                onClick={() => setTaxesDrawerOpen(false)}
+              >
+                {copy.cancel}
+              </button>
+              <button
+                className={styles.drawerPrimaryButton}
                 disabled={!activeTaxOption || taxFormState.productIds.length === 0}
                 type="button"
                 onClick={() => {
@@ -1635,55 +1705,43 @@ export function RetailInventoryWorkspace() {
               >
                 {copy.saveChanges}
               </button>
-              <button
-                className={styles.footerCancelButton}
-                type="button"
-                onClick={() => setTaxesDrawerOpen(false)}
-              >
-                {copy.cancel}
-              </button>
             </>
           }
-        title={copy.productTaxes}
-        onClose={() => {
-          setTaxesDrawerOpen(false)
-          setTaxPickerOpen(false)
-          setTaxOptionsOpen(false)
-          setTaxPickerCategoryId(null)
-        }}
+          title={copy.productTaxes}
+          onClose={() => {
+            setTaxesDrawerOpen(false)
+            setTaxPickerOpen(false)
+            setTaxOptionsOpen(false)
+            setTaxPickerCategoryId(null)
+          }}
         >
           <div className={styles.drawerStack}>
-            <div className={styles.drawerSectionHeader}>
-              <span className={styles.fieldLabel}>{copy.selectProductsToModify}</span>
-              {taxFormState.productIds.length > 0 ? (
+            <div className={styles.taxSelectionCard}>
+              <span className={styles.taxSelectionIcon}>□</span>
+              <div>
+                <strong>{copy.selectedProductsTitle}</strong>
+                <p>
+                  {copy.selectedProductsDescription.replace(
+                    '{count}',
+                    taxFormState.productIds.length.toString(),
+                  )}
+                </p>
                 <button
-                  className={styles.linkButton}
+                  className={styles.taxSelectionLink}
                   type="button"
-                  onClick={() =>
-                    setTaxFormState((currentState) => ({
-                      ...currentState,
-                      productIds: [],
-                    }))
-                  }
+                  onClick={() => {
+                    setTaxPickerCategoryId(activeCategoryId)
+                    setTaxPickerOpen(true)
+                  }}
                 >
-                  {copy.clear}
+                  {copy.selectProductsInTable} →
                 </button>
-              ) : null}
+              </div>
             </div>
 
-            <button
-              className={styles.selectionTrigger}
-              type="button"
-              onClick={() => {
-                setTaxPickerCategoryId(activeCategoryId)
-                setTaxPickerOpen(true)
-              }}
-            >
-              <span>{selectedTaxProductsLabel}</span>
-              <ChevronRightIcon />
-            </button>
-
             <div className={styles.separator} />
+
+            <span className={styles.sectionEyebrow}>{copy.taxConfiguration}</span>
 
             <label className={styles.fieldGroup}>
               <span className={styles.fieldLabel}>{copy.taxBase}</span>
@@ -1695,6 +1753,7 @@ export function RetailInventoryWorkspace() {
                 <span>{activeTaxOption?.label ?? copy.selectOption}</span>
                 <ChevronRightIcon />
               </button>
+              <small className={styles.fieldHint}>{copy.taxBaseHint}</small>
             </label>
 
             {isTaxOptionsOpen ? (
@@ -1727,6 +1786,14 @@ export function RetailInventoryWorkspace() {
                 ))}
               </div>
             ) : null}
+
+            <div className={styles.taxIncludedCard}>
+              <TaxIcon />
+              <span>{copy.taxIncludedInPrice}</span>
+              <span aria-label={copy.enabled} className={styles.staticToggle}>
+                <span />
+              </span>
+            </div>
           </div>
 
           <ModalShell
@@ -1962,31 +2029,43 @@ export function RetailInventoryWorkspace() {
 
       {isPurchaseDrawerOpen ? (
         <DrawerShell
+          titleAccessory={
+            <span className={styles.drawerTitleIcon}>
+              <BoxIcon />
+            </span>
+          }
           footer={
-            <button
-              className={retailStyles.buttonDark}
-              disabled={
-                !purchaseFormState.productId ||
-                parsePositiveNumber(purchaseFormState.quantity) <= 0 ||
-                parsePositiveNumber(purchaseFormState.unitCost) <= 0 ||
-                registerPurchaseMutation.isPending
-              }
-              type="button"
-              onClick={() => {
-                void handleRegisterPurchase()
-              }}
-            >
-              {copy.purchaseSubmit}
-            </button>
+            <>
+              <button
+                className={styles.footerCancelButton}
+                type="button"
+                onClick={() => setPurchaseDrawerOpen(false)}
+              >
+                {copy.cancel}
+              </button>
+              <button
+                className={styles.drawerPrimaryButton}
+                disabled={
+                  !purchaseFormState.productId ||
+                  parsePositiveNumber(purchaseFormState.quantity) <= 0 ||
+                  parsePositiveNumber(purchaseFormState.unitCost) <= 0 ||
+                  registerPurchaseMutation.isPending
+                }
+                type="button"
+                onClick={() => {
+                  void handleRegisterPurchase()
+                }}
+              >
+                ◉ {copy.purchaseSubmit}
+              </button>
+            </>
           }
           title={copy.purchaseTitle}
           onClose={() => setPurchaseDrawerOpen(false)}
         >
           <div className={styles.drawerStack}>
-            <p className={styles.drawerDescription}>{copy.purchaseDescription}</p>
-
             <label className={styles.fieldGroup}>
-              <span className={styles.fieldLabel}>{copy.purchaseProduct}</span>
+              <span className={styles.fieldLabel}>{copy.purchaseProduct} *</span>
               <select
                 className={styles.selectInput}
                 value={purchaseFormState.productId}
@@ -2004,42 +2083,54 @@ export function RetailInventoryWorkspace() {
                   </option>
                 ))}
               </select>
+              <small className={styles.fieldHint}>{copy.purchaseProductHint}</small>
             </label>
 
-            <label className={styles.fieldGroup}>
-              <span className={styles.fieldLabel}>{copy.purchaseQuantity}</span>
-              <input
-                className={styles.textInput}
-                inputMode="decimal"
-                type="number"
-                value={purchaseFormState.quantity}
-                onChange={(event) =>
-                  setPurchaseFormState((currentState) => ({
-                    ...currentState,
-                    quantity: event.target.value,
-                  }))
-                }
-              />
-            </label>
+            <div className={styles.purchaseFieldsRow}>
+              <label className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>{copy.purchaseQuantity} *</span>
+                <input
+                  className={styles.textInput}
+                  inputMode="decimal"
+                  placeholder="Ej: 10"
+                  type="number"
+                  value={purchaseFormState.quantity}
+                  onChange={(event) =>
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      quantity: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>{copy.purchaseUnitCost} *</span>
+                <input
+                  className={styles.textInput}
+                  inputMode="decimal"
+                  placeholder="$ 0.00"
+                  type="number"
+                  value={purchaseFormState.unitCost}
+                  onChange={(event) =>
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      unitCost: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            <div className={styles.purchaseTotalCard}>
+              <span>{copy.estimatedTotal}</span>
+              <strong>{formatCurrency(estimatedPurchaseTotal)}</strong>
+            </div>
+
+            <div className={styles.separator} />
 
             <label className={styles.fieldGroup}>
-              <span className={styles.fieldLabel}>{copy.purchaseUnitCost}</span>
-              <input
-                className={styles.textInput}
-                inputMode="decimal"
-                type="number"
-                value={purchaseFormState.unitCost}
-                onChange={(event) =>
-                  setPurchaseFormState((currentState) => ({
-                    ...currentState,
-                    unitCost: event.target.value,
-                  }))
-                }
-              />
-            </label>
-
-            <label className={styles.fieldGroup}>
-              <span className={styles.fieldLabel}>{copy.purchaseReason}</span>
+              <span className={styles.fieldLabel}>{copy.purchaseReasonSupplier}</span>
               <textarea
                 className={styles.textareaInput}
                 placeholder={copy.purchaseReasonPlaceholder}
