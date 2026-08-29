@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { AdditionalSettingsPanel } from "@/modules/settings/components/AdditionalSettingsPanel";
 import { BusinessSettingsPanel } from "@/modules/settings/components/BusinessSettingsPanel";
 import { InventorySettingsPanel } from "@/modules/settings/components/InventorySettingsPanel";
@@ -40,6 +41,7 @@ import {
 } from "@/shared/constants/user-roles";
 import { SurfaceCard } from "@/shared/components/ui/SurfaceCard";
 import { RetailPageLayout } from "@/shared/components/retail/RetailPageLayout";
+import { routePaths } from "@/routes/route-paths";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "./SettingsPage.module.css";
 import retailStyles from "./SettingsRetailPage.module.css";
@@ -51,15 +53,17 @@ const defaultBusinessTaxSetup = {
 };
 
 export function SettingsPage() {
+  const navigate = useNavigate();
   const navigationPreset = useBusinessNavigationPreset();
   const isRetailPreset = navigationPreset === "retail";
-  const [retailTab, setRetailTab] = useState<"general" | "plan" | "print">(
+  const [retailTab, setRetailTab] = useState<"general" | "team" | "print">(
     "general",
   );
   const currentUser = useAuthSessionStore((state) => state.user);
   const updateActiveBusiness = useAuthSessionStore(
     (state) => state.updateActiveBusiness,
   );
+  const clearSession = useAuthSessionStore((state) => state.clearSession);
   const isAdmin = isAdminWorkspaceRole(currentUser?.role);
   const businessSettingsQuery = useBusinessSettingsQuery(isAdmin);
   const settingsUsersQuery = useSettingsUsersQuery(isAdmin);
@@ -192,6 +196,8 @@ export function SettingsPage() {
 
   async function handleDeleteBusinessSettings() {
     await deleteBusinessSettingsMutation.mutateAsync();
+    clearSession();
+    navigate(routePaths.auth, { replace: true });
   }
 
   if (isRetailPreset) {
@@ -213,12 +219,12 @@ export function SettingsPage() {
             </button>
             <button
               className={
-                retailTab === "plan" ? retailStyles.tabActive : retailStyles.tab
+                retailTab === "team" ? retailStyles.tabActive : retailStyles.tab
               }
               type="button"
-              onClick={() => setRetailTab("plan")}
+              onClick={() => setRetailTab("team")}
             >
-              Tu plan
+              Equipo y roles
             </button>
             <button
               className={
@@ -303,6 +309,7 @@ export function SettingsPage() {
 
             <AdditionalSettingsPanel
               businessSettings={businessSettings}
+              canDeleteBusiness={currentUser.role === "OWNER"}
               errorMessage={businessSettingsError}
               isDeleting={deleteBusinessSettingsMutation.isPending}
               isLoading={businessSettingsQuery.isLoading}
@@ -316,7 +323,7 @@ export function SettingsPage() {
           </div>
         ) : null}
 
-        {retailTab === "plan" ? (
+        {retailTab === "team" ? (
           <UsersManagementPanel
             currentUserId={currentUser.id}
             errorMessage={usersManagementError}

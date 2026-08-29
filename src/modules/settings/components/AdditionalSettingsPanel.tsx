@@ -10,6 +10,7 @@ import styles from "./AdditionalSettingsPanel.module.css";
 
 type AdditionalSettingsPanelProps = {
   businessSettings: BusinessSettings | null;
+  canDeleteBusiness: boolean;
   errorMessage: string | null;
   isDeleting: boolean;
   isLoading: boolean;
@@ -26,6 +27,7 @@ type FeedbackMessage = {
 
 export function AdditionalSettingsPanel({
   businessSettings,
+  canDeleteBusiness,
   errorMessage,
   isDeleting,
   isLoading,
@@ -47,7 +49,8 @@ export function AdditionalSettingsPanel({
   }, [businessSettings]);
 
   const isDisabled = isLoading || isSubmitting || !businessSettings;
-  const isDeleteDisabled = isLoading || isDeleting || !businessSettings;
+  const isDeleteDisabled =
+    isLoading || isDeleting || !businessSettings || !canDeleteBusiness;
 
   async function handleToggle(nextValue: boolean) {
     if (isDisabled || errorMessage) {
@@ -86,8 +89,8 @@ export function AdditionalSettingsPanel({
     const wasConfirmed = await confirm({
       title: "Eliminar negocio",
       description:
-        "¿Seguro que quieres eliminar este negocio? Una vez eliminado no podrás recuperar la información registrada.",
-      confirmLabel: "Eliminar negocio",
+        `Se eliminará definitivamente "${businessSettings?.businessName ?? "este negocio"}" junto con ventas, productos, caja, clientes y configuraciones. Esta acción no se puede deshacer.`,
+      confirmLabel: "Eliminar definitivamente",
       tone: "danger",
     });
 
@@ -169,25 +172,31 @@ export function AdditionalSettingsPanel({
               />
             </label>
 
-            <button
-              className={styles.dangerRow}
-              disabled={isDeleteDisabled}
-              type="button"
-              onClick={() => {
-                void handleDeleteBusiness();
-              }}
-            >
-              <span className={styles.dangerIcon}>
-                <Trash2 aria-hidden="true" />
-              </span>
-              <span className={styles.settingCopy}>
-                <span className={styles.dangerTitle}>Eliminar negocio</span>
-                <span className={styles.dangerDescription}>
-                  Una vez eliminado el negocio no podrás recuperar la
-                  información registrada.
+            {canDeleteBusiness ? (
+              <button
+                className={styles.dangerRow}
+                disabled={isDeleteDisabled}
+                type="button"
+                onClick={() => {
+                  void handleDeleteBusiness();
+                }}
+              >
+                <span className={styles.dangerIcon}>
+                  <Trash2 aria-hidden="true" />
                 </span>
-              </span>
-            </button>
+                <span className={styles.settingCopy}>
+                  <span className={styles.dangerTitle}>Eliminar negocio</span>
+                  <span className={styles.dangerDescription}>
+                    Elimina definitivamente el negocio y toda su información.
+                    Solo el propietario puede realizar esta acción.
+                  </span>
+                </span>
+              </button>
+            ) : (
+              <p className={styles.emptyMessage}>
+                Solo el propietario puede eliminar definitivamente el negocio.
+              </p>
+            )}
 
             {feedbackMessage ? (
               <p

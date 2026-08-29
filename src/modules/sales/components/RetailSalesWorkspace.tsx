@@ -1062,6 +1062,8 @@ export function RetailSalesWorkspace() {
   )
   const allowSaleWithoutStock =
     businessSettingsQuery.data?.allowSaleWithoutStock ?? false
+  const cashRegisterOpeningReminderEnabled =
+    businessSettingsQuery.data?.cashRegisterOpeningReminderEnabled ?? true
   const saleCompletionSoundEnabled =
     businessSettingsQuery.data?.saleCompletionSoundEnabled ?? true
   const isCashRegisterSubmitting =
@@ -1382,9 +1384,19 @@ export function RetailSalesWorkspace() {
       businessSettingsQuery.data?.businessName ??
       'Cashgo'
     const businessLogoUrl = resolveApiAssetUrl(businessSettingsQuery.data?.logoUrl)
-    const brandMarkup = businessLogoUrl
-      ? `<img class="brand-logo" src="${escapeReceiptHtml(businessLogoUrl)}" alt="${escapeReceiptHtml(businessName)}" />`
-      : `<span class="brand-fallback">${escapeReceiptHtml(businessName.slice(0, 1).toUpperCase())}</span>`
+    const printTicketWidth =
+      businessSettingsQuery.data?.printTicketWidth === '58mm' ? '58mm' : '80mm'
+    const printShowLogo = businessSettingsQuery.data?.printShowLogo ?? true
+    const printShowTaxDetail =
+      businessSettingsQuery.data?.printShowTaxDetail ?? true
+    const printFooterMessage =
+      businessSettingsQuery.data?.printFooterMessage?.trim() ||
+      'Gracias por tu compra.'
+    const brandMarkup = printShowLogo
+      ? businessLogoUrl
+        ? `<img class="brand-logo" src="${escapeReceiptHtml(businessLogoUrl)}" alt="${escapeReceiptHtml(businessName)}" />`
+        : `<span class="brand-fallback">${escapeReceiptHtml(businessName.slice(0, 1).toUpperCase())}</span>`
+      : ''
     const paymentRows =
       settlement === 'CREDIT'
         ? '<p><strong>Estado:</strong> A crédito</p>'
@@ -1419,6 +1431,10 @@ export function RetailSalesWorkspace() {
           <meta charset="utf-8" />
           <title>Prefactura</title>
           <style>
+            @page {
+              size: ${printTicketWidth} auto;
+              margin: 0;
+            }
             body {
               margin: 0;
               padding: 24px;
@@ -1500,13 +1516,17 @@ export function RetailSalesWorkspace() {
           </style>
         </head>
         <body>
-          <header class="brand">
-            ${brandMarkup}
-            <div>
-              <h1>Prefactura</h1>
-              <p class="brand-name">${escapeReceiptHtml(businessName)}</p>
-            </div>
-          </header>
+          ${
+            printShowLogo
+              ? `<header class="brand">
+                  ${brandMarkup}
+                  <div>
+                    <h1>Prefactura</h1>
+                    <p class="brand-name">${escapeReceiptHtml(businessName)}</p>
+                  </div>
+                </header>`
+              : '<h1>Prefactura</h1>'
+          }
           <p><strong>Fecha:</strong> ${escapeReceiptHtml(saleDate)}</p>
           <p><strong>Cliente:</strong> ${escapeReceiptHtml(customerName)}</p>
           <table>
@@ -1521,10 +1541,14 @@ export function RetailSalesWorkspace() {
               <span>Descuento</span>
               <strong>${escapeReceiptHtml(formatCurrency(discountTotal))}</strong>
             </div>
-            <div class="summary-row">
-              <span>Impuestos</span>
-              <strong>${escapeReceiptHtml(formatCurrency(cartFinancials.totalTaxes))}</strong>
-            </div>
+            ${
+              printShowTaxDetail
+                ? `<div class="summary-row">
+                    <span>Impuestos</span>
+                    <strong>${escapeReceiptHtml(formatCurrency(cartFinancials.totalTaxes))}</strong>
+                  </div>`
+                : ''
+            }
             <div class="summary-row total">
               <span>Total</span>
               <strong>${escapeReceiptHtml(formatCurrency(totalAmount))}</strong>
@@ -1539,6 +1563,7 @@ export function RetailSalesWorkspace() {
               ? `<p><strong>Nota:</strong> ${escapeReceiptHtml(receiptNote)}</p>`
               : ''
           }
+          <p>${escapeReceiptHtml(printFooterMessage)}</p>
         </body>
       </html>
     `)
@@ -1620,6 +1645,14 @@ export function RetailSalesWorkspace() {
       }
     }
 
+    if (cashRegisterOpeningReminderEnabled && !currentCashRegister) {
+      markCheckoutError(
+        'Abre la caja antes de registrar la primera venta del día.',
+      )
+      openCashRegisterDrawer('manage')
+      return
+    }
+
     try {
       const sale = await createSaleMutation.mutateAsync({
         items: cartItems.map((item) => ({
@@ -1661,6 +1694,15 @@ export function RetailSalesWorkspace() {
 
     if (quickSaleForm.customerId.trim().length === 0) {
       markCheckoutError('Selecciona un cliente antes de registrar la venta libre.')
+      return
+    }
+
+    if (cashRegisterOpeningReminderEnabled && !currentCashRegister) {
+      markCheckoutError(
+        'Abre la caja antes de registrar la primera venta del día.',
+      )
+      setQuickSaleDrawerOpen(false)
+      openCashRegisterDrawer('manage')
       return
     }
 

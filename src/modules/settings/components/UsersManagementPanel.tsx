@@ -225,7 +225,7 @@ export function UsersManagementPanel({
 
     if (!isEditing && !normalizedPassword) {
       setError("password", {
-        message: "Password must contain at least 8 characters.",
+        message: "La contraseña debe tener al menos 8 caracteres.",
       });
       return;
     }
@@ -266,7 +266,7 @@ export function UsersManagementPanel({
       setError("root", {
         message: getErrorMessage(
           error,
-          "Unable to save the user right now. Please try again.",
+          "No fue posible guardar el usuario. Intenta nuevamente.",
         ),
       });
     }
@@ -278,9 +278,9 @@ export function UsersManagementPanel({
     }
 
     const confirmed = await confirm({
-      title: "Delete user",
-      description: `Delete ${selectedUser.name} from the workspace? This removes their access to this business.`,
-      confirmLabel: "Delete user",
+      title: "Eliminar usuario",
+      description: `¿Eliminar a ${selectedUser.name} del equipo? Perderá el acceso a este negocio.`,
+      confirmLabel: "Eliminar usuario",
       tone: "danger",
     });
 
@@ -296,7 +296,7 @@ export function UsersManagementPanel({
       setError("root", {
         message: getErrorMessage(
           error,
-          "Unable to delete the user right now. Please try again.",
+          "No fue posible eliminar el usuario. Intenta nuevamente.",
         ),
       });
     }
@@ -314,20 +314,18 @@ export function UsersManagementPanel({
       <SurfaceCard className={styles.card}>
         <div className={styles.header}>
           <div>
-            <p className={styles.eyebrow}>Users and roles</p>
+            <p className={styles.eyebrow}>Equipo y roles</p>
             <h3 className={styles.title}>
-              Manage admin access and day-to-day team members from one
-              workspace.
+              Administra los accesos y responsabilidades de tu equipo.
             </h3>
             <p className={styles.description}>
-              Create accounts, adjust names and roles, and keep the operational
-              team neatly organized.
+              Crea cuentas, actualiza perfiles y asigna permisos operativos.
             </p>
           </div>
 
           <div className={styles.headerActions}>
             {isRefreshing && !isLoading ? (
-              <span className={styles.refreshingLabel}>Refreshing...</span>
+              <span className={styles.refreshingLabel}>Actualizando...</span>
             ) : null}
 
             <button
@@ -335,17 +333,17 @@ export function UsersManagementPanel({
               type="button"
               onClick={handleStartCreate}
             >
-              Create user
+              Crear usuario
             </button>
           </div>
         </div>
 
         <label className={styles.searchField}>
-          <span className={styles.searchLabel}>Search users</span>
+          <span className={styles.searchLabel}>Buscar usuarios</span>
           <input
             className={styles.searchInput}
             name="settings-user-search"
-            placeholder="Search by name, email or role"
+            placeholder="Buscar por nombre, correo o rol"
             type="search"
             value={searchValue}
             onChange={(event) => setSearchValue(event.target.value)}
@@ -355,7 +353,7 @@ export function UsersManagementPanel({
         {errorMessage ? (
           <div className={styles.feedbackCard} role="alert">
             <p className={styles.feedbackTitle}>
-              Unable to load user management
+              No pudimos cargar el equipo
             </p>
             <p className={styles.feedbackDescription}>{errorMessage}</p>
             <button
@@ -363,7 +361,7 @@ export function UsersManagementPanel({
               type="button"
               onClick={onRetry}
             >
-              Retry
+              Reintentar
             </button>
           </div>
         ) : null}
@@ -372,9 +370,9 @@ export function UsersManagementPanel({
           <div className={styles.listColumn}>
             {isLoading ? (
               <div className={styles.loadingState}>
-                <p className={styles.loadingTitle}>Loading team members...</p>
+                <p className={styles.loadingTitle}>Cargando equipo...</p>
                 <p className={styles.loadingDescription}>
-                  Pulling users and roles from the admin module.
+                  Estamos consultando usuarios y roles del negocio.
                 </p>
               </div>
             ) : null}
@@ -382,11 +380,10 @@ export function UsersManagementPanel({
             {!isLoading && !errorMessage && visibleUsers.length === 0 ? (
               <div className={styles.emptyState}>
                 <p className={styles.emptyTitle}>
-                  No users match the current search
+                  No hay usuarios para esta búsqueda
                 </p>
                 <p className={styles.emptyDescription}>
-                  Try another name, email or role, or create a new user from the
-                  form on the right.
+                  Prueba otro nombre, correo o rol, o crea un usuario nuevo.
                 </p>
               </div>
             ) : null}
@@ -439,9 +436,9 @@ export function UsersManagementPanel({
                       </div>
 
                       <div className={styles.userButtonFooter}>
-                        <span>Created {formatDate(user.createdAt)}</span>
+                        <span>Creado el {formatDate(user.createdAt)}</span>
                         <span>
-                          {isCurrentUser ? "Signed in user" : "Team member"}
+                          {isCurrentUser ? "Sesión actual" : "Miembro del equipo"}
                         </span>
                       </div>
                     </button>
@@ -455,20 +452,20 @@ export function UsersManagementPanel({
             <div className={styles.formHeader}>
               <div>
                 <p className={styles.formEyebrow}>
-                  {isEditing ? "Edit user" : "Create user"}
+                  {isEditing ? "Editar usuario" : "Crear usuario"}
                 </p>
                 <h4 className={styles.formTitle}>
                   {isEditing
-                    ? `Update ${selectedUser.name}`
-                    : "Invite a new teammate into the workspace"}
+                    ? `Actualizar a ${selectedUser.name}`
+                    : "Agrega una persona a tu equipo"}
                 </h4>
               </div>
 
               {isEditing ? (
                 <span className={styles.formTag}>
                   {isCurrentUserSelected
-                    ? "Current session"
-                    : selectedUser.role}
+                    ? "Sesión actual"
+                    : userRoleLabels[selectedUser.role]}
                 </span>
               ) : null}
             </div>
@@ -505,7 +502,7 @@ export function UsersManagementPanel({
                       type="button"
                       onClick={clearAvatarSelection}
                     >
-                      Quitar seleccion
+                      Quitar selección
                     </button>
                   ) : null}
                 </div>
@@ -523,7 +520,7 @@ export function UsersManagementPanel({
 
             <div className={styles.field}>
               <label className={styles.label} htmlFor="settings-user-name">
-                Name
+                Nombre
               </label>
               <input
                 aria-describedby={
@@ -576,7 +573,7 @@ export function UsersManagementPanel({
             <div className={styles.inlineFields}>
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="settings-user-role">
-                  Role
+                  Rol
                 </label>
                 <select
                   aria-describedby={
@@ -608,8 +605,8 @@ export function UsersManagementPanel({
                 ) : null}
                 {isCurrentUserSelected ? (
                   <p className={styles.helperInline}>
-                    You can update your profile details here, but role changes
-                    for the signed-in user stay locked to avoid access issues.
+                    Puedes actualizar tu perfil, pero el rol de la sesión actual
+                    permanece bloqueado para evitar perder el acceso.
                   </p>
                 ) : null}
               </div>
@@ -619,7 +616,7 @@ export function UsersManagementPanel({
                   className={styles.label}
                   htmlFor="settings-user-password"
                 >
-                  {isEditing ? "Reset password" : "Password"}
+                  {isEditing ? "Cambiar contraseña" : "Contraseña"}
                 </label>
                 <input
                   aria-describedby={
@@ -631,8 +628,8 @@ export function UsersManagementPanel({
                   id="settings-user-password"
                   placeholder={
                     isEditing
-                      ? "Leave blank to keep current password"
-                      : "Minimum 8 characters"
+                      ? "Déjala vacía para conservar la actual"
+                      : "Mínimo 8 caracteres"
                   }
                   type="password"
                   {...register("password")}
@@ -657,8 +654,8 @@ export function UsersManagementPanel({
             <div className={styles.formFooter}>
               <p className={styles.helperText}>
                 {isEditing
-                  ? `User created ${formatDate(selectedUser.createdAt)} and last updated ${formatDate(selectedUser.updatedAt)}.`
-                  : "New users are created immediately and can sign in as soon as credentials are shared."}
+                  ? `Usuario creado el ${formatDate(selectedUser.createdAt)} y actualizado el ${formatDate(selectedUser.updatedAt)}.`
+                  : "El usuario podrá ingresar cuando compartas sus credenciales."}
               </p>
 
               <div className={styles.formActions}>
@@ -669,7 +666,7 @@ export function UsersManagementPanel({
                       type="button"
                       onClick={handleStartCreate}
                     >
-                      Switch to create
+                      Crear otro
                     </button>
 
                     <button
@@ -680,7 +677,7 @@ export function UsersManagementPanel({
                         void handleDeleteUser();
                       }}
                     >
-                      Delete user
+                      Eliminar usuario
                     </button>
                   </>
                 ) : null}
@@ -692,11 +689,11 @@ export function UsersManagementPanel({
                 >
                   {isSubmitting
                     ? isEditing
-                      ? "Saving user..."
-                      : "Creating user..."
+                      ? "Guardando..."
+                      : "Creando..."
                     : isEditing
-                      ? "Save user"
-                      : "Create user"}
+                      ? "Guardar usuario"
+                      : "Crear usuario"}
                 </button>
               </div>
             </div>

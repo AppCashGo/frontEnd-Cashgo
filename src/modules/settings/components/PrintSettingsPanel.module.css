@@ -107,6 +107,16 @@
   font-weight: 800;
 }
 
+.feedbackError {
+  margin: 0;
+  border-radius: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  background: #fef2f2;
+  color: #b42318;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;
@@ -219,5 +229,32 @@
   .primaryButton,
   .secondaryButton {
     width: 100%;
+  }
+}
+
+@media print {
+  :global(body *) {
+    visibility: hidden !important;
+  }
+
+  .preview,
+  .previewNarrow,
+  .preview *,
+  .previewNarrow * {
+    visibility: visible !important;
+  }
+
+  .preview,
+  .previewNarrow {
+    position: fixed;
+    inset: 0 auto auto 0;
+    width: 80mm;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .previewNarrow {
+    width: 58mm;
   }
 }

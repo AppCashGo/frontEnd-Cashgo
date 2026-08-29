@@ -6,6 +6,7 @@ import type {
 } from '@/modules/settings/types/settings'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { formatCurrency } from '@/shared/utils/format-currency'
+import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './PrintSettingsPanel.module.css'
 
 type PrintSettings = {
@@ -53,7 +54,10 @@ export function PrintSettingsPanel({
   const [settings, setSettings] = useState<PrintSettings>(() =>
     buildPrintSettings(businessSettings),
   )
-  const [feedback, setFeedback] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<{
+    tone: 'success' | 'error'
+    text: string
+  } | null>(null)
   const sampleSubtotal = 42000
   const sampleTax =
     businessSettings && businessSettings.taxRate > 0
@@ -79,18 +83,33 @@ export function PrintSettingsPanel({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    await onSubmit({
-      printTicketWidth: settings.ticketWidth,
-      printShowLogo: settings.showLogo,
-      printShowTaxDetail: settings.showTaxDetail,
-      printFooterMessage:
-        settings.footerMessage.trim() || defaultPrintSettings.footerMessage,
-    })
-    setFeedback('Configuracion de impresion guardada.')
+    setFeedback(null)
+
+    try {
+      await onSubmit({
+        printTicketWidth: settings.ticketWidth,
+        printShowLogo: settings.showLogo,
+        printShowTaxDetail: settings.showTaxDetail,
+        printFooterMessage:
+          settings.footerMessage.trim() || defaultPrintSettings.footerMessage,
+      })
+      setFeedback({
+        tone: 'success',
+        text: 'Configuración de impresión guardada.',
+      })
+    } catch (error) {
+      setFeedback({
+        tone: 'error',
+        text: getErrorMessage(
+          error,
+          'No fue posible guardar la configuración de impresión.',
+        ),
+      })
+    }
   }
 
   function handlePrintTest() {
-    setFeedback('Ticket de prueba listo para imprimir.')
+    setFeedback({ tone: 'success', text: 'Ticket de prueba listo para imprimir.' })
     window.print()
   }
 
@@ -160,8 +179,15 @@ export function PrintSettingsPanel({
           </label>
 
           {feedback ? (
-            <p className={styles.feedback} role="status">
-              {feedback}
+            <p
+              className={
+                feedback.tone === 'error'
+                  ? styles.feedbackError
+                  : styles.feedback
+              }
+              role={feedback.tone === 'error' ? 'alert' : 'status'}
+            >
+              {feedback.text}
             </p>
           ) : null}
 

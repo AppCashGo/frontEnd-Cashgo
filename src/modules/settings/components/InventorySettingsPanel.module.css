@@ -53,6 +53,38 @@
 
 .notificationRowActive {
   border-color: #16a466;
+  background: #f7fdf9;
+}
+
+.numberField {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(192, 204, 218, 0.96);
+  border-radius: 0.75rem;
+}
+
+.numberField > span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.numberField input {
+  width: 6rem;
+  min-height: 2.7rem;
+  border: 1px solid #c0ccda;
+  border-radius: 0.6rem;
+  padding: 0 0.75rem;
+  color: #1f2a37;
+  font: inherit;
+  font-weight: 800;
+}
+
+.numberField input:focus-visible {
+  border-color: #1457d9;
+  outline: 3px solid rgba(20, 87, 217, 0.14);
 }
 
 .notificationIcon {
@@ -209,6 +241,15 @@
 
   .notificationRow {
     grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .numberField {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .numberField input {
+    width: 100%;
   }
 
   .toggleInput {

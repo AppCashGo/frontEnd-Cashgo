@@ -1,4 +1,10 @@
-import { Bell, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Bell,
+  Calculator,
+  ChevronDown,
+  ChevronUp,
+  PackageMinus,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import type {
   BusinessOperationalSettingsInput,
@@ -17,15 +23,9 @@ type InventorySettingsPanelProps = {
 };
 
 function buildOperationalSettingsInput(
-  businessSettings: BusinessSettings,
-  lowStockAlertsEnabled: boolean,
+  values: BusinessOperationalSettingsInput,
 ): BusinessOperationalSettingsInput {
-  return {
-    allowSaleWithoutStock: businessSettings.allowSaleWithoutStock,
-    lowStockAlertsEnabled,
-    defaultLowStockThreshold: businessSettings.defaultLowStockThreshold,
-    useWeightedAverageCost: businessSettings.useWeightedAverageCost,
-  };
+  return values;
 }
 
 export function InventorySettingsPanel({
@@ -40,16 +40,36 @@ export function InventorySettingsPanel({
   const [lowStockAlertsEnabled, setLowStockAlertsEnabled] = useState(
     businessSettings?.lowStockAlertsEnabled ?? true,
   );
+  const [allowSaleWithoutStock, setAllowSaleWithoutStock] = useState(
+    businessSettings?.allowSaleWithoutStock ?? false,
+  );
+  const [defaultLowStockThreshold, setDefaultLowStockThreshold] = useState(
+    businessSettings?.defaultLowStockThreshold ?? 5,
+  );
+  const [useWeightedAverageCost, setUseWeightedAverageCost] = useState(
+    businessSettings?.useWeightedAverageCost ?? true,
+  );
   const toast = useToast();
 
   useEffect(() => {
     setLowStockAlertsEnabled(businessSettings?.lowStockAlertsEnabled ?? true);
+    setAllowSaleWithoutStock(businessSettings?.allowSaleWithoutStock ?? false);
+    setDefaultLowStockThreshold(
+      businessSettings?.defaultLowStockThreshold ?? 5,
+    );
+    setUseWeightedAverageCost(
+      businessSettings?.useWeightedAverageCost ?? true,
+    );
   }, [businessSettings]);
 
   const isDisabled = isLoading || isSubmitting || !businessSettings;
   const isDirty =
     Boolean(businessSettings) &&
-    lowStockAlertsEnabled !== businessSettings?.lowStockAlertsEnabled;
+    (lowStockAlertsEnabled !== businessSettings?.lowStockAlertsEnabled ||
+      allowSaleWithoutStock !== businessSettings?.allowSaleWithoutStock ||
+      defaultLowStockThreshold !==
+        businessSettings?.defaultLowStockThreshold ||
+      useWeightedAverageCost !== businessSettings?.useWeightedAverageCost);
   const canSave = isDirty && !isDisabled && !errorMessage;
 
   async function handleSave() {
@@ -59,7 +79,12 @@ export function InventorySettingsPanel({
 
     try {
       await onSubmit(
-        buildOperationalSettingsInput(businessSettings, lowStockAlertsEnabled),
+        buildOperationalSettingsInput({
+          allowSaleWithoutStock,
+          lowStockAlertsEnabled,
+          defaultLowStockThreshold,
+          useWeightedAverageCost,
+        }),
       );
       toast.showSuccess("Configuración de inventario actualizada.");
     } catch (error) {
@@ -68,10 +93,6 @@ export function InventorySettingsPanel({
         "No fue posible guardar la configuración de inventario.",
       );
     }
-  }
-
-  function handleToggle(nextValue: boolean) {
-    setLowStockAlertsEnabled(nextValue);
   }
 
   return (
@@ -127,7 +148,91 @@ export function InventorySettingsPanel({
               className={styles.toggleInput}
               disabled={isDisabled || Boolean(errorMessage)}
               type="checkbox"
-              onChange={(event) => handleToggle(event.target.checked)}
+              onChange={(event) =>
+                setLowStockAlertsEnabled(event.target.checked)
+              }
+            />
+          </label>
+
+          <label className={styles.numberField}>
+            <span>
+              <span className={styles.notificationTitle}>
+                Mínimo predeterminado
+              </span>
+              <span className={styles.notificationDescription}>
+                Se usará al crear productos nuevos; puedes ajustarlo por producto.
+              </span>
+            </span>
+            <input
+              aria-label="Mínimo predeterminado de inventario"
+              disabled={isDisabled || Boolean(errorMessage)}
+              min={0}
+              step={1}
+              type="number"
+              value={defaultLowStockThreshold}
+              onChange={(event) =>
+                setDefaultLowStockThreshold(
+                  Math.max(0, Math.trunc(Number(event.target.value) || 0)),
+                )
+              }
+            />
+          </label>
+
+          <label
+            className={
+              allowSaleWithoutStock
+                ? `${styles.notificationRow} ${styles.notificationRowActive}`
+                : styles.notificationRow
+            }
+          >
+            <span className={styles.notificationIcon}>
+              <PackageMinus aria-hidden="true" />
+            </span>
+            <span className={styles.notificationCopy}>
+              <span className={styles.notificationTitle}>
+                Permitir ventas sin existencias
+              </span>
+              <span className={styles.notificationDescription}>
+                Autoriza inventario negativo cuando no haya unidades disponibles.
+              </span>
+            </span>
+            <input
+              checked={allowSaleWithoutStock}
+              className={styles.toggleInput}
+              disabled={isDisabled || Boolean(errorMessage)}
+              type="checkbox"
+              onChange={(event) =>
+                setAllowSaleWithoutStock(event.target.checked)
+              }
+            />
+          </label>
+
+          <label
+            className={
+              useWeightedAverageCost
+                ? `${styles.notificationRow} ${styles.notificationRowActive}`
+                : styles.notificationRow
+            }
+          >
+            <span className={styles.notificationIcon}>
+              <Calculator aria-hidden="true" />
+            </span>
+            <span className={styles.notificationCopy}>
+              <span className={styles.notificationTitle}>
+                Costo promedio ponderado
+              </span>
+              <span className={styles.notificationDescription}>
+                Recalcula el costo unitario al registrar nuevas compras.
+              </span>
+            </span>
+            <input
+              checked={useWeightedAverageCost}
+              className={styles.toggleInput}
+              disabled={isDisabled || Boolean(errorMessage)}
+              type="checkbox"
+              onChange={(event) =>
+                setUseWeightedAverageCost(event.target.checked)
+              }
             />
           </label>
 

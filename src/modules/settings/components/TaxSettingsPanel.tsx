@@ -164,6 +164,7 @@ function RetailTaxSettingsPanel({
   const [baseTaxOptionId, setBaseTaxOptionId] = useState<TaxOptionId | ''>('')
   const [searchTerm, setSearchTerm] = useState('')
   const [categoryId, setCategoryId] = useState<string | null>(null)
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc')
   const [feedbackMessage, setFeedbackMessage] =
     useState<TaxFeedbackMessage | null>(null)
 
@@ -186,10 +187,12 @@ function RetailTaxSettingsPanel({
     return products
       .filter((product) => matchesProductSearch(product, normalizedSearchTerm))
       .filter((product) => (categoryId ? product.categoryId === categoryId : true))
-      .sort((firstProduct, secondProduct) =>
-        firstProduct.name.localeCompare(secondProduct.name),
-      )
-  }, [categoryId, products, searchTerm])
+      .sort((firstProduct, secondProduct) => {
+        const comparison = firstProduct.name.localeCompare(secondProduct.name)
+
+        return sortDirection === 'asc' ? comparison : -comparison
+      })
+  }, [categoryId, products, searchTerm, sortDirection])
 
   const selectedProductsLabel = hasSelectedProducts
     ? `${selectedProductIds.length.toString()} ${
@@ -496,9 +499,19 @@ function RetailTaxSettingsPanel({
 
           <section className={styles.selectorFilters}>
             <button
-              aria-label="Ordenar productos"
+              aria-label={`Ordenar productos ${
+                sortDirection === 'asc' ? 'de Z a A' : 'de A a Z'
+              }`}
               className={styles.sortButton}
+              title={`Orden actual: ${
+                sortDirection === 'asc' ? 'A a Z' : 'Z a A'
+              }`}
               type="button"
+              onClick={() =>
+                setSortDirection((currentDirection) =>
+                  currentDirection === 'asc' ? 'desc' : 'asc',
+                )
+              }
             >
               <SlidersVertical aria-hidden="true" />
             </button>
