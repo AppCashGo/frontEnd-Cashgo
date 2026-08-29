@@ -1,4 +1,12 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Layers3,
+  Plus,
+  RefreshCw,
+  TrendingDown,
+} from 'lucide-react'
 import { ExpenseCategoriesPanel } from '@/modules/expenses/components/ExpenseCategoriesPanel'
 import { ExpenseFormPanel } from '@/modules/expenses/components/ExpenseFormPanel'
 import { ExpensesFiltersBar } from '@/modules/expenses/components/ExpensesFiltersBar'
@@ -22,7 +30,6 @@ import {
   formatExpenseCurrency,
   toExpenseDateInputValue,
 } from '@/modules/expenses/utils/format-expense'
-import { MetricCard } from '@/shared/components/ui/MetricCard'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './ExpensesPage.module.css'
@@ -74,6 +81,8 @@ export function ExpensesPage() {
   const [selectedExpenseId, setSelectedExpenseId] = useState<string | null>(
     null,
   )
+  const [isExpenseDrawerOpen, setIsExpenseDrawerOpen] = useState(false)
+  const [isCategoriesDrawerOpen, setIsCategoriesDrawerOpen] = useState(false)
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const expensesQuery = useExpensesQuery()
   const categoriesQuery = useExpenseCategoriesQuery()
@@ -160,14 +169,17 @@ export function ExpensesPage() {
   }
 
   async function handleExpenseSubmit(input: ExpenseMutationInput) {
-    const savedExpense = selectedExpense
-      ? await updateExpenseMutation.mutateAsync({
+    if (selectedExpense) {
+      await updateExpenseMutation.mutateAsync({
           expenseId: selectedExpense.id,
           input,
         })
-      : await createExpenseMutation.mutateAsync(input)
+    } else {
+      await createExpenseMutation.mutateAsync(input)
+    }
 
-    setSelectedExpenseId(savedExpense.id)
+    setIsExpenseDrawerOpen(false)
+    setSelectedExpenseId(null)
   }
 
   async function handleDeleteExpense(expense: Expense) {
@@ -189,6 +201,22 @@ export function ExpensesPage() {
     }
   }
 
+  async function handleMarkExpensePaid(expense: Expense) {
+    await updateExpenseMutation.mutateAsync({
+      expenseId: expense.id,
+      input: {
+        concept: expense.concept,
+        categoryId: expense.categoryId,
+        supplierId: expense.supplierId,
+        amount: expense.amount,
+        paymentMethod: expense.paymentMethod,
+        status: 'PAID',
+        expenseDate: expense.expenseDate,
+        notes: expense.notes,
+      },
+    })
+  }
+
   async function handleCreateCategory(input: ExpenseCategoryInput) {
     await createCategoryMutation.mutateAsync(input)
   }
@@ -201,68 +229,108 @@ export function ExpensesPage() {
     setToDate('')
   }
 
+  function handleStartCreate() {
+    setSelectedExpenseId(null)
+    setIsExpenseDrawerOpen(true)
+  }
+
+  function handleSelectExpense(expenseId: string) {
+    setSelectedExpenseId(expenseId)
+    setIsExpenseDrawerOpen(true)
+  }
+
   return (
     <>
       {confirmationDialog}
       <div className={styles.page}>
         <section className={styles.hero}>
           <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>Gastos</p>
-            <h2 className={styles.title}>
-              Controla y clasifica cada salida de dinero en una sola vista.
-            </h2>
+            <h1 className={styles.title}>Gastos</h1>
             <p className={styles.description}>
-              Registra egresos, sepáralos por categoría, detecta pendientes y
-              deja lista la base para reportes y flujo de caja diario.
+              Controla y clasifica cada salida de dinero en una sola vista.
             </p>
           </div>
 
           <div className={styles.heroActions}>
             <button
-              className={styles.heroButton}
+              className={styles.secondaryButton}
               type="button"
               onClick={() => void handleRefresh()}
             >
+              <RefreshCw aria-hidden="true" size={17} />
               Actualizar
             </button>
             <button
-              className={styles.heroGhostButton}
+              className={styles.primaryButton}
               type="button"
-              onClick={() => setSelectedExpenseId(null)}
+              onClick={handleStartCreate}
             >
+              <Plus aria-hidden="true" size={18} />
               Nuevo gasto
             </button>
           </div>
         </section>
 
         <div className={styles.metricsGrid}>
-          <MetricCard
-            hint="Suma total de los gastos visibles con los filtros actuales."
-            label="Salida total"
-            tone="alert"
-            value={formatExpenseCurrency(totalExpenses)}
-          />
-          <MetricCard
-            hint="Gastos ya pagados y listos para reflejar operación o caja."
-            label="Pagados"
-            tone="success"
-            value={formatExpenseCurrency(totalPaid)}
-          />
-          <MetricCard
-            hint="Compromisos pendientes por desembolsar o cerrar."
-            label="Pendientes"
-            tone={totalPending > 0 ? 'accent' : 'default'}
-            value={formatExpenseCurrency(totalPending)}
-          />
-          <MetricCard
-            label="Categorías en uso"
-            value={categoriesInView.toString()}
-            hint={
-              categoriesInView > 0
-                ? `${visibleExpenses.length.toString()} movimientos visibles en este momento.`
-                : 'Crea categorías para leer mejor tus egresos.'
-            }
-          />
+          <article className={styles.metricCard}>
+            <div className={styles.metricHeader}>
+              <span>Salida total (mes)</span>
+              <TrendingDown className={styles.metricIconDanger} size={34} />
+            </div>
+            <strong className={styles.metricValue}>
+              {formatExpenseCurrency(totalExpenses)}
+            </strong>
+            <p className={styles.metricHint}>Según los filtros seleccionados</p>
+          </article>
+
+          <article className={styles.metricCard}>
+            <div className={styles.metricHeader}>
+              <span>Pagados</span>
+              <CheckCircle2 className={styles.metricIconPaid} size={23} />
+            </div>
+            <strong className={styles.metricValueSmall}>
+              {formatExpenseCurrency(totalPaid)}
+            </strong>
+            <div className={styles.progressTrack}>
+              <span
+                className={styles.progressPaid}
+                style={{
+                  width: `${totalExpenses > 0 ? Math.min(100, (totalPaid / totalExpenses) * 100) : 0}%`,
+                }}
+              />
+            </div>
+          </article>
+
+          <article className={styles.metricCard}>
+            <div className={styles.metricHeader}>
+              <span>Pendientes</span>
+              <AlertTriangle className={styles.metricIconPending} size={23} />
+            </div>
+            <strong className={styles.metricValueSmallDanger}>
+              {formatExpenseCurrency(totalPending)}
+            </strong>
+            <div className={styles.progressTrack}>
+              <span
+                className={styles.progressPending}
+                style={{
+                  width: `${totalExpenses > 0 ? Math.min(100, (totalPending / totalExpenses) * 100) : 0}%`,
+                }}
+              />
+            </div>
+          </article>
+
+          <button
+            className={styles.metricCardButton}
+            type="button"
+            onClick={() => setIsCategoriesDrawerOpen(true)}
+          >
+            <div className={styles.metricHeader}>
+              <span>Categorías en uso</span>
+              <Layers3 className={styles.metricIconCategories} size={24} />
+            </div>
+            <strong className={styles.metricValue}>{categoriesInView}</strong>
+            <p className={styles.metricHint}>Administrar categorías</p>
+          </button>
         </div>
 
         <ExpensesFiltersBar
@@ -289,50 +357,52 @@ export function ExpensesPage() {
           </div>
         ) : null}
 
-        <div className={styles.workspace}>
-          <div className={styles.primaryColumn}>
-            <ExpensesTable
-              errorMessage={
-                expensesQuery.isError
-                  ? getErrorMessage(
-                      expensesQuery.error,
-                      'No pudimos cargar los gastos del negocio activo.',
-                    )
-                  : null
-              }
-              expenses={visibleExpenses}
-              isLoading={expensesQuery.isLoading}
-              isRefreshing={
-                expensesQuery.isFetching && !expensesQuery.isLoading
-              }
-              selectedExpenseId={selectedExpenseId}
-              onDeleteExpense={(expense) => {
-                void handleDeleteExpense(expense)
-              }}
-              onRetry={() => {
-                void expensesQuery.refetch()
-              }}
-              onSelectExpense={setSelectedExpenseId}
-            />
-          </div>
+        <ExpensesTable
+          errorMessage={
+            expensesQuery.isError
+              ? getErrorMessage(
+                  expensesQuery.error,
+                  'No pudimos cargar los gastos del negocio activo.',
+                )
+              : null
+          }
+          expenses={visibleExpenses}
+          isLoading={expensesQuery.isLoading}
+          isRefreshing={expensesQuery.isFetching && !expensesQuery.isLoading}
+          selectedExpenseId={selectedExpenseId}
+          onDeleteExpense={(expense) => {
+            void handleDeleteExpense(expense)
+          }}
+          onManageCategories={() => setIsCategoriesDrawerOpen(true)}
+          onMarkPaid={(expense) => {
+            void handleMarkExpensePaid(expense)
+          }}
+          onRetry={() => {
+            void expensesQuery.refetch()
+          }}
+          onSelectExpense={handleSelectExpense}
+        />
 
-          <div className={styles.secondaryColumn}>
-            <ExpenseFormPanel
-              categories={categories}
-              expense={selectedExpense}
-              isSubmitting={isSubmitting}
-              onStartCreate={() => setSelectedExpenseId(null)}
-              onSubmit={handleExpenseSubmit}
-            />
+        <ExpenseFormPanel
+          categories={categories}
+          expense={selectedExpense}
+          isOpen={isExpenseDrawerOpen}
+          isSubmitting={isSubmitting}
+          onClose={() => {
+            setIsExpenseDrawerOpen(false)
+            setSelectedExpenseId(null)
+          }}
+          onSubmit={handleExpenseSubmit}
+        />
 
-            <ExpenseCategoriesPanel
-              categories={categories}
-              expenses={expenses}
-              isSubmitting={createCategoryMutation.isPending}
-              onSubmit={handleCreateCategory}
-            />
-          </div>
-        </div>
+        <ExpenseCategoriesPanel
+          categories={categories}
+          expenses={expenses}
+          isOpen={isCategoriesDrawerOpen}
+          isSubmitting={createCategoryMutation.isPending}
+          onClose={() => setIsCategoriesDrawerOpen(false)}
+          onSubmit={handleCreateCategory}
+        />
       </div>
     </>
   )

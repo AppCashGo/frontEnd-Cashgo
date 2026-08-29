@@ -1,93 +1,111 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { zodResolver } from '@hookform/resolvers/zod'
+import {
+  Banknote,
+  Building2,
+  Check,
+  CreditCard,
+  Landmark,
+  Save,
+  Smartphone,
+} from 'lucide-react'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 import {
   expenseFormSchema,
   type ExpenseFormValues,
-} from "@/modules/expenses/schemas/expense-form-schema";
+} from '@/modules/expenses/schemas/expense-form-schema'
 import type {
   Expense,
   ExpenseCategory,
   ExpenseMutationInput,
-} from "@/modules/expenses/types/expense";
+  ExpensePaymentMethod,
+} from '@/modules/expenses/types/expense'
 import {
   toExpenseDateInputValue,
   toExpenseRequestDate,
-} from "@/modules/expenses/utils/format-expense";
-import { SurfaceCard } from "@/shared/components/ui/SurfaceCard";
-import { ApiError } from "@/shared/services/api-client";
-import styles from "./ExpenseFormPanel.module.css";
+} from '@/modules/expenses/utils/format-expense'
+import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { ApiError } from '@/shared/services/api-client'
+import { joinClassNames } from '@/shared/utils/join-class-names'
+import styles from './ExpenseFormPanel.module.css'
 
 type ExpenseFormPanelProps = {
-  categories: ExpenseCategory[];
-  expense: Expense | null;
-  isSubmitting: boolean;
-  onStartCreate: () => void;
-  onSubmit: (input: ExpenseMutationInput) => Promise<void>;
-};
+  categories: ExpenseCategory[]
+  expense: Expense | null
+  isOpen: boolean
+  isSubmitting: boolean
+  onClose: () => void
+  onSubmit: (input: ExpenseMutationInput) => Promise<void>
+}
+
+const paymentMethods: Array<{
+  icon: typeof Banknote
+  label: string
+  value: ExpensePaymentMethod
+}> = [
+  { icon: Banknote, label: 'Efectivo', value: 'CASH' },
+  { icon: CreditCard, label: 'Tarjeta', value: 'CARD' },
+  { icon: Landmark, label: 'Transf.', value: 'TRANSFER' },
+  { icon: Smartphone, label: 'Billetera', value: 'DIGITAL_WALLET' },
+  { icon: Building2, label: 'Depósito', value: 'BANK_DEPOSIT' },
+]
 
 function getDefaultValues(expense: Expense | null): ExpenseFormValues {
   return {
-    concept: expense?.concept ?? "",
-    categoryId: expense?.categoryId ?? "",
+    concept: expense?.concept ?? '',
+    categoryId: expense?.categoryId ?? '',
     amount: expense?.amount ?? 0,
-    paymentMethod: expense?.paymentMethod ?? "CASH",
-    status: expense?.status ?? "PAID",
+    paymentMethod: expense?.paymentMethod ?? 'CASH',
+    status: expense?.status ?? 'PAID',
     expenseDate: toExpenseDateInputValue(expense?.expenseDate ?? new Date()),
-    notes: expense?.notes ?? "",
-  };
+    notes: expense?.notes ?? '',
+  }
 }
 
 function normalizeOptionalValue(value: string | undefined) {
-  const trimmedValue = value?.trim();
-
-  return trimmedValue ? trimmedValue : undefined;
+  const trimmedValue = value?.trim()
+  return trimmedValue ? trimmedValue : undefined
 }
 
 function normalizeOptionalRelationId(value: string | undefined) {
-  const trimmedValue = value?.trim();
-
-  return trimmedValue ? trimmedValue : null;
+  const trimmedValue = value?.trim()
+  return trimmedValue ? trimmedValue : null
 }
 
 function getErrorMessage(error: unknown) {
-  if (error instanceof ApiError) {
-    return error.message;
-  }
-
-  if (error instanceof Error && error.message) {
-    return error.message;
-  }
-
-  return "No pudimos guardar el gasto en este momento.";
+  if (error instanceof ApiError) return error.message
+  if (error instanceof Error && error.message) return error.message
+  return 'No pudimos guardar el gasto en este momento.'
 }
 
 export function ExpenseFormPanel({
   categories,
   expense,
+  isOpen,
   isSubmitting,
-  onStartCreate,
+  onClose,
   onSubmit,
 }: ExpenseFormPanelProps) {
-  const isEditing = expense !== null;
+  const isEditing = expense !== null
   const {
     register,
     handleSubmit,
     reset,
     setError,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<ExpenseFormValues>({
     resolver: zodResolver(expenseFormSchema),
     defaultValues: getDefaultValues(expense),
-  });
+  })
 
-  const selectedStatus = watch("status");
-  const selectedPaymentMethod = watch("paymentMethod");
+  const selectedStatus = watch('status')
+  const selectedPaymentMethod = watch('paymentMethod')
 
   useEffect(() => {
-    reset(getDefaultValues(expense));
-  }, [expense, reset]);
+    reset(getDefaultValues(expense))
+  }, [expense, isOpen, reset])
 
   const submitExpense = handleSubmit(async (values) => {
     try {
@@ -99,111 +117,76 @@ export function ExpenseFormPanel({
         status: values.status,
         expenseDate: toExpenseRequestDate(values.expenseDate),
         notes: normalizeOptionalValue(values.notes) ?? null,
-      });
-
-      if (!isEditing) {
-        reset(getDefaultValues(null));
-      }
+      })
     } catch (error) {
-      setError("root", {
-        message: getErrorMessage(error),
-      });
+      setError('root', { message: getErrorMessage(error) })
     }
-  });
+  })
+
+  const isPaid = selectedStatus === 'PAID'
 
   return (
-    <SurfaceCard className={styles.card}>
-      <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>
-            {isEditing ? "Editar gasto" : "Nuevo gasto"}
-          </p>
-          <h3 className={styles.title}>
-            {isEditing ? expense.concept : "Registra un nuevo egreso"}
-          </h3>
-          <p className={styles.description}>
-            Guarda concepto, categoría, método de pago y estado para mantener
-            caja, reportes y clasificación financiera alineados.
-          </p>
+    <SideDrawer
+      bodyClassName={styles.drawerBody}
+      closeButtonClassName={styles.closeButton}
+      closeLabel="Cerrar formulario de gasto"
+      description={isEditing ? 'Actualiza la información del egreso.' : 'Registra un egreso de caja.'}
+      footer={
+        <div className={styles.footer}>
+          <button
+            className={styles.cancelButton}
+            disabled={isSubmitting}
+            type="button"
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+          <button
+            className={styles.primaryButton}
+            disabled={isSubmitting}
+            form="expense-drawer-form"
+            type="submit"
+          >
+            <Save aria-hidden="true" size={16} />
+            {isSubmitting
+              ? 'Guardando...'
+              : isEditing
+                ? 'Guardar cambios'
+                : 'Crear gasto'}
+          </button>
         </div>
-
-        <button
-          className={styles.secondaryButton}
-          type="button"
-          onClick={onStartCreate}
-        >
-          {isEditing ? "Crear otro" : "Limpiar"}
-        </button>
-      </div>
-
-      <form className={styles.form} noValidate onSubmit={submitExpense}>
-        <label className={styles.field}>
-          <span className={styles.label}>Concepto</span>
-          <input
-            aria-invalid={Boolean(errors.concept)}
-            className={styles.input}
-            placeholder="Arriendo del local"
-            type="text"
-            {...register("concept")}
-          />
-          {errors.concept ? (
-            <p className={styles.errorMessage}>{errors.concept.message}</p>
-          ) : null}
-        </label>
-
-        <div className={styles.inlineFields}>
-          <label className={styles.field}>
-            <span className={styles.label}>Categoría</span>
-            <select className={styles.select} {...register("categoryId")}>
-              <option value="">Sin categoría</option>
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <label className={styles.field}>
-            <span className={styles.label}>Valor</span>
+      }
+      isCloseDisabled={isSubmitting}
+      isOpen={isOpen}
+      panelClassName={styles.drawer}
+      title={isEditing ? 'Editar gasto' : 'Nuevo gasto'}
+      onClose={onClose}
+    >
+      <form
+        className={styles.form}
+        id="expense-drawer-form"
+        noValidate
+        onSubmit={submitExpense}
+      >
+        <label className={styles.amountCard}>
+          <span className={styles.amountLabel}>Valor del gasto</span>
+          <span className={styles.amountControl}>
+            <span aria-hidden="true">$</span>
             <input
               aria-invalid={Boolean(errors.amount)}
-              className={styles.input}
               inputMode="decimal"
               min="0.01"
+              placeholder="0"
               step="0.01"
               type="number"
-              {...register("amount")}
+              {...register('amount')}
             />
-            {errors.amount ? (
-              <p className={styles.errorMessage}>{errors.amount.message}</p>
-            ) : null}
-          </label>
-        </div>
-
-        <div className={styles.inlineFields}>
-          <label className={styles.field}>
-            <span className={styles.label}>Método de pago</span>
-            <select className={styles.select} {...register("paymentMethod")}>
-              <option value="CASH">Efectivo</option>
-              <option value="CARD">Tarjeta</option>
-              <option value="TRANSFER">Transferencia</option>
-              <option value="DIGITAL_WALLET">Billetera digital</option>
-              <option value="BANK_DEPOSIT">Consignación</option>
-              <option value="CREDIT">Crédito</option>
-              <option value="OTHER">Otro</option>
-            </select>
-          </label>
-
-          <label className={styles.field}>
-            <span className={styles.label}>Estado</span>
-            <select className={styles.select} {...register("status")}>
-              <option value="PAID">Pagado</option>
-              <option value="PENDING">Pendiente</option>
-              <option value="CANCELLED">Cancelado</option>
-            </select>
-          </label>
-        </div>
+          </span>
+          <span className={styles.currencyLabel}>COP (Pesos Colombianos)</span>
+          {errors.amount ? (
+            <span className={styles.errorMessage}>{errors.amount.message}</span>
+          ) : null}
+        </label>
 
         <label className={styles.field}>
           <span className={styles.label}>Fecha del gasto</span>
@@ -211,30 +194,96 @@ export function ExpenseFormPanel({
             aria-invalid={Boolean(errors.expenseDate)}
             className={styles.input}
             type="date"
-            {...register("expenseDate")}
+            {...register('expenseDate')}
           />
           {errors.expenseDate ? (
-            <p className={styles.errorMessage}>{errors.expenseDate.message}</p>
+            <span className={styles.errorMessage}>{errors.expenseDate.message}</span>
           ) : null}
         </label>
 
         <label className={styles.field}>
-          <span className={styles.label}>Notas</span>
+          <span className={styles.label}>Concepto / notas</span>
           <textarea
+            aria-invalid={Boolean(errors.concept)}
             className={styles.textarea}
-            placeholder="Detalle adicional para auditoría, proveedor o contexto del pago."
-            rows={4}
-            {...register("notes")}
+            placeholder="Ej. Compra de papelería para la oficina..."
+            rows={3}
+            {...register('concept')}
           />
-          {errors.notes ? (
-            <p className={styles.errorMessage}>{errors.notes.message}</p>
+          {errors.concept ? (
+            <span className={styles.errorMessage}>{errors.concept.message}</span>
           ) : null}
         </label>
 
-        {selectedStatus === "PAID" && selectedPaymentMethod === "CASH" ? (
+        <input type="hidden" {...register('notes')} />
+
+        <label className={styles.field}>
+          <span className={styles.label}>Categoría</span>
+          <select className={styles.select} {...register('categoryId')}>
+            <option value="">Selecciona una categoría</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <fieldset className={styles.paymentFieldset}>
+          <legend className={styles.label}>Método de pago</legend>
+          <input type="hidden" {...register('paymentMethod')} />
+          <div className={styles.paymentGrid}>
+            {paymentMethods.map(({ icon: Icon, label, value }) => (
+              <button
+                key={value}
+                aria-pressed={selectedPaymentMethod === value}
+                className={joinClassNames(
+                  styles.paymentButton,
+                  selectedPaymentMethod === value && styles.paymentButtonActive,
+                )}
+                type="button"
+                onClick={() => setValue('paymentMethod', value, { shouldDirty: true })}
+              >
+                <Icon aria-hidden="true" size={21} />
+                <span>{label}</span>
+              </button>
+            ))}
+          </div>
+        </fieldset>
+
+        <div className={styles.statusCard}>
+          <span className={styles.label}>Estado del gasto</span>
+          <input type="hidden" {...register('status')} />
+          <button
+            aria-pressed={isPaid}
+            className={styles.statusToggle}
+            type="button"
+            onClick={() =>
+              setValue('status', isPaid ? 'PENDING' : 'PAID', {
+                shouldDirty: true,
+              })
+            }
+          >
+            <span className={styles.statusIcon}>
+              {isPaid ? <Check aria-hidden="true" size={15} /> : null}
+            </span>
+            <span className={styles.statusCopy}>
+              <strong>{isPaid ? 'Pagado' : 'Pendiente'}</strong>
+              <small>
+                {isPaid
+                  ? 'El dinero ya salió de la caja.'
+                  : 'El pago todavía está por realizarse.'}
+              </small>
+            </span>
+            <span className={joinClassNames(styles.switch, isPaid && styles.switchActive)}>
+              <span />
+            </span>
+          </button>
+        </div>
+
+        {isPaid && selectedPaymentMethod === 'CASH' ? (
           <div className={styles.helperBanner}>
-            Si hay una caja abierta, este gasto impactará automáticamente el
-            arqueo diario.
+            Si hay una caja abierta, este gasto impactará automáticamente el arqueo diario.
           </div>
         ) : null}
 
@@ -243,28 +292,7 @@ export function ExpenseFormPanel({
             {errors.root.message}
           </div>
         ) : null}
-
-        <div className={styles.footer}>
-          <p className={styles.helperText}>
-            Usa categorías claras para que reportes y flujo de caja sean más
-            útiles después.
-          </p>
-
-          <button
-            className={styles.primaryButton}
-            disabled={isSubmitting}
-            type="submit"
-          >
-            {isSubmitting
-              ? isEditing
-                ? "Guardando..."
-                : "Creando..."
-              : isEditing
-                ? "Guardar cambios"
-                : "Crear gasto"}
-          </button>
-        </div>
       </form>
-    </SurfaceCard>
-  );
+    </SideDrawer>
+  )
 }

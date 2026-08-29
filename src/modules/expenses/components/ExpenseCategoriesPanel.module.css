@@ -1,3 +1,18 @@
+.drawer {
+  width: min(100vw, 29rem);
+}
+
+.drawerBody {
+  padding: 1.1rem 1.5rem 1.5rem;
+  border-top: 1px solid #e1e6ef;
+}
+
+.closeButton {
+  background: transparent;
+  color: #5f697b;
+  font-size: 1.55rem;
+}
+
 .card {
   display: grid;
   gap: 1rem;
@@ -140,7 +155,7 @@
 
 .primaryButton {
   border: none;
-  background: #232838;
+  background: #075acb;
   color: #ffffff;
   border-radius: 999px;
   padding: 0.78rem 1.05rem;
@@ -159,4 +174,8 @@
     grid-template-columns: minmax(0, 1fr) 8.5rem;
     align-items: end;
   }
+}
+
+@media (max-width: 640px) {
+  .drawerBody { padding: 1rem; }
 }

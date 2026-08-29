@@ -1,4 +1,5 @@
 import type { Expense } from '@/modules/expenses/types/expense'
+import { MoreVertical } from 'lucide-react'
 import {
   formatExpenseCurrency,
   formatExpenseDate,
@@ -17,6 +18,8 @@ type ExpensesTableProps = {
   isRefreshing: boolean
   selectedExpenseId: string | null
   onDeleteExpense: (expense: Expense) => void
+  onManageCategories: () => void
+  onMarkPaid: (expense: Expense) => void
   onRetry: () => void
   onSelectExpense: (expenseId: string) => void
 }
@@ -40,28 +43,29 @@ export function ExpensesTable({
   isRefreshing,
   selectedExpenseId,
   onDeleteExpense,
+  onManageCategories,
+  onMarkPaid,
   onRetry,
   onSelectExpense,
 }: ExpensesTableProps) {
   return (
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Movimientos de salida</p>
-          <h3 className={styles.title}>Gastos registrados</h3>
-          <p className={styles.description}>
-            Selecciona un gasto para editarlo, revisar cómo fue pagado o
-            depurar registros manuales.
-          </p>
-        </div>
+        <h3 className={styles.title}>Gastos registrados</h3>
 
         <div className={styles.headerMeta}>
-          <span className={styles.countBadge}>
-            {expenses.length.toString()} registros
-          </span>
           {isRefreshing ? (
             <span className={styles.refreshingLabel}>Actualizando...</span>
           ) : null}
+          <button
+            aria-label="Administrar categorías de gastos"
+            className={styles.menuButton}
+            title="Administrar categorías"
+            type="button"
+            onClick={onManageCategories}
+          >
+            <MoreVertical aria-hidden="true" size={21} />
+          </button>
         </div>
       </div>
 
@@ -99,44 +103,67 @@ export function ExpensesTable({
         <>
           <div className={styles.mobileList}>
             {expenses.map((expense) => (
-              <button
+              <article
                 key={expense.id}
                 className={joinClassNames(
                   styles.mobileItem,
                   selectedExpenseId === expense.id && styles.mobileItemSelected,
                 )}
-                type="button"
-                onClick={() => onSelectExpense(expense.id)}
               >
-                <div className={styles.mobileRow}>
-                  <div>
-                    <p className={styles.mobileConcept}>{expense.concept}</p>
-                    <p className={styles.mobileMeta}>
-                      {expense.category?.name ?? 'Sin categoría'} ·{' '}
-                      {getExpensePaymentMethodLabel(expense.paymentMethod)}
+                <button
+                  className={styles.mobileSelectButton}
+                  type="button"
+                  onClick={() => onSelectExpense(expense.id)}
+                >
+                  <div className={styles.mobileRow}>
+                    <div>
+                      <p className={styles.mobileConcept}>{expense.concept}</p>
+                      <p className={styles.mobileMeta}>
+                        {expense.category?.name ?? 'Sin categoría'} ·{' '}
+                        {getExpensePaymentMethodLabel(expense.paymentMethod)}
+                      </p>
+                    </div>
+
+                    <p className={styles.mobileAmount}>
+                      {formatExpenseCurrency(expense.amount)}
                     </p>
                   </div>
 
-                  <p className={styles.mobileAmount}>
-                    {formatExpenseCurrency(expense.amount)}
-                  </p>
-                </div>
+                  <div className={styles.mobileRow}>
+                    <span
+                      className={joinClassNames(
+                        styles.statusBadge,
+                        getStatusClass(expense.status),
+                      )}
+                    >
+                      {getExpenseStatusLabel(expense.status)}
+                    </span>
 
-                <div className={styles.mobileRow}>
-                  <span
-                    className={joinClassNames(
-                      styles.statusBadge,
-                      getStatusClass(expense.status),
-                    )}
+                    <span className={styles.mobileDate}>
+                      {formatExpenseDate(expense.expenseDate)}
+                    </span>
+                  </div>
+                </button>
+
+                <div className={styles.mobileActions}>
+                  {expense.status === 'PENDING' ? (
+                    <button
+                      className={styles.payButton}
+                      type="button"
+                      onClick={() => onMarkPaid(expense)}
+                    >
+                      Pagar
+                    </button>
+                  ) : null}
+                  <button
+                    className={styles.cancelLink}
+                    type="button"
+                    onClick={() => onDeleteExpense(expense)}
                   >
-                    {getExpenseStatusLabel(expense.status)}
-                  </span>
-
-                  <span className={styles.mobileDate}>
-                    {formatExpenseDate(expense.expenseDate)}
-                  </span>
+                    Cancelar registro
+                  </button>
                 </div>
-              </button>
+              </article>
             ))}
           </div>
 
@@ -148,9 +175,9 @@ export function ExpensesTable({
                   <th>Categoría</th>
                   <th>Valor</th>
                   <th>Método</th>
-                  <th>Fecha</th>
                   <th>Estado</th>
-                  <th aria-label="Acciones" />
+                  <th>Fecha</th>
+                  <th>Acción</th>
                 </tr>
               </thead>
               <tbody>
@@ -171,7 +198,9 @@ export function ExpensesTable({
                         <div className={styles.conceptCell}>
                           <p className={styles.concept}>{expense.concept}</p>
                           <p className={styles.meta}>
-                            Creado {formatExpenseDateTime(expense.createdAt)}
+                            {expense.supplier?.name ??
+                              expense.notes ??
+                              `Creado ${formatExpenseDateTime(expense.createdAt)}`}
                           </p>
                         </div>
                       </button>
@@ -185,7 +214,6 @@ export function ExpensesTable({
                       {formatExpenseCurrency(expense.amount)}
                     </td>
                     <td>{getExpensePaymentMethodLabel(expense.paymentMethod)}</td>
-                    <td>{formatExpenseDate(expense.expenseDate)}</td>
                     <td>
                       <span
                         className={joinClassNames(
@@ -196,22 +224,50 @@ export function ExpensesTable({
                         {getExpenseStatusLabel(expense.status)}
                       </span>
                     </td>
+                    <td>{formatExpenseDate(expense.expenseDate)}</td>
                     <td>
-                      <button
-                        className={styles.deleteButton}
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          onDeleteExpense(expense)
-                        }}
-                      >
-                        Eliminar
-                      </button>
+                      <div className={styles.rowActions}>
+                        {expense.status === 'PENDING' ? (
+                          <button
+                            className={styles.payButton}
+                            type="button"
+                            onClick={() => onMarkPaid(expense)}
+                          >
+                            Pagar
+                          </button>
+                        ) : (
+                          <button
+                            className={styles.editButton}
+                            type="button"
+                            onClick={() => onSelectExpense(expense.id)}
+                          >
+                            Editar
+                          </button>
+                        )}
+                        <button
+                          aria-label={`Cancelar ${expense.concept}`}
+                          className={styles.deleteButton}
+                          title="Cancelar registro"
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onDeleteExpense(expense)
+                          }}
+                        >
+                          &times;
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+          </div>
+          <div className={styles.tableFooter}>
+            <span>
+              Mostrando {expenses.length > 0 ? '1' : '0'} - {expenses.length} de{' '}
+              {expenses.length} gastos
+            </span>
           </div>
         </>
       ) : null}

@@ -2,6 +2,7 @@ import type {
   ExpenseCategory,
   ExpenseStatus,
 } from '@/modules/expenses/types/expense'
+import { ListFilter, Search, X } from 'lucide-react'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import styles from './ExpensesFiltersBar.module.css'
 
@@ -34,29 +35,24 @@ export function ExpensesFiltersBar({
   onStatusChange,
   onToDateChange,
 }: ExpensesFiltersBarProps) {
+  const hasActiveFilters = Boolean(
+    searchValue || selectedStatus !== 'ALL' || selectedCategoryId || fromDate || toDate,
+  )
+
   return (
     <SurfaceCard className={styles.card}>
-      <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Filtros rápidos</p>
-          <h3 className={styles.title}>Busca por concepto, estado o fecha</h3>
-        </div>
-
-        <button className={styles.resetButton} type="button" onClick={onReset}>
-          Limpiar
-        </button>
-      </div>
-
       <div className={styles.grid}>
         <label className={styles.field}>
-          <span className={styles.label}>Concepto</span>
-          <input
-            className={styles.input}
-            placeholder="Buscar arriendo, transporte, servicios..."
-            type="search"
-            value={searchValue}
-            onChange={(event) => onSearchChange(event.target.value)}
-          />
+          <span className={styles.label}>Buscar gasto</span>
+          <span className={styles.inputWithIcon}>
+            <Search aria-hidden="true" size={18} />
+            <input
+              placeholder="Concepto, proveedor..."
+              type="search"
+              value={searchValue}
+              onChange={(event) => onSearchChange(event.target.value)}
+            />
+          </span>
         </label>
 
         <label className={styles.field}>
@@ -82,7 +78,7 @@ export function ExpensesFiltersBar({
             value={selectedCategoryId}
             onChange={(event) => onCategoryChange(event.target.value)}
           >
-            <option value="">Todas las categorías</option>
+            <option value="">Todas</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
@@ -110,6 +106,16 @@ export function ExpensesFiltersBar({
             onChange={(event) => onToDateChange(event.target.value)}
           />
         </label>
+
+        <button
+          className={styles.filterButton}
+          disabled={!hasActiveFilters}
+          type="button"
+          onClick={onReset}
+        >
+          {hasActiveFilters ? <X aria-hidden="true" size={17} /> : <ListFilter aria-hidden="true" size={17} />}
+          {hasActiveFilters ? 'Limpiar' : 'Filtrar'}
+        </button>
       </div>
     </SurfaceCard>
   )

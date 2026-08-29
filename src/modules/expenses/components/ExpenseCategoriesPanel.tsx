@@ -9,14 +9,16 @@ import type {
   ExpenseCategory,
   ExpenseCategoryInput,
 } from '@/modules/expenses/types/expense'
-import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { ApiError } from '@/shared/services/api-client'
 import styles from './ExpenseCategoriesPanel.module.css'
 
 type ExpenseCategoriesPanelProps = {
   categories: ExpenseCategory[]
   expenses: Expense[]
+  isOpen: boolean
   isSubmitting: boolean
+  onClose: () => void
   onSubmit: (input: ExpenseCategoryInput) => Promise<void>
 }
 
@@ -35,7 +37,9 @@ function getErrorMessage(error: unknown) {
 export function ExpenseCategoriesPanel({
   categories,
   expenses,
+  isOpen,
   isSubmitting,
+  onClose,
   onSubmit,
 }: ExpenseCategoriesPanelProps) {
   const {
@@ -83,7 +87,18 @@ export function ExpenseCategoriesPanel({
   })
 
   return (
-    <SurfaceCard className={styles.card}>
+    <SideDrawer
+      bodyClassName={styles.drawerBody}
+      closeButtonClassName={styles.closeButton}
+      closeLabel="Cerrar categorías de gastos"
+      description="Organiza tus egresos para leer mejor reportes y flujo de caja."
+      isCloseDisabled={isSubmitting}
+      isOpen={isOpen}
+      panelClassName={styles.drawer}
+      title="Categorías de gastos"
+      onClose={onClose}
+    >
+      <div className={styles.card}>
       <div>
         <p className={styles.eyebrow}>Clasificación</p>
         <h3 className={styles.title}>Categorías activas</h3>
@@ -147,6 +162,7 @@ export function ExpenseCategoriesPanel({
           {isSubmitting ? 'Creando...' : 'Crear categoría'}
         </button>
       </form>
-    </SurfaceCard>
+      </div>
+    </SideDrawer>
   )
 }

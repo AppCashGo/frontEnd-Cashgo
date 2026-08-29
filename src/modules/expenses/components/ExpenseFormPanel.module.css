@@ -1,155 +1,252 @@
-.card {
-  display: grid;
-  gap: 1rem;
-}
-
-.header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.eyebrow {
-  margin: 0 0 0.2rem;
-  color: #8a7a24;
-  font-size: 0.73rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.title {
-  margin: 0;
-  color: #1f2534;
-  font-size: 1.08rem;
-  font-weight: 700;
-}
-
-.description {
-  margin: 0.45rem 0 0;
-  color: #667085;
-  line-height: 1.55;
-}
-
-.secondaryButton,
-.primaryButton {
-  border-radius: 999px;
-  padding: 0.78rem 1.05rem;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.secondaryButton {
-  border: 1px solid #d7dbe8;
+.drawer {
+  width: min(100vw, 29rem);
   background: #ffffff;
-  color: #48526a;
 }
 
-.primaryButton {
-  border: none;
-  background: #232838;
-  color: #ffffff;
+.drawerBody {
+  padding: 1.1rem 1.5rem 1.5rem;
+  border-top: 1px solid #e1e6ef;
 }
 
-.primaryButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
+.closeButton {
+  background: transparent;
+  color: #5f697b;
+  font-size: 1.55rem;
 }
 
 .form {
   display: grid;
-  gap: 0.95rem;
+  gap: 1.25rem;
+}
+
+.amountCard {
+  display: grid;
+  gap: 0.65rem;
+  border: 1px solid #c8d1e2;
+  border-radius: 0.75rem;
+  padding: 1.15rem;
+  background: #ffffff;
+  box-shadow: 0 2px 5px rgba(15, 31, 62, 0.05);
+}
+
+.amountLabel,
+.label {
+  color: #414b5f;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+}
+
+.amountControl {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-bottom: 1px solid #c9d2e2;
+  padding: 0.15rem 0 0.75rem;
+  color: #4b5569;
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.amountControl input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #172033;
+  font: inherit;
+  font-size: 2.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.amountControl input::placeholder { color: #bac2d3; }
+.amountControl input::-webkit-outer-spin-button,
+.amountControl input::-webkit-inner-spin-button { appearance: none; margin: 0; }
+
+.currencyLabel {
+  color: #667085;
+  font-size: 0.8rem;
 }
 
 .field {
   display: grid;
-  gap: 0.42rem;
-}
-
-.label {
-  color: #5a657d;
-  font-size: 0.82rem;
-  font-weight: 600;
+  gap: 0.45rem;
 }
 
 .input,
 .select,
 .textarea {
   width: 100%;
-  border: 1px solid #d8dcea;
-  background: #fbfcff;
-  color: #1f2534;
-  border-radius: 1rem;
-  padding: 0.8rem 0.95rem;
+  border: 1px solid #cbd4e4;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  color: #172033;
+  padding: 0.75rem 0.85rem;
   font: inherit;
 }
 
 .input,
-.select {
-  min-height: 2.95rem;
-}
-
-.textarea {
-  resize: vertical;
-}
+.select { min-height: 2.75rem; }
+.textarea { min-height: 5.8rem; resize: vertical; line-height: 1.45; }
 
 .input:focus,
 .select:focus,
 .textarea:focus {
   outline: none;
-  border-color: #f1d625;
-  box-shadow: 0 0 0 3px rgba(241, 214, 37, 0.22);
+  border-color: #2f64ed;
+  box-shadow: 0 0 0 3px rgba(47, 100, 237, 0.12);
 }
 
-.inlineFields {
+.paymentFieldset {
+  min-width: 0;
   display: grid;
-  gap: 0.95rem;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
+
+.paymentGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.paymentButton {
+  min-width: 0;
+  min-height: 4.7rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.45rem;
+  border: 1px solid #cbd4e4;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  color: #778197;
+  padding: 0.55rem 0.25rem;
+  font: inherit;
+  font-size: 0.67rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.paymentButton:hover { border-color: #7da1f5; }
+
+.paymentButtonActive {
+  border-color: #2f56f1;
+  background: #ececff;
+  color: #234bc6;
+}
+
+.statusCard {
+  display: grid;
+  gap: 0.6rem;
+  border: 1px solid #c8d1e2;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: #f5f7ff;
+}
+
+.statusToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid #cdd6e6;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  padding: 0.7rem;
+  color: #172033;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.statusIcon {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #e4ecff;
+  color: #1f62e4;
+}
+
+.statusCopy {
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+  margin-right: auto;
+}
+
+.statusCopy strong { font-size: 0.9rem; }
+.statusCopy small { color: #6e788d; line-height: 1.3; }
+
+.switch {
+  width: 2.6rem;
+  height: 1.4rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.17rem;
+  background: #cbd3e1;
+}
+
+.switch span {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  background: #ffffff;
+  transition: transform 160ms ease;
+}
+
+.switchActive { background: #2463eb; }
+.switchActive span { transform: translateX(1.2rem); }
 
 .helperBanner,
 .errorBanner {
-  border-radius: 1rem;
-  padding: 0.85rem 0.95rem;
-  line-height: 1.5;
+  border-radius: 0.65rem;
+  padding: 0.8rem 0.9rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
 }
 
-.helperBanner {
-  background: #fff9cf;
-  color: #5f5419;
-}
-
-.errorBanner {
-  background: #fee2e2;
-  color: #b42318;
-}
-
-.errorMessage {
-  margin: 0;
-  color: #b42318;
-  font-size: 0.8rem;
-}
+.helperBanner { background: #edf4ff; color: #315583; }
+.errorBanner { background: #feecec; color: #b42318; }
+.errorMessage { color: #b42318; font-size: 0.76rem; }
 
 .footer {
   display: grid;
-  gap: 0.9rem;
+  grid-template-columns: 1fr 1.25fr;
+  gap: 0.75rem;
 }
 
-.helperText {
-  margin: 0;
-  color: #667085;
-  font-size: 0.88rem;
-  line-height: 1.5;
+.cancelButton,
+.primaryButton {
+  min-height: 2.8rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 0.65rem;
+  padding: 0.72rem 1rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
 }
 
-@media (min-width: 720px) {
-  .inlineFields {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+.cancelButton { border: 1px solid #cbd4e4; background: #ffffff; color: #424c60; }
+.primaryButton { border: 1px solid #075acb; background: #075acb; color: #ffffff; }
+.cancelButton:disabled,
+.primaryButton:disabled { cursor: not-allowed; opacity: 0.58; }
 
-  .footer {
-    align-items: center;
-    grid-template-columns: minmax(0, 1fr) auto;
-  }
+@media (max-width: 640px) {
+  .drawerBody { padding: 1rem; }
+  .paymentGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .footer { grid-template-columns: 1fr; }
+  .primaryButton { grid-row: 1; }
 }
