@@ -8,6 +8,7 @@ import { useDeleteProductMutation, useImportProductsMutation, useProductsQuery }
 import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
+import { getProductUnitStockLabel } from '@/modules/products/utils/product-unit-options'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
@@ -181,7 +182,7 @@ export function ProductsPage() {
                     <td data-label="SKU">{product.sku ?? '—'}</td>
                     <td data-label="Costo">{formatCurrency(product.cost)}</td>
                     <td data-label="Precio de venta" className={styles.price}>{formatCurrency(product.price)}</td>
-                    <td data-label="Stock"><span className={product.stock <= Math.max(product.minStock, 5) ? styles.lowStock : undefined}><strong>{product.stock}</strong> {product.unit === 'SERVICE' ? 'servicios' : 'unidades'}</span></td>
+                    <td data-label="Stock"><span className={product.stock <= Math.max(product.minStock, 5) ? styles.lowStock : undefined}><strong>{product.stock}</strong> {getProductUnitStockLabel(product.unit, product.stock)}</span></td>
                     <td data-label="Estado"><span className={`${styles.status} ${status.tone}`}>{status.label}</span></td>
                     <td data-label="Acciones" className={styles.actionCell}>
                       <button aria-expanded={openMenuId === product.id} aria-label={`Acciones de ${product.name}`} className={styles.menuButton} type="button" onClick={() => setOpenMenuId((current) => current === product.id ? null : product.id)}><MoreVertical aria-hidden="true" size={20} /></button>

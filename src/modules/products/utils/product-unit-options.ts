@@ -20,3 +20,22 @@ export function getProductUnitLabel(unit: ProductUnit) {
     productUnitOptions.find((option) => option.value === unit)?.label ?? unit
   )
 }
+
+export function getProductUnitStockLabel(
+  unit: ProductUnit,
+  quantity: number,
+) {
+  const labels: Record<ProductUnit, [string, string]> = {
+    UNIT: ['unidad', 'unidades'],
+    KG: ['kg', 'kg'],
+    GRAM: ['g', 'g'],
+    LITER: ['L', 'L'],
+    MILLILITER: ['ml', 'ml'],
+    METER: ['m', 'm'],
+    BOX: ['caja', 'cajas'],
+    PACK: ['paquete', 'paquetes'],
+    SERVICE: ['servicio', 'servicios'],
+  }
+
+  return labels[unit][quantity === 1 ? 0 : 1]
+}

@@ -736,6 +736,7 @@ export function RetailProductCreateWorkspace({
     null,
   );
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const productSubmissionLockRef = useRef(false);
   const [productImages, setProductImages] = useState<string[]>([]);
   const [productImageError, setProductImageError] = useState<string | null>(
     null,
@@ -814,10 +815,6 @@ export function RetailProductCreateWorkspace({
   useEffect(() => {
     setActiveTab(initialTab);
   }, [initialTab]);
-
-  useEffect(() => {
-    onTabChange?.(activeTab);
-  }, [activeTab, onTabChange]);
 
   function handleSelectCategory(categoryId: string) {
     setValue("categoryId", categoryId, {
@@ -1141,9 +1138,14 @@ export function RetailProductCreateWorkspace({
     }
 
     setActiveTab(targetTab);
+    onTabChange?.(targetTab);
   }
 
   async function handlePersistProduct(values: RetailProductCreateValues) {
+    if (productSubmissionLockRef.current) {
+      return;
+    }
+
     const normalizedVariants = (values.variants ?? []).map((variant) => ({
       name: variant.name.trim(),
       sku: normalizeOptionalText(variant.sku),
@@ -1191,6 +1193,8 @@ export function RetailProductCreateWorkspace({
       variants: activeTab === "variants" ? normalizedVariants : undefined,
     };
 
+    productSubmissionLockRef.current = true;
+
     try {
       if (isEditMode && productId) {
         await updateProductMutation.mutateAsync({
@@ -1211,6 +1215,8 @@ export function RetailProductCreateWorkspace({
             : "No fue posible crear el producto.",
         ),
       });
+    } finally {
+      productSubmissionLockRef.current = false;
     }
   }
 
@@ -1875,6 +1881,7 @@ export function RetailProductCreateWorkspace({
           onCancel={() => setConfirmSwitchState(null)}
           onConfirm={() => {
             setActiveTab(confirmSwitchState.targetTab);
+            onTabChange?.(confirmSwitchState.targetTab);
             setConfirmSwitchState(null);
           }}
         />
