@@ -100,7 +100,7 @@ export function VirtualCatalogSettingsPanel({
       }),
     [businessSettings],
   );
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
     hours: false,
     stock: false,

@@ -36,7 +36,7 @@ export function InventorySettingsPanel({
   onRetry,
   onSubmit,
 }: InventorySettingsPanelProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [lowStockAlertsEnabled, setLowStockAlertsEnabled] = useState(
     businessSettings?.lowStockAlertsEnabled ?? true,
   );

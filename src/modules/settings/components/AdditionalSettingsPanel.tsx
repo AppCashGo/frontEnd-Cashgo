@@ -36,7 +36,7 @@ export function AdditionalSettingsPanel({
   onRetry,
   onSubmit,
 }: AdditionalSettingsPanelProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [saleSoundEnabled, setSaleSoundEnabled] = useState(
     businessSettings?.saleCompletionSoundEnabled ?? true,
   );

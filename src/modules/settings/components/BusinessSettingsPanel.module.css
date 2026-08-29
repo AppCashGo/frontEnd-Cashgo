@@ -6,9 +6,22 @@
 
 .retailAccordion {
   overflow: hidden;
-  border: 1px solid rgba(192, 204, 218, 0.96);
-  border-radius: 0.75rem;
+  border: 1px solid #dce4ee;
+  border-radius: 0.9rem;
   background: #ffffff;
+  box-shadow: 0 0.12rem 0.35rem rgba(15, 23, 42, 0.035);
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.retailAccordion:hover {
+  border-color: #c7d3e1;
+}
+
+.retailAccordion[open] {
+  border-color: #c8d5e4;
+  box-shadow: 0 0.55rem 1.5rem rgba(15, 23, 42, 0.055);
 }
 
 .retailAccordionSummary {
@@ -16,9 +29,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.05rem 1.1rem;
+  min-height: 4.15rem;
+  padding: 0.95rem 1.2rem;
   cursor: pointer;
   list-style: none;
+}
+
+.retailAccordionSummary:focus-visible {
+  outline: 3px solid rgba(20, 87, 217, 0.16);
+  outline-offset: -3px;
 }
 
 .retailAccordionSummary::-webkit-details-marker {

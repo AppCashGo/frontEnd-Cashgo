@@ -24,7 +24,7 @@ export function ReminderSettingsPanel({
   onRetry,
   onSubmit,
 }: ReminderSettingsPanelProps) {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const [openingReminderEnabled, setOpeningReminderEnabled] = useState(
     businessSettings?.cashRegisterOpeningReminderEnabled ?? true,
   );

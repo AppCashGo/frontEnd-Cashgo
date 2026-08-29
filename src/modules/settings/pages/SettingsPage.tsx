@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Printer, Settings2, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AdditionalSettingsPanel } from "@/modules/settings/components/AdditionalSettingsPanel";
 import { BusinessSettingsPanel } from "@/modules/settings/components/BusinessSettingsPanel";
@@ -206,33 +207,43 @@ export function SettingsPage() {
         bodyClassName={retailStyles.body}
         headerClassName={retailStyles.header}
         title="Configuraciones"
+        meta="Administra tu negocio, equipo y comprobantes desde un solo lugar."
         actions={
-          <div className={retailStyles.tabs}>
+          <div aria-label="Secciones de configuración" className={retailStyles.tabs} role="tablist">
             <button
+              aria-selected={retailTab === "general"}
               className={
                 retailTab === "general" ? retailStyles.tabActive : retailStyles.tab
               }
+              role="tab"
               type="button"
               onClick={() => setRetailTab("general")}
             >
+              <Settings2 aria-hidden="true" />
               General
             </button>
             <button
+              aria-selected={retailTab === "team"}
               className={
                 retailTab === "team" ? retailStyles.tabActive : retailStyles.tab
               }
+              role="tab"
               type="button"
               onClick={() => setRetailTab("team")}
             >
+              <UsersRound aria-hidden="true" />
               Equipo y roles
             </button>
             <button
+              aria-selected={retailTab === "print"}
               className={
                 retailTab === "print" ? retailStyles.tabActive : retailStyles.tab
               }
+              role="tab"
               type="button"
               onClick={() => setRetailTab("print")}
             >
+              <Printer aria-hidden="true" />
               Impresión
             </button>
           </div>

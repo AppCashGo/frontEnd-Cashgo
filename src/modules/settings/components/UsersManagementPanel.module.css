@@ -15,7 +15,7 @@
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: #7c3aed;
+  color: #1457d9;
 }
 
 .title {
@@ -41,7 +41,7 @@
 .refreshingLabel {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #6366f1;
+  color: #1457d9;
 }
 
 .secondaryButton,
@@ -59,8 +59,8 @@
 }
 
 .secondaryButton {
-  background: rgba(99, 102, 241, 0.12);
-  color: #4338ca;
+  background: rgba(20, 87, 217, 0.1);
+  color: #124bbd;
 }
 
 .feedbackButton {
@@ -101,8 +101,8 @@
 .input:focus,
 .select:focus {
   outline: none;
-  border-color: rgba(124, 58, 237, 0.45);
-  box-shadow: 0 0 0 0.25rem rgba(124, 58, 237, 0.12);
+  border-color: rgba(20, 87, 217, 0.45);
+  box-shadow: 0 0 0 0.25rem rgba(20, 87, 217, 0.12);
   background: #fff;
 }
 
@@ -195,15 +195,15 @@
 
 .userButton:hover {
   transform: translateY(-1px);
-  border-color: rgba(124, 58, 237, 0.24);
+  border-color: rgba(20, 87, 217, 0.24);
   box-shadow: 0 1rem 1.8rem rgba(15, 23, 42, 0.07);
 }
 
 .userButtonActive {
-  border-color: rgba(99, 102, 241, 0.4);
-  box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.1);
+  border-color: rgba(20, 87, 217, 0.4);
+  box-shadow: 0 0 0 0.2rem rgba(20, 87, 217, 0.1);
   background:
-    radial-gradient(circle at top right, rgba(99, 102, 241, 0.12), transparent 38%),
+    radial-gradient(circle at top right, rgba(20, 87, 217, 0.1), transparent 38%),
     #fff;
 }
 
@@ -228,8 +228,8 @@
   flex: 0 0 auto;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.12);
-  color: #4338ca;
+  background: rgba(20, 87, 217, 0.1);
+  color: #124bbd;
   font-weight: 800;
 }
 
@@ -273,8 +273,8 @@
 }
 
 .rolePillAdmin {
-  background: rgba(124, 58, 237, 0.12);
-  color: #6d28d9;
+  background: rgba(20, 87, 217, 0.1);
+  color: #124bbd;
 }
 
 .userButtonFooter {
@@ -305,7 +305,7 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: #6366f1;
+  color: #1457d9;
 }
 
 .formTitle {
@@ -321,8 +321,8 @@
   min-height: 2rem;
   padding: 0 0.8rem;
   border-radius: 999px;
-  background: rgba(99, 102, 241, 0.12);
-  color: #4338ca;
+  background: rgba(20, 87, 217, 0.1);
+  color: #124bbd;
   font-size: 0.76rem;
   font-weight: 700;
 }
@@ -384,9 +384,9 @@
 }
 
 .avatarUploadButton {
-  border: 1px solid rgba(99, 102, 241, 0.22);
-  background: rgba(99, 102, 241, 0.1);
-  color: #4338ca;
+  border: 1px solid rgba(20, 87, 217, 0.22);
+  background: rgba(20, 87, 217, 0.08);
+  color: #124bbd;
   cursor: pointer;
 }
 
@@ -438,7 +438,7 @@
 .helperInline {
   margin: 0;
   font-size: 0.8rem;
-  color: #6366f1;
+  color: #1457d9;
   line-height: 1.5;
 }
 
@@ -484,9 +484,40 @@
 }
 
 .primaryButton {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: #1457d9;
   color: #fff;
-  box-shadow: 0 1rem 2rem rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0.7rem 1.5rem rgba(20, 87, 217, 0.2);
+}
+
+@media (max-width: 620px) {
+  .card,
+  .form {
+    padding: 0.9rem;
+  }
+
+  .headerActions,
+  .secondaryButton {
+    width: 100%;
+  }
+
+  .userButtonTopRow,
+  .formHeader,
+  .avatarField {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .rolePill,
+  .formTag {
+    align-self: flex-start;
+  }
+
+  .formActions,
+  .ghostButton,
+  .dangerButton,
+  .primaryButton {
+    width: 100%;
+  }
 }
 
 .ghostButton:disabled,
