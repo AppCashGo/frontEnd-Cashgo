@@ -303,42 +303,66 @@ export function VirtualCatalogSettingsPanel({
                         (entry) => entry.day === weekday.id,
                       )!;
 
+                    const isHourDisabled =
+                      isDisabled || savingSection === "hours";
+
                     return (
-                      <label className={styles.dayCard} key={weekday.id}>
-                        <input
-                          checked={businessHour.enabled}
-                          disabled={isDisabled || savingSection === "hours"}
-                          type="checkbox"
-                          onChange={(event) =>
-                            updateHour(weekday.id, {
-                              enabled: event.target.checked,
-                            })
-                          }
-                        />
-                        <span>{weekday.label}</span>
-                        <input
-                          aria-label={`Hora de apertura ${weekday.label}`}
-                          disabled={isDisabled || savingSection === "hours"}
-                          type="time"
-                          value={businessHour.opensAt}
-                          onChange={(event) =>
-                            updateHour(weekday.id, {
-                              opensAt: event.target.value,
-                            })
-                          }
-                        />
-                        <input
-                          aria-label={`Hora de cierre ${weekday.label}`}
-                          disabled={isDisabled || savingSection === "hours"}
-                          type="time"
-                          value={businessHour.closesAt}
-                          onChange={(event) =>
-                            updateHour(weekday.id, {
-                              closesAt: event.target.value,
-                            })
-                          }
-                        />
-                      </label>
+                      <div
+                        className={
+                          businessHour.enabled
+                            ? `${styles.dayCard} ${styles.dayCardEnabled}`
+                            : styles.dayCard
+                        }
+                        key={weekday.id}
+                      >
+                        <label className={styles.dayToggle}>
+                          <input
+                            checked={businessHour.enabled}
+                            disabled={isHourDisabled}
+                            type="checkbox"
+                            onChange={(event) =>
+                              updateHour(weekday.id, {
+                                enabled: event.target.checked,
+                              })
+                            }
+                          />
+                          <span className={styles.dayName}>{weekday.label}</span>
+                          <span className={styles.dayStatus}>
+                            {businessHour.enabled ? "Abierto" : "Cerrado"}
+                          </span>
+                        </label>
+
+                        <div className={styles.timeFields}>
+                          <label className={styles.timeField}>
+                            <span>Abre</span>
+                            <input
+                              aria-label={`Hora de apertura ${weekday.label}`}
+                              disabled={isHourDisabled || !businessHour.enabled}
+                              type="time"
+                              value={businessHour.opensAt}
+                              onChange={(event) =>
+                                updateHour(weekday.id, {
+                                  opensAt: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                          <label className={styles.timeField}>
+                            <span>Cierra</span>
+                            <input
+                              aria-label={`Hora de cierre ${weekday.label}`}
+                              disabled={isHourDisabled || !businessHour.enabled}
+                              type="time"
+                              value={businessHour.closesAt}
+                              onChange={(event) =>
+                                updateHour(weekday.id, {
+                                  closesAt: event.target.value,
+                                })
+                              }
+                            />
+                          </label>
+                        </div>
+                      </div>
                     );
                   })}
                 </div>
