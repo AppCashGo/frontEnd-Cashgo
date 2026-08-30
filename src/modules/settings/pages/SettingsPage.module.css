@@ -156,7 +156,7 @@
 
 @media (min-width: 1180px) {
   .workspace {
-    grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
   }
 

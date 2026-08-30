@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Printer, Settings2, UsersRound } from "lucide-react";
+import { Printer, Settings2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AdditionalSettingsPanel } from "@/modules/settings/components/AdditionalSettingsPanel";
 import { BusinessSettingsPanel } from "@/modules/settings/components/BusinessSettingsPanel";
@@ -9,23 +9,15 @@ import { PrintSettingsPanel } from "@/modules/settings/components/PrintSettingsP
 import { ReminderSettingsPanel } from "@/modules/settings/components/ReminderSettingsPanel";
 import { SettingsMetricCard } from "@/modules/settings/components/SettingsMetricCard";
 import { TaxSettingsPanel } from "@/modules/settings/components/TaxSettingsPanel";
-import { UsersManagementPanel } from "@/modules/settings/components/UsersManagementPanel";
 import { VirtualCatalogSettingsPanel } from "@/modules/settings/components/VirtualCatalogSettingsPanel";
 import {
   useBusinessSettingsQuery,
   useCreateBusinessSettingsMutation,
-  useCreateSettingsUserMutation,
   useDeleteBusinessSettingsMutation,
-  useSettingsRolesQuery,
-  useSettingsUsersQuery,
   useUploadBusinessLogoMutation,
-  useUploadSettingsUserAvatarMutation,
   useUpdateBusinessSettingsMutation,
-  useUpdateSettingsUserMutation,
-  useDeleteSettingsUserMutation,
 } from "@/modules/settings/hooks/use-settings-query";
 import {
-  settingsUserRoles,
   type BusinessSettings,
   type BusinessAdditionalSettingsInput,
   type BusinessProfileInput,
@@ -36,10 +28,7 @@ import {
 } from "@/modules/settings/types/settings";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
 import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
-import {
-  isAdminWorkspaceRole,
-  isTeamManagementRole,
-} from "@/shared/constants/user-roles";
+import { isAdminWorkspaceRole } from "@/shared/constants/user-roles";
 import { SurfaceCard } from "@/shared/components/ui/SurfaceCard";
 import { RetailPageLayout } from "@/shared/components/retail/RetailPageLayout";
 import { routePaths } from "@/routes/route-paths";
@@ -57,7 +46,7 @@ export function SettingsPage() {
   const navigate = useNavigate();
   const navigationPreset = useBusinessNavigationPreset();
   const isRetailPreset = navigationPreset === "retail";
-  const [retailTab, setRetailTab] = useState<"general" | "team" | "print">(
+  const [retailTab, setRetailTab] = useState<"general" | "print">(
     "general",
   );
   const currentUser = useAuthSessionStore((state) => state.user);
@@ -67,8 +56,6 @@ export function SettingsPage() {
   const clearSession = useAuthSessionStore((state) => state.clearSession);
   const isAdmin = isAdminWorkspaceRole(currentUser?.role);
   const businessSettingsQuery = useBusinessSettingsQuery(isAdmin);
-  const settingsUsersQuery = useSettingsUsersQuery(isAdmin);
-  const settingsRolesQuery = useSettingsRolesQuery(isAdmin);
   const createBusinessSettingsMutation = useCreateBusinessSettingsMutation();
   const updateBusinessProfileMutation = useUpdateBusinessSettingsMutation();
   const updateOperationalSettingsMutation = useUpdateBusinessSettingsMutation();
@@ -79,11 +66,6 @@ export function SettingsPage() {
   const updatePrintSettingsMutation = useUpdateBusinessSettingsMutation();
   const uploadBusinessLogoMutation = useUploadBusinessLogoMutation();
   const deleteBusinessSettingsMutation = useDeleteBusinessSettingsMutation();
-  const createSettingsUserMutation = useCreateSettingsUserMutation();
-  const updateSettingsUserMutation = useUpdateSettingsUserMutation();
-  const uploadSettingsUserAvatarMutation =
-    useUploadSettingsUserAvatarMutation();
-  const deleteSettingsUserMutation = useDeleteSettingsUserMutation();
 
   if (!currentUser || !isAdmin) {
     return (
@@ -94,7 +76,7 @@ export function SettingsPage() {
             El espacio de configuraciones esta limitado a cuentas administrativas.
           </h2>
           <p className={styles.restrictedDescription}>
-            Los ajustes del negocio, impuestos y usuarios estan protegidos como
+            Los ajustes del negocio e impuestos están protegidos como
             operaciones de administrador. Inicia sesion con una cuenta admin
             para continuar.
           </p>
@@ -104,37 +86,16 @@ export function SettingsPage() {
   }
 
   const businessSettings = businessSettingsQuery.data ?? null;
-  const users = settingsUsersQuery.data ?? [];
-  const roles = settingsRolesQuery.data ?? settingsUserRoles;
-  const adminUsersCount = users.filter((user) =>
-    isAdminWorkspaceRole(user.role),
-  ).length;
-  const operationalUsersCount = users.filter(
-    (user) => !isTeamManagementRole(user.role),
-  ).length;
   const businessSettingsError = businessSettingsQuery.isError
     ? getErrorMessage(
         businessSettingsQuery.error,
         "No pudimos cargar la configuracion del negocio en este momento.",
       )
     : null;
-  const usersManagementError = settingsUsersQuery.isError
-    ? getErrorMessage(
-        settingsUsersQuery.error,
-        "No pudimos cargar la lista de usuarios en este momento.",
-      )
-    : null;
-  const isRefreshing =
-    businessSettingsQuery.isFetching ||
-    settingsUsersQuery.isFetching ||
-    settingsRolesQuery.isFetching;
+  const isRefreshing = businessSettingsQuery.isFetching;
 
   async function handleRefresh() {
-    await Promise.allSettled([
-      businessSettingsQuery.refetch(),
-      settingsUsersQuery.refetch(),
-      settingsRolesQuery.refetch(),
-    ]);
+    await businessSettingsQuery.refetch();
   }
 
   function syncBusinessSession(settings: BusinessSettings) {
@@ -207,7 +168,7 @@ export function SettingsPage() {
         bodyClassName={retailStyles.body}
         headerClassName={retailStyles.header}
         title="Configuraciones"
-        meta="Administra tu negocio, equipo y comprobantes desde un solo lugar."
+        meta="Administra tu negocio y comprobantes desde un solo lugar."
         actions={
           <div aria-label="Secciones de configuración" className={retailStyles.tabs} role="tablist">
             <button
@@ -221,18 +182,6 @@ export function SettingsPage() {
             >
               <Settings2 aria-hidden="true" />
               General
-            </button>
-            <button
-              aria-selected={retailTab === "team"}
-              className={
-                retailTab === "team" ? retailStyles.tabActive : retailStyles.tab
-              }
-              role="tab"
-              type="button"
-              onClick={() => setRetailTab("team")}
-            >
-              <UsersRound aria-hidden="true" />
-              Equipo y roles
             </button>
             <button
               aria-selected={retailTab === "print"}
@@ -334,46 +283,6 @@ export function SettingsPage() {
           </div>
         ) : null}
 
-        {retailTab === "team" ? (
-          <UsersManagementPanel
-            currentUserId={currentUser.id}
-            errorMessage={usersManagementError}
-            isCreatingUser={createSettingsUserMutation.isPending}
-            isDeletingUser={deleteSettingsUserMutation.isPending}
-            isLoading={
-              settingsUsersQuery.isLoading || settingsRolesQuery.isLoading
-            }
-            isRefreshing={
-              settingsUsersQuery.isFetching || settingsRolesQuery.isFetching
-            }
-            isUploadingUserAvatar={uploadSettingsUserAvatarMutation.isPending}
-            isUpdatingUser={updateSettingsUserMutation.isPending}
-            roles={roles}
-            users={users}
-            onCreateUser={(input) =>
-              createSettingsUserMutation.mutateAsync(input)
-            }
-            onDeleteUser={(userId) =>
-              deleteSettingsUserMutation.mutateAsync(userId)
-            }
-            onRetry={() => {
-              void handleRefresh();
-            }}
-            onUploadUserAvatar={(userId, file) =>
-              uploadSettingsUserAvatarMutation.mutateAsync({
-                file,
-                userId,
-              })
-            }
-            onUpdateUser={(userId, input) =>
-              updateSettingsUserMutation.mutateAsync({
-                userId,
-                input,
-              })
-            }
-          />
-        ) : null}
-
         {retailTab === "print" ? (
           <PrintSettingsPanel
             businessSettings={businessSettings}
@@ -391,12 +300,11 @@ export function SettingsPage() {
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Centro administrativo</p>
           <h2 className={styles.title}>
-            Manten negocio, impuestos y accesos organizados en un solo panel.
+            Mantén negocio, impuestos y operación organizados en un solo panel.
           </h2>
           <p className={styles.description}>
             Este espacio concentra la configuracion estructural de la
-            operacion: identidad del negocio, impuestos y usuarios de toda la
-            plataforma.
+            operación: identidad del negocio, impuestos e inventario.
           </p>
         </div>
 
@@ -443,16 +351,22 @@ export function SettingsPage() {
           }
         />
         <SettingsMetricCard
-          hint={`Cuentas operativas: ${operationalUsersCount.toString()}.`}
-          label="Miembros del equipo"
+          hint="Define si una venta puede dejar existencias negativas."
+          label="Política de inventario"
           tone="accent"
-          value={users.length.toString()}
+          value={
+            businessSettings?.allowSaleWithoutStock ? "Flexible" : "Controlado"
+          }
         />
         <SettingsMetricCard
-          hint="Cuentas con acceso al modulo protegido de configuraciones."
-          label="Cuentas admin"
-          tone={adminUsersCount > 0 ? "success" : "alert"}
-          value={adminUsersCount.toString()}
+          hint="Avisos cuando un producto alcanza su mínimo configurado."
+          label="Alertas de inventario"
+          tone={businessSettings?.lowStockAlertsEnabled ? "success" : "alert"}
+          value={
+            businessSettings?.lowStockAlertsEnabled
+              ? "Activadas"
+              : "Desactivadas"
+          }
         />
       </div>
 
@@ -500,43 +414,6 @@ export function SettingsPage() {
           />
         </div>
 
-        <UsersManagementPanel
-          currentUserId={currentUser.id}
-          errorMessage={usersManagementError}
-          isCreatingUser={createSettingsUserMutation.isPending}
-          isDeletingUser={deleteSettingsUserMutation.isPending}
-          isLoading={
-            settingsUsersQuery.isLoading || settingsRolesQuery.isLoading
-          }
-          isRefreshing={
-            settingsUsersQuery.isFetching || settingsRolesQuery.isFetching
-          }
-          isUploadingUserAvatar={uploadSettingsUserAvatarMutation.isPending}
-          isUpdatingUser={updateSettingsUserMutation.isPending}
-          roles={roles}
-          users={users}
-          onCreateUser={(input) =>
-            createSettingsUserMutation.mutateAsync(input)
-          }
-          onDeleteUser={(userId) =>
-            deleteSettingsUserMutation.mutateAsync(userId)
-          }
-          onRetry={() => {
-            void handleRefresh();
-          }}
-          onUploadUserAvatar={(userId, file) =>
-            uploadSettingsUserAvatarMutation.mutateAsync({
-              file,
-              userId,
-            })
-          }
-          onUpdateUser={(userId, input) =>
-            updateSettingsUserMutation.mutateAsync({
-              userId,
-              input,
-            })
-          }
-        />
       </div>
     </div>
   );

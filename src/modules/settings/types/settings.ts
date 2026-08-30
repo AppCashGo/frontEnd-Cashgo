@@ -1,9 +1,7 @@
 import type { AuthUser } from "@/modules/auth/types/auth-session";
 import type { BusinessCategoryOption } from "@/shared/constants/business-categories";
-import { assignableUserRoles } from "@/shared/constants/user-roles";
 
 export const supportedCurrencies = ["COP", "USD", "EUR", "MXN"] as const;
-export const settingsUserRoles = assignableUserRoles;
 export const catalogWeekdayIds = [
   "monday",
   "tuesday",
@@ -21,7 +19,7 @@ export const catalogOutOfStockBehaviors = [
 export const printTicketWidths = ["58mm", "80mm"] as const;
 
 export type SupportedCurrency = (typeof supportedCurrencies)[number];
-export type SettingsUserRole = AuthUser["role"];
+export type ManagedBusinessRole = AuthUser["role"];
 export type CatalogWeekdayId = (typeof catalogWeekdayIds)[number];
 export type CatalogOutOfStockBehavior =
   (typeof catalogOutOfStockBehaviors)[number];
@@ -133,35 +131,11 @@ export type BusinessSettingsUpdateInput = Partial<
     BusinessPrintSettingsInput
 >;
 
-export type SettingsUser = {
-  id: string;
-  email: string;
-  name: string;
-  avatarUrl: string | null;
-  role: SettingsUserRole;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type SettingsUserCreateInput = {
-  email: string;
-  name: string;
-  password: string;
-  role: SettingsUserRole;
-};
-
-export type SettingsUserUpdateInput = {
-  email?: string;
-  name?: string;
-  password?: string;
-  role?: SettingsUserRole;
-};
-
 export type ManagedBusinessSummary = {
   id: string;
   businessName: string;
   businessCategory: string | null;
   logoUrl: string | null;
-  role: SettingsUserRole;
+  role: ManagedBusinessRole;
   isDefault: boolean;
 };

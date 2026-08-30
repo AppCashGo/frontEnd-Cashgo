@@ -3,10 +3,6 @@ import type {
   BusinessSettingsCreateInput,
   BusinessSettingsUpdateInput,
   ManagedBusinessSummary,
-  SettingsUser,
-  SettingsUserCreateInput,
-  SettingsUserRole,
-  SettingsUserUpdateInput,
 } from '@/modules/settings/types/settings'
 import {
   deleteJson,
@@ -65,57 +61,6 @@ export function uploadBusinessLogo(file: File) {
 
 export function deleteBusinessSettings() {
   return deleteJson<void>('/settings/business', {
-    accessToken: getAuthAccessToken(),
-  })
-}
-
-export function getSettingsRoles() {
-  return getJson<SettingsUserRole[]>('/settings/roles', {
-    accessToken: getAuthAccessToken(),
-  })
-}
-
-export function getSettingsUsers() {
-  return getJson<SettingsUser[]>('/settings/users', {
-    accessToken: getAuthAccessToken(),
-  })
-}
-
-export function createSettingsUser(input: SettingsUserCreateInput) {
-  return postJson<SettingsUser, SettingsUserCreateInput>('/settings/users', input, {
-    accessToken: getAuthAccessToken(),
-  })
-}
-
-export function updateSettingsUser(
-  userId: string,
-  input: SettingsUserUpdateInput,
-) {
-  return patchJson<SettingsUser, SettingsUserUpdateInput>(
-    `/settings/users/${userId}`,
-    input,
-    {
-      accessToken: getAuthAccessToken(),
-    },
-  )
-}
-
-export function uploadSettingsUserAvatar(userId: string, file: File) {
-  const formData = new FormData()
-
-  formData.append('file', file)
-
-  return patchFormData<SettingsUser>(
-    `/settings/users/${userId}/avatar`,
-    formData,
-    {
-      accessToken: getAuthAccessToken(),
-    },
-  )
-}
-
-export function deleteSettingsUser(userId: string) {
-  return deleteJson<void>(`/settings/users/${userId}`, {
     accessToken: getAuthAccessToken(),
   })
 }
