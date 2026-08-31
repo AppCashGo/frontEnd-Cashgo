@@ -17,6 +17,7 @@ export const routeSegments = {
   employees: "employees",
   reports: "reports",
   settings: "settings",
+  help: "help",
 } as const;
 
 export const routePaths = {
@@ -41,4 +42,5 @@ export const routePaths = {
   employees: `/${routeSegments.employees}`,
   reports: `/${routeSegments.reports}`,
   settings: `/${routeSegments.settings}`,
+  help: `/${routeSegments.help}`,
 } as const;

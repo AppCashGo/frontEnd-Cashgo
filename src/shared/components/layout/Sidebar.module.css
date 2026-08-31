@@ -547,6 +547,16 @@
   line-height: 1.45;
 }
 
+.supportLink:hover,
+.supportLinkActive {
+  background: #edf4ff;
+  color: #1457d9;
+}
+
+.supportLinkActive {
+  box-shadow: inset 3px 0 0 #1457d9;
+}
+
 .logoutButton {
   display: inline-flex;
   align-items: center;

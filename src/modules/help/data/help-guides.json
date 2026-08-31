@@ -1,0 +1,302 @@
+[
+  {
+    "id": "inicio",
+    "title": "Inicio y resumen del negocio",
+    "shortTitle": "Inicio",
+    "category": "Primeros pasos",
+    "description": "Interpreta ventas, alertas, productos destacados y el estado general de tu operación.",
+    "duration": "0:52",
+    "route": "/dashboard",
+    "audience": "Propietarios, administradores y responsables de operación",
+    "goals": ["Leer los indicadores principales", "Identificar alertas que requieren acción", "Usar los accesos rápidos del panel"],
+    "steps": [
+      {"title": "Confirma el negocio activo", "body": "Revisa en la barra lateral que estás consultando el negocio correcto antes de interpretar las cifras."},
+      {"title": "Lee los indicadores", "body": "Compara ventas, productos vendidos y valor del inventario para entender el desempeño reciente."},
+      {"title": "Prioriza las alertas", "body": "Abre los avisos de inventario bajo y corrige primero los productos que pueden detener una venta."},
+      {"title": "Continúa el flujo", "body": "Usa los accesos del resumen para vender, revisar inventario o consultar estadísticas sin perder contexto."}
+    ],
+    "tips": ["Actualiza la vista después de registrar movimientos importantes.", "Las cifras siempre corresponden al negocio seleccionado."],
+    "videoSrc": "/help/videos/inicio.mp4",
+    "pdfSrc": "/help/guides/inicio.pdf"
+  },
+  {
+    "id": "ventas",
+    "title": "Vender y gestionar mesas",
+    "shortTitle": "Vender / Mesas",
+    "category": "Operación diaria",
+    "description": "Crea una venta, agrega productos, asigna cliente, recibe el pago y finaliza la transacción.",
+    "duration": "0:51",
+    "route": "/sales",
+    "audience": "Cajeros, vendedores y personal de servicio",
+    "goals": ["Crear una venta sin errores", "Aplicar cantidades y descuentos", "Registrar el medio de pago correcto"],
+    "steps": [
+      {"title": "Inicia la venta", "body": "Busca el producto por nombre o código y agrégalo al carrito; en restaurantes selecciona primero la mesa o tipo de servicio."},
+      {"title": "Revisa el carrito", "body": "Confirma cantidades, precios, impuestos y descuentos antes de continuar al cobro."},
+      {"title": "Asocia al cliente", "body": "Selecciona un cliente cuando necesites historial, saldo o datos para el comprobante."},
+      {"title": "Cobra y finaliza", "body": "Elige efectivo, tarjeta, transferencia u otro medio, confirma el valor recibido y registra la venta."}
+    ],
+    "tips": ["No cierres la pantalla mientras Cashgo procesa la venta.", "Verifica el cambio antes de entregar el comprobante."],
+    "videoSrc": "/help/videos/ventas.mp4",
+    "pdfSrc": "/help/guides/ventas.pdf"
+  },
+  {
+    "id": "domicilios",
+    "title": "Domicilios y despacho",
+    "shortTitle": "Domicilios",
+    "category": "Operación diaria",
+    "description": "Organiza pedidos para entrega, datos del cliente, dirección y seguimiento del despacho.",
+    "duration": "0:48",
+    "route": "/deliveries",
+    "audience": "Administradores, cajeros y personal de despacho",
+    "goals": ["Registrar un pedido completo", "Preparar el despacho", "Mantener informado el estado de entrega"],
+    "steps": [
+      {"title": "Crea el pedido", "body": "Registra productos, cantidades y observaciones tal como las solicita el cliente."},
+      {"title": "Completa la entrega", "body": "Confirma nombre, celular, dirección, referencia y costo del domicilio."},
+      {"title": "Asigna el estado", "body": "Mueve el pedido entre pendiente, preparación, en camino y entregado según la operación real."},
+      {"title": "Cierra el pedido", "body": "Confirma el pago y marca la entrega únicamente cuando el cliente haya recibido el pedido."}
+    ],
+    "tips": ["Usa observaciones para instrucciones especiales.", "No marques como entregado un pedido todavía en ruta."],
+    "videoSrc": "/help/videos/domicilios.mp4",
+    "pdfSrc": "/help/guides/domicilios.pdf"
+  },
+  {
+    "id": "movimientos",
+    "title": "Movimientos y control de caja",
+    "shortTitle": "Movimientos",
+    "category": "Finanzas",
+    "description": "Abre caja, registra entradas o salidas, consulta transacciones y realiza el cierre diario.",
+    "duration": "0:48",
+    "route": "/movements",
+    "audience": "Propietarios, administradores, cajeros y contadores",
+    "goals": ["Abrir una sesión de caja", "Registrar movimientos manuales", "Cerrar y conciliar el efectivo"],
+    "steps": [
+      {"title": "Abre la caja", "body": "Indica el efectivo inicial antes de registrar la primera operación del turno."},
+      {"title": "Registra movimientos", "body": "Crea entradas y salidas manuales con concepto y soporte para que el saldo sea explicable."},
+      {"title": "Revisa el historial", "body": "Filtra transacciones y compara ventas, egresos y movimientos manuales durante el turno."},
+      {"title": "Haz el cierre", "body": "Cuenta el efectivo real, registra diferencias y confirma el cierre para conservar el arqueo."}
+    ],
+    "tips": ["No mezcles dinero personal con la caja del negocio.", "Documenta cualquier diferencia antes de cerrar."],
+    "videoSrc": "/help/videos/movimientos.mp4",
+    "pdfSrc": "/help/guides/movimientos.pdf"
+  },
+  {
+    "id": "facturacion",
+    "title": "Facturación y comprobantes",
+    "shortTitle": "Facturación",
+    "category": "Finanzas",
+    "description": "Configura la numeración, crea documentos y consulta el estado de cobro de cada comprobante.",
+    "duration": "0:51",
+    "route": "/billing",
+    "audience": "Administradores, cajeros y contadores",
+    "goals": ["Preparar la configuración documental", "Crear un comprobante", "Controlar saldo y estado de pago"],
+    "steps": [
+      {"title": "Configura la facturación", "body": "Define datos del negocio, prefijo, numeración y condiciones antes de emitir documentos."},
+      {"title": "Selecciona el cliente", "body": "Confirma identificación, contacto y dirección para evitar comprobantes con información incompleta."},
+      {"title": "Agrega conceptos", "body": "Incluye productos o servicios, cantidades, precios, impuestos y descuentos aplicables."},
+      {"title": "Emite y controla", "body": "Guarda el documento, registra abonos y consulta si está pendiente, parcialmente pagado o pagado."}
+    ],
+    "tips": ["Revisa la numeración antes de emitir el primer documento.", "No edites un documento final sin validar el proceso contable."],
+    "videoSrc": "/help/videos/facturacion.mp4",
+    "pdfSrc": "/help/guides/facturacion.pdf"
+  },
+  {
+    "id": "cotizaciones",
+    "title": "Cotizaciones y seguimiento comercial",
+    "shortTitle": "Cotizaciones",
+    "category": "Ventas y clientes",
+    "description": "Prepara propuestas, compártelas con el cliente y conviértelas en ventas cuando sean aprobadas.",
+    "duration": "0:48",
+    "route": "/quotes",
+    "audience": "Propietarios, administradores y vendedores",
+    "goals": ["Crear una propuesta clara", "Compartir la cotización", "Convertirla sin duplicar información"],
+    "steps": [
+      {"title": "Crea la cotización", "body": "Selecciona cliente, vigencia y notas comerciales antes de agregar los conceptos."},
+      {"title": "Agrega productos o conceptos", "body": "Usa el catálogo o una línea libre y confirma cantidades, precios, impuestos y descuentos."},
+      {"title": "Revisa y comparte", "body": "Valida el total y comparte el enlace público o el documento con el cliente."},
+      {"title": "Convierte al aprobar", "body": "Cuando el cliente acepte, usa Convertir para llevar la información a venta o caja."}
+    ],
+    "tips": ["Define una fecha de vencimiento realista.", "Evita crear otra venta manual si ya vas a convertir la cotización."],
+    "videoSrc": "/help/videos/cotizaciones.mp4",
+    "pdfSrc": "/help/guides/cotizaciones.pdf"
+  },
+  {
+    "id": "estadisticas",
+    "title": "Estadísticas y reportes",
+    "shortTitle": "Estadísticas",
+    "category": "Análisis",
+    "description": "Compara ventas, gastos, flujo de caja, productos y rendimiento del equipo por periodo.",
+    "duration": "0:51",
+    "route": "/reports",
+    "audience": "Propietarios, administradores y contadores",
+    "goals": ["Elegir el periodo correcto", "Interpretar tendencias", "Tomar acciones a partir de los datos"],
+    "steps": [
+      {"title": "Selecciona el periodo", "body": "Usa fechas comparables y espera a que todas las tarjetas y gráficas terminen de cargar."},
+      {"title": "Compara ingresos y gastos", "body": "Observa ventas, egresos y flujo de caja para conocer el resultado operativo del periodo."},
+      {"title": "Analiza productos y equipo", "body": "Identifica artículos más vendidos y desempeño por colaborador cuando la información esté disponible."},
+      {"title": "Convierte datos en acciones", "body": "Ajusta compras, horarios, precios o metas y vuelve a medir en el siguiente periodo."}
+    ],
+    "tips": ["No compares periodos con diferente cantidad de días sin tenerlo en cuenta.", "Una tendencia es más útil que un valor aislado."],
+    "videoSrc": "/help/videos/estadisticas.mp4",
+    "pdfSrc": "/help/guides/estadisticas.pdf"
+  },
+  {
+    "id": "inventario",
+    "title": "Inventario y ajustes de stock",
+    "shortTitle": "Inventario",
+    "category": "Catálogo e inventario",
+    "description": "Consulta existencias, identifica bajo stock y registra entradas, salidas o correcciones trazables.",
+    "duration": "0:51",
+    "route": "/inventory",
+    "audience": "Propietarios, administradores y responsables de bodega",
+    "goals": ["Leer el stock disponible", "Registrar un ajuste con motivo", "Atender alertas de bajo inventario"],
+    "steps": [
+      {"title": "Busca el producto", "body": "Filtra por nombre, SKU, categoría o nivel de stock para llegar rápidamente a la referencia."},
+      {"title": "Elige el movimiento", "body": "Usa entrada para compras, salida para pérdidas o consumo y corrección para conteos físicos."},
+      {"title": "Registra el soporte", "body": "Indica cantidad, costo cuando aplique y una nota que explique el origen del movimiento."},
+      {"title": "Verifica el resultado", "body": "Confirma el nuevo saldo y revisa el historial para asegurar que el ajuste quedó registrado."}
+    ],
+    "tips": ["Nunca corrijas inventario sin una nota verificable.", "Atiende primero las referencias cercanas al mínimo."],
+    "videoSrc": "/help/videos/inventario.mp4",
+    "pdfSrc": "/help/guides/inventario.pdf"
+  },
+  {
+    "id": "productos",
+    "title": "Productos, variantes y medidas",
+    "shortTitle": "Productos / Menú",
+    "category": "Catálogo e inventario",
+    "description": "Crea productos básicos, con variantes o con medidas y administra la carga masiva del catálogo.",
+    "duration": "0:55",
+    "route": "/products",
+    "audience": "Propietarios, administradores y responsables de catálogo",
+    "goals": ["Elegir el tipo de producto", "Configurar precios, stock e impuestos", "Importar productos de forma segura"],
+    "steps": [
+      {"title": "Elige el tipo", "body": "Usa básico para una referencia, variantes para opciones como color o talla y medidas para venta por peso o longitud."},
+      {"title": "Completa los datos", "body": "Registra nombre, código, categoría, unidad, precio, costo, stock mínimo e imágenes."},
+      {"title": "Configura variantes o medidas", "body": "Asigna SKU, código, precio, costo y stock a cada opción para mantener trazabilidad individual."},
+      {"title": "Guarda o importa", "body": "Revisa validaciones antes de crear; en carga masiva corrige todas las filas con error antes de importar."}
+    ],
+    "tips": ["Cada SKU debe ser único dentro del negocio.", "Usa la plantilla de carga masiva sin cambiar sus encabezados."],
+    "videoSrc": "/help/videos/productos.mp4",
+    "pdfSrc": "/help/guides/productos.pdf"
+  },
+  {
+    "id": "gastos",
+    "title": "Gastos y categorías",
+    "shortTitle": "Gastos",
+    "category": "Finanzas",
+    "description": "Registra egresos pagados o pendientes, clasifícalos y controla vencimientos y medios de pago.",
+    "duration": "0:49",
+    "route": "/expenses",
+    "audience": "Propietarios, administradores y contadores",
+    "goals": ["Registrar un gasto completo", "Organizar categorías", "Controlar pagos pendientes"],
+    "steps": [
+      {"title": "Prepara las categorías", "body": "Crea clasificaciones estables como arriendo, servicios, nómina o mantenimiento."},
+      {"title": "Registra el gasto", "body": "Indica valor, fecha, concepto, proveedor, categoría y medio de pago."},
+      {"title": "Define el estado", "body": "Marca pagado si el dinero ya salió o pendiente si todavía existe una obligación."},
+      {"title": "Filtra y concilia", "body": "Usa estado, categoría y fechas para revisar vencimientos y comparar con movimientos de caja."}
+    ],
+    "tips": ["Evita categorías duplicadas con nombres parecidos.", "Actualiza a pagado en cuanto se realice el desembolso."],
+    "videoSrc": "/help/videos/gastos.mp4",
+    "pdfSrc": "/help/guides/gastos.pdf"
+  },
+  {
+    "id": "empleados",
+    "title": "Empleados, accesos y roles",
+    "shortTitle": "Empleados",
+    "category": "Administración",
+    "description": "Crea miembros del equipo, asigna roles y mantén actualizados sus datos y permisos.",
+    "duration": "0:48",
+    "route": "/employees",
+    "audience": "Propietarios y administradores",
+    "goals": ["Crear un empleado", "Asignar el rol correcto", "Editar o desactivar accesos"],
+    "steps": [
+      {"title": "Crea el empleado", "body": "Registra nombre, celular, avatar y los datos solicitados para identificar al colaborador."},
+      {"title": "Asigna el rol", "body": "Elige el nivel mínimo de acceso necesario para sus responsabilidades reales."},
+      {"title": "Entrega el acceso", "body": "Confirma el estado de invitación y comparte las credenciales por un canal seguro."},
+      {"title": "Mantén el equipo al día", "body": "Edita datos o desactiva el acceso cuando cambien sus funciones o termine la relación laboral."}
+    ],
+    "tips": ["No compartas una misma cuenta entre varias personas.", "Revisa periódicamente quién conserva acceso administrativo."],
+    "videoSrc": "/help/videos/empleados.mp4",
+    "pdfSrc": "/help/guides/empleados.pdf"
+  },
+  {
+    "id": "dinero",
+    "title": "Mi dinero y herramientas financieras",
+    "shortTitle": "Mi dinero",
+    "category": "Finanzas",
+    "description": "Consulta las soluciones financieras disponibles y sigue los flujos de cobro habilitados para tu negocio.",
+    "duration": "0:50",
+    "route": "/money",
+    "audience": "Propietarios, administradores y personal autorizado",
+    "goals": ["Identificar herramientas disponibles", "Revisar requisitos", "Usar cada solución de forma segura"],
+    "steps": [
+      {"title": "Revisa la oferta", "body": "Consulta las herramientas habilitadas para el negocio y su estado antes de iniciar una solicitud."},
+      {"title": "Lee condiciones", "body": "Valida costos, requisitos, tiempos y responsables asociados a la solución seleccionada."},
+      {"title": "Completa el flujo", "body": "Sigue los pasos en pantalla y confirma cuidadosamente la información financiera."},
+      {"title": "Controla el resultado", "body": "Verifica que el cobro o solicitud aparezca con el estado esperado y conserva sus soportes."}
+    ],
+    "tips": ["Limita este módulo a personal autorizado.", "Nunca compartas claves o códigos de confirmación."],
+    "videoSrc": "/help/videos/dinero.mp4",
+    "pdfSrc": "/help/guides/dinero.pdf"
+  },
+  {
+    "id": "clientes",
+    "title": "Clientes, saldos e historial",
+    "shortTitle": "Clientes",
+    "category": "Ventas y clientes",
+    "description": "Construye la ficha del cliente, consulta compras y controla saldos o información de contacto.",
+    "duration": "0:51",
+    "route": "/customers",
+    "audience": "Propietarios, administradores, vendedores y cajeros",
+    "goals": ["Crear fichas completas", "Consultar historial", "Usar los datos con responsabilidad"],
+    "steps": [
+      {"title": "Crea el cliente", "body": "Registra nombre y datos de contacto; completa identificación y dirección cuando el proceso lo requiera."},
+      {"title": "Busca antes de duplicar", "body": "Consulta por nombre, celular o documento antes de crear una nueva ficha."},
+      {"title": "Revisa historial y saldo", "body": "Abre el detalle para entender compras, frecuencia y valores pendientes asociados al cliente."},
+      {"title": "Actualiza la información", "body": "Corrige datos obsoletos para que comprobantes, entregas y comunicaciones sigan siendo confiables."}
+    ],
+    "tips": ["Solicita únicamente datos necesarios para la operación.", "Evita crear clientes genéricos si necesitas trazabilidad."],
+    "videoSrc": "/help/videos/clientes.mp4",
+    "pdfSrc": "/help/guides/clientes.pdf"
+  },
+  {
+    "id": "proveedores",
+    "title": "Proveedores y abastecimiento",
+    "shortTitle": "Proveedores",
+    "category": "Catálogo e inventario",
+    "description": "Administra contactos de abastecimiento y consulta el historial de suministros de cada proveedor.",
+    "duration": "0:50",
+    "route": "/suppliers",
+    "audience": "Propietarios, administradores y responsables de compras",
+    "goals": ["Crear proveedores confiables", "Consultar suministros", "Mantener datos comerciales actualizados"],
+    "steps": [
+      {"title": "Crea el proveedor", "body": "Registra razón social o nombre, identificación, contacto, dirección y notas comerciales."},
+      {"title": "Evita duplicados", "body": "Busca por nombre, documento o celular antes de registrar un nuevo proveedor."},
+      {"title": "Consulta el detalle", "body": "Revisa datos de contacto e historial de suministros para preparar una nueva compra."},
+      {"title": "Actualiza el registro", "body": "Mantén vigentes condiciones, contactos y observaciones importantes para el abastecimiento."}
+    ],
+    "tips": ["Registra un contacto alterno para compras críticas.", "Usa notas para condiciones de entrega o pago."],
+    "videoSrc": "/help/videos/proveedores.mp4",
+    "pdfSrc": "/help/guides/proveedores.pdf"
+  },
+  {
+    "id": "configuracion",
+    "title": "Configuración del negocio",
+    "shortTitle": "Configuraciones",
+    "category": "Administración",
+    "description": "Configura identidad, impuestos, catálogo virtual, inventario, recordatorios e impresión.",
+    "duration": "0:54",
+    "route": "/settings",
+    "audience": "Propietarios y administradores",
+    "goals": ["Completar la identidad del negocio", "Definir impuestos y reglas operativas", "Publicar correctamente el catálogo"],
+    "steps": [
+      {"title": "Completa los datos del negocio", "body": "Registra nombre, categoría, ubicación, contacto y logo para que documentos y catálogo sean consistentes."},
+      {"title": "Configura impuestos", "body": "Selecciona la regla base y define excepciones por producto cuando corresponda."},
+      {"title": "Prepara el catálogo virtual", "body": "Ajusta horarios, productos sin stock, entregas y URL antes de compartirlo con clientes."},
+      {"title": "Revisa operación e impresión", "body": "Define inventario, recordatorios, opciones adicionales y formato de comprobantes; guarda cada sección."}
+    ],
+    "tips": ["Guarda una sección antes de abrir otra.", "Prueba la URL pública del catálogo después de cualquier cambio importante."],
+    "videoSrc": "/help/videos/configuracion.mp4",
+    "pdfSrc": "/help/guides/configuracion.pdf"
+  }
+]

@@ -1,0 +1,629 @@
+.page {
+  display: grid;
+  gap: 1.25rem;
+  min-width: 0;
+  padding-bottom: 2rem;
+  color: #172033;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(22rem, 0.8fr);
+  align-items: end;
+  gap: 2rem;
+  padding: clamp(1.4rem, 3vw, 2.2rem);
+  border: 1px solid #dce4ee;
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(circle at 88% 10%, rgba(99, 102, 241, 0.18), transparent 32%),
+    radial-gradient(circle at 8% 100%, rgba(20, 184, 166, 0.13), transparent 34%),
+    linear-gradient(135deg, #ffffff 0%, #f4f7ff 100%);
+  box-shadow: 0 1.15rem 2.5rem rgba(23, 32, 51, 0.08);
+}
+
+.heroCopy {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.1rem;
+  min-width: 0;
+}
+
+.heroIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: 0 0 auto;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #1457d9, #5749e8);
+  color: #ffffff;
+  box-shadow: 0 0.8rem 1.5rem rgba(20, 87, 217, 0.22);
+}
+
+.heroIcon svg {
+  width: 1.65rem;
+  height: 1.65rem;
+}
+
+.eyebrow,
+.sectionEyebrow {
+  margin: 0 0 0.35rem;
+  color: #4f46e5;
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 950;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.heroDescription {
+  max-width: 46rem;
+  margin: 0.75rem 0 0;
+  color: #5f6e82;
+  font-size: 1.04rem;
+  line-height: 1.65;
+}
+
+.heroMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid rgba(20, 87, 217, 0.12);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(0.75rem);
+}
+
+.heroMetrics div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  padding: 1rem;
+  text-align: center;
+}
+
+.heroMetrics div + div {
+  border-left: 1px solid #e2e8f0;
+}
+
+.heroMetrics strong {
+  color: #1457d9;
+  font-size: 1.65rem;
+  line-height: 1;
+}
+
+.heroMetrics span {
+  color: #68778d;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.toolbar {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid #dce4ee;
+  border-radius: 1.15rem;
+  background: #ffffff;
+}
+
+.searchField {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0 0.9rem;
+  border: 1px solid #cfd9e6;
+  border-radius: 0.85rem;
+  color: #68778d;
+  background: #fbfcfe;
+}
+
+.searchField:focus-within {
+  border-color: #1457d9;
+  box-shadow: 0 0 0 3px rgba(20, 87, 217, 0.1);
+}
+
+.searchField svg {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex: 0 0 auto;
+}
+
+.searchField input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #172033;
+}
+
+.categories {
+  display: flex;
+  gap: 0.55rem;
+  overflow-x: auto;
+  padding-bottom: 0.1rem;
+  scrollbar-width: thin;
+}
+
+.categoryChip {
+  flex: 0 0 auto;
+  min-height: 2.35rem;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid #d8e1ec;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #526178;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.categoryChipActive {
+  border-color: #1457d9;
+  background: #edf4ff;
+  color: #1457d9;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(22rem, 0.88fr) minmax(30rem, 1.12fr);
+  align-items: start;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
+.library,
+.viewer {
+  min-width: 0;
+  border: 1px solid #dce4ee;
+  border-radius: 1.25rem;
+  background: #ffffff;
+  box-shadow: 0 0.75rem 1.8rem rgba(23, 32, 51, 0.055);
+}
+
+.library {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.sectionHeading,
+.viewerHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.sectionHeading h2,
+.viewerHeading h2 {
+  margin: 0;
+  color: #172033;
+  line-height: 1.2;
+}
+
+.resultCount,
+.durationBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 0 0 auto;
+  padding: 0.4rem 0.65rem;
+  border-radius: 999px;
+  background: #eef3f8;
+  color: #607084;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.durationBadge svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.guideList {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.guideCard {
+  overflow: hidden;
+  border: 1px solid #dce4ee;
+  border-radius: 1rem;
+  background: #ffffff;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.guideCard:hover,
+.guideCardActive {
+  border-color: #9db8ee;
+  box-shadow: 0 0.6rem 1.25rem rgba(20, 87, 217, 0.1);
+}
+
+.guideCardActive {
+  transform: translateX(2px);
+}
+
+.guideSelect {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  width: 100%;
+  padding: 0.9rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.playBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.65rem;
+  height: 2.65rem;
+  border-radius: 0.85rem;
+  background: #edf4ff;
+  color: #1457d9;
+}
+
+.playBadge svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.guideCopy {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.guideCopy > strong {
+  color: #172033;
+  font-size: 0.98rem;
+}
+
+.guideCopy > span:last-child {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #68778d;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.guideMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  color: #4f46e5;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.guideMeta span:last-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: #77859a;
+}
+
+.guideMeta svg {
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.guideArrow {
+  width: 1rem;
+  height: 1rem;
+  color: #8290a3;
+}
+
+.cardDownload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0.9rem 0.8rem 4.35rem;
+  color: #1457d9;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.cardDownload svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.viewer {
+  position: sticky;
+  top: 1rem;
+  overflow: hidden;
+}
+
+.videoFrame {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.videoFrame video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.viewerBody {
+  display: grid;
+  gap: 1rem;
+  padding: 1.2rem;
+}
+
+.viewerDescription {
+  margin: 0;
+  color: #5f6e82;
+  line-height: 1.65;
+}
+
+.learningBlock {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  background: #f7f9fc;
+  border: 1px solid #e1e8f0;
+}
+
+.learningBlock h3 {
+  margin: 0;
+  font-size: 0.96rem;
+}
+
+.learningBlock ul {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.learningBlock li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  color: #526178;
+  font-size: 0.88rem;
+}
+
+.learningBlock li svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  margin-top: 0.12rem;
+  color: #159957;
+}
+
+.viewerActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.primaryAction,
+.secondaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 3rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.85rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.primaryAction {
+  background: #1457d9;
+  color: #ffffff;
+  box-shadow: 0 0.75rem 1.4rem rgba(20, 87, 217, 0.18);
+}
+
+.secondaryAction {
+  border: 1px solid #cfd9e6;
+  background: #ffffff;
+  color: #172033;
+}
+
+.primaryAction svg,
+.secondaryAction svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.guideSummary {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border-radius: 0.85rem;
+  background: #eefaf4;
+  color: #176c49;
+}
+
+.guideSummary > svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex: 0 0 auto;
+  margin-top: 0.1rem;
+}
+
+.guideSummary div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.guideSummary span {
+  color: #4a7865;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.emptyState {
+  display: grid;
+  justify-items: center;
+  gap: 0.55rem;
+  padding: 2.5rem 1rem;
+  color: #68778d;
+  text-align: center;
+}
+
+.emptyState > svg {
+  width: 2rem;
+  height: 2rem;
+}
+
+.emptyState h3,
+.emptyState p {
+  margin: 0;
+}
+
+.emptyState button {
+  margin-top: 0.4rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px solid #1457d9;
+  border-radius: 0.75rem;
+  background: #edf4ff;
+  color: #1457d9;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1180px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace {
+    grid-template-columns: minmax(19rem, 0.8fr) minmax(25rem, 1.2fr);
+  }
+}
+
+@media (max-width: 1080px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .viewer {
+    position: static;
+    grid-row: 1;
+    scroll-margin-top: 1rem;
+  }
+
+  .guideList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    gap: 0.9rem;
+  }
+
+  .hero {
+    gap: 1.25rem;
+    padding: 1.2rem;
+    border-radius: 1.15rem;
+  }
+
+  .heroCopy {
+    display: grid;
+  }
+
+  .heroIcon {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .heroMetrics div {
+    padding: 0.8rem 0.45rem;
+  }
+
+  .heroMetrics strong {
+    font-size: 1.35rem;
+  }
+
+  .toolbar,
+  .library {
+    padding: 0.8rem;
+  }
+
+  .guideList,
+  .viewerActions {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeading,
+  .viewerHeading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .resultCount,
+  .durationBadge {
+    align-self: flex-start;
+  }
+
+  .viewerBody {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 430px) {
+  .heroMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  .heroMetrics div + div {
+    border-top: 1px solid #e2e8f0;
+    border-left: 0;
+  }
+
+  .guideSelect {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .guideArrow {
+    display: none;
+  }
+
+  .cardDownload {
+    margin-left: 4.35rem;
+  }
+}

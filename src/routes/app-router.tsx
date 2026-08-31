@@ -126,6 +126,12 @@ const SettingsPage = lazy(() =>
   })),
 );
 
+const HelpCenterPage = lazy(() =>
+  import("@/modules/help/pages/HelpCenterPage").then((module) => ({
+    default: module.HelpCenterPage,
+  })),
+);
+
 function withRouteSuspense(
   element: ReactElement,
   title: string,
@@ -348,6 +354,14 @@ export const appRouter = createBrowserRouter([
               <SettingsPage />,
               "Cargando configuraciones",
               "Preparando negocio, impuestos y usuarios.",
+            ),
+          },
+          {
+            path: routeSegments.help,
+            element: withRouteSuspense(
+              <HelpCenterPage />,
+              "Cargando centro de ayuda",
+              "Preparando videos y guías de uso de Cashgo.",
             ),
           },
         ],

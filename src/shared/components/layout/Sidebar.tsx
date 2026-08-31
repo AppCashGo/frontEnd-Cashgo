@@ -493,10 +493,19 @@ export function Sidebar({
 
               {isSupportOpen ? (
                 <div className={styles.supportLinks}>
-                  <div className={styles.supportLink}>
+                  <NavLink
+                    className={({ isActive }) =>
+                      joinClassNames(
+                        styles.supportLink,
+                        isActive && styles.supportLinkActive,
+                      )
+                    }
+                    to={routePaths.help}
+                    onClick={handleRouteClick}
+                  >
                     <SidebarIcon className={styles.utilityIcon} name="learn" />
                     <span>{dictionary.layout.sidebar.learn}</span>
-                  </div>
+                  </NavLink>
                   <div className={styles.supportLink}>
                     <SidebarIcon className={styles.utilityIcon} name="terms" />
                     <span>{dictionary.layout.sidebar.terms}</span>
