@@ -117,8 +117,8 @@ export function HelpCenterPage() {
             <p className={styles.eyebrow}>Centro de ayuda</p>
             <h1>Aprende a usar Cashgo</h1>
             <p className={styles.heroDescription}>
-              Videos cortos, narrados en español, con una guía descargable para
-              que configures y operes cada módulo con seguridad.
+              Recorridos sobre la interfaz real, narrados en español y explicados
+              paso a paso, con una guía descargable para cada módulo.
             </p>
           </div>
         </div>

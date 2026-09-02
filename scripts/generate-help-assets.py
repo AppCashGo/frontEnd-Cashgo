@@ -3,12 +3,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import subprocess
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
@@ -34,6 +35,9 @@ GUIDES_DIR = ROOT / "public/help/guides"
 VIDEOS_DIR = ROOT / "public/help/videos"
 WORK_DIR = ROOT / "tmp/help-video"
 VIDEO_DEPS = WORK_DIR / "deps"
+VOICE_DEPS = WORK_DIR / "edge-deps"
+REAL_SCREENS_DIR = WORK_DIR / "real-screens"
+NEURAL_VOICE = "es-CO-SalomeNeural"
 
 INK = colors.HexColor("#172033")
 MUTED = colors.HexColor("#5F6E82")
@@ -304,97 +308,197 @@ def draw_multiline(draw, text, xy, font, fill, max_width, line_gap=12):
     return y
 
 
-def build_video_slide(guide: dict, scene: dict, output: Path, scene_index: int) -> None:
-    width, height = 1280, 720
-    image = Image.new("RGB", (width, height), "#F6F8FC")
+def fit_screen_image(image: Image.Image) -> Image.Image:
+    image = image.convert("RGB")
+    image.thumbnail((1280, 720), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGB", (1280, 720), "#EEF2F7")
+    canvas.paste(image, ((1280 - image.width) // 2, (720 - image.height) // 2))
+    return canvas
+
+
+def draw_simulated_module_screen(guide: dict, base: Image.Image) -> Image.Image:
+    image = fit_screen_image(base)
     draw = ImageDraw.Draw(image)
-    draw.rounded_rectangle((38, 38, width - 38, height - 38), radius=34, fill="#FFFFFF", outline="#DCE4EE", width=2)
-    draw.rounded_rectangle((72, 68, 126, 122), radius=16, fill="#1457D9")
-    draw.text((89, 75), "C", font=load_video_font(34, True), fill="#FFFFFF")
-    draw.text((146, 68), "Cashgo", font=load_video_font(31, True), fill="#172033")
-    draw.text((146, 103), "Aprende a usar Cashgo", font=load_video_font(18), fill="#68778D")
-    draw.rounded_rectangle((1020, 72, 1188, 112), radius=20, fill="#EDF4FF")
-    draw.text((1050, 81), f"{scene_index + 1} de 5", font=load_video_font(17, True), fill="#1457D9")
+    draw.rectangle((270, 0, 1280, 720), fill="#F8FAFC")
+    draw.text((310, 54), guide["shortTitle"], font=load_video_font(34, True), fill="#172033")
+    draw.text((310, 100), guide["description"], font=load_video_font(16), fill="#68778D")
+    draw.rounded_rectangle((1030, 48, 1228, 98), radius=15, fill="#1457D9")
+    draw.text((1129, 73), "+ Nueva operación", font=load_video_font(15, True), fill="#FFFFFF", anchor="mm")
 
-    draw.text((76, 160), scene["eyebrow"].upper(), font=load_video_font(18, True), fill="#4F46E5")
-    title_y = draw_multiline(draw, scene["title"], (76, 198), load_video_font(40, True), "#172033", 1120, 10)
-    y = title_y + 28
+    if guide["id"] == "domicilios":
+        metrics = [("Pendientes", "4"), ("En preparación", "2"), ("En camino", "3")]
+        for index, (label, value) in enumerate(metrics):
+            x = 310 + index * 295
+            draw.rounded_rectangle((x, 145, x + 270, 255), radius=18, fill="#FFFFFF", outline="#DCE4EE", width=2)
+            draw.text((x + 22, 166), label.upper(), font=load_video_font(13, True), fill="#68778D")
+            draw.text((x + 22, 200), value, font=load_video_font(34, True), fill="#172033")
+        draw.rounded_rectangle((310, 285, 1198, 650), radius=20, fill="#FFFFFF", outline="#DCE4EE", width=2)
+        draw.text((335, 315), "Pedidos para entrega", font=load_video_font(22, True), fill="#172033")
+        for index, row in enumerate(["Pedido #1048 · Pendiente", "Pedido #1047 · En preparación", "Pedido #1046 · En camino", "Pedido #1045 · Entregado"]):
+            y = 365 + index * 62
+            draw.line((335, y + 45, 1170, y + 45), fill="#E4EAF1", width=2)
+            draw.text((340, y), row, font=load_video_font(17, True), fill="#253146")
+            draw.text((850, y), "Cliente · Dirección · Total", font=load_video_font(15), fill="#68778D")
+    else:
+        metrics = [("Disponible", "$ 0"), ("En proceso", "0"), ("Completado", "0")]
+        for index, (label, value) in enumerate(metrics):
+            x = 310 + index * 295
+            draw.rounded_rectangle((x, 145, x + 270, 270), radius=18, fill="#FFFFFF", outline="#DCE4EE", width=2)
+            draw.text((x + 22, 170), label.upper(), font=load_video_font(13, True), fill="#68778D")
+            draw.text((x + 22, 210), value, font=load_video_font(32, True), fill="#172033")
+        draw.rounded_rectangle((310, 300, 1198, 625), radius=20, fill="#FFFFFF", outline="#DCE4EE", width=2)
+        draw.text((338, 332), "Herramientas financieras", font=load_video_font(22, True), fill="#172033")
+        for index, item in enumerate(["Cobros y recaudos", "Datáfono para tu negocio", "Historial de solicitudes"]):
+            y = 385 + index * 70
+            draw.rounded_rectangle((335, y, 1170, y + 54), radius=14, fill="#F7F9FC", outline="#E4EAF1", width=1)
+            draw.text((360, y + 17), item, font=load_video_font(17, True), fill="#253146")
+            draw.text((1128, y + 17), "Ver →", font=load_video_font(15, True), fill="#1457D9", anchor="ra")
+    return image
 
-    for item in scene["items"]:
-        if y > 610:
-            break
-        draw.rounded_rectangle((76, y, 1188, y + 82), radius=18, fill="#F8FAFC", outline="#E1E8F0", width=2)
-        draw.rounded_rectangle((96, y + 20, 138, y + 62), radius=13, fill="#DFE9FF")
-        draw.text((111, y + 26), item["marker"], font=load_video_font(19, True), fill="#1457D9", anchor="ma")
-        draw.text((158, y + 15), item["title"], font=load_video_font(21, True), fill="#172033")
-        draw_multiline(draw, item["body"], (158, y + 45), load_video_font(16), "#5F6E82", 980, 6)
-        y += 96
 
-    draw.text((76, 670), guide["shortTitle"], font=load_video_font(15, True), fill="#68778D")
-    draw.text((1188, 670), "cashgo", font=load_video_font(15, True), fill="#68778D", anchor="ra")
-    image.save(output, quality=92)
+def load_module_screen(guide: dict) -> Image.Image:
+    screen_path = REAL_SCREENS_DIR / f"{guide['id']}.png"
+    fallback_path = REAL_SCREENS_DIR / "inicio.png"
+    source_path = screen_path if screen_path.exists() else fallback_path
+    if not source_path.exists():
+        raise FileNotFoundError(f"Missing real screen capture for {guide['id']}")
+    image = Image.open(source_path)
+    if guide["id"] in {"domicilios", "dinero"}:
+        return draw_simulated_module_screen(guide, image)
+    image = fit_screen_image(image)
+    if guide["id"] in {"clientes", "empleados", "proveedores"}:
+        private_background = image.crop((270, 0, 810, 720)).filter(
+            ImageFilter.GaussianBlur(radius=8)
+        )
+        image.paste(private_background, (270, 0))
+    return image
+
+
+def draw_cursor(draw: ImageDraw.ImageDraw, x: int, y: int) -> None:
+    draw.ellipse((x - 25, y - 25, x + 25, y + 25), fill="#FFFFFF", outline="#1457D9", width=5)
+    draw.polygon([(x - 8, y - 13), (x + 12, y), (x, y + 4), (x + 7, y + 17), (x, y + 20), (x - 7, y + 7), (x - 15, y + 15)], fill="#1457D9")
+
+
+def build_video_slide(guide: dict, scene: dict, output: Path, scene_index: int) -> None:
+    source = load_module_screen(guide)
+    if scene_index == 0:
+        image = ImageEnhance.Brightness(source).enhance(0.45).convert("RGBA")
+        overlay = Image.new("RGBA", image.size, (18, 28, 51, 35))
+        image = Image.alpha_composite(image, overlay)
+        draw = ImageDraw.Draw(image)
+        draw.rounded_rectangle((95, 142, 1185, 575), radius=34, fill=(255, 255, 255, 242), outline=(210, 222, 238, 255), width=2)
+        draw.rounded_rectangle((135, 185, 203, 253), radius=20, fill="#1457D9")
+        draw.text((169, 219), "C", font=load_video_font(38, True), fill="#FFFFFF", anchor="mm")
+        draw.text((228, 187), "APRENDE A USAR CASHGO", font=load_video_font(18, True), fill="#4F46E5")
+        title_y = draw_multiline(draw, guide["title"], (135, 285), load_video_font(45, True), "#172033", 970, 9)
+        draw_multiline(draw, guide["description"], (135, title_y + 25), load_video_font(21), "#5F6E82", 970, 8)
+        draw.rounded_rectangle((135, 505, 340, 545), radius=20, fill="#EDF4FF")
+        draw.text((237, 525), "Tutorial guiado", font=load_video_font(16, True), fill="#1457D9", anchor="mm")
+    else:
+        image = source.convert("RGBA")
+        box = scene["highlight"]
+        dimmed = ImageEnhance.Brightness(source).enhance(0.62).convert("RGBA")
+        mask = Image.new("L", source.size, 0)
+        mask_draw = ImageDraw.Draw(mask)
+        mask_draw.rounded_rectangle(box, radius=20, fill=255)
+        bright_region = ImageEnhance.Contrast(source).enhance(1.04).convert("RGBA")
+        dimmed.paste(bright_region, (0, 0), mask)
+        image = dimmed
+        draw = ImageDraw.Draw(image)
+        draw.rounded_rectangle(box, radius=20, outline="#2F74FF", width=7)
+        draw.rounded_rectangle((38, 30, 296, 74), radius=22, fill=(255, 255, 255, 245))
+        draw.text((61, 43), f"PASO {scene_index} DE 4", font=load_video_font(16, True), fill="#1457D9")
+        draw_cursor(draw, box[2] - 5, box[3] - 5)
+        draw.rounded_rectangle((52, 525, 1228, 685), radius=24, fill=(255, 255, 255, 247), outline=(220, 228, 238, 255), width=2)
+        draw.rounded_rectangle((78, 551, 128, 601), radius=15, fill="#1457D9")
+        draw.text((103, 576), str(scene_index), font=load_video_font(24, True), fill="#FFFFFF", anchor="mm")
+        draw.text((151, 545), scene["title"], font=load_video_font(27, True), fill="#172033")
+        draw_multiline(draw, scene["body"], (151, 585), load_video_font(18), "#5F6E82", 1020, 7)
+    image.convert("RGB").save(output, quality=94)
 
 
 def get_video_scenes(guide: dict) -> list[dict]:
-    return [
-        {
-            "eyebrow": guide["category"],
-            "title": guide["title"],
-            "items": [{"marker": "▶", "title": "Qué vas a aprender", "body": guide["description"]}],
-            "narration": f"Bienvenido a Cashgo. En esta guía aprenderás sobre {guide['title']}. {guide['description']}",
-        },
-        {
-            "eyebrow": "Objetivos",
-            "title": "Al terminar podrás",
-            "items": [
-                {"marker": str(index), "title": goal, "body": "Resultado clave de este recorrido."}
-                for index, goal in enumerate(guide["goals"], start=1)
-            ],
-            "narration": "Al finalizar podrás: " + ". ".join(guide["goals"]) + ".",
-        },
-        {
-            "eyebrow": "Paso a paso",
-            "title": "Prepara y ejecuta el flujo",
-            "items": [
-                {"marker": str(index), "title": step["title"], "body": step["body"]}
-                for index, step in enumerate(guide["steps"][:2], start=1)
-            ],
-            "narration": "Primero. " + guide["steps"][0]["title"] + ". " + guide["steps"][0]["body"] + " Luego. " + guide["steps"][1]["title"] + ". " + guide["steps"][1]["body"],
-        },
-        {
-            "eyebrow": "Paso a paso",
-            "title": "Comprueba y termina",
-            "items": [
-                {"marker": str(index), "title": step["title"], "body": step["body"]}
-                for index, step in enumerate(guide["steps"][2:], start=3)
-            ],
-            "narration": "Después. " + guide["steps"][2]["title"] + ". " + guide["steps"][2]["body"] + " Para terminar. " + guide["steps"][3]["title"] + ". " + guide["steps"][3]["body"],
-        },
-        {
-            "eyebrow": "Buenas prácticas",
-            "title": "Antes de continuar",
-            "items": [
-                {"marker": "✓", "title": "Recomendación", "body": tip}
-                for tip in guide["tips"]
-            ],
-            "narration": "Recuerda estas recomendaciones. " + ". ".join(guide["tips"]) + ". Ya puedes aplicar este flujo en Cashgo.",
-        },
+    default_highlights = [
+        (292, 86, 675, 285),
+        (692, 85, 1000, 300),
+        (292, 300, 650, 505),
+        (662, 310, 1005, 510),
     ]
+    drawer_highlights = [
+        (704, 82, 1008, 205),
+        (704, 194, 1008, 325),
+        (704, 312, 1008, 438),
+        (704, 425, 1008, 510),
+    ]
+    highlights_by_guide = {
+        "productos": [
+            (292, 84, 648, 232),
+            (657, 84, 1008, 286),
+            (292, 224, 648, 492),
+            (657, 278, 1008, 510),
+        ],
+        "gastos": drawer_highlights,
+        "empleados": drawer_highlights,
+        "clientes": drawer_highlights,
+        "proveedores": drawer_highlights,
+        "facturacion": drawer_highlights,
+        "inventario": drawer_highlights,
+        "configuracion": [
+            (292, 82, 650, 225),
+            (658, 82, 1008, 260),
+            (292, 252, 650, 505),
+            (658, 252, 1008, 505),
+        ],
+    }
+    highlights = highlights_by_guide.get(guide["id"], default_highlights)
+    scenes = [
+        {
+            "title": guide["title"],
+            "body": guide["description"],
+            "narration": f"Hola. Te doy la bienvenida a Cashgo. En este recorrido aprenderás a usar {guide['title']}. {guide['description']}",
+        }
+    ]
+    for index, step in enumerate(guide["steps"]):
+        scenes.append(
+            {
+                "title": step["title"],
+                "body": step["body"],
+                "highlight": highlights[index],
+                "narration": f"Paso {index + 1}. {step['title']}. {step['body']}",
+            }
+        )
+    return scenes
 
 
-def build_video(guide: dict, ffmpeg: str) -> None:
+async def synthesize_neural_audio(edge_tts, scenes: list[dict], guide_work: Path) -> list[Path]:
+    audio_paths = [guide_work / f"audio-v2-{index}.mp3" for index in range(len(scenes))]
+
+    async def synthesize(scene: dict, audio_path: Path) -> None:
+        communicator = edge_tts.Communicate(
+            scene["narration"],
+            NEURAL_VOICE,
+            rate="+3%",
+            pitch="+0Hz",
+            volume="+0%",
+        )
+        await communicator.save(str(audio_path))
+
+    await asyncio.gather(
+        *(synthesize(scene, audio_path) for scene, audio_path in zip(scenes, audio_paths))
+    )
+    return audio_paths
+
+
+def build_video(guide: dict, ffmpeg: str, edge_tts) -> None:
     guide_work = WORK_DIR / guide["id"]
     guide_work.mkdir(parents=True, exist_ok=True)
     segment_paths = []
-    for index, scene in enumerate(get_video_scenes(guide)):
-        slide = guide_work / f"slide-{index}.png"
-        audio = guide_work / f"audio-{index}.aiff"
-        segment = guide_work / f"segment-{index}.mp4"
+    scenes = get_video_scenes(guide)
+    audio_paths = asyncio.run(synthesize_neural_audio(edge_tts, scenes, guide_work))
+    for index, (scene, audio) in enumerate(zip(scenes, audio_paths)):
+        slide = guide_work / f"slide-v2-{index}.png"
+        segment = guide_work / f"segment-v2-{index}.mp4"
         build_video_slide(guide, scene, slide, index)
-        subprocess.run(
-            ["/usr/bin/say", "-v", "Monica", "-r", "190", "-o", str(audio), scene["narration"]],
-            check=True,
-        )
         subprocess.run(
             [
                 ffmpeg,
@@ -409,14 +513,14 @@ def build_video(guide: dict, ffmpeg: str) -> None:
                 str(slide),
                 "-i",
                 str(audio),
+                "-vf",
+                "scale=1408:792,zoompan=z='min(zoom+0.00035,1.045)':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1250:s=1280x720:fps=25,format=yuv420p",
                 "-c:v",
                 "libx264",
                 "-preset",
                 "veryfast",
                 "-crf",
-                "29",
-                "-pix_fmt",
-                "yuv420p",
+                "27",
                 "-c:a",
                 "aac",
                 "-b:a",
@@ -430,7 +534,7 @@ def build_video(guide: dict, ffmpeg: str) -> None:
         )
         segment_paths.append(segment)
 
-    concat_file = guide_work / "segments.txt"
+    concat_file = guide_work / "segments-v2.txt"
     concat_file.write_text("".join(f"file '{path}'\n" for path in segment_paths), encoding="utf-8")
     subprocess.run(
         [
@@ -476,12 +580,21 @@ def main() -> None:
             f"Missing imageio-ffmpeg in {VIDEO_DEPS}. Install it before generating videos."
         ) from exc
 
+    try:
+        sys.path.insert(0, str(VOICE_DEPS))
+        import edge_tts  # type: ignore
+    except ImportError as exc:
+        raise SystemExit(
+            f"Missing edge-tts in {VOICE_DEPS}. Install it before generating videos."
+        ) from exc
+
     ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
     for guide in guides:
         print(f"Generating {guide['id']}...")
-        build_pdf(guide)
-        build_video(guide, ffmpeg)
-    print(f"Generated {len(guides)} PDF guides and {len(guides)} tutorial videos.")
+        if "--videos-only" not in sys.argv:
+            build_pdf(guide)
+        build_video(guide, ffmpeg, edge_tts)
+    print(f"Generated {len(guides)} guided tutorial videos.")
 
 
 if __name__ == "__main__":
