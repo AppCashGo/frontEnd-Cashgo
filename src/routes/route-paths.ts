@@ -19,6 +19,7 @@ export const routeSegments = {
   settings: "settings",
   help: "help",
   terms: "terms",
+  privacy: "privacy",
 } as const;
 
 export const routePaths = {
@@ -45,4 +46,5 @@ export const routePaths = {
   settings: `/${routeSegments.settings}`,
   help: `/${routeSegments.help}`,
   terms: `/${routeSegments.terms}`,
+  privacy: `/${routeSegments.privacy}`,
 } as const;

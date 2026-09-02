@@ -138,6 +138,12 @@ const TermsAndConditionsPage = lazy(() =>
   })),
 );
 
+const PrivacyPolicyPage = lazy(() =>
+  import("@/modules/legal/pages/PrivacyPolicyPage").then((module) => ({
+    default: module.PrivacyPolicyPage,
+  })),
+);
+
 function withRouteSuspense(
   element: ReactElement,
   title: string,
@@ -376,6 +382,14 @@ export const appRouter = createBrowserRouter([
               <TermsAndConditionsPage />,
               "Cargando términos y condiciones",
               "Preparando la información legal de Cashgo.",
+            ),
+          },
+          {
+            path: routeSegments.privacy,
+            element: withRouteSuspense(
+              <PrivacyPolicyPage />,
+              "Cargando política de privacidad",
+              "Preparando la información sobre datos y privacidad de Cashgo.",
             ),
           },
         ],

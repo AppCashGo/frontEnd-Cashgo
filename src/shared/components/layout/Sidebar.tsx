@@ -519,13 +519,22 @@ export function Sidebar({
                     <SidebarIcon className={styles.utilityIcon} name="terms" />
                     <span>{dictionary.layout.sidebar.terms}</span>
                   </NavLink>
-                  <div className={styles.supportLink}>
+                  <NavLink
+                    className={({ isActive }) =>
+                      joinClassNames(
+                        styles.supportLink,
+                        isActive && styles.supportLinkActive,
+                      )
+                    }
+                    to={routePaths.privacy}
+                    onClick={handleRouteClick}
+                  >
                     <SidebarIcon
                       className={styles.utilityIcon}
                       name="privacy"
                     />
                     <span>{dictionary.layout.sidebar.privacy}</span>
-                  </div>
+                  </NavLink>
                 </div>
               ) : null}
             </div>
