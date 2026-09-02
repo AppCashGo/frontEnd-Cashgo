@@ -132,6 +132,12 @@ const HelpCenterPage = lazy(() =>
   })),
 );
 
+const TermsAndConditionsPage = lazy(() =>
+  import("@/modules/legal/pages/TermsAndConditionsPage").then((module) => ({
+    default: module.TermsAndConditionsPage,
+  })),
+);
+
 function withRouteSuspense(
   element: ReactElement,
   title: string,
@@ -362,6 +368,14 @@ export const appRouter = createBrowserRouter([
               <HelpCenterPage />,
               "Cargando centro de ayuda",
               "Preparando videos y guías de uso de Cashgo.",
+            ),
+          },
+          {
+            path: routeSegments.terms,
+            element: withRouteSuspense(
+              <TermsAndConditionsPage />,
+              "Cargando términos y condiciones",
+              "Preparando la información legal de Cashgo.",
             ),
           },
         ],

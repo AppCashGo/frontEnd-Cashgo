@@ -18,6 +18,7 @@ export const routeSegments = {
   reports: "reports",
   settings: "settings",
   help: "help",
+  terms: "terms",
 } as const;
 
 export const routePaths = {
@@ -43,4 +44,5 @@ export const routePaths = {
   reports: `/${routeSegments.reports}`,
   settings: `/${routeSegments.settings}`,
   help: `/${routeSegments.help}`,
+  terms: `/${routeSegments.terms}`,
 } as const;
