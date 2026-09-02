@@ -249,6 +249,7 @@ export function HelpCenterPage() {
             <video
               controls
               key={selectedGuide.id}
+              poster={`/help/posters/${selectedGuide.id}.jpg`}
               preload="metadata"
               src={selectedGuide.videoSrc}
               onEnded={() => markGuideAsWatched(selectedGuide.id)}

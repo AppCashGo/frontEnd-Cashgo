@@ -37,6 +37,7 @@ ROOT = Path(__file__).resolve().parents[1]
 CONTENT_PATH = ROOT / "src/modules/help/data/help-guides.json"
 GUIDES_DIR = ROOT / "public/help/guides"
 VIDEOS_DIR = ROOT / "public/help/videos"
+POSTERS_DIR = ROOT / "public/help/posters"
 WORK_DIR = ROOT / "tmp/help-video"
 VIDEO_DEPS = WORK_DIR / "deps"
 VOICE_DEPS = WORK_DIR / "edge-deps"
@@ -974,6 +975,24 @@ def build_video(guide: dict, ffmpeg: str, edge_tts) -> float:
         ],
         check=True,
     )
+    subprocess.run(
+        [
+            ffmpeg,
+            "-y",
+            "-loglevel",
+            "error",
+            "-ss",
+            "1.2",
+            "-i",
+            str(output),
+            "-frames:v",
+            "1",
+            "-q:v",
+            "3",
+            str(POSTERS_DIR / f"{guide['id']}.jpg"),
+        ],
+        check=True,
+    )
     return get_media_duration(output, ffmpeg)
 
 
@@ -981,6 +1000,7 @@ def main() -> None:
     register_fonts()
     GUIDES_DIR.mkdir(parents=True, exist_ok=True)
     VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+    POSTERS_DIR.mkdir(parents=True, exist_ok=True)
     WORK_DIR.mkdir(parents=True, exist_ok=True)
     guides = json.loads(CONTENT_PATH.read_text(encoding="utf-8"))
 
