@@ -90,6 +90,9 @@ async function invalidateInventoryDependencies(queryClient: ReturnType<typeof us
     queryClient.invalidateQueries({
       queryKey: suppliersQueryKey,
     }),
+    queryClient.invalidateQueries({ queryKey: ['reports'] }),
+    queryClient.invalidateQueries({ queryKey: ['cash-register'] }),
+    queryClient.invalidateQueries({ queryKey: ['movements'] }),
   ])
 }
 

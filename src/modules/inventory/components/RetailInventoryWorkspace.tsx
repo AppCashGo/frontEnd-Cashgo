@@ -83,15 +83,22 @@ type CategoryEditorState = {
 }
 
 type PurchaseFormState = {
-  productId: string
   supplierId: string
-  quantity: string
-  unitCost: string
+  items: PurchaseLineState[]
   reference: string
   paymentMethod: ExpensePaymentMethod
-  status: 'PAID' | 'PENDING'
+  status: 'PAID' | 'PENDING' | 'PARTIAL'
+  amountPaid: string
   purchaseDate: string
+  dueDate: string
   reason: string
+}
+
+type PurchaseLineState = {
+  id: number
+  productId: string
+  quantity: string
+  unitCost: string
 }
 
 type AdjustmentFormState = {
@@ -131,16 +138,29 @@ function createDefaultCategoryEditorState(): CategoryEditorState {
   }
 }
 
+let purchaseLineSequence = 0
+
+function createPurchaseLineState(): PurchaseLineState {
+  purchaseLineSequence += 1
+
+  return {
+    id: purchaseLineSequence,
+    productId: '',
+    quantity: '1',
+    unitCost: '',
+  }
+}
+
 function createDefaultPurchaseFormState(): PurchaseFormState {
   return {
-    productId: '',
     supplierId: '',
-    quantity: '',
-    unitCost: '',
+    items: [createPurchaseLineState()],
     reference: '',
     paymentMethod: 'CASH',
     status: 'PAID',
+    amountPaid: '',
     purchaseDate: toExpenseDateInputValue(new Date()),
+    dueDate: '',
     reason: '',
   }
 }
@@ -495,8 +515,26 @@ export function RetailInventoryWorkspace() {
     (product) => product.id === adjustmentFormState.productId,
   )
   const estimatedPurchaseTotal =
-    parsePositiveNumber(purchaseFormState.quantity) *
-    parsePositiveNumber(purchaseFormState.unitCost)
+    purchaseFormState.items.reduce(
+      (total, item) =>
+        total +
+        parsePositiveNumber(item.quantity) *
+          parsePositiveNumber(item.unitCost),
+      0,
+    )
+  const purchaseProductIds = purchaseFormState.items
+    .map((item) => item.productId)
+    .filter(Boolean)
+  const hasDuplicatePurchaseProducts =
+    new Set(purchaseProductIds).size !== purchaseProductIds.length
+  const partialPurchaseAmount = parsePositiveNumber(
+    purchaseFormState.amountPaid,
+  )
+  const hasInvalidPurchaseDueDate = Boolean(
+    purchaseFormState.dueDate &&
+      purchaseFormState.purchaseDate &&
+      purchaseFormState.dueDate < purchaseFormState.purchaseDate,
+  )
 
   useEffect(() => {
     setShareCatalogPhone(businessSettings?.phone ?? '')
@@ -996,33 +1034,61 @@ export function RetailInventoryWorkspace() {
   async function handleRegisterPurchase() {
     resetFeedback()
 
-    const quantity = parsePositiveNumber(purchaseFormState.quantity)
-    const unitCost = parsePositiveNumber(purchaseFormState.unitCost)
+    const purchaseItems = purchaseFormState.items.map((item) => ({
+      productId: item.productId,
+      quantity: parsePositiveNumber(item.quantity),
+      unitCost: parsePositiveNumber(item.unitCost),
+    }))
+    const hasInvalidItem = purchaseItems.some(
+      (item) => !item.productId || item.quantity <= 0 || item.unitCost <= 0,
+    )
+    const hasDuplicateProduct = hasDuplicatePurchaseProducts
+    const amountPaid =
+      purchaseFormState.status === 'PAID'
+        ? estimatedPurchaseTotal
+        : purchaseFormState.status === 'PENDING'
+          ? 0
+          : parsePositiveNumber(purchaseFormState.amountPaid)
 
     if (
-      !purchaseFormState.productId ||
       !purchaseFormState.supplierId ||
       !purchaseFormState.purchaseDate ||
-      quantity <= 0 ||
-      unitCost <= 0
+      purchaseItems.length === 0 ||
+      hasInvalidItem ||
+      estimatedPurchaseTotal <= 0 ||
+      amountPaid > estimatedPurchaseTotal ||
+      (purchaseFormState.status === 'PARTIAL' &&
+        (amountPaid <= 0 || amountPaid >= estimatedPurchaseTotal)) ||
+      hasInvalidPurchaseDueDate
     ) {
       setFeedbackMessage({
         tone: 'error',
-        text: 'Completa proveedor, producto, fecha, cantidad y costo unitario.',
+        text: 'Revisa proveedor, productos, cantidades, costos y valor pagado.',
+      })
+      return
+    }
+
+    if (hasDuplicateProduct) {
+      setFeedbackMessage({
+        tone: 'error',
+        text: 'Cada producto debe aparecer una sola vez en la compra.',
       })
       return
     }
 
     try {
       await registerPurchaseMutation.mutateAsync({
-        productId: purchaseFormState.productId,
         supplierId: purchaseFormState.supplierId,
-        quantity,
-        unitCost,
+        items: purchaseItems,
         reference: normalizeOptionalText(purchaseFormState.reference),
         paymentMethod: purchaseFormState.paymentMethod,
-        status: purchaseFormState.status,
+        status:
+          purchaseFormState.status === 'PAID' ? 'PAID' : 'PENDING',
+        amountPaid,
         purchaseDate: toExpenseRequestDate(purchaseFormState.purchaseDate),
+        dueDate: purchaseFormState.dueDate
+          ? toExpenseRequestDate(purchaseFormState.dueDate)
+          : undefined,
         reason: normalizeOptionalText(purchaseFormState.reason),
       })
 
@@ -2236,11 +2302,19 @@ export function RetailInventoryWorkspace() {
               <button
                 className={retailStyles.buttonDark}
                 disabled={
-                  !purchaseFormState.productId ||
                   !purchaseFormState.supplierId ||
                   !purchaseFormState.purchaseDate ||
-                  parsePositiveNumber(purchaseFormState.quantity) <= 0 ||
-                  parsePositiveNumber(purchaseFormState.unitCost) <= 0 ||
+                  purchaseFormState.items.some(
+                    (item) =>
+                      !item.productId ||
+                      parsePositiveNumber(item.quantity) <= 0 ||
+                      parsePositiveNumber(item.unitCost) <= 0,
+                  ) ||
+                  hasDuplicatePurchaseProducts ||
+                  (purchaseFormState.status === 'PARTIAL' &&
+                    (partialPurchaseAmount <= 0 ||
+                      partialPurchaseAmount >= estimatedPurchaseTotal)) ||
+                  hasInvalidPurchaseDueDate ||
                   registerPurchaseMutation.isPending
                 }
                 type="button"
@@ -2295,66 +2369,127 @@ export function RetailInventoryWorkspace() {
               </small>
             </label>
 
-            <label className={styles.fieldGroup}>
-              <span className={styles.fieldLabel}>{copy.purchaseProduct} *</span>
-              <select
-                className={styles.selectInput}
-                value={purchaseFormState.productId}
-                onChange={(event) =>
-                  setPurchaseFormState((currentState) => ({
-                    ...currentState,
-                    productId: event.target.value,
-                  }))
-                }
-              >
-                <option value="">{copy.selectOption}</option>
-                {products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-              <small className={styles.fieldHint}>{copy.purchaseProductHint}</small>
-            </label>
-
-            <div className={styles.purchaseFieldsRow}>
-              <label className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>{copy.purchaseQuantity} *</span>
-                <input
-                  className={styles.textInput}
-                  inputMode="decimal"
-                  min="1"
-                  placeholder="Ej: 10"
-                  step="1"
-                  type="number"
-                  value={purchaseFormState.quantity}
-                  onChange={(event) =>
+            <div className={styles.purchaseItemsSection}>
+              <div className={styles.purchaseItemsHeader}>
+                <div>
+                  <span className={styles.fieldLabel}>{copy.purchaseProducts} *</span>
+                  <small className={styles.fieldHint}>{copy.purchaseProductHint}</small>
+                </div>
+                <button
+                  className={styles.addPurchaseItemButton}
+                  type="button"
+                  onClick={() =>
                     setPurchaseFormState((currentState) => ({
                       ...currentState,
-                      quantity: event.target.value,
+                      items: [...currentState.items, createPurchaseLineState()],
                     }))
                   }
-                />
-              </label>
+                >
+                  + {copy.purchaseAddProduct}
+                </button>
+              </div>
 
-              <label className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>{copy.purchaseUnitCost} *</span>
-                <input
-                  className={styles.textInput}
-                  inputMode="decimal"
-                  min="0.01"
-                  placeholder="$ 0.00"
-                  step="0.01"
-                  type="number"
-                  value={purchaseFormState.unitCost}
-                  onChange={(event) =>
-                    setPurchaseFormState((currentState) => ({
-                      ...currentState,
-                      unitCost: event.target.value,
-                    }))
-                  }
-                />
-              </label>
+              {purchaseFormState.items.map((item, index) => (
+                <article className={styles.purchaseItemCard} key={item.id}>
+                  <div className={styles.purchaseItemTitleRow}>
+                    <strong>{copy.purchaseLine.replace('{number}', String(index + 1))}</strong>
+                    {purchaseFormState.items.length > 1 ? (
+                      <button
+                        className={styles.removePurchaseItemButton}
+                        type="button"
+                        onClick={() =>
+                          setPurchaseFormState((currentState) => ({
+                            ...currentState,
+                            items: currentState.items.filter(
+                              (currentItem) => currentItem.id !== item.id,
+                            ),
+                          }))
+                        }
+                      >
+                        {copy.remove}
+                      </button>
+                    ) : null}
+                  </div>
+
+                  <label className={styles.fieldGroup}>
+                    <span className={styles.fieldLabel}>{copy.purchaseProduct}</span>
+                    <select
+                      className={styles.selectInput}
+                      value={item.productId}
+                      onChange={(event) =>
+                        setPurchaseFormState((currentState) => ({
+                          ...currentState,
+                          items: currentState.items.map((currentItem) =>
+                            currentItem.id === item.id
+                              ? { ...currentItem, productId: event.target.value }
+                              : currentItem,
+                          ),
+                        }))
+                      }
+                    >
+                      <option value="">{copy.selectOption}</option>
+                      {products.map((product) => (
+                        <option key={product.id} value={product.id}>
+                          {product.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <div className={styles.purchaseFieldsRow}>
+                    <label className={styles.fieldGroup}>
+                      <span className={styles.fieldLabel}>{copy.purchaseQuantity}</span>
+                      <input
+                        className={styles.textInput}
+                        inputMode="numeric"
+                        min="1"
+                        step="1"
+                        type="number"
+                        value={item.quantity}
+                        onChange={(event) =>
+                          setPurchaseFormState((currentState) => ({
+                            ...currentState,
+                            items: currentState.items.map((currentItem) =>
+                              currentItem.id === item.id
+                                ? { ...currentItem, quantity: event.target.value }
+                                : currentItem,
+                            ),
+                          }))
+                        }
+                      />
+                    </label>
+
+                    <label className={styles.fieldGroup}>
+                      <span className={styles.fieldLabel}>{copy.purchaseUnitCost}</span>
+                      <input
+                        className={styles.textInput}
+                        inputMode="decimal"
+                        min="0.01"
+                        placeholder="$ 0.00"
+                        step="0.01"
+                        type="number"
+                        value={item.unitCost}
+                        onChange={(event) =>
+                          setPurchaseFormState((currentState) => ({
+                            ...currentState,
+                            items: currentState.items.map((currentItem) =>
+                              currentItem.id === item.id
+                                ? { ...currentItem, unitCost: event.target.value }
+                                : currentItem,
+                            ),
+                          }))
+                        }
+                      />
+                    </label>
+                  </div>
+                  <span className={styles.purchaseLineSubtotal}>
+                    {copy.purchaseSubtotal}: {formatCurrency(
+                      parsePositiveNumber(item.quantity) *
+                        parsePositiveNumber(item.unitCost),
+                    )}
+                  </span>
+                </article>
+              ))}
             </div>
 
             <div className={styles.purchaseFieldsRow}>
@@ -2421,19 +2556,69 @@ export function RetailInventoryWorkspace() {
                   onChange={(event) =>
                     setPurchaseFormState((currentState) => ({
                       ...currentState,
-                      status: event.target.value as 'PAID' | 'PENDING',
+                      status: event.target.value as PurchaseFormState['status'],
                     }))
                   }
                 >
                   <option value="PAID">{copy.purchaseStatusPaid}</option>
+                  <option value="PARTIAL">{copy.purchaseStatusPartial}</option>
                   <option value="PENDING">{copy.purchaseStatusPending}</option>
                 </select>
               </label>
             </div>
 
+            {purchaseFormState.status === 'PARTIAL' ? (
+              <label className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>{copy.purchaseAmountPaid} *</span>
+                <input
+                  className={styles.textInput}
+                  inputMode="decimal"
+                  max={estimatedPurchaseTotal || undefined}
+                  min="0.01"
+                  step="0.01"
+                  type="number"
+                  value={purchaseFormState.amountPaid}
+                  onChange={(event) =>
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      amountPaid: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            ) : null}
+
+            {purchaseFormState.status !== 'PAID' ? (
+              <label className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>{copy.purchaseDueDate}</span>
+                <input
+                  className={styles.textInput}
+                  min={purchaseFormState.purchaseDate}
+                  type="date"
+                  value={purchaseFormState.dueDate}
+                  onChange={(event) =>
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      dueDate: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            ) : null}
+
             <div className={styles.purchaseTotalCard}>
-              <span>{copy.estimatedTotal}</span>
-              <strong>{formatCurrency(estimatedPurchaseTotal)}</strong>
+              <div><span>{copy.estimatedTotal}</span><strong>{formatCurrency(estimatedPurchaseTotal)}</strong></div>
+              <div><span>{copy.purchaseBalance}</span><strong>{formatCurrency(
+                Math.max(
+                  estimatedPurchaseTotal -
+                    (purchaseFormState.status === 'PAID'
+                      ? estimatedPurchaseTotal
+                      : purchaseFormState.status === 'PARTIAL'
+                        ? parsePositiveNumber(purchaseFormState.amountPaid)
+                        : 0),
+                  0,
+                ),
+              )}</strong></div>
             </div>
 
             <div className={styles.separator} />

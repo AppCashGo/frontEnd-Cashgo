@@ -1,4 +1,5 @@
 import {
+  getBlob,
   getJson,
   patchFormData,
   patchJson,
@@ -7,21 +8,39 @@ import {
 import type {
   SupplierDetail,
   SupplierMutationInput,
+  SupplierPurchasePaymentInput,
   SupplierSupplyHistoryItem,
   SupplierSummary,
 } from '@/modules/suppliers/types/supplier'
 import { normalizeNumber } from '@/shared/utils/normalize-number'
 
-type SupplierSummaryApiRecord = Omit<SupplierSummary, 'id'> & {
+type SupplierSummaryApiRecord = Omit<SupplierSummary, 'id' | 'outstandingBalance'> & {
   id: number | string
+  outstandingBalance: number | string
 }
 
 type SupplierSupplyHistoryItemApiRecord = Omit<
   SupplierSupplyHistoryItem,
-  'purchaseId' | 'total'
+  'purchaseId' | 'total' | 'paidAmount' | 'balance' | 'items' | 'payments'
 > & {
   purchaseId: number | string
   total: number | string
+  paidAmount: number | string
+  balance: number | string
+  items: Array<
+    Omit<SupplierSupplyHistoryItem['items'][number], 'id' | 'productId' | 'unitCost' | 'subtotal'> & {
+      id: number | string
+      productId: number | string
+      unitCost: number | string
+      subtotal: number | string
+    }
+  >
+  payments: Array<
+    Omit<SupplierSupplyHistoryItem['payments'][number], 'id' | 'amount'> & {
+      id: number | string
+      amount: number | string
+    }
+  >
 }
 
 type SupplierDetailApiRecord = SupplierSummaryApiRecord & {
@@ -34,6 +53,7 @@ function normalizeSupplierSummaryRecord(
   return {
     ...supplier,
     id: String(supplier.id),
+    outstandingBalance: normalizeNumber(supplier.outstandingBalance),
   }
 }
 
@@ -46,6 +66,20 @@ function normalizeSupplierDetailRecord(
       ...purchase,
       purchaseId: String(purchase.purchaseId),
       total: normalizeNumber(purchase.total),
+      paidAmount: normalizeNumber(purchase.paidAmount),
+      balance: normalizeNumber(purchase.balance),
+      items: purchase.items.map((item) => ({
+        ...item,
+        id: String(item.id),
+        productId: String(item.productId),
+        unitCost: normalizeNumber(item.unitCost),
+        subtotal: normalizeNumber(item.subtotal),
+      })),
+      payments: purchase.payments.map((payment) => ({
+        ...payment,
+        id: String(payment.id),
+        amount: normalizeNumber(payment.amount),
+      })),
     })),
   }
 }
@@ -107,4 +141,26 @@ export async function markSupplierPurchaseAsPaid(
   )
 
   return normalizeSupplierDetailRecord(supplier)
+}
+
+export async function registerSupplierPurchasePayment(
+  supplierId: string,
+  purchaseId: string,
+  input: SupplierPurchasePaymentInput,
+) {
+  const supplier = await postJson<
+    SupplierDetailApiRecord,
+    SupplierPurchasePaymentInput
+  >(`/suppliers/${supplierId}/purchases/${purchaseId}/payments`, input)
+
+  return normalizeSupplierDetailRecord(supplier)
+}
+
+export async function downloadSupplierPurchaseReceipt(
+  supplierId: string,
+  purchaseId: string,
+) {
+  return getBlob(`/suppliers/${supplierId}/purchases/${purchaseId}/receipt`, {
+    accept: 'text/html',
+  })
 }

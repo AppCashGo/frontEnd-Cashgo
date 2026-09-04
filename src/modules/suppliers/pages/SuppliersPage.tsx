@@ -6,13 +6,17 @@ import { SupplierSupplyHistoryPanel } from '@/modules/suppliers/components/Suppl
 import { SuppliersListPanel } from '@/modules/suppliers/components/SuppliersListPanel'
 import {
   useCreateSupplierMutation,
-  useMarkSupplierPurchaseAsPaidMutation,
+  useRegisterSupplierPurchasePaymentMutation,
   useSupplierDetailQuery,
   useSuppliersQuery,
   useUpdateSupplierMutation,
   useUploadSupplierAvatarMutation,
 } from '@/modules/suppliers/hooks/use-suppliers-query'
-import type { SupplierMutationInput } from '@/modules/suppliers/types/supplier'
+import { downloadSupplierPurchaseReceipt } from '@/modules/suppliers/services/suppliers-api'
+import type {
+  SupplierMutationInput,
+  SupplierPurchasePaymentInput,
+} from '@/modules/suppliers/types/supplier'
 import { RetailPremiumBanner } from '@/shared/components/retail/RetailPremiumBanner'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
@@ -24,6 +28,7 @@ import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigat
 import { matchesSupplierSearch } from '@/modules/suppliers/utils/matches-supplier-search'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import styles from './SuppliersPage.module.css'
 
 export function SuppliersPage() {
@@ -35,12 +40,13 @@ export function SuppliersPage() {
   )
   const [isCreateSupplierOpen, setCreateSupplierOpen] = useState(false)
   const [editingSupplierId, setEditingSupplierId] = useState<string | null>(null)
+  const [purchaseActionError, setPurchaseActionError] = useState<string | null>(null)
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const suppliersQuery = useSuppliersQuery()
   const createSupplierMutation = useCreateSupplierMutation()
   const updateSupplierMutation = useUpdateSupplierMutation()
   const uploadSupplierAvatarMutation = useUploadSupplierAvatarMutation()
-  const markPurchaseAsPaidMutation = useMarkSupplierPurchaseAsPaidMutation()
+  const registerPurchasePaymentMutation = useRegisterSupplierPurchasePaymentMutation()
   const supplierRecords = suppliersQuery.data
   const suppliers = supplierRecords ?? []
   const visibleSuppliers = suppliers.filter((supplier) =>
@@ -58,6 +64,10 @@ export function SuppliersPage() {
   ).length
   const trackedRestocks = suppliers.reduce(
     (sum, supplier) => sum + supplier.purchaseCount,
+    0,
+  )
+  const totalOutstandingBalance = suppliers.reduce(
+    (sum, supplier) => sum + supplier.outstandingBalance,
     0,
   )
   const selectedProcurementTotal =
@@ -150,6 +160,47 @@ export function SuppliersPage() {
     setCreateSupplierOpen(true)
   }
 
+  async function handleRegisterPurchasePayment(
+    purchaseId: string,
+    input: SupplierPurchasePaymentInput,
+  ) {
+    if (!selectedSupplierId) {
+      return
+    }
+
+    setPurchaseActionError(null)
+    try {
+      await registerPurchasePaymentMutation.mutateAsync({
+        supplierId: selectedSupplierId,
+        purchaseId,
+        input,
+      })
+    } catch (error) {
+      setPurchaseActionError(
+        getErrorMessage(error, 'No pudimos registrar el abono.'),
+      )
+    }
+  }
+
+  async function handleDownloadPurchaseReceipt(purchaseId: string) {
+    if (!selectedSupplierId) {
+      return
+    }
+
+    setPurchaseActionError(null)
+    try {
+      const { blob, filename } = await downloadSupplierPurchaseReceipt(
+        selectedSupplierId,
+        purchaseId,
+      )
+      downloadBlobFile(blob, filename ?? `compra-${purchaseId}.html`)
+    } catch (error) {
+      setPurchaseActionError(
+        getErrorMessage(error, 'No pudimos descargar el comprobante.'),
+      )
+    }
+  }
+
   function handleCloseSupplierDrawer() {
     setCreateSupplierOpen(false)
     setEditingSupplierId(null)
@@ -200,7 +251,7 @@ export function SuppliersPage() {
               />
               <RetailStatCard
                 label="Total por pagar"
-                value={formatCurrency(selectedProcurementTotal)}
+                value={formatCurrency(totalOutstandingBalance)}
               />
             </div>
 
@@ -256,11 +307,7 @@ export function SuppliersPage() {
                         <td>{supplier.phone ?? 'Sin celular'}</td>
                         <td>{supplier.email ?? 'Sin documento'}</td>
                         <td className={listPageStyles.statusPositive}>
-                          {formatCurrency(
-                            selectedSupplierId === supplier.id
-                              ? selectedProcurementTotal
-                              : 0,
-                          )}
+                          {formatCurrency(supplier.outstandingBalance)}
                         </td>
                         <td>
                           <div className={listPageStyles.actionGroup}>
@@ -427,29 +474,17 @@ export function SuppliersPage() {
             }
             isLoading={supplierDetailQuery.isLoading}
             payingPurchaseId={
-              markPurchaseAsPaidMutation.isPending
-                ? markPurchaseAsPaidMutation.variables?.purchaseId ?? null
+              registerPurchasePaymentMutation.isPending
+                ? registerPurchasePaymentMutation.variables?.purchaseId ?? null
                 : null
             }
-            paymentError={
-              markPurchaseAsPaidMutation.isError
-                ? getErrorMessage(
-                    markPurchaseAsPaidMutation.error,
-                    'No pudimos actualizar el estado de la compra.',
-                  )
-                : null
-            }
+            paymentError={purchaseActionError}
             purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
-            onMarkPaid={(purchaseId) => {
-              if (!selectedSupplierId) {
-                return
-              }
-
-              markPurchaseAsPaidMutation.reset()
-              markPurchaseAsPaidMutation.mutate({
-                supplierId: selectedSupplierId,
-                purchaseId,
-              })
+            onDownloadReceipt={(purchaseId) => {
+              void handleDownloadPurchaseReceipt(purchaseId)
+            }}
+            onRegisterPayment={(purchaseId, input) => {
+              void handleRegisterPurchasePayment(purchaseId, input)
             }}
           />
         </div>

@@ -13,6 +13,7 @@ import type {
   InventoryProductTaxesInput,
   InventoryProductTaxesResult,
   InventoryPurchaseInput,
+  InventoryPurchaseResult,
   InventoryReferenceType,
 } from "@/modules/inventory/types/inventory";
 import {
@@ -227,14 +228,18 @@ export async function updateInventoryProductTaxes(
 }
 
 export async function registerInventoryPurchase(input: InventoryPurchaseInput) {
-  const movement = await postJson<
-    InventoryMovementApiRecord,
+  const purchase = await postJson<
+    InventoryPurchaseResult,
     InventoryPurchaseInput
   >("/inventory/purchase", input, {
     accessToken: getAuthAccessToken(),
   });
 
-  return normalizeInventoryMovement(movement);
+  return {
+    ...purchase,
+    id: String(purchase.id),
+    supplierId: String(purchase.supplierId),
+  };
 }
 
 export async function exportInventoryReport(filters: InventoryExportFilters) {

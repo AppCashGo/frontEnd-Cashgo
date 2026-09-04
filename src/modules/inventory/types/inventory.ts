@@ -77,15 +77,31 @@ export type InventoryProductTaxesResult = {
 };
 
 export type InventoryPurchaseInput = {
-  productId: string;
+  productId?: string;
   supplierId: string;
-  quantity: number;
-  unitCost: number;
+  quantity?: number;
+  unitCost?: number;
+  items?: Array<{
+    productId: string;
+    quantity: number;
+    unitCost: number;
+  }>;
   reference?: string;
   paymentMethod?: ExpensePaymentMethod;
   status?: Exclude<ExpenseStatus, "CANCELLED">;
+  amountPaid?: number;
   purchaseDate?: string;
+  dueDate?: string;
   reason?: string;
+};
+
+export type InventoryPurchaseResult = {
+  id: string;
+  supplierId: string;
+  total: number | string;
+  paidAmount: number | string;
+  balance: number | string;
+  status: ExpenseStatus;
 };
 
 export type InventoryExportFilters = {

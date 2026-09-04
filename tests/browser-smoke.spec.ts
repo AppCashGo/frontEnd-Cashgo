@@ -88,6 +88,21 @@ type SmokeInventoryMovementRecord = {
   reason: string | null;
 };
 
+type SmokeSupplierPurchaseRecord = {
+  id: number | string;
+  supplierId: number | string;
+  status: string;
+  total: number | string;
+  paidAmount: number | string;
+  balance: number | string;
+  items: Array<{
+    productId: number | string;
+    quantity: number | string;
+    unitCost: number | string;
+    subtotal: number | string;
+  }>;
+};
+
 type SmokeSupplierRecord = {
   id: number | string;
   name: string;
@@ -1181,7 +1196,7 @@ test("creates a POS credit sale and records the customer receivable", async ({
   }
 });
 
-test("registers an inventory purchase, updates cost and records the movement", async ({
+test("registers a multi-product purchase and updates inventory costs", async ({
   page,
   request,
 }) => {
@@ -1191,6 +1206,11 @@ test("registers an inventory purchase, updates cost and records the movement", a
     .toString(36)
     .slice(2, 8)}`;
   const product = await createSmokeProduct(request, session, runId);
+  const secondProduct = await createSmokeProduct(
+    request,
+    session,
+    `${runId}-second`,
+  );
   const suppliers = await apiGet<SmokeSupplierRecord[]>(
     request,
     session,
@@ -1202,12 +1222,23 @@ test("registers an inventory purchase, updates cost and records the movement", a
   }
   const purchaseQuantity = 2;
   const purchaseUnitCost = 900;
+  const secondPurchaseQuantity = 3;
+  const secondPurchaseUnitCost = 725;
   const purchaseReason = `Browser smoke inventory purchase ${runId}`;
   const expectedStock = toNumber(product.stock) + purchaseQuantity;
+  const secondExpectedStock =
+    toNumber(secondProduct.stock) + secondPurchaseQuantity;
   const expectedWeightedCost =
     (toNumber(product.stock) * toNumber(product.cost) +
       purchaseQuantity * purchaseUnitCost) /
     expectedStock;
+  const secondExpectedWeightedCost =
+    (toNumber(secondProduct.stock) * toNumber(secondProduct.cost) +
+      secondPurchaseQuantity * secondPurchaseUnitCost) /
+    secondExpectedStock;
+  const expectedTotal =
+    purchaseQuantity * purchaseUnitCost +
+    secondPurchaseQuantity * secondPurchaseUnitCost;
 
   try {
     await page.goto("/inventory");
@@ -1226,15 +1257,32 @@ test("registers an inventory purchase, updates cost and records the movement", a
     await purchaseDrawer.getByLabel("Proveedor").selectOption({
       label: supplier.name,
     });
-    await purchaseDrawer.getByLabel("Producto").selectOption({
+    await purchaseDrawer.getByLabel("Producto").first().selectOption({
       label: product.name,
     });
     await purchaseDrawer
       .getByLabel("Cantidad")
+      .first()
       .fill(String(purchaseQuantity));
     await purchaseDrawer
       .getByLabel("Costo unitario")
+      .first()
       .fill(String(purchaseUnitCost));
+
+    await purchaseDrawer
+      .getByRole("button", { name: "Agregar producto" })
+      .click();
+    await purchaseDrawer.getByLabel("Producto").nth(1).selectOption({
+      label: secondProduct.name,
+    });
+    await purchaseDrawer
+      .getByLabel("Cantidad")
+      .nth(1)
+      .fill(String(secondPurchaseQuantity));
+    await purchaseDrawer
+      .getByLabel("Costo unitario")
+      .nth(1)
+      .fill(String(secondPurchaseUnitCost));
     await purchaseDrawer
       .getByLabel("Factura o referencia")
       .fill(`SMOKE-${runId}`);
@@ -1256,19 +1304,18 @@ test("registers an inventory purchase, updates cost and records the movement", a
       .click();
 
     const purchaseResponse = await purchaseResponsePromise;
-    const purchaseMovement =
-      (await purchaseResponse.json()) as SmokeInventoryMovementRecord;
+    const purchase =
+      (await purchaseResponse.json()) as SmokeSupplierPurchaseRecord;
 
-    expect(String(purchaseMovement.productId)).toBe(String(product.id));
-    expect(purchaseMovement.type).toBe("IN");
-    expect(purchaseMovement.referenceType).toBe("PURCHASE");
-    expect(toNumber(purchaseMovement.quantity)).toBe(purchaseQuantity);
-    expect(toNumber(purchaseMovement.previousStock)).toBe(
-      toNumber(product.stock),
-    );
-    expect(toNumber(purchaseMovement.newStock)).toBe(expectedStock);
-    expect(toNumber(purchaseMovement.unitCost)).toBe(purchaseUnitCost);
-    expect(purchaseMovement.reason).toBe(purchaseReason);
+    expect(String(purchase.supplierId)).toBe(String(supplier.id));
+    expect(purchase.status).toBe("PAID");
+    expect(toNumber(purchase.total)).toBe(expectedTotal);
+    expect(toNumber(purchase.paidAmount)).toBe(expectedTotal);
+    expect(toNumber(purchase.balance)).toBe(0);
+    expect(purchase.items).toHaveLength(2);
+    expect(
+      purchase.items.map((item) => String(item.productId)).sort(),
+    ).toEqual([String(product.id), String(secondProduct.id)].sort());
 
     await expect(purchaseDrawer).toBeHidden();
 
@@ -1280,13 +1327,22 @@ test("registers an inventory purchase, updates cost and records the movement", a
     const purchasedProduct = productsAfterPurchase.find(
       (candidate) => String(candidate.id) === String(product.id),
     );
+    const secondPurchasedProduct = productsAfterPurchase.find(
+      (candidate) => String(candidate.id) === String(secondProduct.id),
+    );
 
     expect(purchasedProduct).toBeDefined();
     expect(toNumber(purchasedProduct?.stock)).toBe(expectedStock);
     expect(toNumber(purchasedProduct?.cost)).toBe(expectedWeightedCost);
+    expect(secondPurchasedProduct).toBeDefined();
+    expect(toNumber(secondPurchasedProduct?.stock)).toBe(secondExpectedStock);
+    expect(toNumber(secondPurchasedProduct?.cost)).toBe(
+      secondExpectedWeightedCost,
+    );
     expect(browserErrors).toEqual([]);
   } finally {
     await safeApiDelete(request, session, `/products/${product.id}`);
+    await safeApiDelete(request, session, `/products/${secondProduct.id}`);
   }
 });
 
