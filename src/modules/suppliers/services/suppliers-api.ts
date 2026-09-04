@@ -10,6 +10,7 @@ import type {
   SupplierMutationInput,
   SupplierPurchaseCancellationInput,
   SupplierPurchasePaymentInput,
+  SupplierPurchaseReturnInput,
   SupplierSupplyHistoryItem,
   SupplierSummary,
 } from '@/modules/suppliers/types/supplier'
@@ -22,12 +23,14 @@ type SupplierSummaryApiRecord = Omit<SupplierSummary, 'id' | 'outstandingBalance
 
 type SupplierSupplyHistoryItemApiRecord = Omit<
   SupplierSupplyHistoryItem,
-  'purchaseId' | 'total' | 'paidAmount' | 'balance' | 'items' | 'payments'
+  'purchaseId' | 'total' | 'paidAmount' | 'balance' | 'returnedAmount' | 'netTotal' | 'items' | 'payments' | 'returns'
 > & {
   purchaseId: number | string
   total: number | string
   paidAmount: number | string
   balance: number | string
+  returnedAmount: number | string
+  netTotal: number | string
   items: Array<
     Omit<SupplierSupplyHistoryItem['items'][number], 'id' | 'productId' | 'unitCost' | 'subtotal'> & {
       id: number | string
@@ -40,6 +43,23 @@ type SupplierSupplyHistoryItemApiRecord = Omit<
     Omit<SupplierSupplyHistoryItem['payments'][number], 'id' | 'amount'> & {
       id: number | string
       amount: number | string
+    }
+  >
+  returns: Array<
+    Omit<SupplierSupplyHistoryItem['returns'][number], 'id' | 'amount' | 'balanceReduction' | 'refundAmount' | 'items'> & {
+      id: number | string
+      amount: number | string
+      balanceReduction: number | string
+      refundAmount: number | string
+      items: Array<
+        Omit<SupplierSupplyHistoryItem['returns'][number]['items'][number], 'id' | 'purchaseItemId' | 'productId' | 'unitCost' | 'subtotal'> & {
+          id: number | string
+          purchaseItemId: number | string
+          productId: number | string
+          unitCost: number | string
+          subtotal: number | string
+        }
+      >
     }
   >
 }
@@ -69,17 +89,41 @@ function normalizeSupplierDetailRecord(
       total: normalizeNumber(purchase.total),
       paidAmount: normalizeNumber(purchase.paidAmount),
       balance: normalizeNumber(purchase.balance),
+      returnedAmount: normalizeNumber(purchase.returnedAmount ?? 0),
+      netTotal: normalizeNumber(
+        purchase.netTotal ??
+          normalizeNumber(purchase.total) - normalizeNumber(purchase.returnedAmount ?? 0),
+      ),
       items: purchase.items.map((item) => ({
         ...item,
         id: String(item.id),
         productId: String(item.productId),
         unitCost: normalizeNumber(item.unitCost),
         subtotal: normalizeNumber(item.subtotal),
+        returnedQuantity: normalizeNumber(item.returnedQuantity ?? 0),
+        availableToReturn: normalizeNumber(
+          item.availableToReturn ?? item.quantity,
+        ),
       })),
       payments: purchase.payments.map((payment) => ({
         ...payment,
         id: String(payment.id),
         amount: normalizeNumber(payment.amount),
+      })),
+      returns: (purchase.returns ?? []).map((purchaseReturn) => ({
+        ...purchaseReturn,
+        id: String(purchaseReturn.id),
+        amount: normalizeNumber(purchaseReturn.amount),
+        balanceReduction: normalizeNumber(purchaseReturn.balanceReduction),
+        refundAmount: normalizeNumber(purchaseReturn.refundAmount),
+        items: purchaseReturn.items.map((item) => ({
+          ...item,
+          id: String(item.id),
+          purchaseItemId: String(item.purchaseItemId),
+          productId: String(item.productId),
+          unitCost: normalizeNumber(item.unitCost),
+          subtotal: normalizeNumber(item.subtotal),
+        })),
       })),
     })),
   }
@@ -168,6 +212,30 @@ export async function cancelSupplierPurchase(
   >(`/suppliers/${supplierId}/purchases/${purchaseId}/cancel`, input)
 
   return normalizeSupplierDetailRecord(supplier)
+}
+
+export async function createSupplierPurchaseReturn(
+  supplierId: string,
+  purchaseId: string,
+  input: SupplierPurchaseReturnInput,
+) {
+  const supplier = await postJson<
+    SupplierDetailApiRecord,
+    SupplierPurchaseReturnInput
+  >(`/suppliers/${supplierId}/purchases/${purchaseId}/returns`, input)
+
+  return normalizeSupplierDetailRecord(supplier)
+}
+
+export async function downloadSupplierPurchaseReturnCreditNote(
+  supplierId: string,
+  purchaseId: string,
+  returnId: string,
+) {
+  return getBlob(
+    `/suppliers/${supplierId}/purchases/${purchaseId}/returns/${returnId}/credit-note`,
+    { accept: 'text/html' },
+  )
 }
 
 export async function downloadSupplierPurchaseReceipt(

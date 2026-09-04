@@ -23,6 +23,8 @@ export type SupplierSupplyHistoryItem = {
   dueDate: string | null
   cancelledAt: string | null
   cancellationReason: string | null
+  returnedAmount: number
+  netTotal: number
   notes: string | null
   items: Array<{
     id: string
@@ -32,6 +34,8 @@ export type SupplierSupplyHistoryItem = {
     quantity: number
     unitCost: number
     subtotal: number
+    returnedQuantity: number
+    availableToReturn: number
   }>
   payments: Array<{
     id: string
@@ -40,6 +44,24 @@ export type SupplierSupplyHistoryItem = {
     reference: string | null
     notes: string | null
     paymentDate: string
+  }>
+  returns: Array<{
+    id: string
+    creditNumber: string
+    amount: number
+    balanceReduction: number
+    refundAmount: number
+    refundMethod: ExpensePaymentMethod | null
+    reason: string
+    returnDate: string
+    items: Array<{
+      id: string
+      purchaseItemId: string
+      productId: string
+      quantity: number
+      unitCost: number
+      subtotal: number
+    }>
   }>
   createdAt: string
 }
@@ -64,6 +86,16 @@ export type SupplierPurchasePaymentInput = {
 
 export type SupplierPurchaseCancellationInput = {
   reason: string
+}
+
+export type SupplierPurchaseReturnInput = {
+  items: Array<{
+    purchaseItemId: number
+    quantity: number
+  }>
+  reason: string
+  refundMethod?: ExpensePaymentMethod
+  returnDate?: string
 }
 import type {
   ExpensePaymentMethod,

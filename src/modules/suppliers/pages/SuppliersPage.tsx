@@ -7,16 +7,21 @@ import { SuppliersListPanel } from '@/modules/suppliers/components/SuppliersList
 import {
   useCreateSupplierMutation,
   useCancelSupplierPurchaseMutation,
+  useCreateSupplierPurchaseReturnMutation,
   useRegisterSupplierPurchasePaymentMutation,
   useSupplierDetailQuery,
   useSuppliersQuery,
   useUpdateSupplierMutation,
   useUploadSupplierAvatarMutation,
 } from '@/modules/suppliers/hooks/use-suppliers-query'
-import { downloadSupplierPurchaseReceipt } from '@/modules/suppliers/services/suppliers-api'
+import {
+  downloadSupplierPurchaseReceipt,
+  downloadSupplierPurchaseReturnCreditNote,
+} from '@/modules/suppliers/services/suppliers-api'
 import type {
   SupplierMutationInput,
   SupplierPurchasePaymentInput,
+  SupplierPurchaseReturnInput,
 } from '@/modules/suppliers/types/supplier'
 import { RetailPremiumBanner } from '@/shared/components/retail/RetailPremiumBanner'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
@@ -49,6 +54,7 @@ export function SuppliersPage() {
   const uploadSupplierAvatarMutation = useUploadSupplierAvatarMutation()
   const registerPurchasePaymentMutation = useRegisterSupplierPurchasePaymentMutation()
   const cancelPurchaseMutation = useCancelSupplierPurchaseMutation()
+  const createPurchaseReturnMutation = useCreateSupplierPurchaseReturnMutation()
   const supplierRecords = suppliersQuery.data
   const suppliers = supplierRecords ?? []
   const visibleSuppliers = suppliers.filter((supplier) =>
@@ -218,6 +224,52 @@ export function SuppliersPage() {
     } catch (error) {
       setPurchaseActionError(
         getErrorMessage(error, 'No pudimos anular la compra.'),
+      )
+    }
+  }
+
+  async function handleCreatePurchaseReturn(
+    purchaseId: string,
+    input: SupplierPurchaseReturnInput,
+  ) {
+    if (!selectedSupplierId) {
+      return
+    }
+
+    setPurchaseActionError(null)
+    try {
+      await createPurchaseReturnMutation.mutateAsync({
+        supplierId: selectedSupplierId,
+        purchaseId,
+        input,
+      })
+    } catch (error) {
+      setPurchaseActionError(
+        getErrorMessage(error, 'No pudimos registrar la devolución.'),
+      )
+    }
+  }
+
+  async function handleDownloadCreditNote(
+    purchaseId: string,
+    returnId: string,
+  ) {
+    if (!selectedSupplierId) {
+      return
+    }
+
+    setPurchaseActionError(null)
+    try {
+      const { blob, filename } =
+        await downloadSupplierPurchaseReturnCreditNote(
+          selectedSupplierId,
+          purchaseId,
+          returnId,
+        )
+      downloadBlobFile(blob, filename ?? `nota-credito-${returnId}.html`)
+    } catch (error) {
+      setPurchaseActionError(
+        getErrorMessage(error, 'No pudimos descargar la nota crédito.'),
       )
     }
   }
@@ -399,6 +451,11 @@ export function SuppliersPage() {
                       ? registerPurchasePaymentMutation.variables?.purchaseId ?? null
                       : null
                   }
+                  returningPurchaseId={
+                    createPurchaseReturnMutation.isPending
+                      ? createPurchaseReturnMutation.variables?.purchaseId ?? null
+                      : null
+                  }
                   paymentError={purchaseActionError}
                   purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
                   onCancelPurchase={(purchaseId, reason) => {
@@ -406,6 +463,12 @@ export function SuppliersPage() {
                   }}
                   onDownloadReceipt={(purchaseId) => {
                     void handleDownloadPurchaseReceipt(purchaseId)
+                  }}
+                  onDownloadCreditNote={(purchaseId, returnId) => {
+                    void handleDownloadCreditNote(purchaseId, returnId)
+                  }}
+                  onCreateReturn={(purchaseId, input) => {
+                    void handleCreatePurchaseReturn(purchaseId, input)
                   }}
                   onRegisterPayment={(purchaseId, input) => {
                     void handleRegisterPurchasePayment(purchaseId, input)
@@ -553,6 +616,11 @@ export function SuppliersPage() {
                 ? registerPurchasePaymentMutation.variables?.purchaseId ?? null
                 : null
             }
+            returningPurchaseId={
+              createPurchaseReturnMutation.isPending
+                ? createPurchaseReturnMutation.variables?.purchaseId ?? null
+                : null
+            }
             paymentError={purchaseActionError}
             purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
             onCancelPurchase={(purchaseId, reason) => {
@@ -560,6 +628,12 @@ export function SuppliersPage() {
             }}
             onDownloadReceipt={(purchaseId) => {
               void handleDownloadPurchaseReceipt(purchaseId)
+            }}
+            onDownloadCreditNote={(purchaseId, returnId) => {
+              void handleDownloadCreditNote(purchaseId, returnId)
+            }}
+            onCreateReturn={(purchaseId, input) => {
+              void handleCreatePurchaseReturn(purchaseId, input)
             }}
             onRegisterPayment={(purchaseId, input) => {
               void handleRegisterPurchasePayment(purchaseId, input)

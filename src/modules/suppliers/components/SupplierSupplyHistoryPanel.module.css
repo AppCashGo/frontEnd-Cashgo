@@ -99,8 +99,17 @@
 }
 
 .purchaseTotal {
+  display: grid;
+  justify-items: end;
+  gap: 0.15rem;
   color: #153b73;
   font-size: 0.98rem;
+}
+
+.purchaseTotal small {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #667085;
 }
 
 .historyMeta {
@@ -205,7 +214,8 @@
 }
 
 .purchaseItemsList,
-.paymentsList {
+.paymentsList,
+.creditNotesList {
   display: grid;
   gap: 0.45rem;
   border-top: 1px solid #e7edf5;
@@ -213,7 +223,8 @@
 }
 
 .purchaseItemsList > div,
-.paymentsList > div {
+.paymentsList > div,
+.creditNotesList > div {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -225,6 +236,26 @@
 .paymentsList > strong {
   color: #344054;
   font-size: 0.78rem;
+}
+
+.creditNotesList > strong {
+  color: #1e3a8a;
+  font-size: 0.78rem;
+}
+
+.creditNotesList > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.creditNotesList button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #0758d1;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .purchaseActions,
@@ -361,16 +392,112 @@
   color: #ffffff;
 }
 
+.returnForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.85rem;
+  padding: 0.9rem;
+  background: #f5f9ff;
+}
+
+.returnFormHeader,
+.returnItems,
+.returnReason,
+.balanceApplicationNotice {
+  grid-column: 1 / -1;
+}
+
+.returnFormHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.returnFormHeader p,
+.balanceApplicationNotice {
+  margin: 0.25rem 0 0;
+  color: #475467;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.returnItems {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.returnItems label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 0.7rem;
+  padding: 0.65rem 0.75rem;
+  background: #ffffff;
+  border: 1px solid #dbe7f7;
+}
+
+.returnItems label > span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.returnItems input {
+  width: 5.5rem;
+}
+
+.returnForm > label {
+  display: grid;
+  gap: 0.35rem;
+  color: #344054;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.returnForm input,
+.returnForm select,
+.returnForm textarea {
+  width: 100%;
+  min-height: 2.55rem;
+  border: 1px solid #b9cbe4;
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  background: #ffffff;
+  color: #101828;
+  font: inherit;
+}
+
+.returnForm textarea {
+  resize: vertical;
+}
+
 @media (max-width: 560px) {
   .historyTopRow,
   .purchaseItemsList > div,
-  .paymentsList > div {
+  .paymentsList > div,
+  .creditNotesList > div {
     align-items: flex-start;
   }
 
   .balanceGrid,
-  .paymentForm {
+  .paymentForm,
+  .returnForm {
     grid-template-columns: 1fr;
+  }
+
+  .creditNotesList > div {
+    grid-template-columns: 1fr auto;
+  }
+
+  .creditNotesList button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .returnItems label {
+    align-items: flex-end;
   }
 
   .balanceGrid .statusPill {
