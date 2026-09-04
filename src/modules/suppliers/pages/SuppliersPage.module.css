@@ -109,6 +109,12 @@
   padding: 0 clamp(1rem, 2.2vw, 2rem) 2rem;
 }
 
+.retailDetailGrid {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
 @media (min-width: 768px) {
   .hero {
     padding: 1.5rem;
@@ -133,6 +139,10 @@
   .secondaryColumn {
     position: sticky;
     top: 1rem;
+  }
+
+  .retailDetailGrid {
+    grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.28fr);
   }
 }
 

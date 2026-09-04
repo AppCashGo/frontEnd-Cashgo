@@ -1196,7 +1196,7 @@ test("creates a POS credit sale and records the customer receivable", async ({
   }
 });
 
-test("registers a multi-product purchase and updates inventory costs", async ({
+test("registers and cancels a multi-product purchase safely", async ({
   page,
   request,
 }) => {
@@ -1338,6 +1338,57 @@ test("registers a multi-product purchase and updates inventory costs", async ({
     expect(toNumber(secondPurchasedProduct?.stock)).toBe(secondExpectedStock);
     expect(toNumber(secondPurchasedProduct?.cost)).toBe(
       secondExpectedWeightedCost,
+    );
+
+    await page.goto("/suppliers");
+    const supplierRow = page.getByRole("row").filter({ hasText: supplier.name });
+    await supplierRow.getByRole("button", { name: "Detalle" }).click();
+
+    const purchaseCard = page
+      .getByRole("article")
+      .filter({ hasText: `SMOKE-${runId}` });
+    await expect(purchaseCard).toBeVisible();
+    await purchaseCard.getByRole("button", { name: "Anular compra" }).click();
+    await purchaseCard
+      .getByLabel("Motivo de la anulación")
+      .fill("Browser smoke cancellation");
+
+    const cancellationResponsePromise = page.waitForResponse((response) => {
+      const requestInfo = response.request();
+      const pathname = new URL(response.url()).pathname;
+
+      return (
+        requestInfo.method() === "PATCH" &&
+        pathname.endsWith(
+          `/api/suppliers/${supplier.id}/purchases/${purchase.id}/cancel`,
+        ) &&
+        response.ok()
+      );
+    });
+    await purchaseCard
+      .getByRole("button", { name: "Confirmar anulación" })
+      .click();
+    await cancellationResponsePromise;
+    await expect(purchaseCard).toContainText("Compra anulada");
+
+    const productsAfterCancellation = await apiGet<SmokeProductRecord[]>(
+      request,
+      session,
+      "/products",
+    );
+    const restoredProduct = productsAfterCancellation.find(
+      (candidate) => String(candidate.id) === String(product.id),
+    );
+    const restoredSecondProduct = productsAfterCancellation.find(
+      (candidate) => String(candidate.id) === String(secondProduct.id),
+    );
+    expect(toNumber(restoredProduct?.stock)).toBe(toNumber(product.stock));
+    expect(toNumber(restoredProduct?.cost)).toBe(toNumber(product.cost));
+    expect(toNumber(restoredSecondProduct?.stock)).toBe(
+      toNumber(secondProduct.stock),
+    );
+    expect(toNumber(restoredSecondProduct?.cost)).toBe(
+      toNumber(secondProduct.cost),
     );
     expect(browserErrors).toEqual([]);
   } finally {

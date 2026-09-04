@@ -8,6 +8,7 @@ import {
 import type {
   SupplierDetail,
   SupplierMutationInput,
+  SupplierPurchaseCancellationInput,
   SupplierPurchasePaymentInput,
   SupplierSupplyHistoryItem,
   SupplierSummary,
@@ -152,6 +153,19 @@ export async function registerSupplierPurchasePayment(
     SupplierDetailApiRecord,
     SupplierPurchasePaymentInput
   >(`/suppliers/${supplierId}/purchases/${purchaseId}/payments`, input)
+
+  return normalizeSupplierDetailRecord(supplier)
+}
+
+export async function cancelSupplierPurchase(
+  supplierId: string,
+  purchaseId: string,
+  input: SupplierPurchaseCancellationInput,
+) {
+  const supplier = await patchJson<
+    SupplierDetailApiRecord,
+    SupplierPurchaseCancellationInput
+  >(`/suppliers/${supplierId}/purchases/${purchaseId}/cancel`, input)
 
   return normalizeSupplierDetailRecord(supplier)
 }

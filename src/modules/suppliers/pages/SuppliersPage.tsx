@@ -6,6 +6,7 @@ import { SupplierSupplyHistoryPanel } from '@/modules/suppliers/components/Suppl
 import { SuppliersListPanel } from '@/modules/suppliers/components/SuppliersListPanel'
 import {
   useCreateSupplierMutation,
+  useCancelSupplierPurchaseMutation,
   useRegisterSupplierPurchasePaymentMutation,
   useSupplierDetailQuery,
   useSuppliersQuery,
@@ -47,6 +48,7 @@ export function SuppliersPage() {
   const updateSupplierMutation = useUpdateSupplierMutation()
   const uploadSupplierAvatarMutation = useUploadSupplierAvatarMutation()
   const registerPurchasePaymentMutation = useRegisterSupplierPurchasePaymentMutation()
+  const cancelPurchaseMutation = useCancelSupplierPurchaseMutation()
   const supplierRecords = suppliersQuery.data
   const suppliers = supplierRecords ?? []
   const visibleSuppliers = suppliers.filter((supplier) =>
@@ -201,6 +203,25 @@ export function SuppliersPage() {
     }
   }
 
+  async function handleCancelPurchase(purchaseId: string, reason: string) {
+    if (!selectedSupplierId) {
+      return
+    }
+
+    setPurchaseActionError(null)
+    try {
+      await cancelPurchaseMutation.mutateAsync({
+        supplierId: selectedSupplierId,
+        purchaseId,
+        input: { reason },
+      })
+    } catch (error) {
+      setPurchaseActionError(
+        getErrorMessage(error, 'No pudimos anular la compra.'),
+      )
+    }
+  }
+
   function handleCloseSupplierDrawer() {
     setCreateSupplierOpen(false)
     setEditingSupplierId(null)
@@ -343,6 +364,55 @@ export function SuppliersPage() {
                 </tbody>
               </table>
             </RetailTableShell>
+
+            {selectedSupplierId ? (
+              <div className={styles.retailDetailGrid}>
+                <SupplierDetailPanel
+                  supplier={selectedSupplier}
+                  errorMessage={
+                    supplierDetailQuery.isError
+                      ? getErrorMessage(
+                          supplierDetailQuery.error,
+                          'No pudimos cargar el proveedor seleccionado.',
+                        )
+                      : null
+                  }
+                  isLoading={supplierDetailQuery.isLoading}
+                  selectedSupplierName={selectedSupplierSummary?.name ?? null}
+                  onEdit={(supplier) => handleStartEditSupplier(supplier.id)}
+                  onRetry={() => {
+                    void supplierDetailQuery.refetch()
+                  }}
+                />
+                <SupplierSupplyHistoryPanel
+                  supplierName={
+                    selectedSupplier?.name ?? selectedSupplierSummary?.name ?? null
+                  }
+                  cancellingPurchaseId={
+                    cancelPurchaseMutation.isPending
+                      ? cancelPurchaseMutation.variables?.purchaseId ?? null
+                      : null
+                  }
+                  isLoading={supplierDetailQuery.isLoading}
+                  payingPurchaseId={
+                    registerPurchasePaymentMutation.isPending
+                      ? registerPurchasePaymentMutation.variables?.purchaseId ?? null
+                      : null
+                  }
+                  paymentError={purchaseActionError}
+                  purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
+                  onCancelPurchase={(purchaseId, reason) => {
+                    void handleCancelPurchase(purchaseId, reason)
+                  }}
+                  onDownloadReceipt={(purchaseId) => {
+                    void handleDownloadPurchaseReceipt(purchaseId)
+                  }}
+                  onRegisterPayment={(purchaseId, input) => {
+                    void handleRegisterPurchasePayment(purchaseId, input)
+                  }}
+                />
+              </div>
+            ) : null}
           </section>
         </RetailPageLayout>
 
@@ -473,6 +543,11 @@ export function SuppliersPage() {
               selectedSupplier?.name ?? selectedSupplierSummary?.name ?? null
             }
             isLoading={supplierDetailQuery.isLoading}
+            cancellingPurchaseId={
+              cancelPurchaseMutation.isPending
+                ? cancelPurchaseMutation.variables?.purchaseId ?? null
+                : null
+            }
             payingPurchaseId={
               registerPurchasePaymentMutation.isPending
                 ? registerPurchasePaymentMutation.variables?.purchaseId ?? null
@@ -480,6 +555,9 @@ export function SuppliersPage() {
             }
             paymentError={purchaseActionError}
             purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
+            onCancelPurchase={(purchaseId, reason) => {
+              void handleCancelPurchase(purchaseId, reason)
+            }}
             onDownloadReceipt={(purchaseId) => {
               void handleDownloadPurchaseReceipt(purchaseId)
             }}

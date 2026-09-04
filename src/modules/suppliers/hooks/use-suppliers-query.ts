@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createSupplier,
+  cancelSupplierPurchase,
   getSupplierDetail,
   getSuppliers,
   markSupplierPurchaseAsPaid,
@@ -11,6 +12,7 @@ import {
 import type {
   SupplierDetail,
   SupplierMutationInput,
+  SupplierPurchaseCancellationInput,
   SupplierPurchasePaymentInput,
   SupplierSummary,
 } from '@/modules/suppliers/types/supplier'
@@ -136,6 +138,34 @@ export function useRegisterSupplierPurchasePaymentMutation() {
         supplier,
       )
       void queryClient.invalidateQueries({ queryKey: suppliersQueryKey })
+      void queryClient.invalidateQueries({ queryKey: ['reports'] })
+      void queryClient.invalidateQueries({ queryKey: ['cash-register'] })
+      void queryClient.invalidateQueries({ queryKey: ['movements'] })
+    },
+  })
+}
+
+export function useCancelSupplierPurchaseMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      supplierId,
+      purchaseId,
+      input,
+    }: {
+      supplierId: string
+      purchaseId: string
+      input: SupplierPurchaseCancellationInput
+    }) => cancelSupplierPurchase(supplierId, purchaseId, input),
+    onSuccess: (supplier) => {
+      queryClient.setQueryData(
+        [...suppliersQueryKey, 'detail', supplier.id],
+        supplier,
+      )
+      void queryClient.invalidateQueries({ queryKey: suppliersQueryKey })
+      void queryClient.invalidateQueries({ queryKey: ['inventory'] })
+      void queryClient.invalidateQueries({ queryKey: ['products'] })
       void queryClient.invalidateQueries({ queryKey: ['reports'] })
       void queryClient.invalidateQueries({ queryKey: ['cash-register'] })
       void queryClient.invalidateQueries({ queryKey: ['movements'] })

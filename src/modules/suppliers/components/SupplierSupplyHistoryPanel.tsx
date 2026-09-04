@@ -21,12 +21,14 @@ type SupplierSupplyHistoryPanelProps = {
   purchaseHistory: SupplierSupplyHistoryItem[]
   isLoading: boolean
   payingPurchaseId?: string | null
+  cancellingPurchaseId?: string | null
   paymentError?: string | null
   onRegisterPayment?: (
     purchaseId: string,
     input: SupplierPurchasePaymentInput,
   ) => void
   onDownloadReceipt?: (purchaseId: string) => void
+  onCancelPurchase?: (purchaseId: string, reason: string) => void
 }
 
 type PaymentDraft = {
@@ -62,13 +64,19 @@ export function SupplierSupplyHistoryPanel({
   purchaseHistory,
   isLoading,
   payingPurchaseId = null,
+  cancellingPurchaseId = null,
   paymentError = null,
   onRegisterPayment,
   onDownloadReceipt,
+  onCancelPurchase,
 }: SupplierSupplyHistoryPanelProps) {
   const { languageCode } = useAppTranslation()
   const isEnglish = languageCode === 'en'
   const [paymentDraft, setPaymentDraft] = useState<PaymentDraft | null>(null)
+  const [cancellationDraft, setCancellationDraft] = useState<{
+    purchaseId: string
+    reason: string
+  } | null>(null)
 
   function getPaymentMethodLabel(method: ExpensePaymentMethod) {
     return isEnglish
@@ -213,6 +221,19 @@ export function SupplierSupplyHistoryPanel({
                   <p className={styles.purchaseNotes}>{purchase.notes}</p>
                 ) : null}
 
+                {purchase.status === 'CANCELLED' ? (
+                  <div className={styles.cancellationNotice}>
+                    <strong>{isEnglish ? 'Cancelled purchase' : 'Compra anulada'}</strong>
+                    <span>
+                      {purchase.cancellationReason ??
+                        (isEnglish ? 'No reason recorded.' : 'Sin motivo registrado.')}
+                    </span>
+                    {purchase.cancelledAt ? (
+                      <small>{formatDateTime(purchase.cancelledAt)}</small>
+                    ) : null}
+                  </div>
+                ) : null}
+
                 <div className={styles.purchaseActions}>
                   {onDownloadReceipt ? (
                     <button type="button" onClick={() => onDownloadReceipt(purchase.purchaseId)}>
@@ -224,7 +245,77 @@ export function SupplierSupplyHistoryPanel({
                       {isEnglish ? 'Register payment' : 'Registrar abono'}
                     </button>
                   ) : null}
+                  {purchase.status !== 'CANCELLED' && onCancelPurchase ? (
+                    <button
+                      className={styles.cancelPurchaseButton}
+                      type="button"
+                      onClick={() => {
+                        setPaymentDraft(null)
+                        setCancellationDraft({
+                          purchaseId: purchase.purchaseId,
+                          reason: '',
+                        })
+                      }}
+                    >
+                      {isEnglish ? 'Cancel purchase' : 'Anular compra'}
+                    </button>
+                  ) : null}
                 </div>
+
+                {cancellationDraft?.purchaseId === purchase.purchaseId ? (
+                  <div className={styles.cancellationForm}>
+                    <div>
+                      <strong>
+                        {isEnglish
+                          ? 'Confirm purchase cancellation'
+                          : 'Confirma la anulación de la compra'}
+                      </strong>
+                      <p>
+                        {isEnglish
+                          ? 'Inventory will be removed and cash payments will be reversed. This action cannot be undone.'
+                          : 'Se retirará el inventario y se reversarán los pagos en efectivo. Esta acción no se puede deshacer.'}
+                      </p>
+                    </div>
+                    <label>
+                      <span>{isEnglish ? 'Reason' : 'Motivo de la anulación'}</span>
+                      <textarea
+                        maxLength={255}
+                        rows={3}
+                        value={cancellationDraft.reason}
+                        onChange={(event) =>
+                          setCancellationDraft({
+                            ...cancellationDraft,
+                            reason: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                    <div className={styles.paymentFormActions}>
+                      <button type="button" onClick={() => setCancellationDraft(null)}>
+                        {isEnglish ? 'Go back' : 'Volver'}
+                      </button>
+                      <button
+                        className={styles.confirmCancellationButton}
+                        disabled={
+                          cancellingPurchaseId !== null ||
+                          cancellationDraft.reason.trim().length < 3
+                        }
+                        type="button"
+                        onClick={() => {
+                          onCancelPurchase?.(
+                            purchase.purchaseId,
+                            cancellationDraft.reason.trim(),
+                          )
+                          setCancellationDraft(null)
+                        }}
+                      >
+                        {cancellingPurchaseId === purchase.purchaseId
+                          ? isEnglish ? 'Cancelling...' : 'Anulando...'
+                          : isEnglish ? 'Confirm cancellation' : 'Confirmar anulación'}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
 
                 {isPaymentOpen && paymentDraft ? (
                   <div className={styles.paymentForm}>

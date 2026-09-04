@@ -21,6 +21,8 @@ export type SupplierSupplyHistoryItem = {
   status: ExpenseStatus
   purchaseDate: string
   dueDate: string | null
+  cancelledAt: string | null
+  cancellationReason: string | null
   notes: string | null
   items: Array<{
     id: string
@@ -58,6 +60,10 @@ export type SupplierPurchasePaymentInput = {
   reference?: string
   notes?: string
   paymentDate?: string
+}
+
+export type SupplierPurchaseCancellationInput = {
+  reason: string
 }
 import type {
   ExpensePaymentMethod,
