@@ -23,6 +23,11 @@ import {
 import { getInventoryCopy } from '@/modules/inventory/i18n/inventory-copy'
 import { exportInventoryReport } from '@/modules/inventory/services/inventory-api'
 import { inventoryTaxOptions } from '@/modules/inventory/constants/inventory-tax-options'
+import type { ExpensePaymentMethod } from '@/modules/expenses/types/expense'
+import {
+  toExpenseDateInputValue,
+  toExpenseRequestDate,
+} from '@/modules/expenses/utils/format-expense'
 import type {
   InventoryAdjustmentInput,
   InventoryProductCategory,
@@ -39,6 +44,7 @@ import {
   useUpdateBusinessSettingsMutation,
 } from '@/modules/settings/hooks/use-settings-query'
 import { buildConfiguredCatalogUrl } from '@/modules/settings/utils/virtual-catalog'
+import { useSuppliersQuery } from '@/modules/suppliers/hooks/use-suppliers-query'
 import { routePaths, routeSegments } from '@/routes/route-paths'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
@@ -78,8 +84,13 @@ type CategoryEditorState = {
 
 type PurchaseFormState = {
   productId: string
+  supplierId: string
   quantity: string
   unitCost: string
+  reference: string
+  paymentMethod: ExpensePaymentMethod
+  status: 'PAID' | 'PENDING'
+  purchaseDate: string
   reason: string
 }
 
@@ -123,8 +134,13 @@ function createDefaultCategoryEditorState(): CategoryEditorState {
 function createDefaultPurchaseFormState(): PurchaseFormState {
   return {
     productId: '',
+    supplierId: '',
     quantity: '',
     unitCost: '',
+    reference: '',
+    paymentMethod: 'CASH',
+    status: 'PAID',
+    purchaseDate: toExpenseDateInputValue(new Date()),
     reason: '',
   }
 }
@@ -396,6 +412,7 @@ export function RetailInventoryWorkspace() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const productsQuery = useProductsQuery()
+  const suppliersQuery = useSuppliersQuery()
   const categoriesQuery = useInventoryCategoriesQuery()
   const lowStockQuery = useInventoryLowStockQuery()
   const createCategoryMutation = useCreateInventoryCategoryMutation()
@@ -408,6 +425,10 @@ export function RetailInventoryWorkspace() {
   const businessSettingsQuery = useBusinessSettingsQuery()
   const updateBusinessSettingsMutation = useUpdateBusinessSettingsMutation()
   const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data])
+  const suppliers = useMemo(
+    () => suppliersQuery.data ?? [],
+    [suppliersQuery.data],
+  )
   const categories = useMemo(
     () => categoriesQuery.data ?? [],
     [categoriesQuery.data],
@@ -978,10 +999,16 @@ export function RetailInventoryWorkspace() {
     const quantity = parsePositiveNumber(purchaseFormState.quantity)
     const unitCost = parsePositiveNumber(purchaseFormState.unitCost)
 
-    if (!purchaseFormState.productId || quantity <= 0 || unitCost <= 0) {
+    if (
+      !purchaseFormState.productId ||
+      !purchaseFormState.supplierId ||
+      !purchaseFormState.purchaseDate ||
+      quantity <= 0 ||
+      unitCost <= 0
+    ) {
       setFeedbackMessage({
         tone: 'error',
-        text: 'Completa producto, cantidad y costo unitario.',
+        text: 'Completa proveedor, producto, fecha, cantidad y costo unitario.',
       })
       return
     }
@@ -989,8 +1016,13 @@ export function RetailInventoryWorkspace() {
     try {
       await registerPurchaseMutation.mutateAsync({
         productId: purchaseFormState.productId,
+        supplierId: purchaseFormState.supplierId,
         quantity,
         unitCost,
+        reference: normalizeOptionalText(purchaseFormState.reference),
+        paymentMethod: purchaseFormState.paymentMethod,
+        status: purchaseFormState.status,
+        purchaseDate: toExpenseRequestDate(purchaseFormState.purchaseDate),
         reason: normalizeOptionalText(purchaseFormState.reason),
       })
 
@@ -998,7 +1030,7 @@ export function RetailInventoryWorkspace() {
       setPurchaseFormState(createDefaultPurchaseFormState())
       setFeedbackMessage({
         tone: 'success',
-        text: copy.purchaseSubmit,
+        text: copy.purchaseSuccess,
       })
     } catch (error) {
       setFeedbackMessage({
@@ -2205,6 +2237,8 @@ export function RetailInventoryWorkspace() {
                 className={retailStyles.buttonDark}
                 disabled={
                   !purchaseFormState.productId ||
+                  !purchaseFormState.supplierId ||
+                  !purchaseFormState.purchaseDate ||
                   parsePositiveNumber(purchaseFormState.quantity) <= 0 ||
                   parsePositiveNumber(purchaseFormState.unitCost) <= 0 ||
                   registerPurchaseMutation.isPending
@@ -2225,6 +2259,42 @@ export function RetailInventoryWorkspace() {
           onClose={handleClosePurchaseDrawer}
         >
           <div className={styles.drawerStack}>
+            <label className={styles.fieldGroup}>
+              <span className={styles.fieldLabel}>{copy.purchaseSupplier} *</span>
+              <select
+                className={styles.selectInput}
+                disabled={suppliersQuery.isLoading || suppliers.length === 0}
+                value={purchaseFormState.supplierId}
+                onChange={(event) =>
+                  setPurchaseFormState((currentState) => ({
+                    ...currentState,
+                    supplierId: event.target.value,
+                  }))
+                }
+              >
+                <option value="">{copy.selectOption}</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
+              <small className={styles.fieldHint}>
+                {suppliers.length > 0
+                  ? copy.purchaseSupplierHint
+                  : copy.purchaseSupplierEmpty}{' '}
+                {suppliers.length === 0 ? (
+                  <button
+                    className={styles.inlineFieldAction}
+                    type="button"
+                    onClick={() => navigate(routePaths.suppliers)}
+                  >
+                    {languageCode === 'en' ? 'Go to suppliers' : 'Ir a proveedores'}
+                  </button>
+                ) : null}
+              </small>
+            </label>
+
             <label className={styles.fieldGroup}>
               <span className={styles.fieldLabel}>{copy.purchaseProduct} *</span>
               <select
@@ -2284,6 +2354,80 @@ export function RetailInventoryWorkspace() {
                     }))
                   }
                 />
+              </label>
+            </div>
+
+            <div className={styles.purchaseFieldsRow}>
+              <label className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>{copy.purchaseDate} *</span>
+                <input
+                  className={styles.textInput}
+                  type="date"
+                  value={purchaseFormState.purchaseDate}
+                  onChange={(event) =>
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      purchaseDate: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>{copy.purchaseReference}</span>
+                <input
+                  className={styles.textInput}
+                  maxLength={120}
+                  placeholder={copy.purchaseReferencePlaceholder}
+                  value={purchaseFormState.reference}
+                  onChange={(event) =>
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      reference: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+            </div>
+
+            <div className={styles.purchaseFieldsRow}>
+              <label className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>{copy.purchasePaymentMethod}</span>
+                <select
+                  className={styles.selectInput}
+                  value={purchaseFormState.paymentMethod}
+                  onChange={(event) =>
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      paymentMethod: event.target.value as ExpensePaymentMethod,
+                    }))
+                  }
+                >
+                  <option value="CASH">{languageCode === 'en' ? 'Cash' : 'Efectivo'}</option>
+                  <option value="CARD">{languageCode === 'en' ? 'Card' : 'Tarjeta'}</option>
+                  <option value="TRANSFER">{languageCode === 'en' ? 'Transfer' : 'Transferencia'}</option>
+                  <option value="DIGITAL_WALLET">{languageCode === 'en' ? 'Digital wallet' : 'Billetera digital'}</option>
+                  <option value="BANK_DEPOSIT">{languageCode === 'en' ? 'Bank deposit' : 'Consignación'}</option>
+                  <option value="CREDIT">{languageCode === 'en' ? 'Credit' : 'Crédito'}</option>
+                  <option value="OTHER">{languageCode === 'en' ? 'Other' : 'Otro'}</option>
+                </select>
+              </label>
+
+              <label className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>{copy.purchaseStatus}</span>
+                <select
+                  className={styles.selectInput}
+                  value={purchaseFormState.status}
+                  onChange={(event) =>
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      status: event.target.value as 'PAID' | 'PENDING',
+                    }))
+                  }
+                >
+                  <option value="PAID">{copy.purchaseStatusPaid}</option>
+                  <option value="PENDING">{copy.purchaseStatusPending}</option>
+                </select>
               </label>
             </div>
 

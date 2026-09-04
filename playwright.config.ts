@@ -18,7 +18,7 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "cd ../backend && npm run build && npm run start",
+      command: "cd ../backend-Cashgo && npm run build && npm run start",
       env: {
         EMAIL_PROVIDER: "none",
         FRONTEND_URL: frontendUrl,

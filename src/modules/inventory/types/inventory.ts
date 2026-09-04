@@ -1,4 +1,8 @@
 import type { Product } from "@/modules/products/types/product";
+import type {
+  ExpensePaymentMethod,
+  ExpenseStatus,
+} from "@/modules/expenses/types/expense";
 
 export const inventoryMovementTypes = [
   "INITIAL_STOCK",
@@ -74,8 +78,13 @@ export type InventoryProductTaxesResult = {
 
 export type InventoryPurchaseInput = {
   productId: string;
+  supplierId: string;
   quantity: number;
   unitCost: number;
+  reference?: string;
+  paymentMethod?: ExpensePaymentMethod;
+  status?: Exclude<ExpenseStatus, "CANCELLED">;
+  purchaseDate?: string;
   reason?: string;
 };
 

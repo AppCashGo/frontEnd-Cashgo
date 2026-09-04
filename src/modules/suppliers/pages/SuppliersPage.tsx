@@ -6,6 +6,7 @@ import { SupplierSupplyHistoryPanel } from '@/modules/suppliers/components/Suppl
 import { SuppliersListPanel } from '@/modules/suppliers/components/SuppliersListPanel'
 import {
   useCreateSupplierMutation,
+  useMarkSupplierPurchaseAsPaidMutation,
   useSupplierDetailQuery,
   useSuppliersQuery,
   useUpdateSupplierMutation,
@@ -39,6 +40,7 @@ export function SuppliersPage() {
   const createSupplierMutation = useCreateSupplierMutation()
   const updateSupplierMutation = useUpdateSupplierMutation()
   const uploadSupplierAvatarMutation = useUploadSupplierAvatarMutation()
+  const markPurchaseAsPaidMutation = useMarkSupplierPurchaseAsPaidMutation()
   const supplierRecords = suppliersQuery.data
   const suppliers = supplierRecords ?? []
   const visibleSuppliers = suppliers.filter((supplier) =>
@@ -424,7 +426,31 @@ export function SuppliersPage() {
               selectedSupplier?.name ?? selectedSupplierSummary?.name ?? null
             }
             isLoading={supplierDetailQuery.isLoading}
+            payingPurchaseId={
+              markPurchaseAsPaidMutation.isPending
+                ? markPurchaseAsPaidMutation.variables?.purchaseId ?? null
+                : null
+            }
+            paymentError={
+              markPurchaseAsPaidMutation.isError
+                ? getErrorMessage(
+                    markPurchaseAsPaidMutation.error,
+                    'No pudimos actualizar el estado de la compra.',
+                  )
+                : null
+            }
             purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
+            onMarkPaid={(purchaseId) => {
+              if (!selectedSupplierId) {
+                return
+              }
+
+              markPurchaseAsPaidMutation.reset()
+              markPurchaseAsPaidMutation.mutate({
+                supplierId: selectedSupplierId,
+                purchaseId,
+              })
+            }}
           />
         </div>
       </div>

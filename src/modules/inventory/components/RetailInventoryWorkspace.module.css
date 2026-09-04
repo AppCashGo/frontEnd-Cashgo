@@ -1308,6 +1308,21 @@
   line-height: 1.4;
 }
 
+.inlineFieldAction {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #0758d1;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inlineFieldAction:hover,
+.inlineFieldAction:focus-visible {
+  text-decoration: underline;
+}
+
 .purchaseFieldsRow {
   display: grid;
   grid-template-columns: 1fr 1fr;

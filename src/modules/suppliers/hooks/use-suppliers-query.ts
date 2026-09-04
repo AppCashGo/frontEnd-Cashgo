@@ -3,6 +3,7 @@ import {
   createSupplier,
   getSupplierDetail,
   getSuppliers,
+  markSupplierPurchaseAsPaid,
   updateSupplier,
   uploadSupplierAvatar,
 } from '@/modules/suppliers/services/suppliers-api'
@@ -87,6 +88,28 @@ export function useUpdateSupplierMutation() {
       )
 
       void queryClient.invalidateQueries({ queryKey: suppliersQueryKey })
+    },
+  })
+}
+
+export function useMarkSupplierPurchaseAsPaidMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      supplierId,
+      purchaseId,
+    }: {
+      supplierId: string
+      purchaseId: string
+    }) => markSupplierPurchaseAsPaid(supplierId, purchaseId),
+    onSuccess: (supplier) => {
+      queryClient.setQueryData(
+        [...suppliersQueryKey, 'detail', supplier.id],
+        supplier,
+      )
+      void queryClient.invalidateQueries({ queryKey: suppliersQueryKey })
+      void queryClient.invalidateQueries({ queryKey: ['reports'] })
     },
   })
 }

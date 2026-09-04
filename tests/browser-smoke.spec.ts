@@ -1191,6 +1191,15 @@ test("registers an inventory purchase, updates cost and records the movement", a
     .toString(36)
     .slice(2, 8)}`;
   const product = await createSmokeProduct(request, session, runId);
+  const suppliers = await apiGet<SmokeSupplierRecord[]>(
+    request,
+    session,
+    "/suppliers",
+  );
+  const supplier = suppliers[0];
+  if (!supplier) {
+    throw new Error("The inventory purchase smoke test requires one supplier.");
+  }
   const purchaseQuantity = 2;
   const purchaseUnitCost = 900;
   const purchaseReason = `Browser smoke inventory purchase ${runId}`;
@@ -1214,6 +1223,9 @@ test("registers an inventory purchase, updates cost and records the movement", a
     });
     await expect(purchaseDrawer).toBeVisible();
 
+    await purchaseDrawer.getByLabel("Proveedor").selectOption({
+      label: supplier.name,
+    });
     await purchaseDrawer.getByLabel("Producto").selectOption({
       label: product.name,
     });
@@ -1223,7 +1235,10 @@ test("registers an inventory purchase, updates cost and records the movement", a
     await purchaseDrawer
       .getByLabel("Costo unitario")
       .fill(String(purchaseUnitCost));
-    await purchaseDrawer.getByLabel("Nota de la compra").fill(purchaseReason);
+    await purchaseDrawer
+      .getByLabel("Factura o referencia")
+      .fill(`SMOKE-${runId}`);
+    await purchaseDrawer.getByLabel("Notas de la compra").fill(purchaseReason);
 
     const purchaseResponsePromise = page.waitForResponse((response) => {
       const requestInfo = response.request();

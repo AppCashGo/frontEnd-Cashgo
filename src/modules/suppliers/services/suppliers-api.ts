@@ -96,3 +96,15 @@ export async function uploadSupplierAvatar(supplierId: string, file: File) {
 
   return normalizeSupplierDetailRecord(supplier)
 }
+
+export async function markSupplierPurchaseAsPaid(
+  supplierId: string,
+  purchaseId: string,
+) {
+  const supplier = await patchJson<SupplierDetailApiRecord, Record<string, never>>(
+    `/suppliers/${supplierId}/purchases/${purchaseId}/pay`,
+    {},
+  )
+
+  return normalizeSupplierDetailRecord(supplier)
+}

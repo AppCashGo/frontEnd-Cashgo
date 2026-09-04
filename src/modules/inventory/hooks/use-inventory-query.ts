@@ -18,6 +18,7 @@ import type {
   InventoryPurchaseInput,
 } from '@/modules/inventory/types/inventory'
 import { productsQueryKey } from '@/modules/products/hooks/use-products-query'
+import { suppliersQueryKey } from '@/modules/suppliers/hooks/use-suppliers-query'
 
 export const inventoryMovementsQueryKey = ['inventory', 'movements'] as const
 export const inventoryLowStockQueryKey = ['inventory', 'low-stock'] as const
@@ -85,6 +86,9 @@ async function invalidateInventoryDependencies(queryClient: ReturnType<typeof us
     }),
     queryClient.invalidateQueries({
       queryKey: dashboardSummaryQueryKey,
+    }),
+    queryClient.invalidateQueries({
+      queryKey: suppliersQueryKey,
     }),
   ])
 }
