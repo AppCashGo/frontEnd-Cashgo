@@ -26,13 +26,6 @@ export const employeeFormSchema = z.object({
       message: "Selecciona un rol.",
     }),
   }),
-  password: z
-    .string()
-    .max(72, "El codigo debe tener maximo 72 caracteres.")
-    .refine(
-      (value) => value.length === 0 || value.trim().length >= 8,
-      "El codigo debe tener al menos 8 caracteres.",
-    ),
 });
 
 export type EmployeeFormValues = z.infer<typeof employeeFormSchema>;

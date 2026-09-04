@@ -47,7 +47,6 @@ export type EmployeeCreateInput = {
   name: string;
   email?: string;
   phone: string;
-  password: string;
   role: AssignableUserRole;
 };
 
@@ -55,6 +54,5 @@ export type EmployeeUpdateInput = {
   name?: string;
   email?: string;
   phone?: string;
-  password?: string;
   role?: AssignableUserRole;
 };

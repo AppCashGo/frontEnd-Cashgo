@@ -168,8 +168,9 @@ export function CreateBillingInvoiceDrawer({
               <option value="POS_DOCUMENT">
                 {getBillingInvoiceTypeLabel("POS_DOCUMENT", languageCode)}
               </option>
-              <option value="ELECTRONIC_INVOICE">
-                {getBillingInvoiceTypeLabel("ELECTRONIC_INVOICE", languageCode)}
+              <option disabled value="ELECTRONIC_INVOICE">
+                {getBillingInvoiceTypeLabel("ELECTRONIC_INVOICE", languageCode)} ·{" "}
+                {languageCode === "en" ? "Coming soon" : "Próximamente"}
               </option>
             </select>
           </label>

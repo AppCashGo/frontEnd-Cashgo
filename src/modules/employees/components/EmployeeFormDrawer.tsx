@@ -52,18 +52,11 @@ function getDefaultValues(employee: Employee | null): EmployeeFormValues {
       : (employee?.email ?? ''),
     phone: employee?.phone ?? '',
     role: getRoleForForm(employee),
-    password: '',
   }
 }
 
 function normalizeOptionalEmail(value: string) {
   const trimmedValue = value.trim().toLowerCase()
-
-  return trimmedValue.length > 0 ? trimmedValue : undefined
-}
-
-function normalizePassword(value: string) {
-  const trimmedValue = value.trim()
 
   return trimmedValue.length > 0 ? trimmedValue : undefined
 }
@@ -116,15 +109,6 @@ export function EmployeeFormDrawer({
   }, [employee, reset])
 
   const submitEmployee = handleSubmit(async (values) => {
-      const normalizedPassword = normalizePassword(values.password)
-
-      if (!isEditing && !normalizedPassword) {
-        setError('password', {
-          message: 'El codigo temporal de acceso es obligatorio.',
-        })
-        return
-      }
-
     try {
       const normalizedEmail = normalizeOptionalEmail(values.email)
 
@@ -134,18 +118,12 @@ export function EmployeeFormDrawer({
           email: normalizedEmail,
           phone: values.phone.trim(),
           role: values.role,
-          ...(normalizedPassword
-            ? {
-                password: normalizedPassword,
-              }
-            : {}),
         })
       } else {
         await onSubmit({
           name: values.name.trim(),
           email: normalizedEmail,
           phone: values.phone.trim(),
-          password: normalizedPassword as string,
           role: values.role,
         })
       }
@@ -288,36 +266,12 @@ export function EmployeeFormDrawer({
           ) : null}
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="employee-password">
-            {isEditing
-              ? 'Nuevo codigo temporal (opcional)'
-              : 'Codigo temporal de acceso'}
-          </label>
-          <input
-            aria-describedby={
-              errors.password ? 'employee-password-error' : undefined
-            }
-            aria-invalid={Boolean(errors.password)}
-            className={styles.input}
-            id="employee-password"
-            placeholder="Minimo 8 caracteres"
-            type="password"
-            {...register('password')}
-          />
-          {errors.password ? (
-            <p className={styles.errorMessage} id="employee-password-error">
-              {errors.password.message}
-            </p>
-          ) : null}
-        </div>
-
         <div className={styles.confirmCard}>
           <p className={styles.confirmTitle}>Confirma la configuracion</p>
           <p className={styles.confirmDescription}>
             Esta persona usara{' '}
             <strong>{watch('phone') || 'el telefono configurado'}</strong>{' '}
-            como identificador principal de ingreso. Verificalo antes de guardar.
+            para recibir un código de verificación e ingresar. Verifícalo antes de guardar.
           </p>
         </div>
 

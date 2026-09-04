@@ -158,7 +158,6 @@ function getDefaultValues(employee: Employee | null): EmployeeFormValues {
     email: employee?.email.includes('@users.cashgo.local')
       ? ''
       : (employee?.email ?? ''),
-    password: '',
     phone: employee?.phone?.replace(/^\+57/, '') ?? '',
     role: getRoleForForm(employee),
   }
@@ -210,13 +209,6 @@ function normalizePhone(phone: string) {
   }
 
   return `+57${trimmedPhone.replace(/\D/g, '')}`
-}
-
-function createTemporaryPassword(phone: string) {
-  const digits = phone.replace(/\D/g, '')
-  const suffix = digits.slice(-4).padStart(4, '0')
-
-  return `Cashgo${suffix}!`
 }
 
 function formatConfirmationPhone(phone: string) {
@@ -533,7 +525,6 @@ export function RetailEmployeeDrawer({
       await onSubmit(
         {
           name: pendingConfirmation.values.name.trim(),
-          password: createTemporaryPassword(pendingConfirmation.normalizedPhone),
           phone: pendingConfirmation.normalizedPhone,
           role: pendingConfirmation.values.role,
         },
