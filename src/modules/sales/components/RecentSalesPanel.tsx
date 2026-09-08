@@ -10,6 +10,7 @@ type RecentSalesPanelProps = {
   isLoading: boolean
   errorMessage: string | null
   onRetry: () => void
+  onManage?: () => void
 }
 
 function getStatusLabel(status: SaleReceipt['status']) {
@@ -32,6 +33,7 @@ export function RecentSalesPanel({
   isLoading,
   errorMessage,
   onRetry,
+  onManage,
 }: RecentSalesPanelProps) {
   return (
     <SurfaceCard className={styles.card}>
@@ -43,6 +45,15 @@ export function RecentSalesPanel({
             Mantén visibles los últimos comprobantes mientras sigues vendiendo.
           </p>
         </div>
+        {onManage ? (
+          <button
+            className={styles.secondaryButton}
+            type="button"
+            onClick={onManage}
+          >
+            Ver historial
+          </button>
+        ) : null}
       </div>
 
       {isLoading ? (
@@ -53,7 +64,9 @@ export function RecentSalesPanel({
         </div>
       ) : errorMessage ? (
         <div className={styles.stateBox} role="alert">
-          <p className={styles.stateTitle}>No pudimos cargar ventas recientes</p>
+          <p className={styles.stateTitle}>
+            No pudimos cargar ventas recientes
+          </p>
           <p className={styles.stateDescription}>{errorMessage}</p>
           <button
             className={styles.secondaryButton}
@@ -76,7 +89,9 @@ export function RecentSalesPanel({
             <li className={styles.saleItem} key={sale.id}>
               <div className={styles.saleHeading}>
                 <div>
-                  <strong className={styles.saleNumber}>{sale.saleNumber}</strong>
+                  <strong className={styles.saleNumber}>
+                    {sale.saleNumber}
+                  </strong>
                   <p className={styles.saleMeta}>
                     {sale.customer?.name ?? 'Venta de mostrador'} ·{' '}
                     {formatDate(sale.createdAt)}

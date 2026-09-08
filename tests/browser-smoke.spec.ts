@@ -437,6 +437,28 @@ test("logs in with the development account and loads the sales workspace", async
   expect(browserErrors).toEqual([]);
 });
 
+test("opens the responsive sales history and returns workspace", async ({
+  page,
+  request,
+}) => {
+  const browserErrors = collectBrowserErrors(page);
+
+  await loginWithDevelopmentAccount(page, request);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/sales");
+  await page.getByRole("button", { name: "Historial de ventas" }).click();
+
+  const drawer = page.getByRole("dialog", { name: "Historial de ventas" });
+  await expect(drawer).toBeVisible();
+  await expect(
+    drawer.getByPlaceholder("Buscar por venta o cliente"),
+  ).toBeVisible();
+  await expect(page.locator("body")).not.toContainText(
+    "Unexpected Application Error",
+  );
+  expect(browserErrors).toEqual([]);
+});
+
 test("closes the current cash register from the sales workspace", async ({
   page,
   request,

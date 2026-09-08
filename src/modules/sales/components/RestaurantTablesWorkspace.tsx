@@ -34,7 +34,11 @@ import {
   restaurantPaymentMethods,
   touchTableOrder,
 } from '@/modules/restaurant/utils/restaurant-workspace'
-import { useCreateSaleMutation } from '@/modules/sales/hooks/use-create-sale-mutation'
+import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
+import {
+  useCreateSaleMutation,
+  useSalesQuery,
+} from '@/modules/sales/hooks/use-create-sale-mutation'
 import type { SalePaymentMethod } from '@/modules/sales/types/sale'
 import { routePaths } from '@/routes/route-paths'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
@@ -140,6 +144,7 @@ export function RestaurantTablesWorkspace() {
   const moveRestaurantTableOrderMutation = useMoveRestaurantTableOrderMutation()
   const deleteRestaurantTableOrderMutation = useDeleteRestaurantTableOrderMutation()
   const createSaleMutation = useCreateSaleMutation()
+  const salesQuery = useSalesQuery()
 
   const [workspace, setWorkspace] = useState(createDefaultRestaurantWorkspace)
   const [activeZoneId, setActiveZoneId] = useState('')
@@ -151,6 +156,7 @@ export function RestaurantTablesWorkspace() {
   const [activeProductCategory, setActiveProductCategory] = useState('ALL')
   const [operationError, setOperationError] = useState<string | null>(null)
   const [isCounterSaleOpen, setIsCounterSaleOpen] = useState(false)
+  const [isSalesHistoryOpen, setSalesHistoryOpen] = useState(false)
   const [counterSaleItems, setCounterSaleItems] = useState<CounterSaleItem[]>([])
   const [counterSaleSearchValue, setCounterSaleSearchValue] = useState('')
   const [counterSaleCategory, setCounterSaleCategory] = useState('ALL')
@@ -2174,6 +2180,13 @@ export function RestaurantTablesWorkspace() {
           <h2>Mesas</h2>
         </div>
         <div className={styles.headerActions}>
+          <button
+            className={styles.cashRegisterPill}
+            type="button"
+            onClick={() => setSalesHistoryOpen(true)}
+          >
+            Historial de ventas
+          </button>
           <Link className={styles.cashRegisterPill} to={routePaths.movements}>
             {currentCashRegisterSession ? 'Caja abierta' : 'Abrir caja'}
           </Link>
@@ -2488,6 +2501,12 @@ export function RestaurantTablesWorkspace() {
             </button>
         </ModalShell>
       ) : null}
+
+      <SalesHistoryDrawer
+        isOpen={isSalesHistoryOpen}
+        sales={salesQuery.data ?? []}
+        onClose={() => setSalesHistoryOpen(false)}
+      />
     </div>
   )
 }

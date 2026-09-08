@@ -6,6 +6,7 @@ import { useProductsQuery } from '@/modules/products/hooks/use-products-query'
 import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
 import { RecentSalesPanel } from '@/modules/sales/components/RecentSalesPanel'
+import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
 import { RetailSalesWorkspace } from '@/modules/sales/components/RetailSalesWorkspace'
 import { RestaurantTablesWorkspace } from '@/modules/sales/components/RestaurantTablesWorkspace'
 import { SaleCartPanel } from '@/modules/sales/components/SaleCartPanel'
@@ -77,12 +78,12 @@ function normalizeOptionalText(value: string) {
 }
 
 function StandardSalesPage() {
+  const [isHistoryOpen, setHistoryOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [inventoryFilter, setInventoryFilter] = useState<InventoryFilter>('ALL')
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
   const [paymentMode, setPaymentMode] = useState<PaymentMode>('FULL')
-  const [paymentMethod, setPaymentMethod] =
-    useState<SalePaymentMethod>('CASH')
+  const [paymentMethod, setPaymentMethod] = useState<SalePaymentMethod>('CASH')
   const [paidAmountInput, setPaidAmountInput] = useState('')
   const [discountInput, setDiscountInput] = useState('0')
   const [taxInput, setTaxInput] = useState('0')
@@ -307,6 +308,7 @@ function StandardSalesPage() {
             onRetry={() => {
               void salesQuery.refetch()
             }}
+            onManage={() => setHistoryOpen(true)}
           />
         </div>
 
@@ -349,6 +351,11 @@ function StandardSalesPage() {
           onTaxInputChange={setTaxInput}
         />
       </div>
+      <SalesHistoryDrawer
+        isOpen={isHistoryOpen}
+        sales={salesQuery.data ?? []}
+        onClose={() => setHistoryOpen(false)}
+      />
     </div>
   )
 }

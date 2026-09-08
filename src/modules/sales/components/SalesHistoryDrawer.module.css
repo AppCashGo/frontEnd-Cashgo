@@ -1,0 +1,299 @@
+.searchField,
+.saleCard,
+.sectionHeader,
+.itemRow,
+.creditList > div,
+.returnItems label,
+.fieldGrid,
+.mainActions,
+.formActions {
+  display: flex;
+  align-items: center;
+}
+.searchField {
+  gap: 0.7rem;
+  border: 1px solid #d5deeb;
+  border-radius: 14px;
+  padding: 0 0.9rem;
+  background: #fff;
+}
+.searchField svg {
+  width: 1.1rem;
+  color: #667085;
+}
+.searchField input {
+  width: 100%;
+  min-height: 3rem;
+  border: 0;
+  outline: 0;
+  font: inherit;
+}
+.salesList,
+.detail,
+.itemList,
+.creditList,
+.actionForm,
+.returnItems,
+.reasonField {
+  display: grid;
+  gap: 0.75rem;
+}
+.saleCard {
+  width: 100%;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+  padding: 1rem;
+  border: 1px solid #e1e7f0;
+  border-radius: 16px;
+  background: #fff;
+  color: #172033;
+  cursor: pointer;
+}
+.saleCard:hover,
+.saleCard:focus-visible {
+  border-color: #0758d1;
+  box-shadow: 0 8px 26px #0758d114;
+}
+.saleCard span,
+.itemRow span,
+.creditList span {
+  display: grid;
+  gap: 0.25rem;
+}
+.saleCard small,
+.itemRow small,
+.creditList small,
+.sectionHeader small {
+  color: #667085;
+}
+.saleCardValue {
+  text-align: right;
+}
+.saleCardValue small {
+  color: #0758d1;
+}
+.emptyState {
+  padding: 2rem;
+  border: 1px dashed #ccd5e2;
+  border-radius: 16px;
+  text-align: center;
+  color: #667085;
+}
+.summaryCard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  border: 1px solid #dce3ed;
+  border-radius: 16px;
+  background: #dce3ed;
+}
+.summaryCard > div {
+  display: grid;
+  gap: 0.35rem;
+  padding: 1rem;
+  background: #fff;
+}
+.summaryCard span {
+  font-size: 0.78rem;
+  color: #667085;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.section,
+.actionForm {
+  padding: 1rem;
+  border: 1px solid #dce3ed;
+  border-radius: 16px;
+  background: #fff;
+}
+.sectionHeader {
+  justify-content: space-between;
+  gap: 1rem;
+}
+.sectionHeader > div {
+  display: grid;
+  gap: 0.3rem;
+}
+.iconButton,
+.primaryButton,
+.secondaryButton,
+.dangerButton,
+.dangerGhostButton,
+.creditList button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border-radius: 10px;
+  min-height: 2.65rem;
+  padding: 0.65rem 0.9rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.iconButton,
+.secondaryButton,
+.dangerGhostButton,
+.creditList button {
+  border: 1px solid #ccd5e2;
+  background: #fff;
+  color: #344054;
+}
+.iconButton svg,
+.primaryButton svg,
+.dangerGhostButton svg {
+  width: 1rem;
+}
+.itemRow,
+.creditList > div {
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 0;
+  border-top: 1px solid #edf0f5;
+}
+.itemList .itemRow:first-child {
+  border-top: 0;
+}
+.creditList button {
+  min-height: 2rem;
+  padding: 0.35rem 0.65rem;
+  color: #0758d1;
+}
+.creditList > div > span:last-child {
+  justify-items: end;
+}
+.feedback {
+  margin: 0;
+  padding: 0.8rem 1rem;
+  border-radius: 12px;
+  background: #edf5ff;
+  color: #0747a6;
+}
+.actionForm {
+  background: #f8faff;
+}
+.actionForm > p {
+  margin: 0;
+  color: #667085;
+  line-height: 1.5;
+}
+.returnItems label {
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #dce3ed;
+  border-radius: 12px;
+  background: #fff;
+}
+.returnItems label > span {
+  display: grid;
+  gap: 0.25rem;
+}
+.returnItems small {
+  color: #667085;
+}
+.returnItems input {
+  width: 5.5rem;
+}
+.fieldGrid {
+  align-items: stretch;
+  gap: 0.75rem;
+}
+.fieldGrid > * {
+  flex: 1;
+}
+.fieldGrid label,
+.reasonField {
+  font-weight: 600;
+}
+.fieldGrid label {
+  display: grid;
+  gap: 0.4rem;
+}
+.fieldGrid input,
+.fieldGrid select,
+.reasonField textarea,
+.returnItems input {
+  min-height: 2.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.65rem;
+  font: inherit;
+  background: #fff;
+}
+.reasonField textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+.balanceNotice {
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 10px;
+  background: #edf5ff;
+}
+.balanceNotice span {
+  color: #667085;
+  font-size: 0.8rem;
+}
+.mainActions,
+.formActions {
+  justify-content: flex-end;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+.primaryButton {
+  border: 1px solid #0758d1;
+  background: #0758d1;
+  color: #fff;
+}
+.dangerButton {
+  border: 1px solid #c62828;
+  background: #c62828;
+  color: #fff;
+}
+.dangerGhostButton {
+  border-color: #f1b8b8;
+  color: #b42318;
+}
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.dangerButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+@media (max-width: 640px) {
+  .summaryCard {
+    grid-template-columns: 1fr;
+  }
+  .saleCard,
+  .sectionHeader,
+  .itemRow,
+  .creditList > div,
+  .fieldGrid {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .saleCardValue,
+  .creditList > div > span:last-child {
+    text-align: left;
+    justify-items: start;
+  }
+  .iconButton,
+  .mainActions > * {
+    width: 100%;
+  }
+  .returnItems label {
+    align-items: center;
+  }
+  .formActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .section,
+  .actionForm {
+    padding: 0.85rem;
+  }
+}

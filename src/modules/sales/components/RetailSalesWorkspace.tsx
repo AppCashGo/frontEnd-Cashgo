@@ -40,6 +40,7 @@ import {
   useSalesQuery,
 } from '@/modules/sales/hooks/use-create-sale-mutation'
 import { useSaleCart } from '@/modules/sales/hooks/use-sale-cart'
+import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
 import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
 import type { SalePaymentMethod, SaleReceipt } from '@/modules/sales/types/sale'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
@@ -1007,6 +1008,7 @@ export function RetailSalesWorkspace() {
   )
   const [receiptNote, setReceiptNote] = useState('')
   const [isQuickSaleDrawerOpen, setQuickSaleDrawerOpen] = useState(false)
+  const [isSalesHistoryOpen, setSalesHistoryOpen] = useState(false)
   const [isQuickExpenseDrawerOpen, setQuickExpenseDrawerOpen] = useState(false)
   const [isCashRegisterDrawerOpen, setCashRegisterDrawerOpen] = useState(false)
   const [cashRegisterDrawerMode, setCashRegisterDrawerMode] =
@@ -1865,6 +1867,13 @@ export function RetailSalesWorkspace() {
             <button
               className={styles.quickSaleButton}
               type="button"
+              onClick={() => setSalesHistoryOpen(true)}
+            >
+              Historial de ventas
+            </button>
+            <button
+              className={styles.quickSaleButton}
+              type="button"
               onClick={handleOpenQuickSaleDrawer}
             >
               Nueva venta libre
@@ -2457,6 +2466,12 @@ export function RetailSalesWorkspace() {
           </aside>
         </div>
       </RetailPageLayout>
+
+      <SalesHistoryDrawer
+        isOpen={isSalesHistoryOpen}
+        sales={salesHistory}
+        onClose={() => setSalesHistoryOpen(false)}
+      />
 
       {isSortDrawerOpen ? (
         <ProductSortDrawer

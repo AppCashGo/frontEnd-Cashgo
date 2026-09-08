@@ -24,6 +24,13 @@
   line-height: 1.7;
 }
 
+.header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .salesList {
   display: grid;
   gap: 0.8rem;
@@ -125,8 +132,12 @@
   display: block;
   height: 0.9rem;
   border-radius: 999px;
-  background:
-    linear-gradient(90deg, rgba(22, 32, 42, 0.08), rgba(196, 106, 45, 0.18), rgba(22, 32, 42, 0.08));
+  background: linear-gradient(
+    90deg,
+    rgba(22, 32, 42, 0.08),
+    rgba(196, 106, 45, 0.18),
+    rgba(22, 32, 42, 0.08)
+  );
   background-size: 200% 100%;
   animation: shimmer 1.5s linear infinite;
 }
@@ -148,5 +159,21 @@
 @media (min-width: 720px) {
   .card {
     padding: 1.5rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .header {
+    display: grid;
+  }
+
+  .header .secondaryButton {
+    width: 100%;
+  }
+
+  .saleHeading,
+  .saleFooter {
+    align-items: stretch;
+    flex-direction: column;
   }
 }

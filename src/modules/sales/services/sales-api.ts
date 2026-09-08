@@ -1,5 +1,14 @@
-import type { CancelSaleInput, CreateSaleInput } from '@/modules/sales/types/sale'
-import { getBlob, getJson, patchJson, postJson } from '@/shared/services/api-client'
+import type {
+  CancelSaleInput,
+  CreateSaleInput,
+  SaleReturnInput,
+} from '@/modules/sales/types/sale'
+import {
+  getBlob,
+  getJson,
+  patchJson,
+  postJson,
+} from '@/shared/services/api-client'
 import { getAuthAccessToken } from '@/shared/services/auth-session'
 import {
   normalizeSaleRecord,
@@ -36,6 +45,23 @@ export async function cancelSale(saleId: string, input: CancelSaleInput = {}) {
 
 export function downloadSaleReceipt(saleId: string) {
   return getBlob(`/sales/${saleId}/receipt`, {
+    accept: 'text/html',
+    accessToken: getAuthAccessToken(),
+  })
+}
+
+export async function createSaleReturn(saleId: string, input: SaleReturnInput) {
+  const sale = await postJson<SaleApiRecord, SaleReturnInput>(
+    `/sales/${saleId}/returns`,
+    input,
+    { accessToken: getAuthAccessToken() },
+  )
+
+  return normalizeSaleRecord(sale)
+}
+
+export function downloadSaleReturnCreditNote(saleId: string, returnId: string) {
+  return getBlob(`/sales/${saleId}/returns/${returnId}/credit-note`, {
     accept: 'text/html',
     accessToken: getAuthAccessToken(),
   })

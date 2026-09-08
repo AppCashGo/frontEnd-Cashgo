@@ -37,6 +37,16 @@ export type CancelSaleInput = {
   reason?: string
 }
 
+export type SaleReturnInput = {
+  items: Array<{
+    saleItemId: string
+    quantity: number
+  }>
+  reason: string
+  refundMethod?: SalePaymentMethod
+  returnDate?: string
+}
+
 export type SalePayment = {
   id: string
   method: SalePaymentMethod
@@ -75,10 +85,30 @@ export type SaleReceipt = {
     productId: string
     quantity: number
     price: number
+    returnedQuantity: number
     product: Product
   }>
   payments: SalePayment[]
   accountReceivable: SaleAccountReceivable | null
+  returns: Array<{
+    id: string
+    creditNumber: string
+    amount: number
+    balanceReduction: number
+    refundAmount: number
+    refundMethod: SalePaymentMethod | null
+    reason: string
+    returnDate: string
+    createdAt: string
+    items: Array<{
+      id: string
+      saleItemId: string
+      productId: string
+      quantity: number
+      unitAmount: number
+      subtotal: number
+    }>
+  }>
 }
 
 export type SaleCartItem = {
