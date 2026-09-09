@@ -260,6 +260,130 @@
   background: #f0fdf4;
 }
 
+.reminderButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  gap: 0.45rem;
+  min-height: 2.6rem;
+  padding: 0 0.9rem;
+  border: 1px solid #bfd1ea;
+  border-radius: 0.8rem;
+  background: #ffffff;
+  color: #2457b8;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.reminderButton svg,
+.reminderActions svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.reminderComposer {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid #bfd1ea;
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #f8fbff 0%, #ffffff 100%);
+  box-shadow: 0 0.7rem 1.8rem rgba(36, 87, 184, 0.08);
+}
+
+.reminderHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.reminderHeader h4,
+.reminderHeader p,
+.reminderFeedback {
+  margin: 0;
+}
+
+.reminderHeader h4 {
+  color: #1f2a37;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.reminderHeader p {
+  margin-top: 0.25rem;
+  color: #66758c;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.reminderClose {
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: #eaf1fb;
+  color: #41516a;
+  font-size: 1.3rem;
+  cursor: pointer;
+}
+
+.reminderActions {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.whatsAppButton,
+.emailButton,
+.disabledContactButton,
+.copyReminderButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.85rem;
+  padding: 0 0.9rem;
+  border-radius: 0.85rem;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.whatsAppButton {
+  background: #168c58;
+  color: #ffffff;
+}
+
+.emailButton {
+  border: 1px solid #2457b8;
+  background: #ffffff;
+  color: #2457b8;
+}
+
+.disabledContactButton {
+  border: 1px dashed #c0ccda;
+  background: #f4f7fb;
+  color: #78869a;
+}
+
+.copyReminderButton {
+  border: 0;
+  background: #1f2a37;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.reminderFeedback {
+  color: #2457b8;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-align: center;
+}
+
 .receivableTop,
 .historyItem,
 .receivableAmounts {
@@ -339,5 +463,16 @@
   .behaviorGrid,
   .receiptActions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reminderActions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 559px) {
+  .reminderButton {
+    width: 100%;
+    justify-self: stretch;
   }
 }

@@ -402,6 +402,7 @@ async function createSmokeCustomer(
   return apiPost<SmokeCustomerRecord>(request, session, "/customers", {
     name: `Smoke Credit ${runId}`,
     phone: `320${uniqueDigits.slice(-7)}`,
+    email: `smoke-credit-${uniqueDigits.slice(-8)}@cashgo.test`,
     notes: "Browser smoke credit sale customer",
   });
 }
@@ -667,7 +668,7 @@ test("creates a POS cash sale, decrements stock and records the movement", async
     createdSale = (await saleResponse.json()) as SmokeSaleRecord;
 
     const successDrawer = page.getByRole("dialog", {
-      name: "¡Creaste una venta!",
+      name: "Venta creada con éxito",
     });
     await expect(successDrawer).toBeVisible();
     await expect(successDrawer).toContainText(createdSale.saleNumber);
@@ -817,7 +818,7 @@ test("creates a POS split-payment sale and records each payment method", async (
     createdSale = (await saleResponse.json()) as SmokeSaleRecord;
 
     const successDrawer = page.getByRole("dialog", {
-      name: "¡Creaste una venta!",
+      name: "Venta creada con éxito",
     });
     await expect(successDrawer).toBeVisible();
     await expect(successDrawer).toContainText(createdSale.saleNumber);
@@ -954,7 +955,7 @@ test("cancels a POS sale from the success drawer and restores stock", async ({
     createdSale = (await saleResponse.json()) as SmokeSaleRecord;
 
     const successDrawer = page.getByRole("dialog", {
-      name: "¡Creaste una venta!",
+      name: "Venta creada con éxito",
     });
     await expect(successDrawer).toBeVisible();
     await expect(successDrawer).toContainText(createdSale.saleNumber);
@@ -1069,7 +1070,7 @@ test("creates a POS credit sale and records the customer receivable", async ({
     createdSale = (await saleResponse.json()) as SmokeSaleRecord;
 
     const successDrawer = page.getByRole("dialog", {
-      name: "¡Creaste una venta!",
+      name: "Venta creada con éxito",
     });
     await expect(successDrawer).toBeVisible();
     await expect(successDrawer).toContainText(createdSale.saleNumber);
@@ -1133,6 +1134,26 @@ test("creates a POS credit sale and records the customer receivable", async ({
     await expect(
       customerDrawer.getByRole("heading", { name: "Registrar abono" }),
     ).toBeVisible();
+
+    await customerDrawer
+      .getByRole("button", { name: "Preparar recordatorio" })
+      .click();
+    const reminderMessage = customerDrawer.getByLabel("Mensaje para el cliente");
+    await expect(reminderMessage).toHaveValue(new RegExp(createdSale.saleNumber));
+    await expect(
+      customerDrawer.getByRole("link", { name: "Abrir WhatsApp" }),
+    ).toHaveAttribute("href", /wa\.me\/57320\d+\?text=/);
+    await expect(
+      customerDrawer.getByRole("link", { name: "Preparar correo" }),
+    ).toHaveAttribute("href", /^mailto:smoke-credit-/);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await expect(
+      customerDrawer.getByRole("heading", { name: "Recordatorio de cobro" }),
+    ).toBeVisible();
+    await expect(
+      customerDrawer.getByRole("link", { name: "Abrir WhatsApp" }),
+    ).toBeVisible();
+    await page.setViewportSize({ width: 1280, height: 720 });
 
     await customerDrawer.getByLabel("Valor recibido").fill("600");
     await customerDrawer

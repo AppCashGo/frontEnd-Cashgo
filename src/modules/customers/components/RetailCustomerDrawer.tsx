@@ -11,8 +11,10 @@ import {
   Hash,
   Mail,
   MapPin,
+  MessageCircle,
   Phone,
   ReceiptText,
+  Send,
   TrendingUp,
 } from 'lucide-react'
 import type {
@@ -188,6 +190,28 @@ function parseMoney(value: string) {
   return Number.isFinite(parsedValue) ? parsedValue : 0
 }
 
+function normalizeWhatsAppPhone(value: string) {
+  const digits = value.replace(/\D/g, '').replace(/^00/, '')
+
+  if (digits.length === 10 && digits.startsWith('3')) {
+    return `57${digits}`
+  }
+
+  return digits
+}
+
+function buildCollectionReminder(
+  customerName: string,
+  receivable: CustomerReceivable,
+  businessName: string,
+) {
+  const dueDateText = receivable.dueDate
+    ? ` La fecha de vencimiento es ${formatDate(receivable.dueDate)}.`
+    : ''
+
+  return `Hola ${customerName}, te recordamos que tienes un saldo pendiente de ${formatCurrency(receivable.balance)} correspondiente a la venta ${receivable.saleNumber}.${dueDateText} Si ya realizaste el pago, por favor ignora este mensaje. Gracias, ${businessName}.`
+}
+
 function escapeHtml(value: string) {
   return value
     .replace(/&/g, '&amp;')
@@ -306,6 +330,11 @@ export function RetailCustomerDrawer({
   const [lastReceipt, setLastReceipt] = useState<PaymentReceiptState | null>(
     null,
   )
+  const [reminderReceivableId, setReminderReceivableId] = useState<string | null>(
+    null,
+  )
+  const [reminderMessage, setReminderMessage] = useState('')
+  const [reminderFeedback, setReminderFeedback] = useState<string | null>(null)
   const businessSettingsQuery = useBusinessSettingsQuery()
 
   const pendingReceivables = useMemo(
@@ -319,6 +348,10 @@ export function RetailCustomerDrawer({
     ) ??
     pendingReceivables[0] ??
     null
+  const reminderReceivable =
+    pendingReceivables.find(
+      (receivable) => receivable.id === reminderReceivableId,
+    ) ?? null
   const totalPurchased = customer?.purchaseHistory.reduce(
     (sum, purchase) => sum + purchase.total,
     0,
@@ -367,7 +400,37 @@ export function RetailCustomerDrawer({
     setFormError(null)
     setPaymentError(null)
     setLastReceipt(null)
+    setReminderReceivableId(null)
+    setReminderMessage('')
+    setReminderFeedback(null)
   }, [customer, isOpen, mode])
+
+  function handleStartReminder(receivable: CustomerReceivable) {
+    if (!customer) {
+      return
+    }
+
+    setReminderReceivableId(receivable.id)
+    setReminderMessage(
+      buildCollectionReminder(
+        customer.name,
+        receivable,
+        receiptBrand.businessName,
+      ),
+    )
+    setReminderFeedback(null)
+  }
+
+  async function handleCopyReminder() {
+    try {
+      await navigator.clipboard.writeText(reminderMessage)
+      setReminderFeedback('Mensaje copiado al portapapeles.')
+    } catch {
+      setReminderFeedback(
+        'No pudimos copiar el mensaje. Puedes seleccionarlo manualmente.',
+      )
+    }
+  }
 
   useEffect(() => {
     if (!isOpen || mode !== 'detail') {
@@ -709,7 +772,11 @@ export function RetailCustomerDrawer({
           {customer.receivables.length > 0 ? (
             <div className={styles.receivableList}>
               {customer.receivables.map((receivable) => (
-                <ReceivableCard key={receivable.id} receivable={receivable} />
+                <ReceivableCard
+                  key={receivable.id}
+                  receivable={receivable}
+                  onReminder={handleStartReminder}
+                />
               ))}
             </div>
           ) : (
@@ -717,6 +784,86 @@ export function RetailCustomerDrawer({
               Este cliente aun no tiene cuentas por cobrar.
             </p>
           )}
+
+          {reminderReceivable ? (
+            <div className={styles.reminderComposer}>
+              <div className={styles.reminderHeader}>
+                <div>
+                  <h4>Recordatorio de cobro</h4>
+                  <p>
+                    {reminderReceivable.saleNumber} ·{' '}
+                    {formatCurrency(reminderReceivable.balance)} pendientes
+                  </p>
+                </div>
+                <button
+                  aria-label="Cerrar recordatorio"
+                  className={styles.reminderClose}
+                  type="button"
+                  onClick={() => setReminderReceivableId(null)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <label className={styles.field}>
+                <span>Mensaje para el cliente</span>
+                <textarea
+                  className={styles.textarea}
+                  rows={5}
+                  value={reminderMessage}
+                  onChange={(event) => {
+                    setReminderMessage(event.target.value)
+                    setReminderFeedback(null)
+                  }}
+                />
+              </label>
+
+              <div className={styles.reminderActions}>
+                {customer.phone ? (
+                  <a
+                    className={styles.whatsAppButton}
+                    href={`https://wa.me/${normalizeWhatsAppPhone(customer.phone)}?text=${encodeURIComponent(reminderMessage)}`}
+                    rel="noreferrer"
+                    target="_blank"
+                  >
+                    <MessageCircle aria-hidden="true" />
+                    Abrir WhatsApp
+                  </a>
+                ) : (
+                  <button className={styles.disabledContactButton} disabled type="button">
+                    Sin celular registrado
+                  </button>
+                )}
+
+                {customer.email ? (
+                  <a
+                    className={styles.emailButton}
+                    href={`mailto:${customer.email}?subject=${encodeURIComponent(`Recordatorio de pago ${reminderReceivable.saleNumber}`)}&body=${encodeURIComponent(reminderMessage)}`}
+                  >
+                    <Send aria-hidden="true" />
+                    Preparar correo
+                  </a>
+                ) : (
+                  <button className={styles.disabledContactButton} disabled type="button">
+                    Sin correo registrado
+                  </button>
+                )}
+              </div>
+
+              <button
+                className={styles.copyReminderButton}
+                type="button"
+                onClick={() => void handleCopyReminder()}
+              >
+                Copiar mensaje
+              </button>
+              {reminderFeedback ? (
+                <p className={styles.reminderFeedback} aria-live="polite">
+                  {reminderFeedback}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </section>
 
         <section className={styles.section}>
@@ -961,7 +1108,13 @@ function MetricTile({
   )
 }
 
-function ReceivableCard({ receivable }: { receivable: CustomerReceivable }) {
+function ReceivableCard({
+  receivable,
+  onReminder,
+}: {
+  receivable: CustomerReceivable
+  onReminder: (receivable: CustomerReceivable) => void
+}) {
   const isPaid = receivable.balance <= 0
 
   return (
@@ -996,6 +1149,17 @@ function ReceivableCard({ receivable }: { receivable: CustomerReceivable }) {
         <p className={styles.receivableDue}>
           Vence el {formatDate(receivable.dueDate)}
         </p>
+      ) : null}
+
+      {!isPaid ? (
+        <button
+          className={styles.reminderButton}
+          type="button"
+          onClick={() => onReminder(receivable)}
+        >
+          <MessageCircle aria-hidden="true" />
+          Preparar recordatorio
+        </button>
       ) : null}
     </article>
   )
