@@ -200,13 +200,19 @@ function normalizeWhatsAppPhone(value: string) {
   return digits
 }
 
+function formatReminderDate(value: string) {
+  return new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'long',
+  }).format(new Date(value))
+}
+
 function buildCollectionReminder(
   customerName: string,
   receivable: CustomerReceivable,
   businessName: string,
 ) {
   const dueDateText = receivable.dueDate
-    ? ` La fecha de vencimiento es ${formatDate(receivable.dueDate)}.`
+    ? ` La fecha de vencimiento es ${formatReminderDate(receivable.dueDate)}.`
     : ''
 
   return `Hola ${customerName}, te recordamos que tienes un saldo pendiente de ${formatCurrency(receivable.balance)} correspondiente a la venta ${receivable.saleNumber}.${dueDateText} Si ya realizaste el pago, por favor ignora este mensaje. Gracias, ${businessName}.`
