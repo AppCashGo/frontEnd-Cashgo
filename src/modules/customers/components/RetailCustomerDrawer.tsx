@@ -219,6 +219,13 @@ function formatReminderDate(value: string) {
   }).format(new Date(value))
 }
 
+function formatReceivableDueDate(value: string) {
+  return new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'medium',
+    timeZone: 'UTC',
+  }).format(new Date(value))
+}
+
 function toDateInputValue(value: string | null) {
   return value ? value.slice(0, 10) : ''
 }
@@ -1295,7 +1302,7 @@ function ReceivableCard({
 
       {receivable.dueDate ? (
         <p className={styles.receivableDue}>
-          Vence el {formatDate(receivable.dueDate)}
+          Vence el {formatReceivableDueDate(receivable.dueDate)}
         </p>
       ) : null}
 
