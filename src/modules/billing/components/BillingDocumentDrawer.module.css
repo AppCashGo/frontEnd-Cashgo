@@ -36,6 +36,81 @@
   font-weight: 900;
 }
 
+.creditSummaryCard {
+  border-color: #fecaca;
+  background: #fff8f7;
+}
+
+.netSummaryCard {
+  border-color: #bfdbfe;
+  background: #f5f9ff;
+}
+
+.creditValue {
+  margin: 0.3rem 0 0;
+  color: #c03f34;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.creditStatus {
+  display: inline-flex;
+  margin-top: 0.45rem;
+  padding: 0.24rem 0.55rem;
+  border-radius: 999px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.creditNoteList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.creditNoteCard {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem;
+  border: 1px solid #d9e4f3;
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #ffffff, #f7faff);
+}
+
+.creditNoteHeading,
+.creditBreakdown {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.creditNoteHeading div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.creditNoteHeading span,
+.creditBreakdown {
+  color: #607084;
+  font-size: 0.8rem;
+}
+
+.creditAmount {
+  color: #c03f34;
+  white-space: nowrap;
+}
+
+.creditReason {
+  margin: 0;
+  color: #364356;
+  line-height: 1.45;
+}
+
+.creditNoteCard button {
+  justify-self: end;
+}
+
 .businessLogo {
   display: block;
   width: 56px;
@@ -233,5 +308,16 @@
   .actions,
   .summaryGrid {
     grid-template-columns: 1fr;
+  }
+
+  .creditNoteHeading,
+  .creditBreakdown {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .creditNoteCard button {
+    width: 100%;
+    justify-self: stretch;
   }
 }

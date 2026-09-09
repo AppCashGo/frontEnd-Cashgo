@@ -1797,6 +1797,7 @@ test("renders core retail routes across desktop, tablet and mobile widths", asyn
   const routes = [
     { path: "/sales", heading: "Nueva venta" },
     { path: "/inventory", heading: "Inventario" },
+    { path: "/billing", heading: "Facturación" },
     { path: "/customers", heading: "Clientes" },
     { path: "/movements", heading: "Movimientos" },
     { path: "/settings", heading: "Configuraciones" },

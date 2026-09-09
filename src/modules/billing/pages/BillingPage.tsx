@@ -32,6 +32,7 @@ import {
 } from "@/modules/billing/utils/format-billing";
 import { useCurrentCashRegisterQuery } from "@/modules/cash-register/hooks/use-cash-register-query";
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
+import { downloadSaleReturnCreditNote } from "@/modules/sales/services/sales-api";
 import { MetricCard } from "@/shared/components/ui/MetricCard";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
@@ -125,7 +126,7 @@ export function BillingPage() {
   const configuration = billingConfigurationQuery.data ?? null;
   const currentCashRegister = currentCashRegisterQuery.data ?? null;
   const totalBilled = documents.reduce(
-    (accumulator, document) => accumulator + document.total,
+    (accumulator, document) => accumulator + document.netTotal,
     0,
   );
   const totalPaid = documents.reduce(
@@ -160,6 +161,21 @@ export function BillingPage() {
     const { blob, filename } = await receiptMutation.mutateAsync(documentId);
 
     downloadBlobFile(blob, filename ?? `${documentId}-receipt.html`);
+  }
+
+  async function handleDownloadCreditNote(returnId: string) {
+    const selectedDocument = detailQuery.data;
+
+    if (!selectedDocument?.saleId) {
+      return;
+    }
+
+    const { blob, filename } = await downloadSaleReturnCreditNote(
+      selectedDocument.saleId,
+      returnId,
+    );
+
+    downloadBlobFile(blob, filename ?? `nota-credito-${returnId}.html`);
   }
 
   async function handlePrintReceipt(documentId: string) {
@@ -424,7 +440,20 @@ export function BillingPage() {
                       </td>
                       <td>{document.customer?.name ?? copy.noCustomer}</td>
                       <td>
-                        {formatBillingCurrency(document.total, languageCode)}
+                        <div className={styles.amountCell}>
+                          <strong>
+                            {formatBillingCurrency(document.netTotal, languageCode)}
+                          </strong>
+                          {document.creditTotal > 0 ? (
+                            <span>
+                              {copy.creditTotalLabel}: -
+                              {formatBillingCurrency(
+                                document.creditTotal,
+                                languageCode,
+                              )}
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
                       <td>
                         {formatBillingCurrency(document.balance, languageCode)}
@@ -506,6 +535,7 @@ export function BillingPage() {
             ? handleDownloadReceipt(selectedDocumentId)
             : Promise.resolve()
         }
+        onDownloadCreditNote={handleDownloadCreditNote}
         onPrintReceipt={() =>
           selectedDocumentId
             ? handlePrintReceipt(selectedDocumentId)

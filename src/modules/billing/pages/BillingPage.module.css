@@ -166,6 +166,18 @@
   font-size: 0.82rem;
 }
 
+.amountCell {
+  display: grid;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.amountCell span {
+  color: #c03f34;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
 .actionButton {
   border: 0;
   background: transparent;

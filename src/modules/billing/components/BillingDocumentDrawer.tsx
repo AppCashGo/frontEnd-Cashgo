@@ -35,6 +35,7 @@ type BillingDocumentDrawerProps = {
   onClose: () => void;
   onCollectPayment: (input: BillingCollectionInput) => Promise<void>;
   onDownloadReceipt: () => Promise<void>;
+  onDownloadCreditNote: (returnId: string) => Promise<void>;
   onPrintReceipt: () => Promise<void>;
 };
 
@@ -105,6 +106,7 @@ export function BillingDocumentDrawer({
   onClose,
   onCollectPayment,
   onDownloadReceipt,
+  onDownloadCreditNote,
   onPrintReceipt,
 }: BillingDocumentDrawerProps) {
   const copy = getBillingCopy(languageCode);
@@ -223,11 +225,36 @@ export function BillingDocumentDrawer({
                   </p>
                 </div>
                 <div className={styles.summaryCard}>
-                  <p className={styles.summaryLabel}>{copy.totalLabel}</p>
+                  <p className={styles.summaryLabel}>
+                    {document.creditTotal > 0
+                      ? copy.originalTotalLabel
+                      : copy.totalLabel}
+                  </p>
                   <p className={styles.summaryValue}>
                     {formatBillingCurrency(document.total, languageCode)}
                   </p>
                 </div>
+                {document.creditTotal > 0 ? (
+                  <>
+                    <div className={`${styles.summaryCard} ${styles.creditSummaryCard}`}>
+                      <p className={styles.summaryLabel}>{copy.creditTotalLabel}</p>
+                      <p className={styles.creditValue}>
+                        -{formatBillingCurrency(document.creditTotal, languageCode)}
+                      </p>
+                    </div>
+                    <div className={`${styles.summaryCard} ${styles.netSummaryCard}`}>
+                      <p className={styles.summaryLabel}>{copy.netTotalLabel}</p>
+                      <p className={styles.summaryValue}>
+                        {formatBillingCurrency(document.netTotal, languageCode)}
+                      </p>
+                      <span className={styles.creditStatus}>
+                        {document.creditStatus === "FULL"
+                          ? copy.fullCredit
+                          : copy.partialCredit}
+                      </span>
+                    </div>
+                  </>
+                ) : null}
                 <div className={styles.summaryCard}>
                   <p className={styles.summaryLabel}>{copy.paidLabel}</p>
                   <p className={styles.summaryValue}>
@@ -242,6 +269,60 @@ export function BillingDocumentDrawer({
                 </div>
               </div>
             </section>
+
+            {document.creditNotes.length > 0 ? (
+              <section className={styles.section}>
+                <div>
+                  <h4 className={styles.sectionTitle}>{copy.creditNotesTitle}</h4>
+                  <p className={styles.sectionDescription}>
+                    {copy.creditNotesDescription}
+                  </p>
+                </div>
+                <div className={styles.creditNoteList}>
+                  {document.creditNotes.map((creditNote) => (
+                    <article className={styles.creditNoteCard} key={creditNote.id}>
+                      <div className={styles.creditNoteHeading}>
+                        <div>
+                          <strong>{creditNote.creditNumber}</strong>
+                          <span>
+                            {formatBillingDateTime(
+                              creditNote.returnDate,
+                              languageCode,
+                            )}
+                          </span>
+                        </div>
+                        <strong className={styles.creditAmount}>
+                          -{formatBillingCurrency(creditNote.amount, languageCode)}
+                        </strong>
+                      </div>
+                      <p className={styles.creditReason}>{creditNote.reason}</p>
+                      <div className={styles.creditBreakdown}>
+                        <span>
+                          {copy.creditAppliedToBalance}: {formatBillingCurrency(
+                            creditNote.balanceReduction,
+                            languageCode,
+                          )}
+                        </span>
+                        <span>
+                          {copy.creditRefunded}: {formatBillingCurrency(
+                            creditNote.refundAmount,
+                            languageCode,
+                          )}
+                        </span>
+                      </div>
+                      <button
+                        className={retailStyles.buttonOutline}
+                        disabled={isSubmitting}
+                        type="button"
+                        onClick={() => void onDownloadCreditNote(creditNote.id)}
+                      >
+                        {copy.downloadCreditNote}
+                      </button>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
 
             <section className={styles.section}>
               <h4 className={styles.sectionTitle}>{copy.configBusinessSection}</h4>

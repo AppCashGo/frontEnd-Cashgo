@@ -22,6 +22,8 @@ export type BillingInvoiceType =
   | "POS_DOCUMENT"
   | "ELECTRONIC_INVOICE";
 
+export type BillingCreditStatus = "NONE" | "PARTIAL" | "FULL";
+
 export type BillingDocumentCustomer = {
   id: string;
   name: string;
@@ -70,6 +72,10 @@ export type BillingDocumentSummary = {
   discountTotal: number;
   taxTotal: number;
   total: number;
+  creditTotal: number;
+  netTotal: number;
+  creditStatus: BillingCreditStatus;
+  creditNoteCount: number;
   paidAmount: number;
   balance: number;
   dueDate: string | null;
@@ -105,10 +111,30 @@ export type BillingDocumentItem = {
   total: number;
 };
 
+export type BillingDocumentCreditNote = {
+  id: string;
+  creditNumber: string;
+  amount: number;
+  balanceReduction: number;
+  refundAmount: number;
+  refundMethod: CashRegisterPaymentMethod | null;
+  reason: string;
+  returnDate: string;
+  items: Array<{
+    id: string;
+    productId: string;
+    productName: string;
+    quantity: number;
+    unitAmount: number;
+    subtotal: number;
+  }>;
+};
+
 export type BillingDocumentDetail = BillingDocumentSummary & {
   sellerName: string | null;
   items: BillingDocumentItem[];
   payments: BillingDocumentPayment[];
+  creditNotes: BillingDocumentCreditNote[];
   isManualSale: boolean;
   resolution: BillingResolution | null;
   business: BillingBusinessSummary;
