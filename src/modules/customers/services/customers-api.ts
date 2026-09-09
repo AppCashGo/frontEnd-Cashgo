@@ -10,6 +10,8 @@ import type {
   CustomerMutationInput,
   CustomerPaymentInput,
   CustomerReceivable,
+  CustomerReceivableCollectionActivity,
+  CustomerCollectionActivityInput,
   CustomerReceivablePayment,
   CustomerReceivableTermsInput,
   CustomerPurchaseHistoryItem,
@@ -38,7 +40,13 @@ type CustomerReceivablePaymentApiRecord = Omit<
 
 type CustomerReceivableApiRecord = Omit<
   CustomerReceivable,
-  'id' | 'saleId' | 'amount' | 'paidAmount' | 'balance' | 'payments'
+  | 'id'
+  | 'saleId'
+  | 'amount'
+  | 'paidAmount'
+  | 'balance'
+  | 'payments'
+  | 'collectionActivities'
 > & {
   id: number | string
   saleId: number | string
@@ -46,6 +54,16 @@ type CustomerReceivableApiRecord = Omit<
   paidAmount: number | string
   balance: number | string
   payments: CustomerReceivablePaymentApiRecord[]
+  collectionActivities: CustomerReceivableCollectionActivityApiRecord[]
+}
+
+type CustomerReceivableCollectionActivityApiRecord = Omit<
+  CustomerReceivableCollectionActivity,
+  'id' | 'createdByUserId' | 'promisedAmount'
+> & {
+  id: number | string
+  createdByUserId: number | string | null
+  promisedAmount: number | string | null
 }
 
 type CustomerDetailApiRecord = CustomerSummaryApiRecord & {
@@ -90,6 +108,18 @@ function normalizeCustomerReceivable(
     paidAmount: normalizeNumber(receivable.paidAmount),
     balance: normalizeNumber(receivable.balance),
     payments: receivable.payments.map(normalizeCustomerReceivablePayment),
+    collectionActivities: (receivable.collectionActivities ?? []).map((activity) => ({
+      ...activity,
+      id: String(activity.id),
+      createdByUserId:
+        activity.createdByUserId === null
+          ? null
+          : String(activity.createdByUserId),
+      promisedAmount:
+        activity.promisedAmount === null
+          ? null
+          : normalizeNumber(activity.promisedAmount),
+    })),
   }
 }
 
@@ -183,4 +213,14 @@ export async function updateCustomerReceivableTerms(
   >(`/accounts-receivable/${receivableId}/terms`, input)
 
   return normalizeCustomerReceivable(receivable)
+}
+
+export async function createCustomerCollectionActivity(
+  receivableId: string,
+  input: CustomerCollectionActivityInput,
+) {
+  return postJson<
+    CustomerReceivableCollectionActivityApiRecord,
+    CustomerCollectionActivityInput
+  >(`/accounts-receivable/${receivableId}/collection-activities`, input)
 }

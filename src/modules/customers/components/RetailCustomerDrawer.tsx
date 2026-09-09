@@ -9,6 +9,7 @@ import {
   Banknote,
   CalendarClock,
   CalendarDays,
+  Handshake,
   Hash,
   Mail,
   MapPin,
@@ -20,6 +21,7 @@ import {
 } from 'lucide-react'
 import type {
   CustomerDetail,
+  CustomerCollectionActivityInput,
   CustomerMutationInput,
   CustomerPaymentInput,
   CustomerPaymentMethod,
@@ -81,12 +83,19 @@ type ReceivableTermsFormState = {
   notes: string
 }
 
+type PaymentPromiseFormState = {
+  promisedDate: string
+  promisedAmount: string
+  notes: string
+}
+
 type RetailCustomerDrawerProps = {
   customer: CustomerDetail | null
   currentCashRegisterId: string | null
   errorMessage: string | null
   isLoading: boolean
   isOpen: boolean
+  isActivitySubmitting: boolean
   isPaymentSubmitting: boolean
   isTermsSubmitting: boolean
   isSubmitting: boolean
@@ -98,6 +107,10 @@ type RetailCustomerDrawerProps = {
   onRegisterPayment: (
     receivableId: string,
     input: CustomerPaymentInput,
+  ) => Promise<void>
+  onCreateCollectionActivity: (
+    receivableId: string,
+    input: CustomerCollectionActivityInput,
   ) => Promise<void>
   onUpdateReceivableTerms: (
     receivableId: string,
@@ -157,6 +170,17 @@ function getStatusLabel(status: string) {
   }
 
   return 'Pendiente'
+}
+
+function getCollectionChannelLabel(channel: string | null) {
+  const labels: Record<string, string> = {
+    WHATSAPP: 'WhatsApp',
+    EMAIL: 'Correo',
+    COPY: 'Mensaje copiado',
+    MANUAL: 'Gestión manual',
+  }
+
+  return channel ? labels[channel] ?? channel : 'Sin canal'
 }
 
 function toFormState(customer: CustomerDetail | null): CustomerFormState {
@@ -337,6 +361,7 @@ export function RetailCustomerDrawer({
   errorMessage,
   isLoading,
   isOpen,
+  isActivitySubmitting,
   isPaymentSubmitting,
   isTermsSubmitting,
   isSubmitting,
@@ -346,6 +371,7 @@ export function RetailCustomerDrawer({
   onModeChange,
   onRefresh,
   onRegisterPayment,
+  onCreateCollectionActivity,
   onUpdateReceivableTerms,
   onSubmitCustomer,
 }: RetailCustomerDrawerProps) {
@@ -373,6 +399,15 @@ export function RetailCustomerDrawer({
     notes: '',
   })
   const [termsError, setTermsError] = useState<string | null>(null)
+  const [promiseReceivableId, setPromiseReceivableId] = useState<string | null>(
+    null,
+  )
+  const [promiseForm, setPromiseForm] = useState<PaymentPromiseFormState>({
+    promisedDate: '',
+    promisedAmount: '',
+    notes: '',
+  })
+  const [promiseError, setPromiseError] = useState<string | null>(null)
   const businessSettingsQuery = useBusinessSettingsQuery()
 
   const pendingReceivables = useMemo(
@@ -393,6 +428,10 @@ export function RetailCustomerDrawer({
   const termsReceivable =
     pendingReceivables.find(
       (receivable) => receivable.id === termsReceivableId,
+    ) ?? null
+  const promiseReceivable =
+    pendingReceivables.find(
+      (receivable) => receivable.id === promiseReceivableId,
     ) ?? null
   const totalPurchased = customer?.purchaseHistory.reduce(
     (sum, purchase) => sum + purchase.total,
@@ -447,6 +486,8 @@ export function RetailCustomerDrawer({
     setReminderFeedback(null)
     setTermsReceivableId(null)
     setTermsError(null)
+    setPromiseReceivableId(null)
+    setPromiseError(null)
   }, [customer, isOpen, mode])
 
   function handleStartReminder(receivable: CustomerReceivable) {
@@ -474,6 +515,62 @@ export function RetailCustomerDrawer({
     setTermsError(null)
   }
 
+  function handleStartPromise(receivable: CustomerReceivable) {
+    setPromiseReceivableId(receivable.id)
+    setPromiseForm({
+      promisedDate: '',
+      promisedAmount: String(receivable.balance),
+      notes: '',
+    })
+    setPromiseError(null)
+  }
+
+  async function handleSubmitPromise(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!promiseReceivable) {
+      return
+    }
+
+    setPromiseError(null)
+
+    try {
+      await onCreateCollectionActivity(promiseReceivable.id, {
+        type: 'PAYMENT_PROMISE',
+        channel: 'MANUAL',
+        promisedDate: promiseForm.promisedDate,
+        promisedAmount: Number(promiseForm.promisedAmount),
+        notes: normalizeOptionalText(promiseForm.notes) ?? undefined,
+      })
+      setPromiseReceivableId(null)
+    } catch (error) {
+      setPromiseError(
+        getErrorMessage(error, 'No pudimos registrar el compromiso de pago.'),
+      )
+    }
+  }
+
+  async function handleRecordReminder(
+    channel: 'WHATSAPP' | 'EMAIL' | 'COPY',
+  ) {
+    if (!reminderReceivable) {
+      return
+    }
+
+    try {
+      await onCreateCollectionActivity(reminderReceivable.id, {
+        type: 'REMINDER',
+        channel,
+        notes: reminderMessage,
+      })
+      setReminderFeedback('Gestión registrada en el historial de cobro.')
+    } catch (error) {
+      setReminderFeedback(
+        getErrorMessage(error, 'No pudimos registrar esta gestión.'),
+      )
+    }
+  }
+
   async function handleSubmitTerms(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
@@ -499,7 +596,7 @@ export function RetailCustomerDrawer({
   async function handleCopyReminder() {
     try {
       await navigator.clipboard.writeText(reminderMessage)
-      setReminderFeedback('Mensaje copiado al portapapeles.')
+      await handleRecordReminder('COPY')
     } catch {
       setReminderFeedback(
         'No pudimos copiar el mensaje. Puedes seleccionarlo manualmente.',
@@ -852,6 +949,7 @@ export function RetailCustomerDrawer({
                   receivable={receivable}
                   onReminder={handleStartReminder}
                   onEditTerms={handleStartTermsEdit}
+                  onPromise={handleStartPromise}
                 />
               ))}
             </div>
@@ -901,6 +999,7 @@ export function RetailCustomerDrawer({
                     href={`https://wa.me/${normalizeWhatsAppPhone(customer.phone)}?text=${encodeURIComponent(reminderMessage)}`}
                     rel="noreferrer"
                     target="_blank"
+                    onClick={() => void handleRecordReminder('WHATSAPP')}
                   >
                     <MessageCircle aria-hidden="true" />
                     Abrir WhatsApp
@@ -915,6 +1014,7 @@ export function RetailCustomerDrawer({
                   <a
                     className={styles.emailButton}
                     href={`mailto:${customer.email}?subject=${encodeURIComponent(`Recordatorio de pago ${reminderReceivable.saleNumber}`)}&body=${encodeURIComponent(reminderMessage)}`}
+                    onClick={() => void handleRecordReminder('EMAIL')}
                   >
                     <Send aria-hidden="true" />
                     Preparar correo
@@ -939,6 +1039,105 @@ export function RetailCustomerDrawer({
                 </p>
               ) : null}
             </div>
+          ) : null}
+
+          {promiseReceivable ? (
+            <form className={styles.promiseComposer} onSubmit={handleSubmitPromise}>
+              <div className={styles.reminderHeader}>
+                <div>
+                  <h4>Compromiso de pago</h4>
+                  <p>
+                    {promiseReceivable.saleNumber} · documenta la fecha y el valor
+                    acordados con el cliente.
+                  </p>
+                </div>
+                <button
+                  aria-label="Cerrar compromiso de pago"
+                  className={styles.reminderClose}
+                  type="button"
+                  onClick={() => setPromiseReceivableId(null)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <div className={styles.promiseFields}>
+                <label className={styles.field}>
+                  <span>Fecha prometida</span>
+                  <input
+                    className={styles.input}
+                    min={new Date().toISOString().slice(0, 10)}
+                    required
+                    type="date"
+                    value={promiseForm.promisedDate}
+                    onChange={(event) =>
+                      setPromiseForm((current) => ({
+                        ...current,
+                        promisedDate: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <label className={styles.field}>
+                  <span>Valor prometido</span>
+                  <input
+                    className={styles.input}
+                    max={promiseReceivable.balance}
+                    min="0.01"
+                    required
+                    step="0.01"
+                    type="number"
+                    value={promiseForm.promisedAmount}
+                    onChange={(event) =>
+                      setPromiseForm((current) => ({
+                        ...current,
+                        promisedAmount: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+
+              <label className={styles.field}>
+                <span>Nota del acuerdo</span>
+                <textarea
+                  className={styles.textarea}
+                  maxLength={1000}
+                  placeholder="Ej. El cliente confirma pago por transferencia"
+                  rows={3}
+                  value={promiseForm.notes}
+                  onChange={(event) =>
+                    setPromiseForm((current) => ({
+                      ...current,
+                      notes: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              {promiseError ? (
+                <p className={styles.errorMessage} role="alert">
+                  {promiseError}
+                </p>
+              ) : null}
+
+              <div className={styles.termsActions}>
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  onClick={() => setPromiseReceivableId(null)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className={styles.primaryButton}
+                  disabled={isActivitySubmitting}
+                  type="submit"
+                >
+                  {isActivitySubmitting ? 'Guardando...' : 'Guardar compromiso'}
+                </button>
+              </div>
+            </form>
           ) : null}
 
           {termsReceivable ? (
@@ -1265,10 +1464,12 @@ function ReceivableCard({
   receivable,
   onReminder,
   onEditTerms,
+  onPromise,
 }: {
   receivable: CustomerReceivable
   onReminder: (receivable: CustomerReceivable) => void
   onEditTerms: (receivable: CustomerReceivable) => void
+  onPromise: (receivable: CustomerReceivable) => void
 }) {
   const isPaid = receivable.balance <= 0
 
@@ -1324,6 +1525,36 @@ function ReceivableCard({
             <MessageCircle aria-hidden="true" />
             Preparar recordatorio
           </button>
+          <button
+            className={styles.promiseButton}
+            type="button"
+            onClick={() => onPromise(receivable)}
+          >
+            <Handshake aria-hidden="true" />
+            Registrar compromiso
+          </button>
+        </div>
+      ) : null}
+
+      {receivable.collectionActivities.length > 0 ? (
+        <div className={styles.collectionHistory}>
+          <strong>Seguimiento de cobro</strong>
+          {receivable.collectionActivities.slice(0, 3).map((activity) => (
+            <div className={styles.collectionHistoryItem} key={activity.id}>
+              <span>
+                {activity.type === 'PAYMENT_PROMISE'
+                  ? `Compromiso por ${formatCurrency(activity.promisedAmount ?? 0)}`
+                  : `Recordatorio · ${getCollectionChannelLabel(activity.channel)}`}
+              </span>
+              <small>
+                {activity.promisedDate
+                  ? `Para ${formatDate(activity.promisedDate)} · `
+                  : ''}
+                {activity.createdByName ?? 'Usuario'} ·{' '}
+                {formatDateTime(activity.createdAt)}
+              </small>
+            </div>
+          ))}
         </div>
       ) : null}
     </article>

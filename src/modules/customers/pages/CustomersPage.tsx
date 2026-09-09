@@ -10,6 +10,7 @@ import {
 } from '@/modules/customers/components/RetailCustomerDrawer'
 import {
   useCustomerDetailQuery,
+  useCreateCustomerCollectionActivityMutation,
   useCreateCustomerMutation,
   useCustomersQuery,
   useRegisterCustomerPaymentMutation,
@@ -19,8 +20,10 @@ import {
 } from '@/modules/customers/hooks/use-customers-query'
 import type {
   CustomerMutationInput,
+  CustomerCollectionActivityInput,
   CustomerPaymentInput,
   CustomerReceivableTermsInput,
+  CustomerSummary,
 } from '@/modules/customers/types/customer'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
@@ -80,6 +83,26 @@ function formatPortfolioDate(value: string | null) {
   }).format(new Date(value))
 }
 
+function getCollectionPriority(customer: CustomerSummary) {
+  if (customer.overdueOver60Balance > 0) {
+    return { label: 'Crítica', className: styles.statusCritical }
+  }
+
+  if (customer.overdue31To60Balance > 0) {
+    return { label: 'Alta', className: styles.statusOverdue }
+  }
+
+  if (customer.overdue1To30Balance > 0) {
+    return { label: 'Media', className: styles.statusPending }
+  }
+
+  if (customer.balance > 0) {
+    return { label: 'Baja', className: styles.statusLow }
+  }
+
+  return { label: 'Al día', className: styles.statusOk }
+}
+
 export function CustomersPage() {
   const navigationPreset = useBusinessNavigationPreset()
   const isRetailPreset = navigationPreset === 'retail'
@@ -98,6 +121,8 @@ export function CustomersPage() {
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const customersQuery = useCustomersQuery()
   const createCustomerMutation = useCreateCustomerMutation()
+  const createCollectionActivityMutation =
+    useCreateCustomerCollectionActivityMutation()
   const updateCustomerMutation = useUpdateCustomerMutation()
   const uploadCustomerAvatarMutation = useUploadCustomerAvatarMutation()
   const registerPaymentMutation = useRegisterCustomerPaymentMutation()
@@ -282,6 +307,18 @@ export function CustomersPage() {
     ])
   }
 
+  async function handleCreateCollectionActivity(
+    receivableId: string,
+    input: CustomerCollectionActivityInput,
+  ) {
+    await createCollectionActivityMutation.mutateAsync({ receivableId, input })
+
+    await Promise.allSettled([
+      customersQuery.refetch(),
+      customerDetailQuery.refetch(),
+    ])
+  }
+
   if (isRetailPreset) {
     return (
       <>
@@ -436,7 +473,7 @@ export function CustomersPage() {
                     <th>Total por cobrar</th>
                     <th>Próximo vencimiento</th>
                     <th>Compras</th>
-                    <th>Estado</th>
+                    <th>Prioridad</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -501,20 +538,8 @@ export function CustomersPage() {
                           </td>
                           <td>{customer.purchaseCount.toString()}</td>
                           <td>
-                            <span
-                              className={
-                                customer.overdueReceivablesCount > 0
-                                  ? styles.statusOverdue
-                                  : customer.balance > 0
-                                    ? styles.statusPending
-                                    : styles.statusOk
-                              }
-                            >
-                              {customer.overdueReceivablesCount > 0
-                                ? 'Vencido'
-                                : customer.balance > 0
-                                  ? 'Por cobrar'
-                                  : 'Al día'}
+                            <span className={getCollectionPriority(customer).className}>
+                              {getCollectionPriority(customer).label}
                             </span>
                           </td>
                           <td>
@@ -568,6 +593,7 @@ export function CustomersPage() {
           isLoading={customerDetailQuery.isLoading}
           isOpen={isRetailDrawerOpen}
           isPaymentSubmitting={registerPaymentMutation.isPending}
+          isActivitySubmitting={createCollectionActivityMutation.isPending}
           isTermsSubmitting={updateReceivableTermsMutation.isPending}
           isSubmitting={
             createCustomerMutation.isPending ||
@@ -588,6 +614,7 @@ export function CustomersPage() {
             void customerDetailQuery.refetch()
           }}
           onRegisterPayment={handleRegisterCustomerPayment}
+          onCreateCollectionActivity={handleCreateCollectionActivity}
           onUpdateReceivableTerms={handleUpdateCustomerReceivableTerms}
           onSubmitCustomer={handleSubmitCustomer}
         />

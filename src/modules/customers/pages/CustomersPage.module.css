@@ -320,6 +320,8 @@
 
 .statusPending,
 .statusOverdue,
+.statusCritical,
+.statusLow,
 .statusOk {
   display: inline-flex;
   align-items: center;
@@ -334,9 +336,19 @@
   color: #b42318;
 }
 
+.statusCritical {
+  background: #7f1d1d;
+  color: #ffffff;
+}
+
 .statusPending {
   background: #fff3d4;
   color: #9a6b12;
+}
+
+.statusLow {
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 
 .statusOk {

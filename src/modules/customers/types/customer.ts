@@ -49,6 +49,18 @@ export type CustomerReceivablePayment = {
   createdAt: string
 }
 
+export type CustomerReceivableCollectionActivity = {
+  id: string
+  type: 'REMINDER' | 'PAYMENT_PROMISE' | 'NOTE'
+  channel: 'WHATSAPP' | 'EMAIL' | 'COPY' | 'MANUAL' | null
+  promisedAmount: number | null
+  promisedDate: string | null
+  notes: string | null
+  createdByUserId: string | null
+  createdByName: string | null
+  createdAt: string
+}
+
 export type CustomerReceivable = {
   id: string
   saleId: string
@@ -61,6 +73,7 @@ export type CustomerReceivable = {
   notes: string | null
   createdAt: string
   payments: CustomerReceivablePayment[]
+  collectionActivities: CustomerReceivableCollectionActivity[]
 }
 
 export type CustomerDetail = CustomerSummary & {
@@ -90,4 +103,12 @@ export type CustomerPaymentInput = {
 export type CustomerReceivableTermsInput = {
   dueDate: string | null
   notes: string | null
+}
+
+export type CustomerCollectionActivityInput = {
+  type: 'REMINDER' | 'PAYMENT_PROMISE' | 'NOTE'
+  channel?: 'WHATSAPP' | 'EMAIL' | 'COPY' | 'MANUAL'
+  promisedAmount?: number
+  promisedDate?: string
+  notes?: string
 }

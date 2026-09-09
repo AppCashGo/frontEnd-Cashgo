@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createCustomer,
+  createCustomerCollectionActivity,
   getCustomerDetail,
   getCustomers,
   registerCustomerPayment,
@@ -10,6 +11,7 @@ import {
 } from '@/modules/customers/services/customers-api'
 import type {
   CustomerDetail,
+  CustomerCollectionActivityInput,
   CustomerMutationInput,
   CustomerPaymentInput,
   CustomerReceivableTermsInput,
@@ -189,6 +191,25 @@ export function useUpdateCustomerReceivableTermsMutation() {
       receivableId: string
       input: CustomerReceivableTermsInput
     }) => updateCustomerReceivableTerms(receivableId, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: customersQueryKey,
+      })
+    },
+  })
+}
+
+export function useCreateCustomerCollectionActivityMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      receivableId,
+      input,
+    }: {
+      receivableId: string
+      input: CustomerCollectionActivityInput
+    }) => createCustomerCollectionActivity(receivableId, input),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: customersQueryKey,

@@ -1196,12 +1196,62 @@ test("creates a POS credit sale and records the customer receivable", async ({
     await expect(
       customerDrawer.getByRole("link", { name: "Preparar correo" }),
     ).toHaveAttribute("href", /^mailto:smoke-credit-/);
+
+    const reminderActivityResponsePromise = page.waitForResponse((response) => {
+      const requestInfo = response.request();
+      const pathname = new URL(response.url()).pathname;
+
+      return (
+        requestInfo.method() === "POST" &&
+        pathname.endsWith(
+          `/api/accounts-receivable/${customerReceivableId}/collection-activities`,
+        ) &&
+        response.ok()
+      );
+    });
+    page.once("popup", (popup) => {
+      void popup.close();
+    });
+    await customerDrawer.getByRole("link", { name: "Abrir WhatsApp" }).click();
+    await reminderActivityResponsePromise;
+    await expect(
+      customerDrawer.getByText("Recordatorio · WhatsApp").first(),
+    ).toBeVisible();
+
+    await customerDrawer
+      .getByRole("button", { name: "Registrar compromiso" })
+      .first()
+      .click();
+    await customerDrawer.getByLabel("Fecha prometida").fill("2099-09-10");
+    await customerDrawer.getByLabel("Valor prometido").fill("200");
+    await customerDrawer
+      .getByLabel("Nota del acuerdo")
+      .fill(`Compromiso smoke ${runId}`);
+
+    const promiseActivityResponsePromise = page.waitForResponse((response) => {
+      const requestInfo = response.request();
+      const pathname = new URL(response.url()).pathname;
+
+      return (
+        requestInfo.method() === "POST" &&
+        pathname.endsWith(
+          `/api/accounts-receivable/${customerReceivableId}/collection-activities`,
+        ) &&
+        response.ok()
+      );
+    });
+    await customerDrawer
+      .getByRole("button", { name: "Guardar compromiso" })
+      .click();
+    await promiseActivityResponsePromise;
+    await expect(customerDrawer.getByText(/Compromiso por/).first()).toBeVisible();
+
     await page.setViewportSize({ width: 390, height: 844 });
     await expect(
-      customerDrawer.getByRole("heading", { name: "Recordatorio de cobro" }),
+      customerDrawer.getByText("Recordatorio · WhatsApp").first(),
     ).toBeVisible();
     await expect(
-      customerDrawer.getByRole("link", { name: "Abrir WhatsApp" }),
+      customerDrawer.getByRole("button", { name: "Registrar compromiso" }).first(),
     ).toBeVisible();
     await page.setViewportSize({ width: 1280, height: 720 });
 
