@@ -1127,6 +1127,22 @@ test("creates a POS credit sale and records the customer receivable", async ({
       .filter({ hasText: customer.name })
       .first();
     await expect(customerRow).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Antigüedad de cartera" }),
+    ).toBeVisible();
+    await expect(page.getByRole("button", { name: /1–30 días/ })).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: /Más de 60 días/ }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Exportar cartera" }),
+    ).toBeVisible();
+    const agingDownloadPromise = page.waitForEvent("download");
+    await page.getByRole("button", { name: "Exportar cartera" }).click();
+    const agingDownload = await agingDownloadPromise;
+    expect(agingDownload.suggestedFilename()).toMatch(
+      /cartera-por-antiguedad.*\.csv/i,
+    );
     await page.getByRole("button", { name: "Al día", exact: true }).click();
     await expect(customerRow).toBeHidden();
     await page.getByRole("button", { name: "Por cobrar", exact: true }).click();

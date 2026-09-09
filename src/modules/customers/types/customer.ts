@@ -10,6 +10,11 @@ export type CustomerSummary = {
   notes: string | null
   balance: number
   overdueBalance: number
+  currentBalance: number
+  overdue1To30Balance: number
+  overdue31To60Balance: number
+  overdueOver60Balance: number
+  undatedBalance: number
   overdueReceivablesCount: number
   openReceivablesCount: number
   nextDueDate: string | null

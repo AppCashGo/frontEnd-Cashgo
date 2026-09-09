@@ -1,4 +1,5 @@
 import {
+  getBlob,
   getJson,
   patchFormData,
   patchJson,
@@ -59,6 +60,12 @@ function normalizeCustomerSummaryRecord(
     ...customer,
     id: String(customer.id),
     balance: normalizeNumber(customer.balance),
+    overdueBalance: normalizeNumber(customer.overdueBalance),
+    currentBalance: normalizeNumber(customer.currentBalance),
+    overdue1To30Balance: normalizeNumber(customer.overdue1To30Balance),
+    overdue31To60Balance: normalizeNumber(customer.overdue31To60Balance),
+    overdueOver60Balance: normalizeNumber(customer.overdueOver60Balance),
+    undatedBalance: normalizeNumber(customer.undatedBalance),
   }
 }
 
@@ -104,6 +111,12 @@ export async function getCustomers() {
   const customers = await getJson<CustomerSummaryApiRecord[]>('/customers')
 
   return customers.map(normalizeCustomerSummaryRecord)
+}
+
+export function exportCustomerAgingReport() {
+  return getBlob('/customers/receivables/aging/export', {
+    accept: 'text/csv',
+  })
 }
 
 export async function getCustomerDetail(customerId: string) {

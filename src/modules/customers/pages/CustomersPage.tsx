@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useState } from 'react'
-import { Crown, History, ReceiptText, TrendingUp, Users } from 'lucide-react'
+import { Crown, Download, History, ReceiptText, TrendingUp, Users } from 'lucide-react'
 import { CustomerDetailPanel } from '@/modules/customers/components/CustomerDetailPanel'
 import { CustomerMetricCard } from '@/modules/customers/components/CustomerMetricCard'
 import { CustomerPurchaseHistoryPanel } from '@/modules/customers/components/CustomerPurchaseHistoryPanel'
@@ -32,11 +32,22 @@ import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import listPageStyles from '@/shared/components/retail/RetailListPage.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
 import { matchesCustomerSearch } from '@/modules/customers/utils/matches-customer-search'
+import { exportCustomerAgingReport } from '@/modules/customers/services/customers-api'
 import { formatCurrency } from '@/shared/utils/format-currency'
+import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './CustomersPage.module.css'
 
-type CustomerPortfolioFilter = 'ALL' | 'OVERDUE' | 'PENDING' | 'CURRENT'
+type CustomerPortfolioFilter =
+  | 'ALL'
+  | 'OVERDUE'
+  | 'PENDING'
+  | 'CURRENT'
+  | 'DUE_SOON'
+  | 'OVERDUE_1_30'
+  | 'OVERDUE_31_60'
+  | 'OVERDUE_OVER_60'
+  | 'UNDATED'
 
 const CUSTOMER_PORTFOLIO_FILTERS: Array<{
   value: CustomerPortfolioFilter
@@ -47,6 +58,14 @@ const CUSTOMER_PORTFOLIO_FILTERS: Array<{
   { value: 'PENDING', label: 'Por cobrar' },
   { value: 'CURRENT', label: 'Al día' },
 ]
+
+const AGING_BUCKETS = [
+  { filter: 'DUE_SOON', label: 'Por vencer', field: 'currentBalance', tone: 'current' },
+  { filter: 'OVERDUE_1_30', label: '1–30 días', field: 'overdue1To30Balance', tone: 'warning' },
+  { filter: 'OVERDUE_31_60', label: '31–60 días', field: 'overdue31To60Balance', tone: 'danger' },
+  { filter: 'OVERDUE_OVER_60', label: 'Más de 60 días', field: 'overdueOver60Balance', tone: 'critical' },
+  { filter: 'UNDATED', label: 'Sin fecha', field: 'undatedBalance', tone: 'neutral' },
+] as const
 
 function formatPortfolioDate(value: string | null) {
   if (!value) {
@@ -74,6 +93,8 @@ export function CustomersPage() {
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false)
   const [portfolioFilter, setPortfolioFilter] =
     useState<CustomerPortfolioFilter>('ALL')
+  const [isExporting, setIsExporting] = useState(false)
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null)
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const customersQuery = useCustomersQuery()
   const createCustomerMutation = useCreateCustomerMutation()
@@ -102,6 +123,14 @@ export function CustomersPage() {
       return customer.balance <= 0
     }
 
+    const agingBucket = AGING_BUCKETS.find(
+      (bucket) => bucket.filter === portfolioFilter,
+    )
+
+    if (agingBucket) {
+      return customer[agingBucket.field] > 0
+    }
+
     return true
   })
   const selectedCustomerSummary =
@@ -122,6 +151,12 @@ export function CustomersPage() {
   const overdueCustomers = customers.filter(
     (customer) => customer.overdueReceivablesCount > 0,
   ).length
+  const agingTotals = AGING_BUCKETS.map((bucket) => ({
+    ...bucket,
+    value: customers.reduce((sum, customer) => sum + customer[bucket.field], 0),
+    customerCount: customers.filter((customer) => customer[bucket.field] > 0)
+      .length,
+  }))
   const totalPurchases = customers.reduce(
     (sum, customer) => sum + customer.purchaseCount,
     0,
@@ -166,6 +201,24 @@ export function CustomersPage() {
 
   function closeRetailCustomerDrawer() {
     setRetailDrawerOpen(false)
+  }
+
+  async function handleExportAgingReport() {
+    setIsExporting(true)
+    setExportFeedback(null)
+
+    try {
+      const { blob, filename } = await exportCustomerAgingReport()
+
+      downloadBlobFile(blob, filename ?? 'cartera-por-antiguedad.csv')
+      setExportFeedback('Reporte de cartera descargado correctamente.')
+    } catch (error) {
+      setExportFeedback(
+        getErrorMessage(error, 'No fue posible descargar el reporte de cartera.'),
+      )
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   async function handleSubmitCustomer(
@@ -237,13 +290,24 @@ export function CustomersPage() {
           bodyVariant="flush"
           title="Clientes"
           actions={
-            <button
-              className={retailStyles.buttonDark}
-              type="button"
-              onClick={openCreateCustomer}
-            >
-              Crear cliente
-            </button>
+            <div className={styles.pageActions}>
+              <button
+                className={retailStyles.buttonOutline}
+                disabled={isExporting}
+                type="button"
+                onClick={() => void handleExportAgingReport()}
+              >
+                <Download aria-hidden="true" />
+                {isExporting ? 'Exportando...' : 'Exportar cartera'}
+              </button>
+              <button
+                className={retailStyles.buttonDark}
+                type="button"
+                onClick={openCreateCustomer}
+              >
+                Crear cliente
+              </button>
+            </div>
           }
         >
           <section className={styles.retailWorkspace}>
@@ -311,6 +375,53 @@ export function CustomersPage() {
                 value={overdueCustomers.toString()}
               />
             </div>
+
+            <section className={styles.agingSection} aria-labelledby="aging-title">
+              <div className={styles.agingHeading}>
+                <div>
+                  <h2 id="aging-title">Antigüedad de cartera</h2>
+                  <p>
+                    Selecciona un rango para identificar los clientes que
+                    requieren gestión.
+                  </p>
+                </div>
+                {portfolioFilter !== 'ALL' ? (
+                  <button type="button" onClick={() => setPortfolioFilter('ALL')}>
+                    Limpiar filtro
+                  </button>
+                ) : null}
+              </div>
+              <div className={styles.agingGrid}>
+                {agingTotals.map((bucket) => (
+                  <button
+                    aria-pressed={portfolioFilter === bucket.filter}
+                    className={`${styles.agingCard} ${
+                      styles[`agingCard_${bucket.tone}`]
+                    } ${
+                      portfolioFilter === bucket.filter
+                        ? styles.agingCardActive
+                        : ''
+                    }`}
+                    key={bucket.filter}
+                    type="button"
+                    onClick={() => setPortfolioFilter(bucket.filter)}
+                  >
+                    <span>{bucket.label}</span>
+                    <strong>{formatCurrency(bucket.value)}</strong>
+                    <small>
+                      {bucket.customerCount} cliente
+                      {bucket.customerCount === 1 ? '' : 's'}
+                    </small>
+                  </button>
+                ))}
+              </div>
+            </section>
+
+            {exportFeedback ? (
+              <p className={styles.exportFeedback} role="status">
+                {exportFeedback}
+              </p>
+            ) : null}
 
             <RetailTableShell
               isRefreshing={customersQuery.isFetching && !customersQuery.isLoading}
