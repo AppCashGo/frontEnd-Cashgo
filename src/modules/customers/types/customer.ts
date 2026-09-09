@@ -9,6 +9,10 @@ export type CustomerSummary = {
   address: string | null
   notes: string | null
   balance: number
+  overdueBalance: number
+  overdueReceivablesCount: number
+  openReceivablesCount: number
+  nextDueDate: string | null
   purchaseCount: number
   lastPurchaseAt: string | null
   createdAt: string

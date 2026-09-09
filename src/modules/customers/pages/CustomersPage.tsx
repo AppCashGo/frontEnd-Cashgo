@@ -36,6 +36,31 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './CustomersPage.module.css'
 
+type CustomerPortfolioFilter = 'ALL' | 'OVERDUE' | 'PENDING' | 'CURRENT'
+
+const CUSTOMER_PORTFOLIO_FILTERS: Array<{
+  value: CustomerPortfolioFilter
+  label: string
+}> = [
+  { value: 'ALL', label: 'Todos' },
+  { value: 'OVERDUE', label: 'Vencidos' },
+  { value: 'PENDING', label: 'Por cobrar' },
+  { value: 'CURRENT', label: 'Al día' },
+]
+
+function formatPortfolioDate(value: string | null) {
+  if (!value) {
+    return 'Sin fecha'
+  }
+
+  return new Intl.DateTimeFormat('es-CO', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(new Date(value))
+}
+
 export function CustomersPage() {
   const navigationPreset = useBusinessNavigationPreset()
   const isRetailPreset = navigationPreset === 'retail'
@@ -47,6 +72,8 @@ export function CustomersPage() {
     useState<RetailCustomerDrawerMode>('detail')
   const [isRetailDrawerOpen, setRetailDrawerOpen] = useState(false)
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false)
+  const [portfolioFilter, setPortfolioFilter] =
+    useState<CustomerPortfolioFilter>('ALL')
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const customersQuery = useCustomersQuery()
   const createCustomerMutation = useCreateCustomerMutation()
@@ -58,9 +85,25 @@ export function CustomersPage() {
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const customerRecords = customersQuery.data
   const customers = customerRecords ?? []
-  const visibleCustomers = customers.filter((customer) =>
-    matchesCustomerSearch(customer, deferredSearchValue),
-  )
+  const visibleCustomers = customers.filter((customer) => {
+    if (!matchesCustomerSearch(customer, deferredSearchValue)) {
+      return false
+    }
+
+    if (portfolioFilter === 'OVERDUE') {
+      return customer.overdueReceivablesCount > 0
+    }
+
+    if (portfolioFilter === 'PENDING') {
+      return customer.balance > 0
+    }
+
+    if (portfolioFilter === 'CURRENT') {
+      return customer.balance <= 0
+    }
+
+    return true
+  })
   const selectedCustomerSummary =
     customers.find((customer) => customer.id === selectedCustomerId) ?? null
   const customerDetailQuery = useCustomerDetailQuery(selectedCustomerId)
@@ -72,13 +115,17 @@ export function CustomersPage() {
   const customersWithBalance = customers.filter(
     (customer) => customer.balance > 0,
   ).length
+  const overdueBalance = customers.reduce(
+    (sum, customer) => sum + customer.overdueBalance,
+    0,
+  )
+  const overdueCustomers = customers.filter(
+    (customer) => customer.overdueReceivablesCount > 0,
+  ).length
   const totalPurchases = customers.reduce(
     (sum, customer) => sum + customer.purchaseCount,
     0,
   )
-  const averagePurchases =
-    customers.length > 0 ? Math.round(totalPurchases / customers.length) : 0
-
   useEffect(() => {
     const availableCustomers = customerRecords ?? []
 
@@ -227,6 +274,23 @@ export function CustomersPage() {
                   onChange={(event) => setSearchValue(event.target.value)}
                 />
               </label>
+              <div className={styles.portfolioFilters} aria-label="Filtrar cartera">
+                {CUSTOMER_PORTFOLIO_FILTERS.map((filter) => (
+                  <button
+                    aria-pressed={portfolioFilter === filter.value}
+                    className={
+                      portfolioFilter === filter.value
+                        ? styles.portfolioFilterActive
+                        : styles.portfolioFilter
+                    }
+                    key={filter.value}
+                    type="button"
+                    onClick={() => setPortfolioFilter(filter.value)}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div className={styles.retailMetricsGrid}>
@@ -239,12 +303,12 @@ export function CustomersPage() {
                 value={formatCurrency(totalBalance)}
               />
               <RetailStatCard
-                label="Clientes con deuda"
-                value={customersWithBalance.toString()}
+                label="Cartera vencida"
+                value={formatCurrency(overdueBalance)}
               />
               <RetailStatCard
-                label="Compras promedio"
-                value={averagePurchases.toString()}
+                label="Clientes vencidos"
+                value={overdueCustomers.toString()}
               />
             </div>
 
@@ -259,6 +323,7 @@ export function CustomersPage() {
                     <th>Celular</th>
                     <th>Documento</th>
                     <th>Total por cobrar</th>
+                    <th>Próximo vencimiento</th>
                     <th>Compras</th>
                     <th>Estado</th>
                     <th>Acciones</th>
@@ -267,7 +332,7 @@ export function CustomersPage() {
                 <tbody>
                   {customersQuery.isLoading ? (
                     <TableStateRow
-                      colSpan={7}
+                      colSpan={8}
                       tone="feedback"
                       title="Cargando clientes..."
                     />
@@ -286,7 +351,7 @@ export function CustomersPage() {
                           Reintentar
                         </button>
                       }
-                      colSpan={7}
+                      colSpan={8}
                       description="Intenta nuevamente para consultar la lista de clientes."
                       tone="error"
                       title="No pudimos cargar los clientes."
@@ -318,16 +383,27 @@ export function CustomersPage() {
                           >
                             {formatCurrency(customer.balance)}
                           </td>
+                          <td>
+                            {customer.overdueReceivablesCount > 0
+                              ? `${customer.overdueReceivablesCount} vencida${customer.overdueReceivablesCount === 1 ? '' : 's'}`
+                              : formatPortfolioDate(customer.nextDueDate)}
+                          </td>
                           <td>{customer.purchaseCount.toString()}</td>
                           <td>
                             <span
                               className={
-                                customer.balance > 0
-                                  ? styles.statusPending
-                                  : styles.statusOk
+                                customer.overdueReceivablesCount > 0
+                                  ? styles.statusOverdue
+                                  : customer.balance > 0
+                                    ? styles.statusPending
+                                    : styles.statusOk
                               }
                             >
-                              {customer.balance > 0 ? 'Por cobrar' : 'Al dia'}
+                              {customer.overdueReceivablesCount > 0
+                                ? 'Vencido'
+                                : customer.balance > 0
+                                  ? 'Por cobrar'
+                                  : 'Al día'}
                             </span>
                           </td>
                           <td>
@@ -356,7 +432,7 @@ export function CustomersPage() {
                   !customersQuery.isError &&
                   visibleCustomers.length === 0 ? (
                     <TableStateRow
-                      colSpan={7}
+                      colSpan={8}
                       description="Crea un cliente o limpia los filtros para ver más resultados."
                       title="No encontramos clientes con esa busqueda."
                     />

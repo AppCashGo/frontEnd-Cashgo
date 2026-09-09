@@ -158,6 +158,34 @@
   gap: 0.75rem;
 }
 
+.portfolioFilters {
+  display: flex;
+  flex: 1 1 22rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.portfolioFilter,
+.portfolioFilterActive {
+  min-height: 2.8rem;
+  border: 1px solid #c0ccda;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #526175;
+  padding: 0 0.9rem;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.portfolioFilterActive {
+  border-color: #1f2a37;
+  background: #1f2a37;
+  color: #ffffff;
+}
+
 .retailMetricsGrid {
   display: grid;
   gap: 0.85rem;
@@ -169,6 +197,7 @@
 }
 
 .statusPending,
+.statusOverdue,
 .statusOk {
   display: inline-flex;
   align-items: center;
@@ -176,6 +205,11 @@
   padding: 0.28rem 0.65rem;
   font-size: 0.78rem;
   font-weight: 900;
+}
+
+.statusOverdue {
+  background: #fee2e2;
+  color: #b42318;
 }
 
 .statusPending {
@@ -364,6 +398,17 @@
 
   .premiumModal {
     padding: 1.5rem 1.25rem 1.2rem;
+  }
+
+  .portfolioFilters,
+  .portfolioFilter,
+  .portfolioFilterActive {
+    width: 100%;
+  }
+
+  .portfolioFilters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .premiumCta {

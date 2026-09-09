@@ -1127,6 +1127,10 @@ test("creates a POS credit sale and records the customer receivable", async ({
       .filter({ hasText: customer.name })
       .first();
     await expect(customerRow).toBeVisible();
+    await page.getByRole("button", { name: "Al día", exact: true }).click();
+    await expect(customerRow).toBeHidden();
+    await page.getByRole("button", { name: "Por cobrar", exact: true }).click();
+    await expect(customerRow).toBeVisible();
     await customerRow.getByRole("button", { name: "Detalle" }).click();
 
     const customerDrawer = page.getByRole("dialog", {
