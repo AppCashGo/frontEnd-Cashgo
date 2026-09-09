@@ -22,6 +22,8 @@ type SmokeCustomerReceivableRecord = {
   amount: number | string;
   paidAmount: number | string;
   balance: number | string;
+  dueDate?: string | null;
+  notes?: string | null;
   status: string;
 };
 
@@ -1136,10 +1138,38 @@ test("creates a POS credit sale and records the customer receivable", async ({
     ).toBeVisible();
 
     await customerDrawer
+      .getByRole("button", { name: "Editar vencimiento" })
+      .click();
+    await customerDrawer.getByLabel("Fecha de vencimiento").fill("2099-08-20");
+    await customerDrawer
+      .getByLabel("Nota interna")
+      .fill(`Acuerdo de pago smoke ${runId}`);
+
+    const termsResponsePromise = page.waitForResponse((response) => {
+      const requestInfo = response.request();
+      const pathname = new URL(response.url()).pathname;
+
+      return (
+        requestInfo.method() === "PATCH" &&
+        pathname.endsWith(
+          `/api/accounts-receivable/${customerReceivableId}/terms`,
+        ) &&
+        response.ok()
+      );
+    });
+
+    await customerDrawer
+      .getByRole("button", { name: "Guardar condiciones" })
+      .click();
+    await termsResponsePromise;
+    await expect(customerDrawer.getByText(/Vence el Aug 20, 2099/)).toBeVisible();
+
+    await customerDrawer
       .getByRole("button", { name: "Preparar recordatorio" })
       .click();
     const reminderMessage = customerDrawer.getByLabel("Mensaje para el cliente");
     await expect(reminderMessage).toHaveValue(new RegExp(createdSale.saleNumber));
+    await expect(reminderMessage).toHaveValue(/20 de agosto de 2099/);
     await expect(
       customerDrawer.getByRole("link", { name: "Abrir WhatsApp" }),
     ).toHaveAttribute("href", /wa\.me\/57320\d+\?text=/);

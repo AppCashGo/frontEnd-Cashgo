@@ -14,11 +14,13 @@ import {
   useCustomersQuery,
   useRegisterCustomerPaymentMutation,
   useUpdateCustomerMutation,
+  useUpdateCustomerReceivableTermsMutation,
   useUploadCustomerAvatarMutation,
 } from '@/modules/customers/hooks/use-customers-query'
 import type {
   CustomerMutationInput,
   CustomerPaymentInput,
+  CustomerReceivableTermsInput,
 } from '@/modules/customers/types/customer'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
@@ -51,6 +53,8 @@ export function CustomersPage() {
   const updateCustomerMutation = useUpdateCustomerMutation()
   const uploadCustomerAvatarMutation = useUploadCustomerAvatarMutation()
   const registerPaymentMutation = useRegisterCustomerPaymentMutation()
+  const updateReceivableTermsMutation =
+    useUpdateCustomerReceivableTermsMutation()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const customerRecords = customersQuery.data
   const customers = customerRecords ?? []
@@ -159,6 +163,18 @@ export function CustomersPage() {
       receivableId,
       input,
     })
+
+    await Promise.allSettled([
+      customersQuery.refetch(),
+      customerDetailQuery.refetch(),
+    ])
+  }
+
+  async function handleUpdateCustomerReceivableTerms(
+    receivableId: string,
+    input: CustomerReceivableTermsInput,
+  ) {
+    await updateReceivableTermsMutation.mutateAsync({ receivableId, input })
 
     await Promise.allSettled([
       customersQuery.refetch(),
@@ -365,6 +381,7 @@ export function CustomersPage() {
           isLoading={customerDetailQuery.isLoading}
           isOpen={isRetailDrawerOpen}
           isPaymentSubmitting={registerPaymentMutation.isPending}
+          isTermsSubmitting={updateReceivableTermsMutation.isPending}
           isSubmitting={
             createCustomerMutation.isPending ||
             updateCustomerMutation.isPending ||
@@ -375,7 +392,8 @@ export function CustomersPage() {
             createCustomerMutation.error ??
             updateCustomerMutation.error ??
             uploadCustomerAvatarMutation.error ??
-            registerPaymentMutation.error
+            registerPaymentMutation.error ??
+            updateReceivableTermsMutation.error
           }
           onClose={closeRetailCustomerDrawer}
           onModeChange={setRetailDrawerMode}
@@ -383,6 +401,7 @@ export function CustomersPage() {
             void customerDetailQuery.refetch()
           }}
           onRegisterPayment={handleRegisterCustomerPayment}
+          onUpdateReceivableTerms={handleUpdateCustomerReceivableTerms}
           onSubmitCustomer={handleSubmitCustomer}
         />
 

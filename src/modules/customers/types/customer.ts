@@ -77,3 +77,8 @@ export type CustomerPaymentInput = {
   reference?: string
   notes?: string
 }
+
+export type CustomerReceivableTermsInput = {
+  dueDate: string | null
+  notes: string | null
+}

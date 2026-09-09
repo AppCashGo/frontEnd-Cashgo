@@ -6,11 +6,13 @@ import {
   registerCustomerPayment,
   uploadCustomerAvatar,
   updateCustomer,
+  updateCustomerReceivableTerms,
 } from '@/modules/customers/services/customers-api'
 import type {
   CustomerDetail,
   CustomerMutationInput,
   CustomerPaymentInput,
+  CustomerReceivableTermsInput,
   CustomerSummary,
 } from '@/modules/customers/types/customer'
 
@@ -159,6 +161,25 @@ export function useRegisterCustomerPaymentMutation() {
       receivableId: string
       input: CustomerPaymentInput
     }) => registerCustomerPayment(receivableId, input),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: customersQueryKey,
+      })
+    },
+  })
+}
+
+export function useUpdateCustomerReceivableTermsMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      receivableId,
+      input,
+    }: {
+      receivableId: string
+      input: CustomerReceivableTermsInput
+    }) => updateCustomerReceivableTerms(receivableId, input),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: customersQueryKey,

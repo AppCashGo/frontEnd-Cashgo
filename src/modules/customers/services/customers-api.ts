@@ -10,6 +10,7 @@ import type {
   CustomerPaymentInput,
   CustomerReceivable,
   CustomerReceivablePayment,
+  CustomerReceivableTermsInput,
   CustomerPurchaseHistoryItem,
   CustomerSummary,
 } from '@/modules/customers/types/customer'
@@ -155,6 +156,18 @@ export async function registerCustomerPayment(
     CustomerReceivableApiRecord,
     CustomerPaymentInput
   >(`/accounts-receivable/${receivableId}/payments`, input)
+
+  return normalizeCustomerReceivable(receivable)
+}
+
+export async function updateCustomerReceivableTerms(
+  receivableId: string,
+  input: CustomerReceivableTermsInput,
+) {
+  const receivable = await patchJson<
+    CustomerReceivableApiRecord,
+    CustomerReceivableTermsInput
+  >(`/accounts-receivable/${receivableId}/terms`, input)
 
   return normalizeCustomerReceivable(receivable)
 }

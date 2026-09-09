@@ -8,6 +8,7 @@ import {
 import {
   Banknote,
   CalendarClock,
+  CalendarDays,
   Hash,
   Mail,
   MapPin,
@@ -23,6 +24,7 @@ import type {
   CustomerPaymentInput,
   CustomerPaymentMethod,
   CustomerReceivable,
+  CustomerReceivableTermsInput,
 } from '@/modules/customers/types/customer'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
@@ -74,6 +76,11 @@ type PaymentReceiptBrand = {
   businessLogoUrl: string | null
 }
 
+type ReceivableTermsFormState = {
+  dueDate: string
+  notes: string
+}
+
 type RetailCustomerDrawerProps = {
   customer: CustomerDetail | null
   currentCashRegisterId: string | null
@@ -81,6 +88,7 @@ type RetailCustomerDrawerProps = {
   isLoading: boolean
   isOpen: boolean
   isPaymentSubmitting: boolean
+  isTermsSubmitting: boolean
   isSubmitting: boolean
   mode: RetailCustomerDrawerMode
   submitError: unknown
@@ -90,6 +98,10 @@ type RetailCustomerDrawerProps = {
   onRegisterPayment: (
     receivableId: string,
     input: CustomerPaymentInput,
+  ) => Promise<void>
+  onUpdateReceivableTerms: (
+    receivableId: string,
+    input: CustomerReceivableTermsInput,
   ) => Promise<void>
   onSubmitCustomer: (
     input: CustomerMutationInput,
@@ -203,7 +215,12 @@ function normalizeWhatsAppPhone(value: string) {
 function formatReminderDate(value: string) {
   return new Intl.DateTimeFormat('es-CO', {
     dateStyle: 'long',
+    timeZone: 'UTC',
   }).format(new Date(value))
+}
+
+function toDateInputValue(value: string | null) {
+  return value ? value.slice(0, 10) : ''
 }
 
 function buildCollectionReminder(
@@ -314,6 +331,7 @@ export function RetailCustomerDrawer({
   isLoading,
   isOpen,
   isPaymentSubmitting,
+  isTermsSubmitting,
   isSubmitting,
   mode,
   submitError,
@@ -321,6 +339,7 @@ export function RetailCustomerDrawer({
   onModeChange,
   onRefresh,
   onRegisterPayment,
+  onUpdateReceivableTerms,
   onSubmitCustomer,
 }: RetailCustomerDrawerProps) {
   const [form, setForm] = useState<CustomerFormState>(EMPTY_FORM)
@@ -341,6 +360,12 @@ export function RetailCustomerDrawer({
   )
   const [reminderMessage, setReminderMessage] = useState('')
   const [reminderFeedback, setReminderFeedback] = useState<string | null>(null)
+  const [termsReceivableId, setTermsReceivableId] = useState<string | null>(null)
+  const [termsForm, setTermsForm] = useState<ReceivableTermsFormState>({
+    dueDate: '',
+    notes: '',
+  })
+  const [termsError, setTermsError] = useState<string | null>(null)
   const businessSettingsQuery = useBusinessSettingsQuery()
 
   const pendingReceivables = useMemo(
@@ -357,6 +382,10 @@ export function RetailCustomerDrawer({
   const reminderReceivable =
     pendingReceivables.find(
       (receivable) => receivable.id === reminderReceivableId,
+    ) ?? null
+  const termsReceivable =
+    pendingReceivables.find(
+      (receivable) => receivable.id === termsReceivableId,
     ) ?? null
   const totalPurchased = customer?.purchaseHistory.reduce(
     (sum, purchase) => sum + purchase.total,
@@ -409,6 +438,8 @@ export function RetailCustomerDrawer({
     setReminderReceivableId(null)
     setReminderMessage('')
     setReminderFeedback(null)
+    setTermsReceivableId(null)
+    setTermsError(null)
   }, [customer, isOpen, mode])
 
   function handleStartReminder(receivable: CustomerReceivable) {
@@ -425,6 +456,37 @@ export function RetailCustomerDrawer({
       ),
     )
     setReminderFeedback(null)
+  }
+
+  function handleStartTermsEdit(receivable: CustomerReceivable) {
+    setTermsReceivableId(receivable.id)
+    setTermsForm({
+      dueDate: toDateInputValue(receivable.dueDate),
+      notes: receivable.notes ?? '',
+    })
+    setTermsError(null)
+  }
+
+  async function handleSubmitTerms(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+
+    if (!termsReceivable) {
+      return
+    }
+
+    setTermsError(null)
+
+    try {
+      await onUpdateReceivableTerms(termsReceivable.id, {
+        dueDate: termsForm.dueDate || null,
+        notes: normalizeOptionalText(termsForm.notes),
+      })
+      setTermsReceivableId(null)
+    } catch (error) {
+      setTermsError(
+        getErrorMessage(error, 'No pudimos actualizar las condiciones de cobro.'),
+      )
+    }
   }
 
   async function handleCopyReminder() {
@@ -782,6 +844,7 @@ export function RetailCustomerDrawer({
                   key={receivable.id}
                   receivable={receivable}
                   onReminder={handleStartReminder}
+                  onEditTerms={handleStartTermsEdit}
                 />
               ))}
             </div>
@@ -869,6 +932,83 @@ export function RetailCustomerDrawer({
                 </p>
               ) : null}
             </div>
+          ) : null}
+
+          {termsReceivable ? (
+            <form className={styles.termsComposer} onSubmit={handleSubmitTerms}>
+              <div className={styles.reminderHeader}>
+                <div>
+                  <h4>Condiciones de cobro</h4>
+                  <p>
+                    {termsReceivable.saleNumber} · ajusta el vencimiento y la nota
+                    interna.
+                  </p>
+                </div>
+                <button
+                  aria-label="Cerrar condiciones de cobro"
+                  className={styles.reminderClose}
+                  type="button"
+                  onClick={() => setTermsReceivableId(null)}
+                >
+                  ×
+                </button>
+              </div>
+
+              <label className={styles.field}>
+                <span>Fecha de vencimiento</span>
+                <input
+                  className={styles.input}
+                  type="date"
+                  value={termsForm.dueDate}
+                  onChange={(event) =>
+                    setTermsForm((current) => ({
+                      ...current,
+                      dueDate: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              <label className={styles.field}>
+                <span>Nota interna</span>
+                <textarea
+                  className={styles.textarea}
+                  maxLength={255}
+                  placeholder="Acuerdo, plazo o detalle para el equipo"
+                  rows={3}
+                  value={termsForm.notes}
+                  onChange={(event) =>
+                    setTermsForm((current) => ({
+                      ...current,
+                      notes: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+
+              {termsError ? (
+                <p className={styles.errorMessage} role="alert">
+                  {termsError}
+                </p>
+              ) : null}
+
+              <div className={styles.termsActions}>
+                <button
+                  className={styles.secondaryButton}
+                  type="button"
+                  onClick={() => setTermsReceivableId(null)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className={styles.primaryButton}
+                  disabled={isTermsSubmitting}
+                  type="submit"
+                >
+                  {isTermsSubmitting ? 'Guardando...' : 'Guardar condiciones'}
+                </button>
+              </div>
+            </form>
           ) : null}
         </section>
 
@@ -1117,9 +1257,11 @@ function MetricTile({
 function ReceivableCard({
   receivable,
   onReminder,
+  onEditTerms,
 }: {
   receivable: CustomerReceivable
   onReminder: (receivable: CustomerReceivable) => void
+  onEditTerms: (receivable: CustomerReceivable) => void
 }) {
   const isPaid = receivable.balance <= 0
 
@@ -1158,14 +1300,24 @@ function ReceivableCard({
       ) : null}
 
       {!isPaid ? (
-        <button
-          className={styles.reminderButton}
-          type="button"
-          onClick={() => onReminder(receivable)}
-        >
-          <MessageCircle aria-hidden="true" />
-          Preparar recordatorio
-        </button>
+        <div className={styles.receivableActions}>
+          <button
+            className={styles.termsButton}
+            type="button"
+            onClick={() => onEditTerms(receivable)}
+          >
+            <CalendarDays aria-hidden="true" />
+            Editar vencimiento
+          </button>
+          <button
+            className={styles.reminderButton}
+            type="button"
+            onClick={() => onReminder(receivable)}
+          >
+            <MessageCircle aria-hidden="true" />
+            Preparar recordatorio
+          </button>
+        </div>
       ) : null}
     </article>
   )
