@@ -90,12 +90,14 @@ type PaymentPromiseFormState = {
 }
 
 type RetailCustomerDrawerProps = {
+  canSendConfirmedEmail: boolean
   customer: CustomerDetail | null
   currentCashRegisterId: string | null
   errorMessage: string | null
   isLoading: boolean
   isOpen: boolean
   isActivitySubmitting: boolean
+  isEmailSubmitting: boolean
   isPaymentSubmitting: boolean
   isTermsSubmitting: boolean
   isSubmitting: boolean
@@ -111,6 +113,10 @@ type RetailCustomerDrawerProps = {
   onCreateCollectionActivity: (
     receivableId: string,
     input: CustomerCollectionActivityInput,
+  ) => Promise<void>
+  onSendReminderEmail: (
+    receivableId: string,
+    message: string,
   ) => Promise<void>
   onUpdateReceivableTerms: (
     receivableId: string,
@@ -356,12 +362,14 @@ function openReceipt(
 }
 
 export function RetailCustomerDrawer({
+  canSendConfirmedEmail,
   customer,
   currentCashRegisterId,
   errorMessage,
   isLoading,
   isOpen,
   isActivitySubmitting,
+  isEmailSubmitting,
   isPaymentSubmitting,
   isTermsSubmitting,
   isSubmitting,
@@ -372,6 +380,7 @@ export function RetailCustomerDrawer({
   onRefresh,
   onRegisterPayment,
   onCreateCollectionActivity,
+  onSendReminderEmail,
   onUpdateReceivableTerms,
   onSubmitCustomer,
 }: RetailCustomerDrawerProps) {
@@ -600,6 +609,26 @@ export function RetailCustomerDrawer({
     } catch {
       setReminderFeedback(
         'No pudimos copiar el mensaje. Puedes seleccionarlo manualmente.',
+      )
+    }
+  }
+
+  async function handleSendReminderEmail() {
+    if (!reminderReceivable) {
+      return
+    }
+
+    setReminderFeedback(null)
+
+    try {
+      await onSendReminderEmail(reminderReceivable.id, reminderMessage)
+      setReminderFeedback('Correo enviado y confirmado por el proveedor.')
+    } catch (error) {
+      setReminderFeedback(
+        getErrorMessage(
+          error,
+          'No fue posible confirmar el envío. Puedes preparar el correo manualmente.',
+        ),
       )
     }
   }
@@ -1025,6 +1054,23 @@ export function RetailCustomerDrawer({
                   </button>
                 )}
               </div>
+
+              {customer.email && canSendConfirmedEmail ? (
+                <button
+                  className={styles.sendEmailButton}
+                  disabled={isEmailSubmitting || reminderMessage.trim().length === 0}
+                  type="button"
+                  onClick={() => void handleSendReminderEmail()}
+                >
+                  <Send aria-hidden="true" />
+                  {isEmailSubmitting ? 'Enviando…' : 'Enviar correo con CashGo'}
+                </button>
+              ) : customer.email ? (
+                <p className={styles.deliveryNotice}>
+                  El envío directo aún no está configurado. Usa “Preparar correo”
+                  para enviarlo desde tu aplicación de correo.
+                </p>
+              ) : null}
 
               <button
                 className={styles.copyReminderButton}
@@ -1547,6 +1593,15 @@ function ReceivableCard({
                   : `Recordatorio · ${getCollectionChannelLabel(activity.channel)}`}
               </span>
               <small>
+                {activity.type === 'REMINDER' && activity.deliveryStatus
+                  ? `${
+                      activity.deliveryStatus === 'SENT'
+                        ? 'Enviado'
+                        : activity.deliveryStatus === 'FAILED'
+                          ? 'Falló el envío'
+                          : 'Preparado'
+                    } · `
+                  : ''}
                 {activity.type === 'PAYMENT_PROMISE' && activity.promiseStatus
                   ? `${
                       activity.promiseStatus === 'FULFILLED'

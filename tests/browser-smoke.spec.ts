@@ -1196,6 +1196,12 @@ test("creates a POS credit sale and records the customer receivable", async ({
     await expect(
       customerDrawer.getByRole("link", { name: "Preparar correo" }),
     ).toHaveAttribute("href", /^mailto:smoke-credit-/);
+    await expect(
+      customerDrawer.getByText(/El envío directo aún no está configurado/),
+    ).toBeVisible();
+    await expect(
+      customerDrawer.getByRole("button", { name: "Enviar correo con CashGo" }),
+    ).toHaveCount(0);
 
     const reminderActivityResponsePromise = page.waitForResponse((response) => {
       const requestInfo = response.request();

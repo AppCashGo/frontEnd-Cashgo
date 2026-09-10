@@ -6,6 +6,7 @@ import {
   getCustomerCollectionAgenda,
   getCustomers,
   registerCustomerPayment,
+  sendCustomerReminderEmail,
   uploadCustomerAvatar,
   updateCustomer,
   updateCustomerReceivableTerms,
@@ -16,6 +17,7 @@ import type {
   CustomerMutationInput,
   CustomerPaymentInput,
   CustomerReceivableTermsInput,
+  CustomerReminderEmailInput,
   CustomerSummary,
 } from '@/modules/customers/types/customer'
 
@@ -228,6 +230,28 @@ export function useCreateCustomerCollectionActivityMutation() {
       receivableId: string
       input: CustomerCollectionActivityInput
     }) => createCustomerCollectionActivity(receivableId, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: customerCollectionAgendaQueryKey,
+        }),
+      ])
+    },
+  })
+}
+
+export function useSendCustomerReminderEmailMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      receivableId,
+      input,
+    }: {
+      receivableId: string
+      input: CustomerReminderEmailInput
+    }) => sendCustomerReminderEmail(receivableId, input),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: customersQueryKey }),

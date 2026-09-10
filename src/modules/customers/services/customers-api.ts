@@ -15,6 +15,7 @@ import type {
   CustomerCollectionAgenda,
   CustomerReceivablePayment,
   CustomerReceivableTermsInput,
+  CustomerReminderEmailInput,
   CustomerPurchaseHistoryItem,
   CustomerSummary,
 } from '@/modules/customers/types/customer'
@@ -178,6 +179,7 @@ export async function getCustomerCollectionAgenda(): Promise<CustomerCollectionA
   )
 
   return {
+    deliveryCapabilities: agenda.deliveryCapabilities,
     summary: agenda.summary,
     promises: agenda.promises.map((promise) => ({
       ...promise,
@@ -279,4 +281,14 @@ export async function createCustomerCollectionActivity(
     CustomerReceivableCollectionActivityApiRecord,
     CustomerCollectionActivityInput
   >(`/accounts-receivable/${receivableId}/collection-activities`, input)
+}
+
+export async function sendCustomerReminderEmail(
+  receivableId: string,
+  input: CustomerReminderEmailInput,
+) {
+  return postJson<
+    CustomerReceivableCollectionActivityApiRecord,
+    CustomerReminderEmailInput
+  >(`/accounts-receivable/${receivableId}/reminders/email`, input)
 }

@@ -57,6 +57,9 @@ export type CustomerReceivableCollectionActivity = {
   promisedDate: string | null
   promiseStatus: CustomerPromiseStatus | null
   resolvedAt: string | null
+  deliveryStatus: 'PREPARED' | 'SENT' | 'FAILED' | null
+  deliveryError: string | null
+  deliveredAt: string | null
   notes: string | null
   createdByUserId: string | null
   createdByName: string | null
@@ -98,6 +101,9 @@ export type CustomerPendingReminder = {
 }
 
 export type CustomerCollectionAgenda = {
+  deliveryCapabilities: {
+    email: boolean
+  }
   summary: {
     upcoming: number
     dueToday: number
@@ -107,6 +113,10 @@ export type CustomerCollectionAgenda = {
   }
   promises: CustomerCollectionAgendaPromise[]
   remindersPending: CustomerPendingReminder[]
+}
+
+export type CustomerReminderEmailInput = {
+  message: string
 }
 
 export type CustomerReceivable = {

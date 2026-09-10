@@ -26,6 +26,7 @@ import {
   useCreateCustomerMutation,
   useCustomersQuery,
   useRegisterCustomerPaymentMutation,
+  useSendCustomerReminderEmailMutation,
   useUpdateCustomerMutation,
   useUpdateCustomerReceivableTermsMutation,
   useUploadCustomerAvatarMutation,
@@ -147,6 +148,7 @@ export function CustomersPage() {
   const updateCustomerMutation = useUpdateCustomerMutation()
   const uploadCustomerAvatarMutation = useUploadCustomerAvatarMutation()
   const registerPaymentMutation = useRegisterCustomerPaymentMutation()
+  const sendReminderEmailMutation = useSendCustomerReminderEmailMutation()
   const updateReceivableTermsMutation =
     useUpdateCustomerReceivableTermsMutation()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
@@ -366,6 +368,21 @@ export function CustomersPage() {
 
     await Promise.allSettled([
       customersQuery.refetch(),
+      customerDetailQuery.refetch(),
+    ])
+  }
+
+  async function handleSendReminderEmail(
+    receivableId: string,
+    message: string,
+  ) {
+    await sendReminderEmailMutation.mutateAsync({
+      receivableId,
+      input: { message },
+    })
+
+    await Promise.allSettled([
+      collectionAgendaQuery.refetch(),
       customerDetailQuery.refetch(),
     ])
   }
@@ -798,6 +815,10 @@ export function CustomersPage() {
           isOpen={isRetailDrawerOpen}
           isPaymentSubmitting={registerPaymentMutation.isPending}
           isActivitySubmitting={createCollectionActivityMutation.isPending}
+          isEmailSubmitting={sendReminderEmailMutation.isPending}
+          canSendConfirmedEmail={
+            collectionAgenda?.deliveryCapabilities.email ?? false
+          }
           isTermsSubmitting={updateReceivableTermsMutation.isPending}
           isSubmitting={
             createCustomerMutation.isPending ||
@@ -819,6 +840,7 @@ export function CustomersPage() {
           }}
           onRegisterPayment={handleRegisterCustomerPayment}
           onCreateCollectionActivity={handleCreateCollectionActivity}
+          onSendReminderEmail={handleSendReminderEmail}
           onUpdateReceivableTerms={handleUpdateCustomerReceivableTerms}
           onSubmitCustomer={handleSubmitCustomer}
         />

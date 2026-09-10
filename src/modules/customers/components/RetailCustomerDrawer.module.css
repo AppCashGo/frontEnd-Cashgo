@@ -300,7 +300,8 @@
 .reminderButton svg,
 .termsButton svg,
 .promiseButton svg,
-.reminderActions svg {
+.reminderActions svg,
+.sendEmailButton svg {
   width: 1rem;
   height: 1rem;
 }
@@ -425,7 +426,8 @@
 .whatsAppButton,
 .emailButton,
 .disabledContactButton,
-.copyReminderButton {
+.copyReminderButton,
+.sendEmailButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -461,6 +463,29 @@
   background: #1f2a37;
   color: #ffffff;
   cursor: pointer;
+}
+
+.sendEmailButton {
+  border: 0;
+  background: #2457b8;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.sendEmailButton:disabled {
+  opacity: 0.62;
+  cursor: wait;
+}
+
+.deliveryNotice {
+  margin: 0;
+  border: 1px solid #d7e2f2;
+  border-radius: 0.75rem;
+  background: #f4f7fb;
+  color: #526175;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .reminderFeedback {
