@@ -12,6 +12,7 @@ import type {
   CustomerReceivable,
   CustomerReceivableCollectionActivity,
   CustomerCollectionActivityInput,
+  CustomerCollectionAgenda,
   CustomerReceivablePayment,
   CustomerReceivableTermsInput,
   CustomerPurchaseHistoryItem,
@@ -141,6 +142,61 @@ export async function getCustomers() {
   const customers = await getJson<CustomerSummaryApiRecord[]>('/customers')
 
   return customers.map(normalizeCustomerSummaryRecord)
+}
+
+type CustomerCollectionAgendaApiRecord = Omit<
+  CustomerCollectionAgenda,
+  'promises' | 'remindersPending'
+> & {
+  promises: Array<
+    Omit<
+      CustomerCollectionAgenda['promises'][number],
+      'id' | 'receivableId' | 'customerId' | 'balance' | 'promisedAmount'
+    > & {
+      id: number | string
+      receivableId: number | string
+      customerId: number | string
+      balance: number | string
+      promisedAmount: number | string | null
+    }
+  >
+  remindersPending: Array<
+    Omit<
+      CustomerCollectionAgenda['remindersPending'][number],
+      'receivableId' | 'customerId' | 'balance'
+    > & {
+      receivableId: number | string
+      customerId: number | string
+      balance: number | string
+    }
+  >
+}
+
+export async function getCustomerCollectionAgenda(): Promise<CustomerCollectionAgenda> {
+  const agenda = await getJson<CustomerCollectionAgendaApiRecord>(
+    '/accounts-receivable/collection-agenda',
+  )
+
+  return {
+    summary: agenda.summary,
+    promises: agenda.promises.map((promise) => ({
+      ...promise,
+      id: String(promise.id),
+      receivableId: String(promise.receivableId),
+      customerId: String(promise.customerId),
+      balance: normalizeNumber(promise.balance),
+      promisedAmount:
+        promise.promisedAmount === null
+          ? null
+          : normalizeNumber(promise.promisedAmount),
+    })),
+    remindersPending: agenda.remindersPending.map((reminder) => ({
+      ...reminder,
+      receivableId: String(reminder.receivableId),
+      customerId: String(reminder.customerId),
+      balance: normalizeNumber(reminder.balance),
+    })),
+  }
 }
 
 export function exportCustomerAgingReport() {

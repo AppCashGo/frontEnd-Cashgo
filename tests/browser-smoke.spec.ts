@@ -1293,6 +1293,17 @@ test("creates a POS credit sale and records the customer receivable", async ({
       /payment-receipt|comprobante|html/i,
     );
 
+    await customerDrawer.getByRole("button", { name: "Listo" }).click();
+    const collectionAgenda = page.getByRole("region", {
+      name: "Agenda de cobranza",
+    });
+    await expect(collectionAgenda).toBeVisible();
+    await collectionAgenda
+      .getByRole("button", { name: /Cumplidos/ })
+      .click();
+    await expect(collectionAgenda.getByText(customer.name).first()).toBeVisible();
+    await expect(collectionAgenda.getByText("Cumplido").first()).toBeVisible();
+
     const customerAfterPayment = await apiGet<SmokeCustomerRecord>(
       request,
       session,

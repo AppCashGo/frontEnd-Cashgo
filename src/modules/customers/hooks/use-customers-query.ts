@@ -3,6 +3,7 @@ import {
   createCustomer,
   createCustomerCollectionActivity,
   getCustomerDetail,
+  getCustomerCollectionAgenda,
   getCustomers,
   registerCustomerPayment,
   uploadCustomerAvatar,
@@ -19,6 +20,10 @@ import type {
 } from '@/modules/customers/types/customer'
 
 export const customersQueryKey = ['customers'] as const
+export const customerCollectionAgendaQueryKey = [
+  'accounts-receivable',
+  'collection-agenda',
+] as const
 
 function toCustomerSummary(customer: CustomerDetail): CustomerSummary {
   return {
@@ -52,6 +57,13 @@ export function useCustomersQuery() {
   return useQuery({
     queryKey: customersQueryKey,
     queryFn: getCustomers,
+  })
+}
+
+export function useCustomerCollectionAgendaQuery() {
+  return useQuery({
+    queryKey: customerCollectionAgendaQueryKey,
+    queryFn: getCustomerCollectionAgenda,
   })
 }
 
@@ -173,9 +185,12 @@ export function useRegisterCustomerPaymentMutation() {
       input: CustomerPaymentInput
     }) => registerCustomerPayment(receivableId, input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: customersQueryKey,
-      })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: customerCollectionAgendaQueryKey,
+        }),
+      ])
     },
   })
 }
@@ -192,9 +207,12 @@ export function useUpdateCustomerReceivableTermsMutation() {
       input: CustomerReceivableTermsInput
     }) => updateCustomerReceivableTerms(receivableId, input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: customersQueryKey,
-      })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: customerCollectionAgendaQueryKey,
+        }),
+      ])
     },
   })
 }
@@ -211,9 +229,12 @@ export function useCreateCustomerCollectionActivityMutation() {
       input: CustomerCollectionActivityInput
     }) => createCustomerCollectionActivity(receivableId, input),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: customersQueryKey,
-      })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: customerCollectionAgendaQueryKey,
+        }),
+      ])
     },
   })
 }

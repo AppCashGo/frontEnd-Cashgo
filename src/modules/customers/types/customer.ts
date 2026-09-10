@@ -55,10 +55,58 @@ export type CustomerReceivableCollectionActivity = {
   channel: 'WHATSAPP' | 'EMAIL' | 'COPY' | 'MANUAL' | null
   promisedAmount: number | null
   promisedDate: string | null
+  promiseStatus: CustomerPromiseStatus | null
+  resolvedAt: string | null
   notes: string | null
   createdByUserId: string | null
   createdByName: string | null
   createdAt: string
+}
+
+export type CustomerPromiseStatus =
+  | 'PENDING'
+  | 'FULFILLED'
+  | 'BROKEN'
+  | 'CANCELLED'
+
+export type CustomerCollectionAgendaPromise = {
+  id: string
+  receivableId: string
+  customerId: string
+  customerName: string
+  customerPhone: string | null
+  saleNumber: string
+  balance: number
+  promisedAmount: number | null
+  promisedDate: string | null
+  status: CustomerPromiseStatus | null
+  notes: string | null
+  createdByName: string | null
+  createdAt: string
+  resolvedAt: string | null
+}
+
+export type CustomerPendingReminder = {
+  receivableId: string
+  customerId: string
+  customerName: string
+  customerPhone: string | null
+  saleNumber: string
+  balance: number
+  dueDate: string | null
+  lastReminderAt: string | null
+}
+
+export type CustomerCollectionAgenda = {
+  summary: {
+    upcoming: number
+    dueToday: number
+    broken: number
+    fulfilled: number
+    remindersPending: number
+  }
+  promises: CustomerCollectionAgendaPromise[]
+  remindersPending: CustomerPendingReminder[]
 }
 
 export type CustomerReceivable = {

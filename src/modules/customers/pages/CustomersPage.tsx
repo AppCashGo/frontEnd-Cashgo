@@ -1,5 +1,16 @@
 import { useDeferredValue, useEffect, useState } from 'react'
-import { Crown, Download, History, ReceiptText, TrendingUp, Users } from 'lucide-react'
+import {
+  BellRing,
+  CalendarCheck,
+  CircleAlert,
+  CircleCheckBig,
+  Crown,
+  Download,
+  History,
+  ReceiptText,
+  TrendingUp,
+  Users,
+} from 'lucide-react'
 import { CustomerDetailPanel } from '@/modules/customers/components/CustomerDetailPanel'
 import { CustomerMetricCard } from '@/modules/customers/components/CustomerMetricCard'
 import { CustomerPurchaseHistoryPanel } from '@/modules/customers/components/CustomerPurchaseHistoryPanel'
@@ -10,6 +21,7 @@ import {
 } from '@/modules/customers/components/RetailCustomerDrawer'
 import {
   useCustomerDetailQuery,
+  useCustomerCollectionAgendaQuery,
   useCreateCustomerCollectionActivityMutation,
   useCreateCustomerMutation,
   useCustomersQuery,
@@ -51,6 +63,12 @@ type CustomerPortfolioFilter =
   | 'OVERDUE_31_60'
   | 'OVERDUE_OVER_60'
   | 'UNDATED'
+
+type CollectionAgendaFilter =
+  | 'UPCOMING'
+  | 'BROKEN'
+  | 'FULFILLED'
+  | 'REMINDERS'
 
 const CUSTOMER_PORTFOLIO_FILTERS: Array<{
   value: CustomerPortfolioFilter
@@ -117,9 +135,12 @@ export function CustomersPage() {
   const [portfolioFilter, setPortfolioFilter] =
     useState<CustomerPortfolioFilter>('ALL')
   const [isExporting, setIsExporting] = useState(false)
+  const [agendaFilter, setAgendaFilter] =
+    useState<CollectionAgendaFilter>('UPCOMING')
   const [exportFeedback, setExportFeedback] = useState<string | null>(null)
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const customersQuery = useCustomersQuery()
+  const collectionAgendaQuery = useCustomerCollectionAgendaQuery()
   const createCustomerMutation = useCreateCustomerMutation()
   const createCollectionActivityMutation =
     useCreateCustomerCollectionActivityMutation()
@@ -185,6 +206,36 @@ export function CustomersPage() {
   const totalPurchases = customers.reduce(
     (sum, customer) => sum + customer.purchaseCount,
     0,
+  )
+  const collectionAgenda = collectionAgendaQuery.data
+  const visibleAgendaPromises = (collectionAgenda?.promises ?? []).filter(
+    (promise) => {
+      if (agendaFilter === 'UPCOMING') {
+        if (promise.status !== 'PENDING' || !promise.promisedDate) {
+          return false
+        }
+
+        const now = new Date()
+        const today = new Date(
+          Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
+        )
+        const upcomingLimit = new Date(today)
+        upcomingLimit.setUTCDate(upcomingLimit.getUTCDate() + 7)
+        const promisedDate = new Date(promise.promisedDate)
+
+        return promisedDate >= today && promisedDate <= upcomingLimit
+      }
+
+      if (agendaFilter === 'BROKEN') {
+        return promise.status === 'BROKEN'
+      }
+
+      if (agendaFilter === 'FULFILLED') {
+        return promise.status === 'FULFILLED'
+      }
+
+      return false
+    },
   )
   useEffect(() => {
     const availableCustomers = customerRecords ?? []
@@ -451,6 +502,159 @@ export function CustomersPage() {
                     </small>
                   </button>
                 ))}
+              </div>
+            </section>
+
+            <section
+              className={styles.collectionAgenda}
+              aria-labelledby="collection-agenda-title"
+            >
+              <div className={styles.agendaHeading}>
+                <div>
+                  <span>Seguimiento diario</span>
+                  <h2 id="collection-agenda-title">Agenda de cobranza</h2>
+                  <p>
+                    Revisa compromisos de pago y clientes que necesitan un
+                    nuevo recordatorio.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={collectionAgendaQuery.isFetching}
+                  onClick={() => void collectionAgendaQuery.refetch()}
+                >
+                  {collectionAgendaQuery.isFetching ? 'Actualizando…' : 'Actualizar'}
+                </button>
+              </div>
+
+              <div className={styles.agendaSummary}>
+                <button
+                  className={agendaFilter === 'UPCOMING' ? styles.agendaCardActive : styles.agendaCard}
+                  type="button"
+                  onClick={() => setAgendaFilter('UPCOMING')}
+                >
+                  <CalendarCheck aria-hidden="true" />
+                  <span>Próximos 7 días</span>
+                  <strong>{collectionAgenda?.summary.upcoming ?? 0}</strong>
+                  <small>{collectionAgenda?.summary.dueToday ?? 0} para hoy</small>
+                </button>
+                <button
+                  className={agendaFilter === 'REMINDERS' ? styles.agendaCardActive : styles.agendaCard}
+                  type="button"
+                  onClick={() => setAgendaFilter('REMINDERS')}
+                >
+                  <BellRing aria-hidden="true" />
+                  <span>Recordatorios pendientes</span>
+                  <strong>{collectionAgenda?.summary.remindersPending ?? 0}</strong>
+                  <small>Sin contacto reciente</small>
+                </button>
+                <button
+                  className={agendaFilter === 'BROKEN' ? styles.agendaCardActive : styles.agendaCard}
+                  type="button"
+                  onClick={() => setAgendaFilter('BROKEN')}
+                >
+                  <CircleAlert aria-hidden="true" />
+                  <span>Incumplidos</span>
+                  <strong>{collectionAgenda?.summary.broken ?? 0}</strong>
+                  <small>Requieren seguimiento</small>
+                </button>
+                <button
+                  className={agendaFilter === 'FULFILLED' ? styles.agendaCardActive : styles.agendaCard}
+                  type="button"
+                  onClick={() => setAgendaFilter('FULFILLED')}
+                >
+                  <CircleCheckBig aria-hidden="true" />
+                  <span>Cumplidos</span>
+                  <strong>{collectionAgenda?.summary.fulfilled ?? 0}</strong>
+                  <small>Confirmados por abonos</small>
+                </button>
+              </div>
+
+              <div className={styles.agendaList}>
+                {collectionAgendaQuery.isLoading ? (
+                  <p className={styles.agendaEmpty}>Cargando agenda…</p>
+                ) : null}
+                {collectionAgendaQuery.isError ? (
+                  <div className={styles.agendaError} role="alert">
+                    <strong>No pudimos cargar la agenda.</strong>
+                    <button type="button" onClick={() => void collectionAgendaQuery.refetch()}>
+                      Reintentar
+                    </button>
+                  </div>
+                ) : null}
+                {!collectionAgendaQuery.isLoading &&
+                !collectionAgendaQuery.isError &&
+                agendaFilter === 'REMINDERS'
+                  ? (collectionAgenda?.remindersPending ?? []).map((reminder) => (
+                      <article className={styles.agendaItem} key={reminder.receivableId}>
+                        <div className={styles.agendaItemIcon}>
+                          <BellRing aria-hidden="true" />
+                        </div>
+                        <div>
+                          <strong>{reminder.customerName}</strong>
+                          <span>Venta {reminder.saleNumber} · {formatCurrency(reminder.balance)}</span>
+                        </div>
+                        <div className={styles.agendaItemMeta}>
+                          <span className={styles.agendaStatusReminder}>Recordar</span>
+                          <small>Venció {formatPortfolioDate(reminder.dueDate)}</small>
+                        </div>
+                        <button type="button" onClick={() => openCustomerDetail(reminder.customerId)}>
+                          Gestionar
+                        </button>
+                      </article>
+                    ))
+                  : null}
+                {!collectionAgendaQuery.isLoading &&
+                !collectionAgendaQuery.isError &&
+                agendaFilter !== 'REMINDERS'
+                  ? visibleAgendaPromises.map((promise) => (
+                      <article className={styles.agendaItem} key={promise.id}>
+                        <div className={styles.agendaItemIcon}>
+                          {promise.status === 'FULFILLED' ? (
+                            <CircleCheckBig aria-hidden="true" />
+                          ) : promise.status === 'BROKEN' ? (
+                            <CircleAlert aria-hidden="true" />
+                          ) : (
+                            <CalendarCheck aria-hidden="true" />
+                          )}
+                        </div>
+                        <div>
+                          <strong>{promise.customerName}</strong>
+                          <span>
+                            Prometió {formatCurrency(promise.promisedAmount ?? 0)} · Venta {promise.saleNumber}
+                          </span>
+                        </div>
+                        <div className={styles.agendaItemMeta}>
+                          <span className={
+                            promise.status === 'FULFILLED'
+                              ? styles.agendaStatusFulfilled
+                              : promise.status === 'BROKEN'
+                                ? styles.agendaStatusBroken
+                                : styles.agendaStatusPending
+                          }>
+                            {promise.status === 'FULFILLED'
+                              ? 'Cumplido'
+                              : promise.status === 'BROKEN'
+                                ? 'Incumplido'
+                                : 'Pendiente'}
+                          </span>
+                          <small>{formatPortfolioDate(promise.promisedDate)}</small>
+                        </div>
+                        <button type="button" onClick={() => openCustomerDetail(promise.customerId)}>
+                          Ver cuenta
+                        </button>
+                      </article>
+                    ))
+                  : null}
+                {!collectionAgendaQuery.isLoading &&
+                !collectionAgendaQuery.isError &&
+                ((agendaFilter === 'REMINDERS' &&
+                  (collectionAgenda?.remindersPending.length ?? 0) === 0) ||
+                  (agendaFilter !== 'REMINDERS' && visibleAgendaPromises.length === 0)) ? (
+                  <p className={styles.agendaEmpty}>
+                    No hay gestiones en esta categoría.
+                  </p>
+                ) : null}
               </div>
             </section>
 

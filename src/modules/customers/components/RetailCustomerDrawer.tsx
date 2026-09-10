@@ -1547,6 +1547,17 @@ function ReceivableCard({
                   : `Recordatorio · ${getCollectionChannelLabel(activity.channel)}`}
               </span>
               <small>
+                {activity.type === 'PAYMENT_PROMISE' && activity.promiseStatus
+                  ? `${
+                      activity.promiseStatus === 'FULFILLED'
+                        ? 'Cumplido'
+                        : activity.promiseStatus === 'BROKEN'
+                          ? 'Incumplido'
+                          : activity.promiseStatus === 'CANCELLED'
+                            ? 'Reemplazado'
+                            : 'Pendiente'
+                    } · `
+                  : ''}
                 {activity.promisedDate
                   ? `Para ${formatDate(activity.promisedDate)} · `
                   : ''}
