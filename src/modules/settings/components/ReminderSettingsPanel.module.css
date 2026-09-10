@@ -65,6 +65,111 @@
   cursor: pointer;
 }
 
+.automationCard {
+  overflow: hidden;
+  border: 1px solid #dce4ee;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+}
+
+.automationCard .settingRow {
+  border-bottom: 1px solid #e4eaf2;
+  border-radius: 0;
+  background: #ffffff;
+}
+
+.scheduleGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+  color: #344054;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.inputWithSuffix {
+  display: grid;
+  grid-template-columns: 5.25rem minmax(0, 1fr);
+  align-items: center;
+  min-height: 2.85rem;
+  overflow: hidden;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.7rem;
+  background: #ffffff;
+}
+
+.inputWithSuffix:focus-within {
+  border-color: #1557d5;
+  box-shadow: 0 0 0 3px rgba(21, 87, 213, 0.12);
+}
+
+.inputWithSuffix input {
+  width: 100%;
+  height: 100%;
+  min-height: 2.85rem;
+  padding: 0 0.75rem;
+  border: 0;
+  border-right: 1px solid #e2e8f0;
+  outline: 0;
+  background: transparent;
+  color: #172033;
+  font: inherit;
+  font-size: 0.95rem;
+}
+
+.inputWithSuffix input:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+}
+
+.inputWithSuffix > span {
+  padding: 0 0.75rem;
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.automationFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 1rem 1rem;
+}
+
+.automationFooter p {
+  max-width: 39rem;
+  margin: 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.saveButton {
+  min-height: 2.65rem;
+  flex: 0 0 auto;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 0.68rem;
+  background: #1557d5;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.saveButton:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
 .settingIcon {
   display: inline-flex;
   align-items: center;
@@ -201,5 +306,18 @@
   .toggleInput {
     grid-column: 1 / -1;
     justify-self: end;
+  }
+
+  .scheduleGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .automationFooter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .saveButton {
+    width: 100%;
   }
 }

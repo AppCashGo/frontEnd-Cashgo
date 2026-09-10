@@ -51,6 +51,9 @@ export type BusinessSettings = {
   defaultLowStockThreshold: number;
   useWeightedAverageCost: boolean;
   cashRegisterOpeningReminderEnabled: boolean;
+  receivableEmailRemindersEnabled: boolean;
+  receivableReminderDaysBefore: number;
+  receivableReminderRepeatDays: number;
   saleCompletionSoundEnabled: boolean;
   printTicketWidth: PrintTicketWidth;
   printShowLogo: boolean;
@@ -98,7 +101,10 @@ export type BusinessVirtualCatalogSettingsInput = {
 };
 
 export type BusinessReminderSettingsInput = {
-  cashRegisterOpeningReminderEnabled: boolean;
+  cashRegisterOpeningReminderEnabled?: boolean;
+  receivableEmailRemindersEnabled?: boolean;
+  receivableReminderDaysBefore?: number;
+  receivableReminderRepeatDays?: number;
 };
 
 export type BusinessAdditionalSettingsInput = {
