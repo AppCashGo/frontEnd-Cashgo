@@ -22,9 +22,9 @@ loadDotEnvIfPresent(path.resolve(__dirname, "../.env"));
 
 const WRITE_GUARD_ENV = "CASHGO_SMOKE_ALLOW_DB_WRITE";
 const API_URL =
-  process.env.CASHGO_API_URL ?? "https://backend-cashgo.onrender.com/api";
+  process.env.CASHGO_API_URL ?? "https://api.cashgoapp.com.co/api";
 const FRONTEND_URL =
-  process.env.CASHGO_FRONTEND_URL ?? "https://front-end-cashgo.vercel.app";
+  process.env.CASHGO_FRONTEND_URL ?? "https://cashgoapp.com.co";
 const APP_TIME_ZONE = process.env.APP_TIME_ZONE ?? "America/Bogota";
 const SALE_TOTAL = Number(process.env.CASHGO_SMOKE_SALE_TOTAL ?? 7890);
 const HEADLESS = process.env.CASHGO_SMOKE_HEADLESS !== "0";
