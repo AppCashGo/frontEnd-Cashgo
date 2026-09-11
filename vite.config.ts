@@ -15,14 +15,6 @@ export default defineConfig({
           }
 
           if (
-            /\/node_modules\/(recharts|react-smooth|victory-vendor|d3-)/.test(
-              id,
-            )
-          ) {
-            return 'vendor-charts'
-          }
-
-          if (
             id.includes('/node_modules/react/') ||
             id.includes('/node_modules/react-dom/') ||
             id.includes('/node_modules/scheduler/')
