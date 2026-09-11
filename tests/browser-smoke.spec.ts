@@ -1981,6 +1981,33 @@ test("renders core retail routes across desktop, tablet and mobile widths", asyn
   expect(browserErrors).toEqual([]);
 });
 
+test("preloads a module when the user shows navigation intent", async ({
+  page,
+  request,
+}) => {
+  const browserErrors = collectBrowserErrors(page);
+  const productModuleRequests: string[] = [];
+
+  page.on("request", (browserRequest) => {
+    if (browserRequest.url().includes("/products/pages/ProductsPage.tsx")) {
+      productModuleRequests.push(browserRequest.url());
+    }
+  });
+
+  await loginWithDevelopmentAccount(page, request);
+  await page.goto("/sales");
+  await expect(
+    page.getByRole("heading", { name: /nueva venta/i }),
+  ).toBeVisible();
+  expect(productModuleRequests).toHaveLength(0);
+
+  await page.getByRole("link", { name: /^productos/i }).hover();
+
+  await expect.poll(() => productModuleRequests.length).toBeGreaterThan(0);
+  await expect(page).toHaveURL(/\/sales$/);
+  expect(browserErrors).toEqual([]);
+});
+
 test("logs out from the sidebar and clears the persisted session", async ({
   page,
   request,

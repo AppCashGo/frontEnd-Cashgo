@@ -19,6 +19,7 @@ import {
   getModuleNavigationRoutes,
 } from "@/routes/module-navigation-routes";
 import { routePaths, routeSegments } from "@/routes/route-paths";
+import { preloadAppRoute } from "@/routes/route-page-loaders";
 import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
 import { useTranslationsQuery } from "@/shared/hooks/use-translations-query";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
@@ -241,6 +242,9 @@ export function Sidebar({
             )
           }
           onClick={handleRouteClick}
+          onFocus={() => preloadAppRoute(route.path)}
+          onMouseEnter={() => preloadAppRoute(route.path)}
+          onTouchStart={() => preloadAppRoute(route.path)}
         >
           <span className={styles.shortLabel}>
             <SidebarIcon
@@ -282,6 +286,9 @@ export function Sidebar({
                     )
                   }
                   onClick={handleRouteClick}
+                  onFocus={() => child.path && preloadAppRoute(child.path)}
+                  onMouseEnter={() => child.path && preloadAppRoute(child.path)}
+                  onTouchStart={() => child.path && preloadAppRoute(child.path)}
                 >
                   {child.label}
                 </NavLink>
@@ -461,6 +468,9 @@ export function Sidebar({
                   )
                 }
                 onClick={handleRouteClick}
+                onFocus={() => preloadAppRoute(settingsRoute.path)}
+                onMouseEnter={() => preloadAppRoute(settingsRoute.path)}
+                onTouchStart={() => preloadAppRoute(settingsRoute.path)}
               >
                 <span className={styles.utilityContent}>
                   <SidebarIcon className={styles.utilityIcon} name="settings" />
@@ -502,6 +512,9 @@ export function Sidebar({
                     }
                     to={routePaths.help}
                     onClick={handleRouteClick}
+                    onFocus={() => preloadAppRoute(routePaths.help)}
+                    onMouseEnter={() => preloadAppRoute(routePaths.help)}
+                    onTouchStart={() => preloadAppRoute(routePaths.help)}
                   >
                     <SidebarIcon className={styles.utilityIcon} name="learn" />
                     <span>{dictionary.layout.sidebar.learn}</span>
@@ -515,6 +528,9 @@ export function Sidebar({
                     }
                     to={routePaths.terms}
                     onClick={handleRouteClick}
+                    onFocus={() => preloadAppRoute(routePaths.terms)}
+                    onMouseEnter={() => preloadAppRoute(routePaths.terms)}
+                    onTouchStart={() => preloadAppRoute(routePaths.terms)}
                   >
                     <SidebarIcon className={styles.utilityIcon} name="terms" />
                     <span>{dictionary.layout.sidebar.terms}</span>
@@ -528,6 +544,9 @@ export function Sidebar({
                     }
                     to={routePaths.privacy}
                     onClick={handleRouteClick}
+                    onFocus={() => preloadAppRoute(routePaths.privacy)}
+                    onMouseEnter={() => preloadAppRoute(routePaths.privacy)}
+                    onTouchStart={() => preloadAppRoute(routePaths.privacy)}
                   >
                     <SidebarIcon
                       className={styles.utilityIcon}

@@ -11,138 +11,30 @@ import { MainLayout } from "@/shared/components/layout/MainLayout";
 import { NotFoundPage } from "@/shared/components/states/NotFoundPage";
 import { PageLoadingState } from "@/shared/components/states/PageLoadingState";
 import { RouteErrorBoundary } from "@/shared/components/states/RouteErrorBoundary";
+import { routePageLoaders } from "@/routes/route-page-loaders";
 
-const AuthPage = lazy(() =>
-  import("@/modules/auth/pages/AuthPage").then((module) => ({
-    default: module.AuthPage,
-  })),
-);
-
-const DashboardPage = lazy(() =>
-  import("@/modules/dashboard/pages/DashboardPage").then((module) => ({
-    default: module.DashboardPage,
-  })),
-);
-
-const ProductsPage = lazy(() =>
-  import("@/modules/products/pages/ProductsPage").then((module) => ({
-    default: module.ProductsPage,
-  })),
-);
-
-const InventoryPage = lazy(() =>
-  import("@/modules/inventory/pages/InventoryPage").then((module) => ({
-    default: module.InventoryPage,
-  })),
-);
-
-const SalesPage = lazy(() =>
-  import("@/modules/sales/pages/SalesPage").then((module) => ({
-    default: module.SalesPage,
-  })),
-);
-
-const DeliveriesPage = lazy(() =>
-  import("@/modules/deliveries/pages/DeliveriesPage").then((module) => ({
-    default: module.DeliveriesPage,
-  })),
-);
-
-const CashRegisterPage = lazy(() =>
-  import("@/modules/cash-register/pages/CashRegisterPage").then((module) => ({
-    default: module.CashRegisterPage,
-  })),
-);
-
-const BillingPage = lazy(() =>
-  import("@/modules/billing/pages/BillingPage").then((module) => ({
-    default: module.BillingPage,
-  })),
-);
-
-const ExpensesPage = lazy(() =>
-  import("@/modules/expenses/pages/ExpensesPage").then((module) => ({
-    default: module.ExpensesPage,
-  })),
-);
-
-const CustomersPage = lazy(() =>
-  import("@/modules/customers/pages/CustomersPage").then((module) => ({
-    default: module.CustomersPage,
-  })),
-);
-
-const SuppliersPage = lazy(() =>
-  import("@/modules/suppliers/pages/SuppliersPage").then((module) => ({
-    default: module.SuppliersPage,
-  })),
-);
-
-const EmployeesPage = lazy(() =>
-  import("@/modules/employees/pages/EmployeesPage").then((module) => ({
-    default: module.EmployeesPage,
-  })),
-);
-
-const QuotesPage = lazy(() =>
-  import("@/modules/quotes/pages/QuotesPage").then((module) => ({
-    default: module.QuotesPage,
-  })),
-);
-
-const CreateQuotationPage = lazy(() =>
-  import("@/modules/quotes/pages/CreateQuotationPage").then((module) => ({
-    default: module.CreateQuotationPage,
-  })),
-);
-
-const PublicQuotationPage = lazy(() =>
-  import("@/modules/quotes/pages/PublicQuotationPage").then((module) => ({
-    default: module.PublicQuotationPage,
-  })),
-);
-
-const PublicCatalogPage = lazy(() =>
-  import("@/modules/catalog/pages/PublicCatalogPage").then((module) => ({
-    default: module.PublicCatalogPage,
-  })),
-);
-
-const MoneyPage = lazy(() =>
-  import("@/modules/money/pages/MoneyPage").then((module) => ({
-    default: module.MoneyPage,
-  })),
-);
-
-const ReportsPage = lazy(() =>
-  import("@/modules/reports/pages/ReportsPage").then((module) => ({
-    default: module.ReportsPage,
-  })),
-);
-
-const SettingsPage = lazy(() =>
-  import("@/modules/settings/pages/SettingsPage").then((module) => ({
-    default: module.SettingsPage,
-  })),
-);
-
-const HelpCenterPage = lazy(() =>
-  import("@/modules/help/pages/HelpCenterPage").then((module) => ({
-    default: module.HelpCenterPage,
-  })),
-);
-
-const TermsAndConditionsPage = lazy(() =>
-  import("@/modules/legal/pages/TermsAndConditionsPage").then((module) => ({
-    default: module.TermsAndConditionsPage,
-  })),
-);
-
-const PrivacyPolicyPage = lazy(() =>
-  import("@/modules/legal/pages/PrivacyPolicyPage").then((module) => ({
-    default: module.PrivacyPolicyPage,
-  })),
-);
+const AuthPage = lazy(routePageLoaders.auth);
+const DashboardPage = lazy(routePageLoaders.dashboard);
+const ProductsPage = lazy(routePageLoaders.products);
+const InventoryPage = lazy(routePageLoaders.inventory);
+const SalesPage = lazy(routePageLoaders.sales);
+const DeliveriesPage = lazy(routePageLoaders.deliveries);
+const CashRegisterPage = lazy(routePageLoaders.movements);
+const BillingPage = lazy(routePageLoaders.billing);
+const ExpensesPage = lazy(routePageLoaders.expenses);
+const CustomersPage = lazy(routePageLoaders.customers);
+const SuppliersPage = lazy(routePageLoaders.suppliers);
+const EmployeesPage = lazy(routePageLoaders.employees);
+const QuotesPage = lazy(routePageLoaders.quotes);
+const CreateQuotationPage = lazy(routePageLoaders.createQuote);
+const PublicQuotationPage = lazy(routePageLoaders.publicQuote);
+const PublicCatalogPage = lazy(routePageLoaders.publicCatalog);
+const MoneyPage = lazy(routePageLoaders.money);
+const ReportsPage = lazy(routePageLoaders.reports);
+const SettingsPage = lazy(routePageLoaders.settings);
+const HelpCenterPage = lazy(routePageLoaders.help);
+const TermsAndConditionsPage = lazy(routePageLoaders.terms);
+const PrivacyPolicyPage = lazy(routePageLoaders.privacy);
 
 function withRouteSuspense(
   element: ReactElement,
