@@ -15,12 +15,51 @@ import {
   type SaleApiRecord,
 } from '@/modules/sales/utils/normalize-sale-record'
 
-export async function createSale(input: CreateSaleInput) {
-  const sale = await postJson<SaleApiRecord, CreateSaleInput>('/sales', input, {
-    accessToken: getAuthAccessToken(),
-  })
+const pendingSaleRequests = new Map<
+  string,
+  Promise<ReturnType<typeof normalizeSaleRecord>>
+>()
 
-  return normalizeSaleRecord(sale)
+function createIdempotencyKey() {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID()
+  }
+
+  return `sale-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+export async function createSale(input: CreateSaleInput) {
+  const accessToken = getAuthAccessToken()
+  const requestSignature = `${accessToken ?? 'anonymous'}:${JSON.stringify(input)}`
+  const pendingRequest = pendingSaleRequests.get(requestSignature)
+
+  if (pendingRequest) {
+    return pendingRequest
+  }
+
+  const requestInput = {
+    ...input,
+    idempotencyKey: input.idempotencyKey ?? createIdempotencyKey(),
+  }
+  const request = postJson<SaleApiRecord, CreateSaleInput>(
+    '/sales',
+    requestInput,
+    { accessToken },
+  ).then(normalizeSaleRecord)
+
+  pendingSaleRequests.set(requestSignature, request)
+  void request.then(
+    () => {
+      globalThis.setTimeout(() => {
+        if (pendingSaleRequests.get(requestSignature) === request) {
+          pendingSaleRequests.delete(requestSignature)
+        }
+      }, 5_000)
+    },
+    () => pendingSaleRequests.delete(requestSignature),
+  )
+
+  return request
 }
 
 export async function getSales() {

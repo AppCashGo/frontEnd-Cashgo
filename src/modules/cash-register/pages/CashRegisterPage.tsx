@@ -56,7 +56,11 @@ import {
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
 import { useEmployeesQuery } from "@/modules/employees/hooks/use-employees-query";
 import { useCreateExpenseMutation } from "@/modules/expenses/hooks/use-expenses-query";
-import { useCreateSaleMutation } from "@/modules/sales/hooks/use-create-sale-mutation";
+import { SalesHistoryDrawer } from "@/modules/sales/components/SalesHistoryDrawer";
+import {
+  useCreateSaleMutation,
+  useSalesQuery,
+} from "@/modules/sales/hooks/use-create-sale-mutation";
 import { useBusinessSettingsQuery } from "@/modules/settings/hooks/use-settings-query";
 import { useSuppliersQuery } from "@/modules/suppliers/hooks/use-suppliers-query";
 import { AppIcon } from "@/shared/components/icons/AppIcon";
@@ -693,6 +697,7 @@ export function CashRegisterPage() {
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
   const [selectedSuppliers, setSelectedSuppliers] = useState<string[]>([]);
+  const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null);
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase());
   const dateRange = useMemo(
     () => getPeriodRange(selectedDate, periodOption),
@@ -706,6 +711,7 @@ export function CashRegisterPage() {
   const customersQuery = useCustomersQuery();
   const suppliersQuery = useSuppliersQuery();
   const businessSettingsQuery = useBusinessSettingsQuery();
+  const salesQuery = useSalesQuery();
   const movementsOverviewQuery = useMovementsOverviewQuery({
     from: dateRange.from,
     to: dateRange.to,
@@ -1240,6 +1246,7 @@ export function CashRegisterPage() {
                   emptyActionLabel="Crear un movimiento"
                   transactions={visibleTransactions}
                   onEmptyAction={() => setMovementCreateDrawerOpen(true)}
+                  onOpenSale={setSelectedSaleId}
                 />
               </div>
             ) : (
@@ -1247,6 +1254,7 @@ export function CashRegisterPage() {
                 emptyActionLabel="Crear un movimiento"
                 transactions={visibleTransactions}
                 onEmptyAction={() => setMovementCreateDrawerOpen(true)}
+                onOpenSale={setSelectedSaleId}
               />
             )}
           </section>
@@ -1371,6 +1379,13 @@ export function CashRegisterPage() {
         }
         onPrintReport={() => window.print()}
         onSelectStep={setReportStep}
+      />
+
+      <SalesHistoryDrawer
+        initialSaleId={selectedSaleId}
+        isOpen={selectedSaleId !== null}
+        sales={salesQuery.data ?? []}
+        onClose={() => setSelectedSaleId(null)}
       />
     </>
   );

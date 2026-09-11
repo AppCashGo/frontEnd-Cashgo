@@ -897,7 +897,7 @@ test("creates a POS split-payment sale and records each payment method", async (
   }
 });
 
-test("cancels a POS sale from the success drawer and restores stock", async ({
+test("cancels a POS sale from movements and restores stock", async ({
   page,
   request,
 }) => {
@@ -962,6 +962,29 @@ test("cancels a POS sale from the success drawer and restores stock", async ({
     await expect(successDrawer).toBeVisible();
     await expect(successDrawer).toContainText(createdSale.saleNumber);
 
+    await successDrawer
+      .getByRole("button", { name: "Seguir vendiendo" })
+      .click();
+    await expect(successDrawer).toBeHidden();
+
+    await page.goto("/movements");
+    await expect(page).toHaveURL(/\/movements$/);
+
+    const saleRow = page.getByRole("row").filter({
+      hasText: createdSale.saleNumber,
+    });
+    await expect(saleRow).toBeVisible();
+    await saleRow.getByRole("button", { name: /gestionar/i }).last().click();
+
+    const saleDrawer = page.getByRole("dialog", {
+      name: createdSale.saleNumber,
+    });
+    await expect(saleDrawer).toBeVisible();
+    await saleDrawer.getByRole("button", { name: "Anular venta" }).click();
+    await saleDrawer.getByLabel("Motivo de anulación").fill(
+      "Browser smoke cancellation",
+    );
+
     const cancelDialogPromise = page.waitForResponse((response) => {
       const requestInfo = response.request();
       const pathname = new URL(response.url()).pathname;
@@ -973,20 +996,19 @@ test("cancels a POS sale from the success drawer and restores stock", async ({
       );
     });
 
-    await successDrawer.getByRole("button", { name: "Cancelar venta" }).click();
-
-    const confirmDialog = page.getByRole("dialog", {
-      name: "¿Quieres cancelar esta venta?",
-    });
-    await expect(confirmDialog).toBeVisible();
-    await confirmDialog.getByRole("button", { name: "Cancelar venta" }).click();
+    await saleDrawer
+      .getByRole("button", { name: "Confirmar anulación" })
+      .click();
 
     const cancelResponse = await cancelDialogPromise;
     const cancelledSale = (await cancelResponse.json()) as SmokeSaleRecord;
     wasCancelledFromUi = true;
 
-    await expect(successDrawer).toBeHidden();
-    await expect(page.getByText("Venta cancelada correctamente.")).toBeVisible();
+    await expect(
+      saleDrawer.getByText(
+        "La venta fue anulada y el inventario quedó restaurado.",
+      ),
+    ).toBeVisible();
     expect(cancelledSale.status).toBe("CANCELLED");
 
     const productsAfterCancel = await apiGet<SmokeProductRecord[]>(

@@ -2456,7 +2456,11 @@ export function RetailSalesWorkspace() {
                       onClick={handleCatalogSaleSubmit}
                     >
                       <span className={styles.continueBadge}>{totalItems.toString()}</span>
-                      <span className={styles.continueText}>Crear venta</span>
+                      <span className={styles.continueText}>
+                        {createSaleMutation.isPending
+                          ? 'Registrando…'
+                          : 'Crear venta'}
+                      </span>
                       <strong>{formatCurrency(totalAmount)}</strong>
                     </button>
                   </div>
@@ -2651,7 +2655,9 @@ export function RetailSalesWorkspace() {
                 void handleCreateQuickSale()
               }}
             >
-              Crear venta
+              {createSaleMutation.isPending
+                ? 'Registrando venta…'
+                : 'Crear venta'}
             </button>
           </div>
         </DrawerShell>

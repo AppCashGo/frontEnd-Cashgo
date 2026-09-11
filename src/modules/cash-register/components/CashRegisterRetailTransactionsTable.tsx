@@ -1,4 +1,4 @@
-import { Wallet } from "lucide-react";
+import { ArrowRight, Wallet } from "lucide-react";
 import type { MovementLedgerItem } from "@/modules/cash-register/types/cash-register";
 import {
   formatCashRegisterCurrency,
@@ -13,7 +13,20 @@ type CashRegisterRetailTransactionsTableProps = {
   emptyDescription?: string;
   emptyActionLabel?: string;
   onEmptyAction?: () => void;
+  onOpenSale?: (saleId: string) => void;
 };
+
+function getSaleId(transaction: MovementLedgerItem) {
+  if (
+    transaction.source !== "SALE" ||
+    transaction.referenceType !== "SALE" ||
+    !transaction.referenceId
+  ) {
+    return null;
+  }
+
+  return transaction.referenceId;
+}
 
 function getStatusLabel(status: string) {
   switch (status) {
@@ -92,6 +105,7 @@ export function CashRegisterRetailTransactionsTable({
   emptyActionLabel,
   emptyDescription,
   onEmptyAction,
+  onOpenSale,
   transactions,
 }: CashRegisterRetailTransactionsTableProps) {
   if (transactions.length === 0) {
@@ -131,64 +145,101 @@ export function CashRegisterRetailTransactionsTable({
             <th>Medio de pago</th>
             <th>Fecha y hora</th>
             <th>Estado</th>
+            {onOpenSale ? <th>Acciones</th> : null}
           </tr>
         </thead>
         <tbody>
-          {transactions.map((transaction) => (
-            <tr key={transaction.id}>
-              <td>
-                <span
-                  className={joinClassNames(
-                    styles.kindIcon,
-                    transaction.direction === "IN" && styles.kindIconIncome,
-                    transaction.direction === "OUT" && styles.kindIconExpense,
-                    transaction.direction === "ADJUSTMENT" &&
-                      styles.kindIconAdjustment,
-                  )}
-                >
-                  {getKindIcon(transaction.direction)}
-                </span>
-              </td>
-              <td>
-                <div className={styles.conceptCell}>
-                  <strong className={styles.conceptTitle}>
-                    {transaction.concept}
-                  </strong>
-                  {transaction.details ? (
-                    <span className={styles.conceptDetails}>
-                      {transaction.details}
+          {transactions.map((transaction) => {
+            const saleId = getSaleId(transaction);
+
+            return (
+              <tr key={transaction.id}>
+                <td>
+                  {saleId && onOpenSale ? (
+                    <button
+                      aria-label={`Gestionar ${transaction.concept}`}
+                      className={joinClassNames(
+                        styles.kindIcon,
+                        styles.kindIconButton,
+                        styles.kindIconIncome,
+                      )}
+                      title="Ver detalle de la venta"
+                      type="button"
+                      onClick={() => onOpenSale(saleId)}
+                    >
+                      {getKindIcon(transaction.direction)}
+                    </button>
+                  ) : (
+                    <span
+                      className={joinClassNames(
+                        styles.kindIcon,
+                        transaction.direction === "IN" && styles.kindIconIncome,
+                        transaction.direction === "OUT" &&
+                          styles.kindIconExpense,
+                        transaction.direction === "ADJUSTMENT" &&
+                          styles.kindIconAdjustment,
+                      )}
+                    >
+                      {getKindIcon(transaction.direction)}
                     </span>
-                  ) : null}
-                </div>
-              </td>
-              <td>{getValueLabel(transaction)}</td>
-              <td>{getPaymentColumnLabel(transaction)}</td>
-              <td>{formatCashRegisterDateTime(transaction.createdAt)}</td>
-              <td>
-                <span
-                  className={joinClassNames(
-                    styles.statusPill,
-                    (transaction.status === "COMPLETED" ||
-                      transaction.status === "PAID" ||
-                      transaction.status === "RECORDED") &&
-                      styles.statusPaid,
-                    transaction.status === "PARTIALLY_PAID" &&
-                      styles.statusPartial,
-                    (transaction.status === "PENDING_PAYMENT" ||
-                      transaction.status === "PENDING") &&
-                      styles.statusPending,
-                    (transaction.status === "ACTIVE" ||
-                      transaction.status === "REVERSED") &&
-                      styles.statusNeutral,
-                    transaction.status === "CANCELLED" &&
-                      styles.statusCancelled,
                   )}
-                >
-                  {getStatusLabel(transaction.status)}
-                </span>
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td>
+                  <div className={styles.conceptCell}>
+                    <strong className={styles.conceptTitle}>
+                      {transaction.concept}
+                    </strong>
+                    {transaction.details ? (
+                      <span className={styles.conceptDetails}>
+                        {transaction.details}
+                      </span>
+                    ) : null}
+                  </div>
+                </td>
+                <td>{getValueLabel(transaction)}</td>
+                <td>{getPaymentColumnLabel(transaction)}</td>
+                <td>{formatCashRegisterDateTime(transaction.createdAt)}</td>
+                <td>
+                  <span
+                    className={joinClassNames(
+                      styles.statusPill,
+                      (transaction.status === "COMPLETED" ||
+                        transaction.status === "PAID" ||
+                        transaction.status === "RECORDED") &&
+                        styles.statusPaid,
+                      transaction.status === "PARTIALLY_PAID" &&
+                        styles.statusPartial,
+                      (transaction.status === "PENDING_PAYMENT" ||
+                        transaction.status === "PENDING") &&
+                        styles.statusPending,
+                      (transaction.status === "ACTIVE" ||
+                        transaction.status === "REVERSED") &&
+                        styles.statusNeutral,
+                      transaction.status === "CANCELLED" &&
+                        styles.statusCancelled,
+                    )}
+                  >
+                    {getStatusLabel(transaction.status)}
+                  </span>
+                </td>
+                {onOpenSale ? (
+                  <td>
+                    {saleId ? (
+                      <button
+                        className={styles.saleAction}
+                        type="button"
+                        onClick={() => onOpenSale(saleId)}
+                      >
+                        Gestionar <ArrowRight aria-hidden="true" />
+                      </button>
+                    ) : (
+                      <span className={styles.noAction}>—</span>
+                    )}
+                  </td>
+                ) : null}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

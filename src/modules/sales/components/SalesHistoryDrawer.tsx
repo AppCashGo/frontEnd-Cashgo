@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Download, RotateCcw, Search, XCircle } from 'lucide-react'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import {
@@ -22,6 +22,7 @@ import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './SalesHistoryDrawer.module.css'
 
 type SalesHistoryDrawerProps = {
+  initialSaleId?: string | null
   isOpen: boolean
   sales: SaleReceipt[]
   onClose: () => void
@@ -58,6 +59,7 @@ function statusLabel(sale: SaleReceipt) {
 }
 
 export function SalesHistoryDrawer({
+  initialSaleId = null,
   isOpen,
   sales,
   onClose,
@@ -119,6 +121,12 @@ export function SalesHistoryDrawer({
     0,
   )
   const isSubmitting = cancelMutation.isPending || returnMutation.isPending
+
+  useEffect(() => {
+    if (isOpen && initialSaleId) {
+      setSelectedSaleId(initialSaleId)
+    }
+  }, [initialSaleId, isOpen])
 
   function resetDraft() {
     setDraftMode(null)
@@ -223,6 +231,13 @@ export function SalesHistoryDrawer({
       size="lg"
       title={selectedSale ? selectedSale.saleNumber : 'Historial de ventas'}
       onClose={() => {
+        if (initialSaleId) {
+          setSelectedSaleId(null)
+          resetDraft()
+          onClose()
+          return
+        }
+
         if (selectedSale) {
           setSelectedSaleId(null)
           resetDraft()

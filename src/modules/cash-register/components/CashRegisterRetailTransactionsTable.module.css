@@ -28,6 +28,7 @@
 }
 
 .kindIcon {
+  border: 0;
   width: 2rem;
   height: 2rem;
   display: inline-flex;
@@ -36,6 +37,25 @@
   border-radius: 999px;
   font-size: 0.92rem;
   font-weight: 900;
+}
+
+.kindIconButton {
+  font: inherit;
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.kindIconButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0.4rem 0.85rem rgba(76, 104, 217, 0.2);
+}
+
+.kindIconButton:focus-visible,
+.saleAction:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.28);
+  outline-offset: 2px;
 }
 
 .kindIconIncome {
@@ -106,6 +126,42 @@
 .statusCancelled {
   background: #e2e8f0;
   color: #475569;
+}
+
+.saleAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid rgba(76, 104, 217, 0.28);
+  border-radius: 0.55rem;
+  background: #ffffff;
+  color: #3656c7;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.saleAction:hover {
+  border-color: #4c68d9;
+  background: #f3f6ff;
+  transform: translateY(-1px);
+}
+
+.saleAction svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.noAction {
+  color: #a0aec0;
 }
 
 .emptyState {

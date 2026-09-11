@@ -10,6 +10,7 @@ export type SaleStatus =
   | 'CANCELLED'
 
 export type CreateSaleInput = {
+  idempotencyKey?: string
   items?: Array<{
     productId: string
     quantity: number
