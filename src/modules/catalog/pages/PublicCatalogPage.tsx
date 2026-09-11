@@ -285,7 +285,12 @@ function ProductCard({ product }: { product: PublicCatalogProduct }) {
     >
       <div className={styles.productImage}>
         {imageUrl ? (
-          <img alt={product.name} src={imageUrl} />
+          <img
+            alt={product.name}
+            decoding="async"
+            loading="lazy"
+            src={imageUrl}
+          />
         ) : (
           <ShoppingBag aria-hidden="true" />
         )}

@@ -1983,7 +1983,12 @@ export function RetailSalesWorkspace() {
                       }
                     >
                       {productImageUrl ? (
-                        <img alt="" src={productImageUrl} />
+                        <img
+                          alt=""
+                          decoding="async"
+                          loading="lazy"
+                          src={productImageUrl}
+                        />
                       ) : (
                         <span className={styles.productPreviewMark}>
                           {product.name.slice(0, 1).toUpperCase()}
@@ -2040,6 +2045,8 @@ export function RetailSalesWorkspace() {
                                   <img
                                     alt=""
                                     className={styles.cartAvatarImage}
+                                    decoding="async"
+                                    loading="lazy"
                                     src={productImageUrl}
                                   />
                                 ) : (

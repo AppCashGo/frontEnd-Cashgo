@@ -109,7 +109,12 @@ export function SuppliersListPanel({
                   <div className={styles.supplierIdentity}>
                     <span className={styles.supplierAvatar} aria-hidden="true">
                       {avatarUrl ? (
-                        <img src={avatarUrl} alt="" />
+                        <img
+                          alt=""
+                          decoding="async"
+                          loading="lazy"
+                          src={avatarUrl}
+                        />
                       ) : (
                         supplier.name.charAt(0).toUpperCase()
                       )}

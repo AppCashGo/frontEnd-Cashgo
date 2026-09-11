@@ -104,7 +104,15 @@ function ProductThumb({ product }: { product: Product }) {
   const imageUrl = resolveProductImageUrl(product.imageUrls)
 
   if (imageUrl) {
-    return <img alt="" className={styles.productImage} src={imageUrl} />
+    return (
+      <img
+        alt=""
+        className={styles.productImage}
+        decoding="async"
+        loading="lazy"
+        src={imageUrl}
+      />
+    )
   }
 
   return <span className={styles.productFallback}>t.</span>

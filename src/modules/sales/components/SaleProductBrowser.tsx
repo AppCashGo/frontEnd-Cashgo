@@ -202,7 +202,12 @@ export function SaleProductBrowser({
                   )}
                 >
                   {productImageUrl ? (
-                    <img alt="" src={productImageUrl} />
+                    <img
+                      alt=""
+                      decoding="async"
+                      loading="lazy"
+                      src={productImageUrl}
+                    />
                   ) : (
                     <span>{getProductMonogram(product)}</span>
                   )}

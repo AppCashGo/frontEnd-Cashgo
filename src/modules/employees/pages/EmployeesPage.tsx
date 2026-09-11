@@ -316,7 +316,12 @@ export function EmployeesPage() {
                                   aria-hidden="true"
                                 >
                                   {avatarUrl ? (
-                                    <img alt="" src={avatarUrl} />
+                                    <img
+                                      alt=""
+                                      decoding="async"
+                                      loading="lazy"
+                                      src={avatarUrl}
+                                    />
                                   ) : (
                                     employee.name.charAt(0).toUpperCase()
                                   )}

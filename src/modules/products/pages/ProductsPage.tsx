@@ -52,7 +52,11 @@ function ProductThumbnail({ product }: { product: Product }) {
   const imageUrl = resolveProductImageUrl(product.imageUrls)
   return (
     <span className={styles.thumbnail}>
-      {imageUrl ? <img alt="" src={imageUrl} /> : <ImageIcon aria-hidden="true" size={20} strokeWidth={1.8} />}
+      {imageUrl ? (
+        <img alt="" decoding="async" loading="lazy" src={imageUrl} />
+      ) : (
+        <ImageIcon aria-hidden="true" size={20} strokeWidth={1.8} />
+      )}
     </span>
   )
 }

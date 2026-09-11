@@ -1548,6 +1548,8 @@ export function RetailInventoryWorkspace() {
                           <img
                             alt=""
                             className={styles.productAvatarImage}
+                            decoding="async"
+                            loading="lazy"
                             src={productImageUrl}
                           />
                         ) : (

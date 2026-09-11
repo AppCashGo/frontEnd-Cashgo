@@ -787,6 +787,8 @@ export function QuotationFormWorkspace({
           <img
             alt=""
             className={styles.productImage}
+            decoding="async"
+            loading="lazy"
             src={productImageUrl}
           />
         ) : (
