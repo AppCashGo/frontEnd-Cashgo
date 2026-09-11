@@ -1,9 +1,8 @@
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, ImageIcon, MoreVertical, Plus, Search, Upload } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { RetailProductCreateWorkspace, type RetailProductCreateWorkspaceTab } from '@/modules/inventory/components/RetailProductCreateWorkspace'
 import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inventory-query'
-import { ProductImportPanel } from '@/modules/products/components/ProductImportPanel'
 import { useDeleteProductMutation, useImportProductsMutation, useProductsQuery } from '@/modules/products/hooks/use-products-query'
 import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
@@ -21,6 +20,11 @@ type StockFilter = 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK'
 
 const PAGE_SIZE = 10
 const workspaceTabs: RetailProductCreateWorkspaceTab[] = ['basic', 'variants', 'measures']
+const ProductImportPanel = lazy(() =>
+  import('@/modules/products/components/ProductImportPanel').then((module) => ({
+    default: module.ProductImportPanel,
+  })),
+)
 
 function isWorkspaceTab(value: string | null): value is RetailProductCreateWorkspaceTab {
   return workspaceTabs.includes(value as RetailProductCreateWorkspaceTab)
@@ -202,7 +206,20 @@ export function ProductsPage() {
       </RetailPageLayout>
 
       <SideDrawer isOpen={isImportOpen} isCloseDisabled={importMutation.isPending} panelClassName={styles.importDrawer} title="Carga masiva de productos" description="Importa o actualiza tu catálogo desde un archivo CSV o Excel." closeLabel="Cerrar carga masiva" onClose={closeWorkspace}>
-        <ProductImportPanel isImporting={importMutation.isPending} onImport={(input) => importMutation.mutateAsync(input)} />
+        {isImportOpen ? (
+          <Suspense
+            fallback={(
+              <div className={styles.state} role="status">
+                Preparando el importador...
+              </div>
+            )}
+          >
+            <ProductImportPanel
+              isImporting={importMutation.isPending}
+              onImport={(input) => importMutation.mutateAsync(input)}
+            />
+          </Suspense>
+        ) : null}
       </SideDrawer>
     </>
   )

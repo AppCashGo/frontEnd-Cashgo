@@ -1,13 +1,7 @@
-import { useState } from 'react'
-import { CashflowChart } from '@/modules/reports/components/CashflowChart'
-import { EmployeesPerformanceChart } from '@/modules/reports/components/EmployeesPerformanceChart'
-import { ExpensesBreakdownChart } from '@/modules/reports/components/ExpensesBreakdownChart'
+import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { ReportsChartCard } from '@/modules/reports/components/ReportsChartCard'
 import { ReportsDateFilters } from '@/modules/reports/components/ReportsDateFilters'
 import { ReportsMetricCard } from '@/modules/reports/components/ReportsMetricCard'
-import { RetailSalesComparisonChart } from '@/modules/reports/components/RetailSalesComparisonChart'
-import { SalesPerformanceChart } from '@/modules/reports/components/SalesPerformanceChart'
-import { TopProductsChart } from '@/modules/reports/components/TopProductsChart'
 import { useReportsOverviewQuery } from '@/modules/reports/hooks/use-reports-overview-query'
 import type {
   EmployeesReport,
@@ -29,6 +23,51 @@ import styles from './ReportsPage.module.css'
 import retailPageStyles from './ReportsRetailPage.module.css'
 
 type ConcreteReportRangePreset = Exclude<ReportRangePreset, 'CUSTOM'>
+
+const CashflowChart = lazy(() =>
+  import('@/modules/reports/components/CashflowChart').then((module) => ({
+    default: module.CashflowChart,
+  })),
+)
+const EmployeesPerformanceChart = lazy(() =>
+  import('@/modules/reports/components/EmployeesPerformanceChart').then(
+    (module) => ({ default: module.EmployeesPerformanceChart }),
+  ),
+)
+const ExpensesBreakdownChart = lazy(() =>
+  import('@/modules/reports/components/ExpensesBreakdownChart').then((module) => ({
+    default: module.ExpensesBreakdownChart,
+  })),
+)
+const RetailSalesComparisonChart = lazy(() =>
+  import('@/modules/reports/components/RetailSalesComparisonChart').then(
+    (module) => ({ default: module.RetailSalesComparisonChart }),
+  ),
+)
+const SalesPerformanceChart = lazy(() =>
+  import('@/modules/reports/components/SalesPerformanceChart').then((module) => ({
+    default: module.SalesPerformanceChart,
+  })),
+)
+const TopProductsChart = lazy(() =>
+  import('@/modules/reports/components/TopProductsChart').then((module) => ({
+    default: module.TopProductsChart,
+  })),
+)
+
+function DeferredChart({ children }: { children: ReactNode }) {
+  return (
+    <Suspense
+      fallback={(
+        <div className={styles.chartLoading} role="status">
+          Preparando gráfica...
+        </div>
+      )}
+    >
+      {children}
+    </Suspense>
+  )
+}
 
 function formatDateInputValue(date: Date) {
   const year = date.getFullYear()
@@ -774,30 +813,32 @@ export function ReportsPage() {
 
             <SurfaceCard className={retailPageStyles.chartCard}>
               <p className={retailPageStyles.chartTitle}>{copy.sales.salesChart}</p>
-              <RetailSalesComparisonChart
-                currentLabel={getCurrentSeriesLabel(
-                  selectedPreset,
-                  languageCode,
-                )}
-                currentReport={salesReport}
-                emptyDescription={
-                  languageCode === 'en'
-                    ? 'Once the selected range has sales, this chart will compare it with the previous period.'
-                    : 'Cuando el rango seleccionado tenga ventas, esta gráfica comparará el periodo actual contra el anterior.'
-                }
-                emptyTitle={
-                  languageCode === 'en'
-                    ? 'No sales detail yet'
-                    : 'Todavía no hay detalle de ventas'
-                }
-                languageCode={languageCode}
-                previousLabel={getPreviousSeriesLabel(
-                  selectedPreset,
-                  anchorDateValue,
-                  languageCode,
-                )}
-                previousReport={previousSalesReport}
-              />
+              <DeferredChart>
+                <RetailSalesComparisonChart
+                  currentLabel={getCurrentSeriesLabel(
+                    selectedPreset,
+                    languageCode,
+                  )}
+                  currentReport={salesReport}
+                  emptyDescription={
+                    languageCode === 'en'
+                      ? 'Once the selected range has sales, this chart will compare it with the previous period.'
+                      : 'Cuando el rango seleccionado tenga ventas, esta gráfica comparará el periodo actual contra el anterior.'
+                  }
+                  emptyTitle={
+                    languageCode === 'en'
+                      ? 'No sales detail yet'
+                      : 'Todavía no hay detalle de ventas'
+                  }
+                  languageCode={languageCode}
+                  previousLabel={getPreviousSeriesLabel(
+                    selectedPreset,
+                    anchorDateValue,
+                    languageCode,
+                  )}
+                  previousReport={previousSalesReport}
+                />
+              </DeferredChart>
             </SurfaceCard>
 
             <section className={retailPageStyles.productsTableCard}>
@@ -906,10 +947,12 @@ export function ReportsPage() {
             <div className={retailPageStyles.secondaryGrid}>
               <SurfaceCard className={retailPageStyles.chartCard}>
                 <p className={retailPageStyles.chartTitle}>{copy.expenses.chart}</p>
-                <ExpensesBreakdownChart
-                  languageCode={languageCode}
-                  report={expensesReport}
-                />
+                <DeferredChart>
+                  <ExpensesBreakdownChart
+                    languageCode={languageCode}
+                    report={expensesReport}
+                  />
+                </DeferredChart>
               </SurfaceCard>
 
               <SurfaceCard className={retailPageStyles.compactCard}>
@@ -1031,10 +1074,12 @@ export function ReportsPage() {
 
             <SurfaceCard className={retailPageStyles.chartCard}>
               <p className={retailPageStyles.chartTitle}>{copy.employees.chart}</p>
-              <EmployeesPerformanceChart
-                languageCode={languageCode}
-                report={employeesReport}
-              />
+              <DeferredChart>
+                <EmployeesPerformanceChart
+                  languageCode={languageCode}
+                  report={employeesReport}
+                />
+              </DeferredChart>
             </SurfaceCard>
 
             <section className={retailStyles.tableCard}>
@@ -1247,14 +1292,16 @@ export function ReportsPage() {
           footer={`${salesCount.toString()} transacciones en el rango`}
           title="Ventas"
         >
-          <SalesPerformanceChart
-            emptyDescription="Cuando el periodo seleccionado tenga actividad, esta gráfica comparará ventas y ganancia por tramo del tiempo."
-            emptyTitle="Todavía no hay detalle de ventas"
-            languageCode={languageCode}
-            profitSeriesLabel="Ganancia"
-            report={salesReport}
-            revenueSeriesLabel="Ventas"
-          />
+          <DeferredChart>
+            <SalesPerformanceChart
+              emptyDescription="Cuando el periodo seleccionado tenga actividad, esta gráfica comparará ventas y ganancia por tramo del tiempo."
+              emptyTitle="Todavía no hay detalle de ventas"
+              languageCode={languageCode}
+              profitSeriesLabel="Ganancia"
+              report={salesReport}
+              revenueSeriesLabel="Ventas"
+            />
+          </DeferredChart>
         </ReportsChartCard>
 
         <ReportsChartCard
@@ -1262,10 +1309,12 @@ export function ReportsPage() {
           footer={formatReportCurrency(totalExpenses, languageCode)}
           title="Gastos"
         >
-          <ExpensesBreakdownChart
-            languageCode={languageCode}
-            report={expensesReport}
-          />
+          <DeferredChart>
+            <ExpensesBreakdownChart
+              languageCode={languageCode}
+              report={expensesReport}
+            />
+          </DeferredChart>
         </ReportsChartCard>
 
         <ReportsChartCard
@@ -1273,21 +1322,23 @@ export function ReportsPage() {
           footer={`Neto ${formatReportCurrency(netCashflow, languageCode)}`}
           title="Flujo de caja"
         >
-          <CashflowChart
-            report={
-              cashflowReport ?? {
-                from: null,
-                to: null,
-                salesRevenue: 0,
-                manualIncomeTotal: 0,
-                manualExpenseTotal: 0,
-                supplierPurchasesTotal: 0,
-                totalInflow: 0,
-                totalOutflow: 0,
-                netCashflow: 0,
+          <DeferredChart>
+            <CashflowChart
+              report={
+                cashflowReport ?? {
+                  from: null,
+                  to: null,
+                  salesRevenue: 0,
+                  manualIncomeTotal: 0,
+                  manualExpenseTotal: 0,
+                  supplierPurchasesTotal: 0,
+                  totalInflow: 0,
+                  totalOutflow: 0,
+                  netCashflow: 0,
+                }
               }
-            }
-          />
+            />
+          </DeferredChart>
         </ReportsChartCard>
 
         <ReportsChartCard
@@ -1295,15 +1346,17 @@ export function ReportsPage() {
           footer={topProduct ? `${topProduct.name} lidera` : 'Sin ranking todavía'}
           title="Productos destacados"
         >
-          <TopProductsChart
-            report={
-              topProductsReport ?? {
-                from: null,
-                to: null,
-                items: [],
+          <DeferredChart>
+            <TopProductsChart
+              report={
+                topProductsReport ?? {
+                  from: null,
+                  to: null,
+                  items: [],
+                }
               }
-            }
-          />
+            />
+          </DeferredChart>
         </ReportsChartCard>
       </div>
     </div>

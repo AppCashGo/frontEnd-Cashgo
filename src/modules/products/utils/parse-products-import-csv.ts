@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx'
 import {
   productImportRowSchema,
   type ProductImportRowSchemaValues,
@@ -46,6 +45,7 @@ export async function parseProductsImportFile(
   file: File,
 ): Promise<ParsedImportData> {
   if (/\.(xlsx|xls)$/i.test(file.name)) {
+    const XLSX = await import('xlsx')
     const workbookBuffer = await file.arrayBuffer()
     const workbook = XLSX.read(workbookBuffer, {
       type: 'array',

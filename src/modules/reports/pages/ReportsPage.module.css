@@ -83,6 +83,15 @@
   gap: 0.95rem;
 }
 
+.chartLoading {
+  display: grid;
+  min-height: 16rem;
+  place-items: center;
+  color: var(--color-text-muted, #667085);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .summaryCard {
   display: grid;
   gap: 0.35rem;
