@@ -67,6 +67,22 @@ function normalizeOptionalRelationId(value?: string) {
   return trimmedValue ? trimmedValue : null;
 }
 
+function createIdentifierPreview(name: string) {
+  const normalizedName = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-{2,}/g, "");
+  const base = normalizedName || "NOMBRE-DEL-PRODUCTO";
+
+  return {
+    sku: base.slice(0, 80),
+    barcode: `COD-${base}`.slice(0, 120),
+  };
+}
+
 function BackIcon() {
   return (
     <svg aria-hidden="true" className={styles.backIcon} viewBox="0 0 24 24">
@@ -773,6 +789,11 @@ export function RetailProductCreateWorkspace({
   });
   const isVisibleInCatalog = watch("isVisibleInCatalog");
   const selectedCategoryId = watch("categoryId") ?? "";
+  const productName = watch("name") ?? "";
+  const identifierPreview = useMemo(
+    () => createIdentifierPreview(productName),
+    [productName],
+  );
   const selectedCategory = useMemo(
     () =>
       categories.find((category) => category.id === selectedCategoryId) ?? null,
@@ -1320,16 +1341,6 @@ export function RetailProductCreateWorkspace({
                 {renderProductImageUploader()}
 
                 <label className={styles.field}>
-                  <span className={styles.label}>Codigo</span>
-                  <input
-                    className={styles.input}
-                    placeholder="Escanea o escribe el codigo del producto"
-                    type="text"
-                    {...register("barcode")}
-                  />
-                </label>
-
-                <label className={styles.field}>
                   <span className={styles.label}>
                     Nombre del producto
                     <span className={styles.required}>*</span>
@@ -1344,6 +1355,30 @@ export function RetailProductCreateWorkspace({
                     <p className={styles.error}>{errors.name.message}</p>
                   ) : null}
                 </label>
+
+                <div className={styles.identifierCard}>
+                  <div className={styles.identifierCopy}>
+                    <strong>Identificación automática</strong>
+                    <span>
+                      CashGo crea el SKU y el código cuando guardas el producto.
+                      Si ya existen, agrega un número para mantenerlos únicos.
+                    </span>
+                  </div>
+                  <div className={styles.identifierValues}>
+                    <span className={styles.identifierValue}>
+                      <small>SKU</small>
+                      <strong>
+                        {currentProduct?.sku ?? identifierPreview.sku}
+                      </strong>
+                    </span>
+                    <span className={styles.identifierValue}>
+                      <small>Código</small>
+                      <strong>
+                        {currentProduct?.barcode ?? identifierPreview.barcode}
+                      </strong>
+                    </span>
+                  </div>
+                </div>
 
                 {activeTab === "measures" ? (
                   <>
@@ -1525,6 +1560,11 @@ export function RetailProductCreateWorkspace({
                       </span>
                     </div>
                     <p className={styles.variantsHint}>{copy.variantsHint}</p>
+                    <p className={styles.variantIdentifierHint}>
+                      El SKU y el código de cada variante se crean
+                      automáticamente con el nombre del producto y de la
+                      variante.
+                    </p>
                   </div>
 
                   <div className={styles.variantsActions}>
@@ -1591,26 +1631,6 @@ export function RetailProductCreateWorkspace({
                                   {errors.variants[index]?.name?.message}
                                 </p>
                               ) : null}
-                            </label>
-
-                            <label className={styles.field}>
-                              <span className={styles.label}>SKU</span>
-                              <input
-                                className={styles.input}
-                                type="text"
-                                {...register(`variants.${index}.sku` as const)}
-                              />
-                            </label>
-
-                            <label className={styles.field}>
-                              <span className={styles.label}>Codigo</span>
-                              <input
-                                className={styles.input}
-                                type="text"
-                                {...register(
-                                  `variants.${index}.barcode` as const,
-                                )}
-                              />
                             </label>
 
                             <label className={styles.field}>

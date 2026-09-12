@@ -171,11 +171,11 @@
     "goals": ["Elegir el tipo de producto", "Configurar precios, stock e impuestos", "Importar productos de forma segura"],
     "steps": [
       {"title": "Elige el tipo", "body": "Usa básico para una referencia, variantes para opciones como color o talla y medidas para venta por peso o longitud."},
-      {"title": "Completa los datos", "body": "Registra nombre, código, categoría, unidad, precio, costo, stock mínimo e imágenes."},
-      {"title": "Configura variantes o medidas", "body": "Asigna SKU, código, precio, costo y stock a cada opción para mantener trazabilidad individual."},
+      {"title": "Completa los datos", "body": "Registra nombre, categoría, unidad, precio, costo, stock mínimo e imágenes. CashGo genera automáticamente el SKU y el código."},
+      {"title": "Configura variantes o medidas", "body": "Asigna nombre, precio, costo y stock a cada opción. CashGo crea sus identificadores únicos a partir del nombre del producto y la variante."},
       {"title": "Guarda o importa", "body": "Revisa validaciones antes de crear; en carga masiva corrige todas las filas con error antes de importar."}
     ],
-    "tips": ["Cada SKU debe ser único dentro del negocio.", "Usa la plantilla de carga masiva sin cambiar sus encabezados."],
+    "tips": ["Si un identificador ya existe, CashGo agrega un número para mantenerlo único.", "Usa la plantilla de carga masiva sin cambiar sus encabezados."],
     "videoSrc": "/help/videos/productos.mp4",
     "pdfSrc": "/help/guides/productos.pdf"
   },
