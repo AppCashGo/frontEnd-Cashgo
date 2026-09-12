@@ -148,6 +148,28 @@ function collectBrowserErrors(page: Page) {
   return browserErrors;
 }
 
+test("shows recovery controls when the application cannot start", async ({
+  page,
+}) => {
+  await page.route("**/src/main.tsx*", async (route) => {
+    await route.abort("failed");
+  });
+
+  await page.goto("/auth");
+
+  const recovery = page.getByRole("alert", {
+    name: "CashGo no pudo iniciar",
+  });
+
+  await expect(recovery).toBeVisible({ timeout: 6_000 });
+  await expect(
+    recovery.getByRole("link", { name: "Reintentar" }),
+  ).toBeVisible();
+  await expect(
+    recovery.getByRole("link", { name: "Ir al acceso" }),
+  ).toHaveAttribute("href", "/auth");
+});
+
 async function loginWithDevelopmentAccount(
   page: Page,
   request: APIRequestContext,

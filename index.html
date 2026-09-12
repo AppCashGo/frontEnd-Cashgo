@@ -11,9 +11,113 @@
     <meta name="theme-color" content="#1458d4" />
     <link rel="canonical" href="https://cashgoapp.com.co/" />
     <title>CashGo | Gestión de tu negocio</title>
+    <style>
+      .cashgo-boot-fallback {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        padding: 1.5rem;
+        visibility: hidden;
+        background:
+          radial-gradient(circle at 15% 10%, rgba(45, 212, 191, 0.2), transparent 32rem),
+          linear-gradient(145deg, #f8fbff 0%, #edf6ff 100%);
+        color: #172033;
+        opacity: 0;
+        animation: cashgo-boot-reveal 0s 3s forwards;
+      }
+
+      .cashgo-boot-card {
+        width: min(100%, 32rem);
+        padding: clamp(1.5rem, 5vw, 2.5rem);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        border-radius: 1.5rem;
+        background: rgba(255, 255, 255, 0.94);
+        box-shadow: 0 1.5rem 4rem rgba(15, 23, 42, 0.13);
+        text-align: center;
+      }
+
+      .cashgo-boot-logo {
+        width: 4rem;
+        height: 4rem;
+        margin: 0 auto 1.25rem;
+      }
+
+      .cashgo-boot-card h1 {
+        margin: 0;
+        font: 800 clamp(1.45rem, 5vw, 2rem) / 1.15 'Segoe UI', sans-serif;
+      }
+
+      .cashgo-boot-card p {
+        margin: 0.85rem auto 0;
+        color: #52606d;
+        font: 500 1rem / 1.55 'Segoe UI', sans-serif;
+      }
+
+      .cashgo-boot-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+      }
+
+      .cashgo-boot-action {
+        min-height: 3rem;
+        padding: 0.8rem 1rem;
+        border: 1px solid #1f2a37;
+        border-radius: 0.85rem;
+        color: #1f2a37;
+        font: 800 0.95rem / 1 'Segoe UI', sans-serif;
+        text-decoration: none;
+      }
+
+      .cashgo-boot-action-primary {
+        background: #1f2a37;
+        color: #fff;
+      }
+
+      @media (max-width: 420px) {
+        .cashgo-boot-actions {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @keyframes cashgo-boot-reveal {
+        to {
+          visibility: visible;
+          opacity: 1;
+        }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <section
+      aria-labelledby="cashgo-boot-title"
+      class="cashgo-boot-fallback"
+      id="cashgo-boot-fallback"
+      role="alert"
+    >
+      <div class="cashgo-boot-card">
+        <img
+          alt=""
+          class="cashgo-boot-logo"
+          src="/cashgo-app-icon.svg"
+        />
+        <h1 id="cashgo-boot-title">CashGo no pudo iniciar</h1>
+        <p>
+          La aplicación tardó más de lo esperado. Reintenta la carga o vuelve
+          al acceso para continuar.
+        </p>
+        <div class="cashgo-boot-actions">
+          <a class="cashgo-boot-action cashgo-boot-action-primary" href="">
+            Reintentar
+          </a>
+          <a class="cashgo-boot-action" href="/auth">Ir al acceso</a>
+        </div>
+      </div>
+    </section>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
