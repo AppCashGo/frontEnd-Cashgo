@@ -1542,7 +1542,7 @@ export function RetailInventoryWorkspace() {
                     key={product.id}
                     className={isLowStock ? styles.tableRowLowStock : undefined}
                   >
-                    <td>
+                    <td data-label={copy.productColumn}>
                       <div className={styles.productCell}>
                         {productImageUrl ? (
                           <img
@@ -1565,7 +1565,7 @@ export function RetailInventoryWorkspace() {
                         </div>
                       </div>
                     </td>
-                    <td>
+                    <td data-label={copy.priceColumn}>
                       <label
                         className={styles.inlineEditBox}
                         onClick={(event) => event.stopPropagation()}
@@ -1595,7 +1595,7 @@ export function RetailInventoryWorkspace() {
                         />
                       </label>
                     </td>
-                    <td>
+                    <td data-label={copy.costColumn}>
                       <label
                         className={styles.inlineEditBox}
                         onClick={(event) => event.stopPropagation()}
@@ -1625,7 +1625,7 @@ export function RetailInventoryWorkspace() {
                         />
                       </label>
                     </td>
-                    <td>
+                    <td data-label={copy.stockColumn}>
                       <label
                         className={
                           isLowStock
@@ -1660,14 +1660,14 @@ export function RetailInventoryWorkspace() {
                         />
                       </label>
                     </td>
-                    <td>
+                    <td data-label={copy.marginColumn}>
                       <div className={styles.gainCell}>
                         <span className={styles.marginPill}>
                           {`${margin.toFixed(1)}%`}
                         </span>
                       </div>
                     </td>
-                    <td>
+                    <td data-label={copy.actionsColumn}>
                       <button
                         aria-label={`${copy.editProduct}: ${product.name}`}
                         className={styles.rowActionButton}

@@ -2003,6 +2003,59 @@ test("renders core retail routes across desktop, tablet and mobile widths", asyn
   expect(browserErrors).toEqual([]);
 });
 
+test("keeps every inventory workspace responsive without page overflow", async ({
+  page,
+  request,
+}) => {
+  const browserErrors = collectBrowserErrors(page);
+
+  await loginWithDevelopmentAccount(page, request);
+
+  const viewports = [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1466, height: 900 },
+  ];
+  const inventoryViews = [
+    { path: "/inventory", heading: "Inventario" },
+    {
+      path: "/inventory?create=manual&tab=basic",
+      heading: "Producto básico",
+    },
+    {
+      path: "/inventory?create=manual&tab=variants",
+      heading: "Producto con variantes",
+    },
+    {
+      path: "/inventory?create=manual&tab=measures",
+      heading: "Producto con medidas",
+    },
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+
+    for (const view of inventoryViews) {
+      await page.goto(view.path);
+      await expect(
+        page.getByRole("heading", { name: view.heading, exact: true }),
+      ).toBeVisible();
+      await expect(page.locator("body")).not.toContainText(
+        "Unexpected Application Error",
+      );
+
+      const hasPageOverflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > window.innerWidth + 1,
+      );
+      expect(hasPageOverflow, `${view.path} overflows at ${viewport.width}px`).toBe(
+        false,
+      );
+    }
+  }
+
+  expect(browserErrors).toEqual([]);
+});
+
 test("preloads a module when the user shows navigation intent", async ({
   page,
   request,

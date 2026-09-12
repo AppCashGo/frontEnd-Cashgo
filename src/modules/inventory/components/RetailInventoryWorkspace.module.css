@@ -910,6 +910,7 @@
 
 /* Inventory dashboard refresh */
 .dashboardBody {
+  container: inventory-dashboard / inline-size;
   gap: 1.55rem;
   background: #f8fafc;
 }
@@ -979,7 +980,7 @@
 
 .summaryGrid {
   display: grid;
-  grid-template-columns: minmax(12rem, 0.85fr) minmax(12rem, 0.85fr) minmax(20rem, 1.8fr);
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 0.85fr) minmax(0, 1.8fr);
   gap: 1.15rem;
 }
 
@@ -995,6 +996,7 @@
   display: grid;
   align-content: center;
   gap: 0.8rem;
+  min-width: 0;
   padding: 1.45rem 1.7rem;
   background: #ffffff;
   box-shadow: 0 3px 8px rgba(15, 23, 42, 0.04);
@@ -1009,6 +1011,11 @@
   font-weight: 850;
   letter-spacing: 0.055em;
   text-transform: uppercase;
+}
+
+.summaryCardHeader > span:last-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .summaryIcon {
@@ -1031,10 +1038,12 @@
 
 .summaryCard > strong {
   color: #101b2d;
-  font-size: clamp(2rem, 3.2vw, 2.85rem);
+  font-size: clamp(1.85rem, 3.1cqi, 2.65rem);
+  font-variant-numeric: tabular-nums;
   font-weight: 900;
   letter-spacing: -0.04em;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .summaryCard > small {
@@ -1769,5 +1778,211 @@
   .summaryCard,
   .promoCard {
     min-height: 9.5rem;
+  }
+}
+
+@container inventory-dashboard (max-width: 68rem) {
+  .summaryGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .promoCard {
+    grid-column: 1 / -1;
+  }
+
+  .tableToolbar,
+  .tableToolbarRight {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .tableFilters,
+  .tableToolbarRight {
+    width: 100%;
+  }
+
+  .tableSearch,
+  .compactSelectWrap {
+    flex: 1 1 12rem;
+  }
+
+  .compactSelect {
+    min-width: 0;
+  }
+}
+
+@container inventory-dashboard (max-width: 46rem) {
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .promoCard {
+    grid-column: auto;
+  }
+
+  .banner,
+  .tableToolbar,
+  .tableFilters,
+  .tableToolbarRight {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .bannerLead {
+    padding-right: 0.4rem;
+  }
+
+  .banner > button:not(.bannerClose) {
+    width: 100%;
+  }
+
+  .compactSelectWrap,
+  .compactSelect,
+  .tableSearch,
+  .tableActions {
+    width: 100%;
+  }
+
+  .tableActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .iconButtonWrap,
+  .iconButton {
+    width: 100%;
+  }
+
+  .iconButtonWrap:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .iconButton {
+    justify-content: flex-start;
+    gap: 0.55rem;
+    min-height: 2.75rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .mobileActionLabel {
+    display: inline;
+    overflow: hidden;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .tooltipBubble {
+    display: none;
+  }
+
+  .tableScroller {
+    overflow: visible;
+  }
+
+  .table {
+    display: block;
+    min-width: 0;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody {
+    display: grid;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.85rem 0.75rem;
+    padding: 0.9rem;
+    border: 1px solid #dce3ed;
+    border-radius: 0.8rem;
+    background: #ffffff;
+  }
+
+  .table tbody tr.tableRowLowStock {
+    border-color: #f4c4be;
+    background: #fffafa;
+  }
+
+  .table tbody td {
+    display: grid;
+    gap: 0.35rem;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .table tbody td::before {
+    content: attr(data-label);
+    color: #737c8e;
+    font-size: 0.68rem;
+    font-weight: 850;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+  }
+
+  .table tbody td:first-child {
+    position: static;
+    grid-column: 1 / -1;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .table tbody td:first-child::before {
+    display: none;
+  }
+
+  .table tbody td:last-child {
+    align-content: end;
+    justify-items: end;
+  }
+
+  .inlineEditBox {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    border-color: #d5deea;
+    background: #ffffff;
+    padding-left: 0.65rem;
+  }
+
+  .drawer {
+    width: 100vw;
+    max-width: none;
+    border-left: 0;
+  }
+
+  .purchaseFieldsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@container inventory-dashboard (max-width: 28rem) {
+  .tableActions,
+  .table tbody tr {
+    grid-template-columns: 1fr;
+  }
+
+  .iconButtonWrap:last-child,
+  .table tbody td:first-child {
+    grid-column: auto;
+  }
+
+  .table tbody td:last-child {
+    justify-items: stretch;
+  }
+
+  .rowActionButton {
+    width: 100%;
+    border: 1px solid #d5deea;
+    border-radius: 0.65rem;
   }
 }

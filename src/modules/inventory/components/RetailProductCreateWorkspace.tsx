@@ -1289,10 +1289,17 @@ export function RetailProductCreateWorkspace({
       {confirmationDialog}
       <div className={styles.page}>
         <header className={styles.pageHeader}>
-          <button className={styles.backButton} type="button" onClick={onBack}>
+          <button
+            aria-label={
+              languageCode === "en" ? "Back to inventory" : "Volver al inventario"
+            }
+            className={styles.backButton}
+            type="button"
+            onClick={onBack}
+          >
             <BackIcon />
-            <span>{currentTitle}</span>
           </button>
+          <h1 className={styles.pageTitle}>{currentTitle}</h1>
         </header>
 
         <div className={styles.tabs}>
