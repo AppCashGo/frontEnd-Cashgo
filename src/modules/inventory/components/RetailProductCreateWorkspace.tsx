@@ -1,5 +1,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type DragEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import {
   useCreateProductMutation,
@@ -31,7 +38,10 @@ import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { formatCurrency } from "@/shared/utils/format-currency";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
-import { IMAGE_UPLOAD_ACCEPT } from "@/shared/utils/image-upload-validation";
+import {
+  IMAGE_UPLOAD_ACCEPT,
+  validateImageUploadFile,
+} from "@/shared/utils/image-upload-validation";
 import styles from "./RetailProductCreateWorkspace.module.css";
 
 export type RetailProductCreateWorkspaceTab = "basic" | "variants" | "measures";
@@ -224,12 +234,10 @@ function canvasToWebpBlob(canvas: HTMLCanvasElement) {
 }
 
 async function resizeProductImage(file: File) {
-  if (!file.type.startsWith("image/")) {
-    throw new Error("Selecciona un archivo de imagen válido.");
-  }
+  const validationError = validateImageUploadFile(file);
 
-  if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
-    throw new Error("Cada imagen debe pesar máximo 2MB.");
+  if (validationError) {
+    throw new Error(validationError);
   }
 
   const objectUrl = URL.createObjectURL(file);
@@ -752,8 +760,11 @@ export function RetailProductCreateWorkspace({
     null,
   );
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const imageDragDepthRef = useRef(0);
   const productSubmissionLockRef = useRef(false);
   const [productImages, setProductImages] = useState<string[]>([]);
+  const [isProductImageDragActive, setIsProductImageDragActive] =
+    useState(false);
   const [productImageError, setProductImageError] = useState<string | null>(
     null,
   );
@@ -973,6 +984,62 @@ export function RetailProductCreateWorkspace({
     event.target.value = "";
   }
 
+  function hasDraggedFiles(event: DragEvent<HTMLElement>) {
+    return Array.from(event.dataTransfer.types).includes("Files");
+  }
+
+  function handleProductImageDragEnter(event: DragEvent<HTMLDivElement>) {
+    if (!hasDraggedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    imageDragDepthRef.current += 1;
+    setIsProductImageDragActive(true);
+  }
+
+  function handleProductImageDragOver(event: DragEvent<HTMLDivElement>) {
+    if (!hasDraggedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    event.dataTransfer.dropEffect =
+      uploadProductImagesMutation.isPending ||
+      productImages.length >= MAX_PRODUCT_IMAGES
+        ? "none"
+        : "copy";
+  }
+
+  function handleProductImageDragLeave(event: DragEvent<HTMLDivElement>) {
+    if (!hasDraggedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    imageDragDepthRef.current = Math.max(0, imageDragDepthRef.current - 1);
+
+    if (imageDragDepthRef.current === 0) {
+      setIsProductImageDragActive(false);
+    }
+  }
+
+  function handleProductImageDrop(event: DragEvent<HTMLDivElement>) {
+    if (!hasDraggedFiles(event)) {
+      return;
+    }
+
+    event.preventDefault();
+    imageDragDepthRef.current = 0;
+    setIsProductImageDragActive(false);
+
+    if (uploadProductImagesMutation.isPending) {
+      return;
+    }
+
+    void handleProductImageFiles(Array.from(event.dataTransfer.files), null);
+  }
+
   function handleRemoveProductImage(index: number) {
     setProductImages((currentImages) =>
       currentImages.filter((_, currentIndex) => currentIndex !== index),
@@ -995,7 +1062,23 @@ export function RetailProductCreateWorkspace({
         : `Añade ${remainingImages} imágenes más`;
 
     return (
-      <div className={styles.imageUploader}>
+      <div
+        className={`${styles.imageUploader} ${
+          isProductImageDragActive ? styles.imageUploaderDragActive : ""
+        }`}
+        onDragEnter={handleProductImageDragEnter}
+        onDragLeave={handleProductImageDragLeave}
+        onDragOver={handleProductImageDragOver}
+        onDrop={handleProductImageDrop}
+      >
+        {isProductImageDragActive ? (
+          <div className={styles.imageDropOverlay} aria-live="polite">
+            <UploadIcon />
+            <strong>Suelta las imágenes para cargarlas</strong>
+            <span>PNG, JPG o WEBP · máximo 3 imágenes de 2MB</span>
+          </div>
+        ) : null}
+
         {productImages.length === 0 ? (
           <button
             className={styles.uploadPanel}
@@ -1004,10 +1087,10 @@ export function RetailProductCreateWorkspace({
             onClick={() => requestProductImageUpload()}
           >
             <UploadIcon />
-            <strong>Carga hasta 3 imágenes</strong>
+            <strong>Arrastra aquí o carga hasta 3 imágenes</strong>
             <p>
-              Recomendamos: Tamaño de 500 x 500 px, formato PNG y peso máximo
-              2MB.
+              Suelta tus fotos en este cuadro o haz clic para seleccionarlas.
+              Recomendamos 500 x 500 px, formato PNG, JPG o WEBP y máximo 2MB.
             </p>
           </button>
         ) : (
