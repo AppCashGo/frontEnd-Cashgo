@@ -24,6 +24,7 @@ import {
   useCustomerDetailQuery,
   useCustomerCollectionAgendaQuery,
   useCreateCustomerCollectionActivityMutation,
+  useCreateCustomerGeneralReminderMutation,
   useCreateCustomerMutation,
   useCustomersQuery,
   useDeleteCustomerMutation,
@@ -174,6 +175,8 @@ export function CustomersPage() {
   const { confirm, confirmationDialog } = useConfirmDialog()
   const createCollectionActivityMutation =
     useCreateCustomerCollectionActivityMutation()
+  const createGeneralReminderMutation =
+    useCreateCustomerGeneralReminderMutation()
   const updateCustomerMutation = useUpdateCustomerMutation()
   const uploadCustomerAvatarMutation = useUploadCustomerAvatarMutation()
   const registerPaymentMutation = useRegisterCustomerPaymentMutation()
@@ -455,12 +458,21 @@ export function CustomersPage() {
     ])
   }
 
-  async function handleSendReminderEmail(
-    receivableId: string,
-    message: string,
+  async function handleCreateGeneralReminder(
+    customerId: string,
+    input: CustomerCollectionActivityInput,
   ) {
+    await createGeneralReminderMutation.mutateAsync({ customerId, input })
+
+    await Promise.allSettled([
+      customersQuery.refetch(),
+      customerDetailQuery.refetch(),
+    ])
+  }
+
+  async function handleSendReminderEmail(customerId: string, message: string) {
     await sendReminderEmailMutation.mutateAsync({
-      receivableId,
+      customerId,
       input: { message },
     })
 
@@ -1032,7 +1044,10 @@ export function CustomersPage() {
             registerPaymentMutation.isPending ||
             registerOldestPaymentMutation.isPending
           }
-          isActivitySubmitting={createCollectionActivityMutation.isPending}
+          isActivitySubmitting={
+            createCollectionActivityMutation.isPending ||
+            createGeneralReminderMutation.isPending
+          }
           isEmailSubmitting={sendReminderEmailMutation.isPending}
           canSendConfirmedEmail={
             collectionAgenda?.deliveryCapabilities.email ?? false
@@ -1060,6 +1075,7 @@ export function CustomersPage() {
           onRegisterPayment={handleRegisterCustomerPayment}
           onRegisterOldestPayment={handleRegisterCustomerOldestPayment}
           onCreateCollectionActivity={handleCreateCollectionActivity}
+          onCreateGeneralReminder={handleCreateGeneralReminder}
           onSendReminderEmail={handleSendReminderEmail}
           onUpdateReceivableTerms={handleUpdateCustomerReceivableTerms}
           onSubmitCustomer={handleSubmitCustomer}

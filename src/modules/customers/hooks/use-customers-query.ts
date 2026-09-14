@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createCustomer,
   createCustomerCollectionActivity,
+  createCustomerGeneralReminder,
   deleteCustomer,
   getCustomerDetail,
   getCustomerCollectionAgenda,
@@ -298,12 +299,34 @@ export function useSendCustomerReminderEmailMutation() {
 
   return useMutation({
     mutationFn: ({
-      receivableId,
+      customerId,
       input,
     }: {
-      receivableId: string
+      customerId: string
       input: CustomerReminderEmailInput
-    }) => sendCustomerReminderEmail(receivableId, input),
+    }) => sendCustomerReminderEmail(customerId, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: customerCollectionAgendaQueryKey,
+        }),
+      ])
+    },
+  })
+}
+
+export function useCreateCustomerGeneralReminderMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      customerId,
+      input,
+    }: {
+      customerId: string
+      input: CustomerCollectionActivityInput
+    }) => createCustomerGeneralReminder(customerId, input),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: customersQueryKey }),

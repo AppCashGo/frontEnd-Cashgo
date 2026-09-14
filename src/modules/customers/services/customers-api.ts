@@ -348,12 +348,25 @@ export async function createCustomerCollectionActivity(
   >(`/accounts-receivable/${receivableId}/collection-activities`, input)
 }
 
+export async function createCustomerGeneralReminder(
+  customerId: string,
+  input: CustomerCollectionActivityInput,
+) {
+  return postJson<
+    {
+      customerId: string
+      activities: CustomerReceivableCollectionActivityApiRecord[]
+    },
+    CustomerCollectionActivityInput
+  >(`/accounts-receivable/customers/${customerId}/reminders/activity`, input)
+}
+
 export async function sendCustomerReminderEmail(
-  receivableId: string,
+  customerId: string,
   input: CustomerReminderEmailInput,
 ) {
   return postJson<
-    CustomerReceivableCollectionActivityApiRecord,
+    { customerId: string; receivableIds: string[]; deliveryStatus: 'SENT' },
     CustomerReminderEmailInput
-  >(`/accounts-receivable/${receivableId}/reminders/email`, input)
+  >(`/accounts-receivable/customers/${customerId}/reminders/email`, input)
 }

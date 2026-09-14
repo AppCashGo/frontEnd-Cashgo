@@ -119,7 +119,11 @@ type RetailCustomerDrawerProps = {
     receivableId: string,
     input: CustomerCollectionActivityInput,
   ) => Promise<void>
-  onSendReminderEmail: (receivableId: string, message: string) => Promise<void>
+  onCreateGeneralReminder: (
+    customerId: string,
+    input: CustomerCollectionActivityInput,
+  ) => Promise<void>
+  onSendReminderEmail: (customerId: string, message: string) => Promise<void>
   onUpdateReceivableTerms: (
     receivableId: string,
     input: CustomerReceivableTermsInput,
@@ -262,16 +266,27 @@ function toDateInputValue(value: string | null) {
   return value ? value.slice(0, 10) : ''
 }
 
-function buildCollectionReminder(
+function buildGeneralCollectionReminder(
   customerName: string,
-  receivable: CustomerReceivable,
+  receivables: CustomerReceivable[],
+  totalOutstanding: number,
   businessName: string,
 ) {
-  const dueDateText = receivable.dueDate
-    ? ` La fecha de vencimiento es ${formatReminderDate(receivable.dueDate)}.`
-    : ''
+  const accountLabel =
+    receivables.length === 1
+      ? '1 cuenta pendiente'
+      : `${receivables.length} cuentas pendientes`
+  const accountDetail = receivables
+    .map((receivable) => {
+      const dueDateText = receivable.dueDate
+        ? ` · vence ${formatReminderDate(receivable.dueDate)}`
+        : ''
 
-  return `Hola ${customerName}, te recordamos que tienes un saldo pendiente de ${formatCurrency(receivable.balance)} correspondiente a la venta ${receivable.saleNumber}.${dueDateText} Si ya realizaste el pago, por favor ignora este mensaje. Gracias, ${businessName}.`
+      return `• ${receivable.saleNumber}: ${formatCurrency(receivable.balance)}${dueDateText}`
+    })
+    .join('\n')
+
+  return `Hola ${customerName}, te recordamos que tienes un saldo total pendiente de ${formatCurrency(totalOutstanding)} en ${accountLabel}:\n\n${accountDetail}\n\nSi ya realizaste el pago, por favor ignora este mensaje. Gracias, ${businessName}.`
 }
 
 function escapeHtml(value: string) {
@@ -383,6 +398,7 @@ export function RetailCustomerDrawer({
   onRegisterPayment,
   onRegisterOldestPayment,
   onCreateCollectionActivity,
+  onCreateGeneralReminder,
   onSendReminderEmail,
   onUpdateReceivableTerms,
   onSubmitCustomer,
@@ -400,9 +416,7 @@ export function RetailCustomerDrawer({
   const [lastReceipt, setLastReceipt] = useState<PaymentReceiptState | null>(
     null,
   )
-  const [reminderReceivableId, setReminderReceivableId] = useState<
-    string | null
-  >(null)
+  const [isGeneralReminderOpen, setGeneralReminderOpen] = useState(false)
   const [reminderMessage, setReminderMessage] = useState('')
   const [reminderFeedback, setReminderFeedback] = useState<string | null>(null)
   const [termsReceivableId, setTermsReceivableId] = useState<string | null>(
@@ -440,10 +454,6 @@ export function RetailCustomerDrawer({
     (total, receivable) => total + receivable.balance,
     0,
   )
-  const reminderReceivable =
-    pendingReceivables.find(
-      (receivable) => receivable.id === reminderReceivableId,
-    ) ?? null
   const termsReceivable =
     pendingReceivables.find(
       (receivable) => receivable.id === termsReceivableId,
@@ -502,7 +512,7 @@ export function RetailCustomerDrawer({
     setFormError(null)
     setPaymentError(null)
     setLastReceipt(null)
-    setReminderReceivableId(null)
+    setGeneralReminderOpen(false)
     setReminderMessage('')
     setReminderFeedback(null)
     setTermsReceivableId(null)
@@ -511,16 +521,17 @@ export function RetailCustomerDrawer({
     setPromiseError(null)
   }, [customer, isOpen, mode])
 
-  function handleStartReminder(receivable: CustomerReceivable) {
+  function handleStartGeneralReminder() {
     if (!customer) {
       return
     }
 
-    setReminderReceivableId(receivable.id)
+    setGeneralReminderOpen(true)
     setReminderMessage(
-      buildCollectionReminder(
+      buildGeneralCollectionReminder(
         customer.name,
-        receivable,
+        pendingReceivables,
+        totalOutstanding,
         receiptBrand.businessName,
       ),
     )
@@ -572,12 +583,12 @@ export function RetailCustomerDrawer({
   }
 
   async function handleRecordReminder(channel: 'WHATSAPP' | 'EMAIL' | 'COPY') {
-    if (!reminderReceivable) {
+    if (!customer || pendingReceivables.length === 0) {
       return
     }
 
     try {
-      await onCreateCollectionActivity(reminderReceivable.id, {
+      await onCreateGeneralReminder(customer.id, {
         type: 'REMINDER',
         channel,
         notes: reminderMessage,
@@ -627,14 +638,14 @@ export function RetailCustomerDrawer({
   }
 
   async function handleSendReminderEmail() {
-    if (!reminderReceivable) {
+    if (!customer || pendingReceivables.length === 0) {
       return
     }
 
     setReminderFeedback(null)
 
     try {
-      await onSendReminderEmail(reminderReceivable.id, reminderMessage)
+      await onSendReminderEmail(customer.id, reminderMessage)
       setReminderFeedback('Correo enviado y confirmado por el proveedor.')
     } catch (error) {
       setReminderFeedback(
@@ -1024,42 +1035,37 @@ export function RetailCustomerDrawer({
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h4>Cuentas por cobrar</h4>
-            <span>{pendingReceivables.length.toString()} pendientes</span>
+            <div className={styles.sectionHeaderActions}>
+              <span>{pendingReceivables.length.toString()} pendientes</span>
+              {pendingReceivables.length > 0 ? (
+                <button
+                  className={styles.generalReminderButton}
+                  type="button"
+                  onClick={handleStartGeneralReminder}
+                >
+                  <MessageCircle aria-hidden="true" />
+                  Recordatorio general
+                </button>
+              ) : null}
+            </div>
           </div>
 
-          {customer.receivables.length > 0 ? (
-            <div className={styles.receivableList}>
-              {customer.receivables.map((receivable) => (
-                <ReceivableCard
-                  key={receivable.id}
-                  receivable={receivable}
-                  onReminder={handleStartReminder}
-                  onEditTerms={handleStartTermsEdit}
-                  onPromise={handleStartPromise}
-                />
-              ))}
-            </div>
-          ) : (
-            <p className={styles.emptyText}>
-              Este cliente aun no tiene cuentas por cobrar.
-            </p>
-          )}
-
-          {reminderReceivable ? (
+          {isGeneralReminderOpen ? (
             <div className={styles.reminderComposer}>
               <div className={styles.reminderHeader}>
                 <div>
-                  <h4>Recordatorio de cobro</h4>
+                  <h4>Recordatorio general de cobro</h4>
                   <p>
-                    {reminderReceivable.saleNumber} ·{' '}
-                    {formatCurrency(reminderReceivable.balance)} pendientes
+                    {pendingReceivables.length}{' '}
+                    {pendingReceivables.length === 1 ? 'cuenta' : 'cuentas'} ·{' '}
+                    saldo total {formatCurrency(totalOutstanding)}
                   </p>
                 </div>
                 <button
                   aria-label="Cerrar recordatorio"
                   className={styles.reminderClose}
                   type="button"
-                  onClick={() => setReminderReceivableId(null)}
+                  onClick={() => setGeneralReminderOpen(false)}
                 >
                   ×
                 </button>
@@ -1069,7 +1075,7 @@ export function RetailCustomerDrawer({
                 <span>Mensaje para el cliente</span>
                 <textarea
                   className={styles.textarea}
-                  rows={5}
+                  rows={8}
                   value={reminderMessage}
                   onChange={(event) => {
                     setReminderMessage(event.target.value)
@@ -1103,7 +1109,7 @@ export function RetailCustomerDrawer({
                 {customer.email ? (
                   <a
                     className={styles.emailButton}
-                    href={`mailto:${customer.email}?subject=${encodeURIComponent(`Recordatorio de pago ${reminderReceivable.saleNumber}`)}&body=${encodeURIComponent(reminderMessage)}`}
+                    href={`mailto:${customer.email}?subject=${encodeURIComponent(`Recordatorio de pago · ${receiptBrand.businessName}`)}&body=${encodeURIComponent(reminderMessage)}`}
                     onClick={() => void handleRecordReminder('EMAIL')}
                   >
                     <Send aria-hidden="true" />
@@ -1153,6 +1159,23 @@ export function RetailCustomerDrawer({
               ) : null}
             </div>
           ) : null}
+
+          {customer.receivables.length > 0 ? (
+            <div className={styles.receivableList}>
+              {customer.receivables.map((receivable) => (
+                <ReceivableCard
+                  key={receivable.id}
+                  receivable={receivable}
+                  onEditTerms={handleStartTermsEdit}
+                  onPromise={handleStartPromise}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className={styles.emptyText}>
+              Este cliente aun no tiene cuentas por cobrar.
+            </p>
+          )}
 
           {promiseReceivable ? (
             <form
@@ -1620,12 +1643,10 @@ function MetricTile({
 
 function ReceivableCard({
   receivable,
-  onReminder,
   onEditTerms,
   onPromise,
 }: {
   receivable: CustomerReceivable
-  onReminder: (receivable: CustomerReceivable) => void
   onEditTerms: (receivable: CustomerReceivable) => void
   onPromise: (receivable: CustomerReceivable) => void
 }) {
@@ -1674,14 +1695,6 @@ function ReceivableCard({
           >
             <CalendarDays aria-hidden="true" />
             Editar vencimiento
-          </button>
-          <button
-            className={styles.reminderButton}
-            type="button"
-            onClick={() => onReminder(receivable)}
-          >
-            <MessageCircle aria-hidden="true" />
-            Preparar recordatorio
           </button>
           <button
             className={styles.promiseButton}
