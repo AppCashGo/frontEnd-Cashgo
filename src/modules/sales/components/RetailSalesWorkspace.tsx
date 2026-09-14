@@ -20,7 +20,9 @@ import {
   useCurrentCashRegisterQuery,
   useOpenCashRegisterMutation,
 } from '@/modules/cash-register/hooks/use-cash-register-query'
+import { QuickCreateCustomerDrawer } from '@/modules/customers/components/QuickCreateCustomerDrawer'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
+import type { CustomerSummary } from '@/modules/customers/types/customer'
 import {
   useCreateExpenseMutation,
   useExpenseCategoriesQuery,
@@ -60,6 +62,7 @@ import styles from './RetailSalesWorkspace.module.css'
 
 type RetailStep = 'CATALOG' | 'PAYMENT'
 type RetailSettlement = 'PAID' | 'CREDIT'
+type QuickCustomerTarget = 'CATALOG' | 'QUICK_SALE'
 type RetailPaymentOption =
   | 'CASH'
   | 'CARD'
@@ -128,6 +131,8 @@ type DrawerShellProps = {
   onClose: () => void
   children: ReactNode
 }
+
+const createCustomerSelectValue = '__CREATE_CUSTOMER__'
 
 const paymentOptions: Array<{
   value: RetailPaymentOption
@@ -1008,6 +1013,8 @@ export function RetailSalesWorkspace() {
   )
   const [receiptNote, setReceiptNote] = useState('')
   const [isQuickSaleDrawerOpen, setQuickSaleDrawerOpen] = useState(false)
+  const [quickCustomerTarget, setQuickCustomerTarget] =
+    useState<QuickCustomerTarget | null>(null)
   const [isSalesHistoryOpen, setSalesHistoryOpen] = useState(false)
   const [isQuickExpenseDrawerOpen, setQuickExpenseDrawerOpen] = useState(false)
   const [isCashRegisterDrawerOpen, setCashRegisterDrawerOpen] = useState(false)
@@ -1352,6 +1359,23 @@ export function RetailSalesWorkspace() {
     clearCheckoutFeedback()
     setChangeModalOpen(false)
     setQuickSaleDrawerOpen(true)
+  }
+
+  function handleOpenQuickCustomerDrawer(target: QuickCustomerTarget) {
+    setQuickCustomerTarget(target)
+  }
+
+  function handleQuickCustomerCreated(customer: CustomerSummary) {
+    if (quickCustomerTarget === 'QUICK_SALE') {
+      setQuickSaleForm((currentState) => ({
+        ...currentState,
+        customerId: customer.id,
+      }))
+    } else {
+      setSelectedCustomerId(customer.id)
+    }
+
+    setQuickCustomerTarget(null)
   }
 
   function handleOpenQuickExpenseDrawer() {
@@ -2176,18 +2200,39 @@ export function RetailSalesWorkspace() {
                     <span className={styles.fieldLabel}>
                       Cliente{settlement === 'CREDIT' ? ' *' : ''}
                     </span>
-                    <select
-                      className={styles.select}
-                      value={selectedCustomerId}
-                      onChange={(event) => setSelectedCustomerId(event.target.value)}
-                    >
-                      <option value="">Selecciona un cliente</option>
-                      {customers.map((customer) => (
-                        <option key={customer.id} value={customer.id}>
-                          {customer.name}
+                    <div className={styles.customerSelectRow}>
+                      <select
+                        className={styles.select}
+                        value={selectedCustomerId}
+                        onChange={(event) => {
+                          if (event.target.value === createCustomerSelectValue) {
+                            handleOpenQuickCustomerDrawer('CATALOG')
+                            return
+                          }
+
+                          setSelectedCustomerId(event.target.value)
+                        }}
+                      >
+                        <option value="">Selecciona un cliente</option>
+                        <option value={createCustomerSelectValue}>
+                          ＋ Crear cliente nuevo
                         </option>
-                      ))}
-                    </select>
+                        {customers.map((customer) => (
+                          <option key={customer.id} value={customer.id}>
+                            {customer.name}
+                          </option>
+                        ))}
+                      </select>
+                      <button
+                        aria-label="Crear cliente sin salir de la venta"
+                        className={styles.addCustomerButton}
+                        title="Crear cliente"
+                        type="button"
+                        onClick={() => handleOpenQuickCustomerDrawer('CATALOG')}
+                      >
+                        +
+                      </button>
+                    </div>
                   </label>
 
                   <div className={styles.divider} />
@@ -2513,6 +2558,13 @@ export function RetailSalesWorkspace() {
         }}
       />
 
+      <QuickCreateCustomerDrawer
+        customers={customers}
+        isOpen={quickCustomerTarget !== null}
+        onClose={() => setQuickCustomerTarget(null)}
+        onCreated={handleQuickCustomerCreated}
+      />
+
       {isQuickSaleDrawerOpen ? (
         <DrawerShell
           title="Crear Venta"
@@ -2614,23 +2666,42 @@ export function RetailSalesWorkspace() {
 
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Agrega un cliente a la venta *</span>
-              <select
-                className={styles.select}
-                value={quickSaleForm.customerId}
-                onChange={(event) =>
-                  setQuickSaleForm((currentState) => ({
-                    ...currentState,
-                    customerId: event.target.value,
-                  }))
-                }
-              >
-                <option value="">Selecciona un cliente</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.id}>
-                    {customer.name}
+              <div className={styles.customerSelectRow}>
+                <select
+                  className={styles.select}
+                  value={quickSaleForm.customerId}
+                  onChange={(event) => {
+                    if (event.target.value === createCustomerSelectValue) {
+                      handleOpenQuickCustomerDrawer('QUICK_SALE')
+                      return
+                    }
+
+                    setQuickSaleForm((currentState) => ({
+                      ...currentState,
+                      customerId: event.target.value,
+                    }))
+                  }}
+                >
+                  <option value="">Selecciona un cliente</option>
+                  <option value={createCustomerSelectValue}>
+                    ＋ Crear cliente nuevo
                   </option>
-                ))}
-              </select>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.id}>
+                      {customer.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  aria-label="Crear cliente sin salir de la venta"
+                  className={styles.addCustomerButton}
+                  title="Crear cliente"
+                  type="button"
+                  onClick={() => handleOpenQuickCustomerDrawer('QUICK_SALE')}
+                >
+                  +
+                </button>
+              </div>
             </label>
 
             <label className={styles.field}>
