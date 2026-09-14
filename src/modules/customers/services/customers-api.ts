@@ -1,4 +1,5 @@
 import {
+  deleteJson,
   getBlob,
   getJson,
   patchFormData,
@@ -234,6 +235,10 @@ export async function updateCustomer(
   )
 
   return normalizeCustomerDetailRecord(customer)
+}
+
+export function deleteCustomer(customerId: string) {
+  return deleteJson<void>(`/customers/${customerId}`)
 }
 
 export async function uploadCustomerAvatar(customerId: string, file: File) {

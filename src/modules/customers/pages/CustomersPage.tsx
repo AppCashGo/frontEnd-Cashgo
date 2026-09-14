@@ -25,6 +25,7 @@ import {
   useCreateCustomerCollectionActivityMutation,
   useCreateCustomerMutation,
   useCustomersQuery,
+  useDeleteCustomerMutation,
   useRegisterCustomerPaymentMutation,
   useSendCustomerReminderEmailMutation,
   useUpdateCustomerMutation,
@@ -47,6 +48,7 @@ import { ModalShell } from '@/shared/components/ui/ModalShell'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import listPageStyles from '@/shared/components/retail/RetailListPage.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
+import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { matchesCustomerSearch } from '@/modules/customers/utils/matches-customer-search'
 import { exportCustomerAgingReport } from '@/modules/customers/services/customers-api'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -143,6 +145,8 @@ export function CustomersPage() {
   const customersQuery = useCustomersQuery()
   const collectionAgendaQuery = useCustomerCollectionAgendaQuery()
   const createCustomerMutation = useCreateCustomerMutation()
+  const deleteCustomerMutation = useDeleteCustomerMutation()
+  const { confirm, confirmationDialog } = useConfirmDialog()
   const createCollectionActivityMutation =
     useCreateCustomerCollectionActivityMutation()
   const updateCustomerMutation = useUpdateCustomerMutation()
@@ -279,6 +283,32 @@ export function CustomersPage() {
 
   function closeRetailCustomerDrawer() {
     setRetailDrawerOpen(false)
+    deleteCustomerMutation.reset()
+  }
+
+  async function handleDeleteCustomer() {
+    if (!selectedCustomer) {
+      return
+    }
+
+    const confirmed = await confirm({
+      title: 'Eliminar cliente',
+      description: `¿Quieres eliminar a ${selectedCustomer.name}? Dejará de aparecer en Clientes y en los selectores. El historial contable se conservará.`,
+      confirmLabel: 'Eliminar cliente',
+      tone: 'danger',
+    })
+
+    if (!confirmed) {
+      return
+    }
+
+    try {
+      await deleteCustomerMutation.mutateAsync(selectedCustomer.id)
+      setRetailDrawerOpen(false)
+      setSelectedCustomerId(null)
+    } catch {
+      // The drawer keeps the customer open and displays the API validation.
+    }
   }
 
   async function handleExportAgingReport() {
@@ -812,6 +842,7 @@ export function CustomersPage() {
               : null
           }
           isLoading={customerDetailQuery.isLoading}
+          isDeleting={deleteCustomerMutation.isPending}
           isOpen={isRetailDrawerOpen}
           isPaymentSubmitting={registerPaymentMutation.isPending}
           isActivitySubmitting={createCollectionActivityMutation.isPending}
@@ -833,7 +864,9 @@ export function CustomersPage() {
             registerPaymentMutation.error ??
             updateReceivableTermsMutation.error
           }
+          deleteError={deleteCustomerMutation.error}
           onClose={closeRetailCustomerDrawer}
+          onDeleteCustomer={handleDeleteCustomer}
           onModeChange={setRetailDrawerMode}
           onRefresh={() => {
             void customerDetailQuery.refetch()
@@ -848,6 +881,7 @@ export function CustomersPage() {
         {isPremiumModalOpen ? (
           <CustomerPremiumModal onClose={() => setPremiumModalOpen(false)} />
         ) : null}
+        {confirmationDialog}
       </>
     )
   }

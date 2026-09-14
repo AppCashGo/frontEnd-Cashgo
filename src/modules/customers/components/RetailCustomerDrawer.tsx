@@ -94,6 +94,8 @@ type RetailCustomerDrawerProps = {
   customer: CustomerDetail | null
   currentCashRegisterId: string | null
   errorMessage: string | null
+  deleteError: unknown
+  isDeleting: boolean
   isLoading: boolean
   isOpen: boolean
   isActivitySubmitting: boolean
@@ -104,6 +106,7 @@ type RetailCustomerDrawerProps = {
   mode: RetailCustomerDrawerMode
   submitError: unknown
   onClose: () => void
+  onDeleteCustomer: () => Promise<void>
   onModeChange: (mode: RetailCustomerDrawerMode) => void
   onRefresh: () => void
   onRegisterPayment: (
@@ -366,6 +369,8 @@ export function RetailCustomerDrawer({
   customer,
   currentCashRegisterId,
   errorMessage,
+  deleteError,
+  isDeleting,
   isLoading,
   isOpen,
   isActivitySubmitting,
@@ -376,6 +381,7 @@ export function RetailCustomerDrawer({
   mode,
   submitError,
   onClose,
+  onDeleteCustomer,
   onModeChange,
   onRefresh,
   onRegisterPayment,
@@ -1435,6 +1441,38 @@ export function RetailCustomerDrawer({
               Descargar comprobante
             </button>
           </div>
+        </section>
+
+        <section className={styles.dangerZone}>
+          <div>
+            <h4>Eliminar cliente</h4>
+            <p>
+              Puedes eliminarlo cuando no tenga deudas pendientes. Sus ventas,
+              pagos y notas credito permanecen en el historial contable.
+            </p>
+          </div>
+          <button
+            className={styles.dangerButton}
+            disabled={isDeleting || customer.openReceivablesCount > 0}
+            type="button"
+            onClick={() => void onDeleteCustomer()}
+          >
+            {isDeleting ? 'Eliminando...' : 'Eliminar cliente'}
+          </button>
+          {customer.openReceivablesCount > 0 ? (
+            <p className={styles.dangerHint}>
+              Registra el pago o la nota credito de las deudas pendientes antes
+              de eliminarlo.
+            </p>
+          ) : null}
+          {deleteError ? (
+            <p className={styles.errorMessage} role="alert">
+              {getErrorMessage(
+                deleteError,
+                'No fue posible eliminar el cliente.',
+              )}
+            </p>
+          ) : null}
         </section>
       </div>
     )

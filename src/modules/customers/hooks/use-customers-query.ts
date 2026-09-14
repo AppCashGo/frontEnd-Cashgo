@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   createCustomer,
   createCustomerCollectionActivity,
+  deleteCustomer,
   getCustomerDetail,
   getCustomerCollectionAgenda,
   getCustomers,
@@ -135,6 +136,29 @@ export function useUpdateCustomerMutation() {
       await queryClient.invalidateQueries({
         queryKey: customersQueryKey,
       })
+    },
+  })
+}
+
+export function useDeleteCustomerMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (customerId: string) => deleteCustomer(customerId),
+    onSuccess: async (_, customerId) => {
+      queryClient.setQueryData<CustomerSummary[]>(customersQueryKey, (current) =>
+        current?.filter((customer) => customer.id !== customerId),
+      )
+      queryClient.removeQueries({
+        queryKey: [...customersQueryKey, 'detail', customerId],
+      })
+
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: customerCollectionAgendaQueryKey,
+        }),
+      ])
     },
   })
 }

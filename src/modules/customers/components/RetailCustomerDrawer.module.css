@@ -563,6 +563,57 @@
   background: #f4f7fb;
 }
 
+.dangerZone {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid #f2b8b5;
+  border-radius: 1rem;
+  background: #fff8f7;
+  padding: 1rem;
+}
+
+.dangerZone h4,
+.dangerZone p {
+  margin: 0;
+}
+
+.dangerZone h4 {
+  color: #9f2924;
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+
+.dangerZone p {
+  color: #6f4b49;
+  line-height: 1.5;
+}
+
+.dangerButton {
+  min-height: 2.9rem;
+  border: 1px solid #cf3f37;
+  border-radius: 0.85rem;
+  background: #ffffff;
+  color: #b83229;
+  padding: 0 1rem;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: #fff0ed;
+}
+
+.dangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.dangerHint {
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
 .receiptActions {
   display: grid;
   gap: 0.75rem;
