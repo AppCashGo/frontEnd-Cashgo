@@ -109,10 +109,205 @@
   padding: 0 clamp(1rem, 2.2vw, 2rem) 2rem;
 }
 
-.retailDetailGrid {
+.pageActions,
+.filterGroup,
+.mobileActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pageActions button {
+  gap: 0.5rem;
+}
+
+.controlsCard {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid rgba(192, 204, 218, 0.9);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.searchField {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 3rem;
+  padding: 0 1rem;
+  border: 1px solid rgba(184, 197, 213, 0.98);
+  border-radius: 0.9rem;
+  color: #64748b;
+}
+
+.filterButton,
+.filterButtonActive {
+  min-height: 2.55rem;
+  padding: 0.62rem 1rem;
+  border: 1px solid #d5deea;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #58677a;
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.filterButtonActive {
+  border-color: #1f2a37;
+  background: #1f2a37;
+  color: #ffffff;
+}
+
+.retailMetricsGrid {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.supplierIdentity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 13rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1f2a37;
+  text-align: left;
+  cursor: pointer;
+}
+
+.supplierIdentity > span:last-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.supplierIdentity strong {
+  font-size: 0.96rem;
+}
+
+.supplierIdentity small {
+  max-width: 16rem;
+  overflow: hidden;
+  color: #738196;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.supplierAvatar {
+  width: 2.65rem;
+  height: 2.65rem;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eef2ff;
+  color: #315fd5;
+  font-weight: 900;
+}
+
+.supplierAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.contactValue {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  white-space: nowrap;
+}
+
+.balanceDue,
+.balanceClear {
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.balanceDue {
+  color: #c24136 !important;
+}
+
+.balanceClear {
+  color: #15834b !important;
+}
+
+.statusDue,
+.statusClear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.statusDue {
+  background: #fff0ed;
+  color: #c24136;
+}
+
+.statusClear {
+  background: #e9f9f0;
+  color: #15834b;
+}
+
+.rowAction,
+.iconAction {
+  min-height: 2.35rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.7rem;
+  background: #ffffff;
+  color: #243248;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.rowAction {
+  padding: 0.55rem 0.75rem;
+}
+
+.iconAction {
+  width: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rowAction:hover,
+.iconAction:hover {
+  border-color: #94a3b8;
+  background: #f8fafc;
+}
+
+.mobileSupplierList {
+  display: none;
+}
+
+.detailDrawer {
+  width: min(100vw, 52rem);
+}
+
+.detailDrawerBody {
+  background: #f7f9fc;
+  padding-top: 0.35rem;
+}
+
+.drawerContent {
   display: grid;
   gap: 1rem;
-  align-items: start;
 }
 
 @media (min-width: 768px) {
@@ -122,6 +317,15 @@
 
   .metricsGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .controlsCard {
+    grid-template-columns: minmax(17rem, 1fr) auto;
+    align-items: center;
+  }
+
+  .retailMetricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -141,8 +345,162 @@
     top: 1rem;
   }
 
-  .retailDetailGrid {
-    grid-template-columns: minmax(18rem, 0.72fr) minmax(0, 1.28fr);
+  .retailMetricsGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .retailWorkspace {
+    padding: 0 0 1.25rem;
+  }
+
+  .pageActions,
+  .pageActions button {
+    width: 100%;
+  }
+
+  .filterGroup {
+    flex-wrap: nowrap;
+    margin: 0 -1rem -0.2rem;
+    padding: 0 1rem 0.2rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .filterGroup::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filterButton,
+  .filterButtonActive {
+    flex: 0 0 auto;
+  }
+
+  .retailMetricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .retailWorkspace > section:has(table) {
+    display: none;
+  }
+
+  .mobileSupplierList {
+    display: grid;
+    gap: 0.85rem;
+  }
+
+  .mobileSupplierCard {
+    display: grid;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid #d7e0eb;
+    border-radius: 1rem;
+    background: #ffffff;
+  }
+
+  .mobileEmptyState {
+    display: grid;
+    justify-items: center;
+    gap: 0.35rem;
+    padding: 2.5rem 1rem;
+    border: 1px dashed #cbd5e1;
+    border-radius: 1rem;
+    background: #ffffff;
+    color: #65758b;
+    text-align: center;
+  }
+
+  .mobileEmptyState strong {
+    color: #1f2a37;
+  }
+
+  .mobileSupplierHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+
+  .mobileSupplierHeader > div {
+    display: grid;
+    gap: 0.4rem;
+    min-width: 0;
+  }
+
+  .mobileSupplierHeader h3 {
+    margin: 0;
+    color: #1f2a37;
+    font-size: 1rem;
+    overflow-wrap: anywhere;
+  }
+
+  .mobileSupplierHeader .statusDue,
+  .mobileSupplierHeader .statusClear {
+    justify-self: start;
+  }
+
+  .mobileContactList {
+    display: grid;
+    gap: 0.55rem;
+    color: #617086;
+    font-size: 0.88rem;
+  }
+
+  .mobileContactList span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    overflow-wrap: anywhere;
+  }
+
+  .mobileBalance {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid #e5eaf1;
+  }
+
+  .mobileBalance span {
+    color: #6b788b;
+    font-size: 0.82rem;
+    font-weight: 800;
+  }
+
+  .mobileBalance strong {
+    color: #1f2a37;
+    font-size: 1.15rem;
+  }
+
+  .mobileActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mobileActions button {
+    min-height: 2.75rem;
+    border: 1px solid #1f2a37;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    color: #1f2a37;
+    font: inherit;
+    font-weight: 900;
+  }
+
+  .mobileActions button:first-child {
+    background: #1f2a37;
+    color: #ffffff;
+  }
+
+  .detailDrawer {
+    width: 100vw;
+  }
+}
+
+@media (max-width: 440px) {
+  .retailMetricsGrid {
+    grid-template-columns: 1fr;
   }
 }
 

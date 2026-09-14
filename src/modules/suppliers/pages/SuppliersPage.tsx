@@ -1,4 +1,13 @@
 import { useDeferredValue, useEffect, useState } from 'react'
+import {
+  Mail,
+  PackageCheck,
+  Pencil,
+  Phone,
+  Plus,
+  RefreshCw,
+  Search,
+} from 'lucide-react'
 import { SupplierDetailPanel } from '@/modules/suppliers/components/SupplierDetailPanel'
 import { SupplierMetricCard } from '@/modules/suppliers/components/SupplierMetricCard'
 import { RetailSupplierDrawer } from '@/modules/suppliers/components/RetailSupplierDrawer'
@@ -28,6 +37,7 @@ import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
 import { RetailTableShell } from '@/shared/components/retail/RetailTableShell'
 import { TableStateRow } from '@/shared/components/retail/TableStateRow'
+import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import listPageStyles from '@/shared/components/retail/RetailListPage.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
@@ -35,7 +45,10 @@ import { matchesSupplierSearch } from '@/modules/suppliers/utils/matches-supplie
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import styles from './SuppliersPage.module.css'
+
+type RetailSupplierFilter = 'all' | 'outstanding' | 'active' | 'withoutPurchases'
 
 export function SuppliersPage() {
   const navigationPreset = useBusinessNavigationPreset()
@@ -45,7 +58,9 @@ export function SuppliersPage() {
     null,
   )
   const [isCreateSupplierOpen, setCreateSupplierOpen] = useState(false)
+  const [isRetailDetailOpen, setRetailDetailOpen] = useState(false)
   const [editingSupplierId, setEditingSupplierId] = useState<string | null>(null)
+  const [retailFilter, setRetailFilter] = useState<RetailSupplierFilter>('all')
   const [purchaseActionError, setPurchaseActionError] = useState<string | null>(null)
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const suppliersQuery = useSuppliersQuery()
@@ -57,9 +72,25 @@ export function SuppliersPage() {
   const createPurchaseReturnMutation = useCreateSupplierPurchaseReturnMutation()
   const supplierRecords = suppliersQuery.data
   const suppliers = supplierRecords ?? []
-  const visibleSuppliers = suppliers.filter((supplier) =>
-    matchesSupplierSearch(supplier, deferredSearchValue),
-  )
+  const visibleSuppliers = suppliers.filter((supplier) => {
+    if (!matchesSupplierSearch(supplier, deferredSearchValue)) {
+      return false
+    }
+
+    if (retailFilter === 'outstanding') {
+      return supplier.outstandingBalance > 0
+    }
+
+    if (retailFilter === 'active') {
+      return supplier.purchaseCount > 0
+    }
+
+    if (retailFilter === 'withoutPurchases') {
+      return supplier.purchaseCount === 0
+    }
+
+    return true
+  })
   const selectedSupplierSummary =
     suppliers.find((supplier) => supplier.id === selectedSupplierId) ?? null
   const supplierDetailQuery = useSupplierDetailQuery(selectedSupplierId)
@@ -78,6 +109,9 @@ export function SuppliersPage() {
     (sum, supplier) => sum + supplier.outstandingBalance,
     0,
   )
+  const suppliersWithOutstandingBalance = suppliers.filter(
+    (supplier) => supplier.outstandingBalance > 0,
+  ).length
   const selectedProcurementTotal =
     selectedSupplier?.purchaseHistory.reduce(
       (sum, purchase) => sum + purchase.total,
@@ -116,10 +150,10 @@ export function SuppliersPage() {
       (supplier) => supplier.id === selectedSupplierId,
     )
 
-    if (!hasSelectedSupplier) {
+    if (!hasSelectedSupplier && !isRetailPreset) {
       setSelectedSupplierId(availableSuppliers[0]?.id ?? null)
     }
-  }, [supplierRecords, selectedSupplierId])
+  }, [isRetailPreset, supplierRecords, selectedSupplierId])
 
   async function handleCreateSupplier(
     input: SupplierMutationInput,
@@ -165,7 +199,14 @@ export function SuppliersPage() {
   function handleStartEditSupplier(supplierId: string) {
     setEditingSupplierId(supplierId)
     setSelectedSupplierId(supplierId)
+    setRetailDetailOpen(false)
     setCreateSupplierOpen(true)
+  }
+
+  function handleOpenSupplierDetail(supplierId: string) {
+    setPurchaseActionError(null)
+    setSelectedSupplierId(supplierId)
+    setRetailDetailOpen(true)
   }
 
   async function handleRegisterPurchasePayment(
@@ -286,14 +327,27 @@ export function SuppliersPage() {
           accent="success"
           bodyVariant="flush"
           title="Proveedores"
+          meta="Administra contactos, compras y saldos de tu red de abastecimiento."
           actions={
-            <button
-              className={retailStyles.buttonDark}
-              type="button"
-              onClick={handleStartCreateSupplier}
-            >
-              Crear proveedor
-            </button>
+            <div className={styles.pageActions}>
+              <button
+                className={retailStyles.buttonOutline}
+                disabled={suppliersQuery.isFetching}
+                type="button"
+                onClick={() => void suppliersQuery.refetch()}
+              >
+                <RefreshCw aria-hidden="true" size={18} />
+                {suppliersQuery.isFetching ? 'Actualizando...' : 'Actualizar'}
+              </button>
+              <button
+                className={retailStyles.buttonDark}
+                type="button"
+                onClick={handleStartCreateSupplier}
+              >
+                <Plus aria-hidden="true" size={19} />
+                Crear proveedor
+              </button>
+            </div>
           }
         >
           <section className={styles.retailWorkspace}>
@@ -303,28 +357,62 @@ export function SuppliersPage() {
               linkLabel="Ver beneficios"
             />
 
-            <div className={listPageStyles.searchRow}>
-              <label
-                className={`${retailStyles.searchField} ${listPageStyles.searchField}`}
-              >
+            <div className={styles.controlsCard}>
+              <label className={styles.searchField}>
+                <Search aria-hidden="true" size={20} />
                 <input
                   className={retailStyles.input}
-                  placeholder="Busca un proveedor"
+                  placeholder="Buscar por nombre, celular o correo..."
                   type="search"
                   value={searchValue}
                   onChange={(event) => setSearchValue(event.target.value)}
                 />
               </label>
+
+              <div aria-label="Filtrar proveedores" className={styles.filterGroup}>
+                {([
+                  ['all', 'Todos'],
+                  ['outstanding', 'Con saldo'],
+                  ['active', 'Con compras'],
+                  ['withoutPurchases', 'Sin compras'],
+                ] as const).map(([filter, label]) => (
+                  <button
+                    key={filter}
+                    aria-pressed={retailFilter === filter}
+                    className={
+                      retailFilter === filter
+                        ? styles.filterButtonActive
+                        : styles.filterButton
+                    }
+                    type="button"
+                    onClick={() => setRetailFilter(filter)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className={listPageStyles.metricsGrid}>
+            <div className={styles.retailMetricsGrid}>
               <RetailStatCard
                 label="Total proveedores"
                 value={suppliers.length.toString()}
+                hint="Contactos registrados"
+              />
+              <RetailStatCard
+                label="Proveedores activos"
+                value={activeSuppliers.toString()}
+                hint="Con compras registradas"
+              />
+              <RetailStatCard
+                label="Compras registradas"
+                value={trackedRestocks.toString()}
+                hint="Movimientos de abastecimiento"
               />
               <RetailStatCard
                 label="Total por pagar"
                 value={formatCurrency(totalOutstandingBalance)}
+                hint={`${suppliersWithOutstandingBalance.toString()} proveedores con saldo`}
               />
             </div>
 
@@ -335,17 +423,19 @@ export function SuppliersPage() {
               <table className={retailStyles.table}>
                 <thead>
                   <tr>
-                    <th>Nombre</th>
-                    <th>Celular</th>
-                    <th>Documento</th>
+                    <th>Proveedor</th>
+                    <th>Contacto</th>
+                    <th>Compras</th>
+                    <th>Última compra</th>
                     <th>Total por pagar</th>
+                    <th>Estado</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
                 <tbody>
                   {suppliersQuery.isLoading ? (
                     <TableStateRow
-                      colSpan={5}
+                      colSpan={7}
                       tone="feedback"
                       title="Cargando proveedores..."
                     />
@@ -364,7 +454,7 @@ export function SuppliersPage() {
                           Reintentar
                         </button>
                       }
-                      colSpan={5}
+                      colSpan={7}
                       description="Intenta nuevamente para consultar la lista de proveedores."
                       tone="error"
                       title="No pudimos cargar los proveedores."
@@ -376,27 +466,63 @@ export function SuppliersPage() {
                   visibleSuppliers.length > 0
                     ? visibleSuppliers.map((supplier) => (
                       <tr key={supplier.id}>
-                        <td>{supplier.name}</td>
-                        <td>{supplier.phone ?? 'Sin celular'}</td>
-                        <td>{supplier.email ?? 'Sin documento'}</td>
-                        <td className={listPageStyles.statusPositive}>
+                        <td>
+                          <button
+                            className={styles.supplierIdentity}
+                            type="button"
+                            onClick={() => handleOpenSupplierDetail(supplier.id)}
+                          >
+                            <span className={styles.supplierAvatar} aria-hidden="true">
+                              {resolveApiAssetUrl(supplier.avatarUrl) ? (
+                                <img src={resolveApiAssetUrl(supplier.avatarUrl) ?? ''} alt="" />
+                              ) : (
+                                supplier.name.charAt(0).toUpperCase()
+                              )}
+                            </span>
+                            <span>
+                              <strong>{supplier.name}</strong>
+                              <small>{supplier.email ?? 'Sin correo registrado'}</small>
+                            </span>
+                          </button>
+                        </td>
+                        <td>
+                          <span className={styles.contactValue}>
+                            <Phone aria-hidden="true" size={16} />
+                            {supplier.phone ?? 'Sin celular'}
+                          </span>
+                        </td>
+                        <td>{supplier.purchaseCount.toString()}</td>
+                        <td>
+                          {supplier.lastPurchaseAt
+                            ? new Intl.DateTimeFormat('es-CO', {
+                                dateStyle: 'medium',
+                              }).format(new Date(supplier.lastPurchaseAt))
+                            : 'Sin compras'}
+                        </td>
+                        <td className={supplier.outstandingBalance > 0 ? styles.balanceDue : styles.balanceClear}>
                           {formatCurrency(supplier.outstandingBalance)}
+                        </td>
+                        <td>
+                          <span className={supplier.outstandingBalance > 0 ? styles.statusDue : styles.statusClear}>
+                            {supplier.outstandingBalance > 0 ? 'Por pagar' : 'Al día'}
+                          </span>
                         </td>
                         <td>
                           <div className={listPageStyles.actionGroup}>
                             <button
-                              className={listPageStyles.detailLink}
+                              className={styles.rowAction}
                               type="button"
-                              onClick={() => setSelectedSupplierId(supplier.id)}
+                              onClick={() => handleOpenSupplierDetail(supplier.id)}
                             >
                               Detalle
                             </button>
                             <button
-                              className={listPageStyles.detailLink}
+                              aria-label={`Editar ${supplier.name}`}
+                              className={styles.iconAction}
                               type="button"
                               onClick={() => handleStartEditSupplier(supplier.id)}
                             >
-                              Editar
+                              <Pencil aria-hidden="true" size={17} />
                             </button>
                           </div>
                         </td>
@@ -408,7 +534,7 @@ export function SuppliersPage() {
                   !suppliersQuery.isError &&
                   visibleSuppliers.length === 0 ? (
                     <TableStateRow
-                      colSpan={5}
+                      colSpan={7}
                       description="Crea un proveedor o limpia los filtros para ver más resultados."
                       title="No encontramos proveedores con esa búsqueda."
                     />
@@ -417,67 +543,94 @@ export function SuppliersPage() {
               </table>
             </RetailTableShell>
 
-            {selectedSupplierId ? (
-              <div className={styles.retailDetailGrid}>
-                <SupplierDetailPanel
-                  supplier={selectedSupplier}
-                  errorMessage={
-                    supplierDetailQuery.isError
-                      ? getErrorMessage(
-                          supplierDetailQuery.error,
-                          'No pudimos cargar el proveedor seleccionado.',
-                        )
-                      : null
-                  }
-                  isLoading={supplierDetailQuery.isLoading}
-                  selectedSupplierName={selectedSupplierSummary?.name ?? null}
-                  onEdit={(supplier) => handleStartEditSupplier(supplier.id)}
-                  onRetry={() => {
-                    void supplierDetailQuery.refetch()
-                  }}
-                />
-                <SupplierSupplyHistoryPanel
-                  supplierName={
-                    selectedSupplier?.name ?? selectedSupplierSummary?.name ?? null
-                  }
-                  cancellingPurchaseId={
-                    cancelPurchaseMutation.isPending
-                      ? cancelPurchaseMutation.variables?.purchaseId ?? null
-                      : null
-                  }
-                  isLoading={supplierDetailQuery.isLoading}
-                  payingPurchaseId={
-                    registerPurchasePaymentMutation.isPending
-                      ? registerPurchasePaymentMutation.variables?.purchaseId ?? null
-                      : null
-                  }
-                  returningPurchaseId={
-                    createPurchaseReturnMutation.isPending
-                      ? createPurchaseReturnMutation.variables?.purchaseId ?? null
-                      : null
-                  }
-                  paymentError={purchaseActionError}
-                  purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
-                  onCancelPurchase={(purchaseId, reason) => {
-                    void handleCancelPurchase(purchaseId, reason)
-                  }}
-                  onDownloadReceipt={(purchaseId) => {
-                    void handleDownloadPurchaseReceipt(purchaseId)
-                  }}
-                  onDownloadCreditNote={(purchaseId, returnId) => {
-                    void handleDownloadCreditNote(purchaseId, returnId)
-                  }}
-                  onCreateReturn={(purchaseId, input) => {
-                    void handleCreatePurchaseReturn(purchaseId, input)
-                  }}
-                  onRegisterPayment={(purchaseId, input) => {
-                    void handleRegisterPurchasePayment(purchaseId, input)
-                  }}
-                />
+            {!suppliersQuery.isLoading && !suppliersQuery.isError ? (
+              <div className={styles.mobileSupplierList}>
+                {visibleSuppliers.map((supplier) => (
+                  <article key={supplier.id} className={styles.mobileSupplierCard}>
+                    <div className={styles.mobileSupplierHeader}>
+                      <span className={styles.supplierAvatar} aria-hidden="true">
+                        {resolveApiAssetUrl(supplier.avatarUrl) ? (
+                          <img src={resolveApiAssetUrl(supplier.avatarUrl) ?? ''} alt="" />
+                        ) : (
+                          supplier.name.charAt(0).toUpperCase()
+                        )}
+                      </span>
+                      <div>
+                        <h3>{supplier.name}</h3>
+                        <span className={supplier.outstandingBalance > 0 ? styles.statusDue : styles.statusClear}>
+                          {supplier.outstandingBalance > 0 ? 'Por pagar' : 'Al día'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.mobileContactList}>
+                      <span><Phone aria-hidden="true" size={16} />{supplier.phone ?? 'Sin celular'}</span>
+                      <span><Mail aria-hidden="true" size={16} />{supplier.email ?? 'Sin correo'}</span>
+                      <span><PackageCheck aria-hidden="true" size={16} />{supplier.purchaseCount} compras</span>
+                    </div>
+
+                    <div className={styles.mobileBalance}>
+                      <span>Saldo por pagar</span>
+                      <strong>{formatCurrency(supplier.outstandingBalance)}</strong>
+                    </div>
+
+                    <div className={styles.mobileActions}>
+                      <button type="button" onClick={() => handleOpenSupplierDetail(supplier.id)}>Ver detalle</button>
+                      <button type="button" onClick={() => handleStartEditSupplier(supplier.id)}>Editar</button>
+                    </div>
+                  </article>
+                ))}
+                {visibleSuppliers.length === 0 ? (
+                  <div className={styles.mobileEmptyState}>
+                    <strong>No encontramos proveedores</strong>
+                    <span>Crea uno nuevo o cambia la búsqueda y los filtros.</span>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </section>
         </RetailPageLayout>
+
+        <SideDrawer
+          bodyClassName={styles.detailDrawerBody}
+          description="Consulta sus datos, compras, saldos, abonos y devoluciones."
+          isOpen={isRetailDetailOpen}
+          panelClassName={styles.detailDrawer}
+          title="Detalle del proveedor"
+          onClose={() => setRetailDetailOpen(false)}
+        >
+          <div className={styles.drawerContent}>
+            <SupplierDetailPanel
+              supplier={selectedSupplier}
+              errorMessage={
+                supplierDetailQuery.isError
+                  ? getErrorMessage(
+                      supplierDetailQuery.error,
+                      'No pudimos cargar el proveedor seleccionado.',
+                    )
+                  : null
+              }
+              isLoading={supplierDetailQuery.isLoading}
+              selectedSupplierName={selectedSupplierSummary?.name ?? null}
+              onEdit={(supplier) => handleStartEditSupplier(supplier.id)}
+              onRetry={() => void supplierDetailQuery.refetch()}
+            />
+            <SupplierSupplyHistoryPanel
+              supplierName={selectedSupplier?.name ?? selectedSupplierSummary?.name ?? null}
+              cancellingPurchaseId={cancelPurchaseMutation.isPending ? cancelPurchaseMutation.variables?.purchaseId ?? null : null}
+              isLoading={supplierDetailQuery.isLoading}
+              payingPurchaseId={registerPurchasePaymentMutation.isPending ? registerPurchasePaymentMutation.variables?.purchaseId ?? null : null}
+              returningPurchaseId={createPurchaseReturnMutation.isPending ? createPurchaseReturnMutation.variables?.purchaseId ?? null : null}
+              paymentError={purchaseActionError}
+              purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
+              onCancelPurchase={(purchaseId, reason) => void handleCancelPurchase(purchaseId, reason)}
+              onDownloadReceipt={(purchaseId) => void handleDownloadPurchaseReceipt(purchaseId)}
+              onDownloadCreditNote={(purchaseId, returnId) => void handleDownloadCreditNote(purchaseId, returnId)}
+              onCreateReturn={(purchaseId, input) => void handleCreatePurchaseReturn(purchaseId, input)}
+              onRegisterPayment={(purchaseId, input) => void handleRegisterPurchasePayment(purchaseId, input)}
+            />
+          </div>
+        </SideDrawer>
 
         <RetailSupplierDrawer
           errorMessage={createSupplierError}
