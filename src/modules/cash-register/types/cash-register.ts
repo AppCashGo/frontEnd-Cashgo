@@ -47,6 +47,7 @@ export type MovementLedgerItem = {
   quantity: number | null;
   paymentMethod: CashRegisterPaymentMethod | null;
   productName: string | null;
+  productNames?: string[];
   previousStock: number | null;
   newStock: number | null;
   userName: string | null;

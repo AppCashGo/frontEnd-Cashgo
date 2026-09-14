@@ -101,6 +101,14 @@ function getValueLabel(transaction: MovementLedgerItem) {
   return "—";
 }
 
+function getProductsLabel(transaction: MovementLedgerItem) {
+  if (transaction.productNames?.length) {
+    return transaction.productNames.join(", ");
+  }
+
+  return transaction.productName ?? "—";
+}
+
 export function CashRegisterRetailTransactionsTable({
   emptyActionLabel,
   emptyDescription,
@@ -141,6 +149,7 @@ export function CashRegisterRetailTransactionsTable({
           <tr>
             <th aria-hidden="true" />
             <th>Concepto</th>
+            <th>Productos</th>
             <th>Valor</th>
             <th>Medio de pago</th>
             <th>Fecha y hora</th>
@@ -195,6 +204,14 @@ export function CashRegisterRetailTransactionsTable({
                       </span>
                     ) : null}
                   </div>
+                </td>
+                <td>
+                  <span
+                    className={styles.productsCell}
+                    title={getProductsLabel(transaction)}
+                  >
+                    {getProductsLabel(transaction)}
+                  </span>
                 </td>
                 <td>{getValueLabel(transaction)}</td>
                 <td>{getPaymentColumnLabel(transaction)}</td>

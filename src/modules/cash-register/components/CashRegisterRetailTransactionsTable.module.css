@@ -4,8 +4,18 @@
 
 .table {
   width: 100%;
-  min-width: 56rem;
+  min-width: 68rem;
   border-collapse: collapse;
+}
+
+.productsCell {
+  display: block;
+  min-width: 10rem;
+  max-width: 17rem;
+  color: #536780;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
 }
 
 .table thead th {
