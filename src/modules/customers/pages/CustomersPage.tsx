@@ -54,6 +54,7 @@ import { exportCustomerAgingReport } from '@/modules/customers/services/customer
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import styles from './CustomersPage.module.css'
 
 type CustomerPortfolioFilter =
@@ -760,13 +761,33 @@ export function CustomersPage() {
                   {!customersQuery.isLoading &&
                   !customersQuery.isError &&
                   visibleCustomers.length > 0
-                    ? visibleCustomers.map((customer) => (
-                        <tr key={customer.id}>
-                          <td>
-                            <strong className={styles.customerName}>
-                              {customer.name}
-                            </strong>
-                          </td>
+                    ? visibleCustomers.map((customer) => {
+                        const avatarUrl = resolveApiAssetUrl(customer.avatarUrl)
+
+                        return (
+                          <tr key={customer.id}>
+                            <td>
+                              <span className={styles.customerIdentity}>
+                                <span
+                                  aria-hidden="true"
+                                  className={styles.customerAvatar}
+                                >
+                                  {avatarUrl ? (
+                                    <img
+                                      alt=""
+                                      decoding="async"
+                                      loading="lazy"
+                                      src={avatarUrl}
+                                    />
+                                  ) : (
+                                    customer.name.trim().charAt(0).toUpperCase() || '?'
+                                  )}
+                                </span>
+                                <strong className={styles.customerName}>
+                                  {customer.name}
+                                </strong>
+                              </span>
+                            </td>
                           <td>{customer.phone ?? 'Sin celular'}</td>
                           <td>
                             {customer.documentNumber
@@ -811,8 +832,9 @@ export function CustomersPage() {
                               </button>
                             </div>
                           </td>
-                        </tr>
-                      ))
+                          </tr>
+                        )
+                      })
                     : null}
 
                   {!customersQuery.isLoading &&
