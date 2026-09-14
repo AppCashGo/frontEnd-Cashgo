@@ -840,7 +840,9 @@ export function CustomersPage() {
               }
               title="Clientes registrados"
             >
-              <table className={retailStyles.table}>
+              <table
+                className={`${retailStyles.table} ${styles.customersTable}`}
+              >
                 <thead>
                   <tr>
                     <th>Nombre</th>

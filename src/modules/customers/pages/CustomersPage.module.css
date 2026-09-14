@@ -557,11 +557,43 @@
   font-weight: 800;
 }
 
+.customersTable {
+  min-width: 76rem;
+  table-layout: auto;
+}
+
+.customersTable th:first-child,
+.customersTable td:first-child {
+  min-width: 14rem;
+}
+
+.customersTable th:nth-child(2),
+.customersTable td:nth-child(2) {
+  min-width: 9.5rem;
+}
+
+.customersTable th:nth-child(3),
+.customersTable td:nth-child(3) {
+  min-width: 10.5rem;
+}
+
+.customersTable th:nth-child(4),
+.customersTable td:nth-child(4),
+.customersTable th:nth-child(5),
+.customersTable td:nth-child(5) {
+  min-width: 10.5rem;
+}
+
+.customersTable th:last-child,
+.customersTable td:last-child {
+  min-width: 10.5rem;
+}
+
 .customerIdentity {
   display: inline-flex;
   align-items: center;
   gap: 0.7rem;
-  min-width: 0;
+  min-width: 12rem;
 }
 
 .customerAvatar {
@@ -590,7 +622,8 @@
 .customerName {
   min-width: 0;
   color: #1f2a37;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .statusPending,
