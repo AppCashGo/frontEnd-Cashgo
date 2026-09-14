@@ -8,6 +8,7 @@ import {
   Download,
   History,
   ReceiptText,
+  Trash2,
   TrendingUp,
   Users,
 } from 'lucide-react'
@@ -164,6 +165,7 @@ export function CustomersPage() {
   const [agendaFilter, setAgendaFilter] =
     useState<CollectionAgendaFilter>('UPCOMING')
   const [exportFeedback, setExportFeedback] = useState<string | null>(null)
+  const [deleteFeedback, setDeleteFeedback] = useState<string | null>(null)
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
   const customersQuery = useCustomersQuery()
   const collectionAgendaQuery = useCustomerCollectionAgendaQuery()
@@ -311,14 +313,15 @@ export function CustomersPage() {
     deleteCustomerMutation.reset()
   }
 
-  async function handleDeleteCustomer() {
-    if (!selectedCustomer) {
-      return
-    }
+  async function handleDeleteCustomer(customer: CustomerSummary) {
+    if (customer.openReceivablesCount > 0) return
+
+    deleteCustomerMutation.reset()
+    setDeleteFeedback(null)
 
     const confirmed = await confirm({
       title: 'Eliminar cliente',
-      description: `¿Quieres eliminar a ${selectedCustomer.name}? Dejará de aparecer en Clientes y en los selectores. El historial contable se conservará.`,
+      description: `¿Quieres eliminar a ${customer.name}? Dejará de aparecer en Clientes y en los selectores. Sus ventas, pagos y notas crédito permanecerán en el historial contable.`,
       confirmLabel: 'Eliminar cliente',
       tone: 'danger',
     })
@@ -328,11 +331,16 @@ export function CustomersPage() {
     }
 
     try {
-      await deleteCustomerMutation.mutateAsync(selectedCustomer.id)
-      setRetailDrawerOpen(false)
-      setSelectedCustomerId(null)
-    } catch {
-      // The drawer keeps the customer open and displays the API validation.
+      await deleteCustomerMutation.mutateAsync(customer.id)
+
+      if (selectedCustomerId === customer.id) {
+        setRetailDrawerOpen(false)
+        setSelectedCustomerId(null)
+      }
+    } catch (error) {
+      setDeleteFeedback(
+        getErrorMessage(error, 'No fue posible eliminar el cliente.'),
+      )
     }
   }
 
@@ -820,6 +828,12 @@ export function CustomersPage() {
               </p>
             ) : null}
 
+            {deleteFeedback ? (
+              <p className={styles.deleteFeedback} role="alert">
+                {deleteFeedback}
+              </p>
+            ) : null}
+
             <RetailTableShell
               isRefreshing={
                 customersQuery.isFetching && !customersQuery.isLoading
@@ -873,6 +887,10 @@ export function CustomersPage() {
                   visibleCustomers.length > 0
                     ? visibleCustomers.map((customer) => {
                         const avatarUrl = resolveApiAssetUrl(customer.avatarUrl)
+                        const cannotDelete = customer.openReceivablesCount > 0
+                        const deleteTooltip = cannotDelete
+                          ? 'No se puede eliminar mientras tenga deudas pendientes. Registra el pago o una nota crédito primero.'
+                          : 'Eliminará al cliente de la lista. Sus ventas, pagos y notas crédito permanecerán en el historial contable.'
 
                         return (
                           <tr key={customer.id}>
@@ -949,6 +967,30 @@ export function CustomersPage() {
                                 >
                                   Editar
                                 </button>
+                                <span className={styles.deleteAction}>
+                                  <button
+                                    aria-describedby={`delete-customer-tooltip-${customer.id}`}
+                                    aria-disabled={cannotDelete}
+                                    aria-label={`Eliminar cliente ${customer.name}`}
+                                    className={styles.deleteButton}
+                                    disabled={deleteCustomerMutation.isPending}
+                                    type="button"
+                                    onClick={() => {
+                                      if (!cannotDelete) {
+                                        void handleDeleteCustomer(customer)
+                                      }
+                                    }}
+                                  >
+                                    <Trash2 aria-hidden="true" />
+                                  </button>
+                                  <span
+                                    className={styles.deleteTooltip}
+                                    id={`delete-customer-tooltip-${customer.id}`}
+                                    role="tooltip"
+                                  >
+                                    {deleteTooltip}
+                                  </span>
+                                </span>
                               </div>
                             </td>
                           </tr>
@@ -983,7 +1025,6 @@ export function CustomersPage() {
               : null
           }
           isLoading={customerDetailQuery.isLoading}
-          isDeleting={deleteCustomerMutation.isPending}
           isOpen={isRetailDrawerOpen}
           isPaymentSubmitting={
             registerPaymentMutation.isPending ||
@@ -1009,9 +1050,7 @@ export function CustomersPage() {
             registerOldestPaymentMutation.error ??
             updateReceivableTermsMutation.error
           }
-          deleteError={deleteCustomerMutation.error}
           onClose={closeRetailCustomerDrawer}
-          onDeleteCustomer={handleDeleteCustomer}
           onModeChange={setRetailDrawerMode}
           onRefresh={() => {
             void customerDetailQuery.refetch()

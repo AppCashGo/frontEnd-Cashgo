@@ -547,6 +547,16 @@
   font-weight: 800;
 }
 
+.deleteFeedback {
+  margin: 0;
+  border-radius: 0.75rem;
+  background: #fff1f0;
+  color: #b42318;
+  padding: 0.75rem 0.9rem;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
 .customerIdentity {
   display: inline-flex;
   align-items: center;
@@ -626,6 +636,95 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.7rem;
+}
+
+.deleteAction {
+  position: relative;
+  display: inline-flex;
+}
+
+.deleteButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.65rem;
+  background: #fff7f7;
+  color: #c9372c;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.deleteButton svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.deleteButton:hover:not(:disabled):not([aria-disabled='true']),
+.deleteButton:focus-visible:not([aria-disabled='true']) {
+  border-color: #ef4444;
+  background: #fee2e2;
+  color: #a9231b;
+}
+
+.deleteButton[aria-disabled='true'] {
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+.deleteButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.deleteTooltip {
+  position: absolute;
+  top: calc(100% + 0.55rem);
+  right: 0;
+  z-index: 30;
+  width: min(17rem, 70vw);
+  border-radius: 0.65rem;
+  background: #172033;
+  color: #ffffff;
+  padding: 0.65rem 0.75rem;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+  font-size: 0.76rem;
+  font-weight: 700;
+  line-height: 1.45;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-0.2rem);
+  visibility: hidden;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    visibility 0.16s ease;
+}
+
+.deleteTooltip::before {
+  position: absolute;
+  right: 0.7rem;
+  bottom: 100%;
+  width: 0;
+  height: 0;
+  border-right: 0.35rem solid transparent;
+  border-bottom: 0.4rem solid #172033;
+  border-left: 0.35rem solid transparent;
+  content: '';
+}
+
+.deleteAction:hover .deleteTooltip,
+.deleteAction:focus-within .deleteTooltip {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
 }
 
 .premiumBackdrop {
