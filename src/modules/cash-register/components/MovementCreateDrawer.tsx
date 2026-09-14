@@ -6,6 +6,7 @@ import {
   CalendarDays,
   HandCoins,
   Landmark,
+  PackagePlus,
   Plus,
   ReceiptText,
   UserRound,
@@ -42,6 +43,7 @@ type MovementCreateDrawerProps = {
   canCreateIncome: boolean
   isSubmitting: boolean
   onClose: () => void
+  onOpenInventoryPurchase: () => void
   onSubmit: (input: MovementCreateInput) => Promise<void>
 }
 
@@ -70,10 +72,11 @@ const drawerCopy = {
     Icon: ArrowDownLeft,
   },
   expenses: {
-    title: 'Registrar un egreso',
-    description: 'Registra un gasto pagado y el medio utilizado.',
-    eyebrow: 'Salida de dinero',
-    submit: 'Guardar egreso',
+    title: 'Registrar gasto operativo',
+    description:
+      'Registra una salida de caja que no aumenta las existencias del inventario.',
+    eyebrow: 'Gasto operativo',
+    submit: 'Guardar gasto',
     amount: 'Valor pagado',
     concept: 'Concepto del egreso',
     placeholder: 'Ej. transporte, servicios, caja menor...',
@@ -92,7 +95,8 @@ const drawerCopy = {
   },
   payables: {
     title: 'Crear una cuenta por pagar',
-    description: 'Registra un compromiso pendiente con un proveedor.',
+    description:
+      'Registra un compromiso operativo pendiente que no corresponde a mercancía.',
     eyebrow: 'Dinero por pagar',
     submit: 'Crear cuenta por pagar',
     amount: 'Valor pendiente',
@@ -118,6 +122,7 @@ export function MovementCreateDrawer({
   canCreateIncome,
   isSubmitting,
   onClose,
+  onOpenInventoryPurchase,
   onSubmit,
 }: MovementCreateDrawerProps) {
   const [amount, setAmount] = useState('')
@@ -225,6 +230,30 @@ export function MovementCreateDrawer({
                   activo.
                 </small>
               </span>
+            </div>
+          ) : null}
+
+          {isExpense || isPayable ? (
+            <div className={styles.inventoryPurchaseCallout}>
+              <span className={styles.inventoryPurchaseIcon}>
+                <PackagePlus aria-hidden="true" />
+              </span>
+              <span className={styles.inventoryPurchaseCopy}>
+                <strong>¿Compraste mercancía para vender?</strong>
+                <small>
+                  Registra la compra en Inventario para aumentar existencias,
+                  asociar el proveedor y descontar de caja solo lo que pagaste.
+                </small>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  onClose()
+                  onOpenInventoryPurchase()
+                }}
+              >
+                Registrar compra
+              </button>
             </div>
           ) : null}
 

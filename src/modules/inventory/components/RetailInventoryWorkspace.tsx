@@ -537,6 +537,22 @@ export function RetailInventoryWorkspace() {
   )
 
   useEffect(() => {
+    if (searchParams.get('mode') !== 'purchase') {
+      return
+    }
+
+    setPurchaseDrawerOpen(true)
+    setSearchParams(
+      (currentParams) => {
+        const nextParams = new URLSearchParams(currentParams)
+        nextParams.delete('mode')
+        return nextParams
+      },
+      { replace: true },
+    )
+  }, [searchParams, setSearchParams])
+
+  useEffect(() => {
     setShareCatalogPhone(businessSettings?.phone ?? '')
   }, [businessSettings?.phone])
 

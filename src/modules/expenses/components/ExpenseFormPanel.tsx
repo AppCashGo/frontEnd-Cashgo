@@ -5,6 +5,7 @@ import {
   Check,
   CreditCard,
   Landmark,
+  PackagePlus,
   Save,
   Smartphone,
 } from 'lucide-react'
@@ -35,6 +36,7 @@ type ExpenseFormPanelProps = {
   isOpen: boolean
   isSubmitting: boolean
   onClose: () => void
+  onOpenInventoryPurchase: () => void
   onSubmit: (input: ExpenseMutationInput) => Promise<void>
 }
 
@@ -84,6 +86,7 @@ export function ExpenseFormPanel({
   isOpen,
   isSubmitting,
   onClose,
+  onOpenInventoryPurchase,
   onSubmit,
 }: ExpenseFormPanelProps) {
   const isEditing = expense !== null
@@ -130,7 +133,7 @@ export function ExpenseFormPanel({
       bodyClassName={styles.drawerBody}
       closeButtonClassName={styles.closeButton}
       closeLabel="Cerrar formulario de gasto"
-      description={isEditing ? 'Actualiza la información del egreso.' : 'Registra un egreso de caja.'}
+      description={isEditing ? 'Actualiza la información del gasto operativo.' : 'Registra un gasto operativo del negocio.'}
       footer={
         <div className={styles.footer}>
           <button
@@ -159,7 +162,7 @@ export function ExpenseFormPanel({
       isCloseDisabled={isSubmitting}
       isOpen={isOpen}
       panelClassName={styles.drawer}
-      title={isEditing ? 'Editar gasto' : 'Nuevo gasto'}
+      title={isEditing ? 'Editar gasto' : 'Nuevo gasto operativo'}
       onClose={onClose}
     >
       <form
@@ -168,6 +171,28 @@ export function ExpenseFormPanel({
         noValidate
         onSubmit={submitExpense}
       >
+        {!isEditing ? (
+          <div className={styles.inventoryPurchaseCallout}>
+            <PackagePlus aria-hidden="true" size={22} />
+            <span>
+              <strong>¿Esta salida fue para comprar mercancía?</strong>
+              <small>
+                Usa Compra de inventario para sumar existencias, asociar el
+                proveedor y descontar de caja el valor realmente pagado.
+              </small>
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                onOpenInventoryPurchase()
+              }}
+            >
+              Registrar compra de mercancía
+            </button>
+          </div>
+        ) : null}
+
         <label className={styles.amountCard}>
           <span className={styles.amountLabel}>Valor del gasto</span>
           <span className={styles.amountControl}>

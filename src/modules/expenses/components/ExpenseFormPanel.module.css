@@ -19,6 +19,45 @@
   gap: 1.25rem;
 }
 
+.inventoryPurchaseCallout {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: start;
+  border: 1px solid #bcd7ca;
+  border-radius: 0.75rem;
+  padding: 0.9rem;
+  background: #f0faf5;
+  color: #176644;
+}
+.inventoryPurchaseCallout > svg {
+  margin-top: 0.05rem;
+}
+.inventoryPurchaseCallout strong,
+.inventoryPurchaseCallout small {
+  display: block;
+}
+.inventoryPurchaseCallout small {
+  margin-top: 0.2rem;
+  color: #4d7562;
+  line-height: 1.4;
+}
+.inventoryPurchaseCallout button {
+  grid-column: 1 / -1;
+  min-height: 2.65rem;
+  border: 1px solid #26845c;
+  border-radius: 0.62rem;
+  background: #fff;
+  color: #176644;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+.inventoryPurchaseCallout button:hover {
+  background: #e5f7ee;
+}
+
 .amountCard {
   display: grid;
   gap: 0.65rem;

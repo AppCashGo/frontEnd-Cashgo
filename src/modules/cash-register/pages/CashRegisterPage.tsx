@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
   BarChart3,
@@ -71,6 +71,7 @@ import { toDateInputValue } from "@/shared/utils/date-input";
 import { downloadBlobFile } from "@/shared/utils/download-blob-file";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import { joinClassNames } from "@/shared/utils/join-class-names";
+import { routePaths } from "@/routes/route-paths";
 import styles from "./CashRegisterRetailPage.module.css";
 
 type CashRegisterTab = "transactions" | "closures";
@@ -675,6 +676,7 @@ function ReportsDrawer({
 }
 
 export function CashRegisterPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<CashRegisterTab>("transactions");
   const [activeLedgerTab, setActiveLedgerTab] = useState<LedgerTab>("income");
@@ -1134,7 +1136,7 @@ export function CashRegisterPage() {
               value={formatCashRegisterCurrency(movementsOverview?.salesTotal ?? 0)}
             />
             <SummaryCard
-              label="Gastos totales"
+              label="Egresos totales"
               tone="expenses"
               value={formatCashRegisterCurrency(movementsOverview?.expensesTotal ?? 0)}
             />
@@ -1313,6 +1315,9 @@ export function CashRegisterPage() {
         movementDate={selectedDate}
         suppliers={suppliersQuery.data ?? []}
         onClose={() => setMovementCreateDrawerOpen(false)}
+        onOpenInventoryPurchase={() => {
+          navigate(`${routePaths.inventory}?mode=purchase`);
+        }}
         onSubmit={handleCreateMovement}
       />
 

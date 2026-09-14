@@ -74,6 +74,56 @@
 .warningBox small {
   display: block;
 }
+
+.inventoryPurchaseCallout {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border: 1px solid #bcd7ca;
+  border-radius: 0.75rem;
+  background: #f0faf5;
+  color: #176644;
+}
+.inventoryPurchaseIcon {
+  width: 2.35rem;
+  height: 2.35rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.65rem;
+  background: #d9f3e5;
+}
+.inventoryPurchaseIcon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+.inventoryPurchaseCopy {
+  min-width: 0;
+}
+.inventoryPurchaseCopy strong,
+.inventoryPurchaseCopy small {
+  display: block;
+}
+.inventoryPurchaseCopy small {
+  margin-top: 0.18rem;
+  color: #4d7562;
+  line-height: 1.4;
+}
+.inventoryPurchaseCallout button {
+  grid-column: 1 / -1;
+  min-height: 2.65rem;
+  border: 1px solid #26845c;
+  border-radius: 0.62rem;
+  background: #fff;
+  color: #176644;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+.inventoryPurchaseCallout button:hover {
+  background: #e5f7ee;
+}
 .warningBox small {
   margin-top: 0.18rem;
   line-height: 1.4;

@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -32,6 +33,7 @@ import {
 } from '@/modules/expenses/utils/format-expense'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { routePaths } from '@/routes/route-paths'
 import styles from './ExpensesPage.module.css'
 
 const emptyExpenses: Expense[] = []
@@ -71,6 +73,7 @@ function isExpenseWithinRange(
 }
 
 export function ExpensesPage() {
+  const navigate = useNavigate()
   const [searchValue, setSearchValue] = useState('')
   const [selectedStatus, setSelectedStatus] = useState<'ALL' | ExpenseStatus>(
     'ALL',
@@ -391,6 +394,9 @@ export function ExpensesPage() {
           onClose={() => {
             setIsExpenseDrawerOpen(false)
             setSelectedExpenseId(null)
+          }}
+          onOpenInventoryPurchase={() => {
+            navigate(`${routePaths.inventory}?mode=purchase`)
           }}
           onSubmit={handleExpenseSubmit}
         />
