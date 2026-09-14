@@ -552,9 +552,62 @@
 }
 
 .historyItem {
-  align-items: center;
+  display: grid;
+  gap: 0.75rem;
   border-bottom: 1px solid #e5ebf2;
   padding-bottom: 0.75rem;
+}
+
+.historyHeader,
+.historyProduct {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.historyProducts {
+  display: grid;
+  gap: 0.55rem;
+  border-radius: 0.8rem;
+  background: #f6f8fb;
+  padding: 0.75rem;
+}
+
+.historyProduct {
+  color: #1f2a37;
+  font-size: 0.86rem;
+}
+
+.historyProduct + .historyProduct {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.55rem;
+}
+
+.historyProduct span {
+  display: block;
+  margin-top: 0.18rem;
+  color: #66758c;
+  font-size: 0.76rem;
+}
+
+.historyProduct > strong {
+  white-space: nowrap;
+}
+
+.paymentAllocationNotice {
+  margin: -0.25rem 0 0;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.8rem;
+  background: #eff6ff;
+  color: #34506f;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.paymentAllocationNotice strong {
+  color: #1d4ed8;
 }
 
 .receiptPanel {

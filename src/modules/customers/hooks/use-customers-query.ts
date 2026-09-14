@@ -7,6 +7,7 @@ import {
   getCustomerCollectionAgenda,
   getCustomers,
   registerCustomerPayment,
+  registerCustomerOldestPayment,
   sendCustomerReminderEmail,
   uploadCustomerAvatar,
   updateCustomer,
@@ -84,18 +85,21 @@ export function useCreateCustomerMutation() {
   return useMutation({
     mutationFn: (input: CustomerMutationInput) => createCustomer(input),
     onSuccess: async (customer) => {
-      queryClient.setQueryData<CustomerSummary[]>(customersQueryKey, (current) => {
-        const nextCustomer = toCustomerSummary(customer)
+      queryClient.setQueryData<CustomerSummary[]>(
+        customersQueryKey,
+        (current) => {
+          const nextCustomer = toCustomerSummary(customer)
 
-        if (!current) {
-          return [nextCustomer]
-        }
+          if (!current) {
+            return [nextCustomer]
+          }
 
-        return [
-          nextCustomer,
-          ...current.filter((item) => item.id !== customer.id),
-        ]
-      })
+          return [
+            nextCustomer,
+            ...current.filter((item) => item.id !== customer.id),
+          ]
+        },
+      )
 
       await queryClient.invalidateQueries({
         queryKey: customersQueryKey,
@@ -116,17 +120,20 @@ export function useUpdateCustomerMutation() {
       input: CustomerMutationInput
     }) => updateCustomer(customerId, input),
     onSuccess: async (customer) => {
-      queryClient.setQueryData<CustomerSummary[]>(customersQueryKey, (current) => {
-        const nextCustomer = toCustomerSummary(customer)
+      queryClient.setQueryData<CustomerSummary[]>(
+        customersQueryKey,
+        (current) => {
+          const nextCustomer = toCustomerSummary(customer)
 
-        if (!current) {
-          return [nextCustomer]
-        }
+          if (!current) {
+            return [nextCustomer]
+          }
 
-        return current.map((item) =>
-          item.id === customer.id ? nextCustomer : item,
-        )
-      })
+          return current.map((item) =>
+            item.id === customer.id ? nextCustomer : item,
+          )
+        },
+      )
 
       queryClient.setQueryData<CustomerDetail>(
         [...customersQueryKey, 'detail', customer.id],
@@ -146,8 +153,9 @@ export function useDeleteCustomerMutation() {
   return useMutation({
     mutationFn: (customerId: string) => deleteCustomer(customerId),
     onSuccess: async (_, customerId) => {
-      queryClient.setQueryData<CustomerSummary[]>(customersQueryKey, (current) =>
-        current?.filter((customer) => customer.id !== customerId),
+      queryClient.setQueryData<CustomerSummary[]>(
+        customersQueryKey,
+        (current) => current?.filter((customer) => customer.id !== customerId),
       )
       queryClient.removeQueries({
         queryKey: [...customersQueryKey, 'detail', customerId],
@@ -167,25 +175,23 @@ export function useUploadCustomerAvatarMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      customerId,
-      file,
-    }: {
-      customerId: string
-      file: File
-    }) => uploadCustomerAvatar(customerId, file),
+    mutationFn: ({ customerId, file }: { customerId: string; file: File }) =>
+      uploadCustomerAvatar(customerId, file),
     onSuccess: async (customer) => {
-      queryClient.setQueryData<CustomerSummary[]>(customersQueryKey, (current) => {
-        const nextCustomer = toCustomerSummary(customer)
+      queryClient.setQueryData<CustomerSummary[]>(
+        customersQueryKey,
+        (current) => {
+          const nextCustomer = toCustomerSummary(customer)
 
-        if (!current) {
-          return [nextCustomer]
-        }
+          if (!current) {
+            return [nextCustomer]
+          }
 
-        return current.map((item) =>
-          item.id === customer.id ? nextCustomer : item,
-        )
-      })
+          return current.map((item) =>
+            item.id === customer.id ? nextCustomer : item,
+          )
+        },
+      )
 
       queryClient.setQueryData<CustomerDetail>(
         [...customersQueryKey, 'detail', customer.id],
@@ -210,6 +216,28 @@ export function useRegisterCustomerPaymentMutation() {
       receivableId: string
       input: CustomerPaymentInput
     }) => registerCustomerPayment(receivableId, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: customerCollectionAgendaQueryKey,
+        }),
+      ])
+    },
+  })
+}
+
+export function useRegisterCustomerOldestPaymentMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      customerId,
+      input,
+    }: {
+      customerId: string
+      input: CustomerPaymentInput
+    }) => registerCustomerOldestPayment(customerId, input),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: customersQueryKey }),

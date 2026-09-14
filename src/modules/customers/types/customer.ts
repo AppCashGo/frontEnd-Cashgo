@@ -26,9 +26,21 @@ export type CustomerSummary = {
 
 export type CustomerPurchaseHistoryItem = {
   saleId: string
+  saleNumber: string
+  status: string
   total: number
   createdAt: string
   itemCount: number
+  products: CustomerPurchaseHistoryProduct[]
+}
+
+export type CustomerPurchaseHistoryProduct = {
+  productId: string
+  name: string
+  sku: string | null
+  quantity: number
+  unitPrice: number
+  subtotal: number
 }
 
 export type CustomerPaymentMethod =
@@ -156,6 +168,21 @@ export type CustomerPaymentInput = {
   cashRegisterId?: string
   reference?: string
   notes?: string
+}
+
+export type CustomerPaymentAllocation = {
+  receivableId: string
+  saleId: string
+  saleNumber: string
+  amount: number
+  remainingBalance: number
+  status: string
+}
+
+export type CustomerOldestPaymentResult = {
+  customerId: string
+  amount: number
+  allocations: CustomerPaymentAllocation[]
 }
 
 export type CustomerReceivableTermsInput = {

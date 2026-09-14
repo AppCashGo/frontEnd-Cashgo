@@ -10,6 +10,7 @@ import type {
   CustomerDetail,
   CustomerMutationInput,
   CustomerPaymentInput,
+  CustomerOldestPaymentResult,
   CustomerReceivable,
   CustomerReceivableCollectionActivity,
   CustomerCollectionActivityInput,
@@ -28,9 +29,38 @@ type CustomerSummaryApiRecord = Omit<CustomerSummary, 'id'> & {
 
 type CustomerPurchaseHistoryItemApiRecord = Omit<
   CustomerPurchaseHistoryItem,
-  'saleId'
+  'saleId' | 'products'
 > & {
   saleId: number | string
+  products: Array<
+    Omit<
+      CustomerPurchaseHistoryItem['products'][number],
+      'productId' | 'unitPrice' | 'subtotal'
+    > & {
+      productId: number | string
+      unitPrice: number | string
+      subtotal: number | string
+    }
+  >
+}
+
+type CustomerOldestPaymentResultApiRecord = Omit<
+  CustomerOldestPaymentResult,
+  'customerId' | 'amount' | 'allocations'
+> & {
+  customerId: number | string
+  amount: number | string
+  allocations: Array<
+    Omit<
+      CustomerOldestPaymentResult['allocations'][number],
+      'receivableId' | 'saleId' | 'amount' | 'remainingBalance'
+    > & {
+      receivableId: number | string
+      saleId: number | string
+      amount: number | string
+      remainingBalance: number | string
+    }
+  >
 }
 
 type CustomerReceivablePaymentApiRecord = Omit<
@@ -111,18 +141,20 @@ function normalizeCustomerReceivable(
     paidAmount: normalizeNumber(receivable.paidAmount),
     balance: normalizeNumber(receivable.balance),
     payments: receivable.payments.map(normalizeCustomerReceivablePayment),
-    collectionActivities: (receivable.collectionActivities ?? []).map((activity) => ({
-      ...activity,
-      id: String(activity.id),
-      createdByUserId:
-        activity.createdByUserId === null
-          ? null
-          : String(activity.createdByUserId),
-      promisedAmount:
-        activity.promisedAmount === null
-          ? null
-          : normalizeNumber(activity.promisedAmount),
-    })),
+    collectionActivities: (receivable.collectionActivities ?? []).map(
+      (activity) => ({
+        ...activity,
+        id: String(activity.id),
+        createdByUserId:
+          activity.createdByUserId === null
+            ? null
+            : String(activity.createdByUserId),
+        promisedAmount:
+          activity.promisedAmount === null
+            ? null
+            : normalizeNumber(activity.promisedAmount),
+      }),
+    ),
   }
 }
 
@@ -135,6 +167,12 @@ function normalizeCustomerDetailRecord(
       ...item,
       saleId: String(item.saleId),
       total: normalizeNumber(item.total),
+      products: item.products.map((product) => ({
+        ...product,
+        productId: String(product.productId),
+        unitPrice: normalizeNumber(product.unitPrice),
+        subtotal: normalizeNumber(product.subtotal),
+      })),
     })),
     receivables: customer.receivables.map(normalizeCustomerReceivable),
   }
@@ -217,10 +255,10 @@ export async function getCustomerDetail(customerId: string) {
 }
 
 export async function createCustomer(input: CustomerMutationInput) {
-  const customer = await postJson<CustomerDetailApiRecord, CustomerMutationInput>(
-    '/customers',
-    input,
-  )
+  const customer = await postJson<
+    CustomerDetailApiRecord,
+    CustomerMutationInput
+  >('/customers', input)
 
   return normalizeCustomerDetailRecord(customer)
 }
@@ -229,10 +267,10 @@ export async function updateCustomer(
   customerId: string,
   input: CustomerMutationInput,
 ) {
-  const customer = await patchJson<CustomerDetailApiRecord, CustomerMutationInput>(
-    `/customers/${customerId}`,
-    input,
-  )
+  const customer = await patchJson<
+    CustomerDetailApiRecord,
+    CustomerMutationInput
+  >(`/customers/${customerId}`, input)
 
   return normalizeCustomerDetailRecord(customer)
 }
@@ -264,6 +302,28 @@ export async function registerCustomerPayment(
   >(`/accounts-receivable/${receivableId}/payments`, input)
 
   return normalizeCustomerReceivable(receivable)
+}
+
+export async function registerCustomerOldestPayment(
+  customerId: string,
+  input: CustomerPaymentInput,
+): Promise<CustomerOldestPaymentResult> {
+  const result = await postJson<
+    CustomerOldestPaymentResultApiRecord,
+    CustomerPaymentInput
+  >(`/accounts-receivable/customers/${customerId}/payments`, input)
+
+  return {
+    customerId: String(result.customerId),
+    amount: normalizeNumber(result.amount),
+    allocations: result.allocations.map((allocation) => ({
+      ...allocation,
+      receivableId: String(allocation.receivableId),
+      saleId: String(allocation.saleId),
+      amount: normalizeNumber(allocation.amount),
+      remainingBalance: normalizeNumber(allocation.remainingBalance),
+    })),
+  }
 }
 
 export async function updateCustomerReceivableTerms(

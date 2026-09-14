@@ -23,6 +23,7 @@ import type {
   CustomerDetail,
   CustomerCollectionActivityInput,
   CustomerMutationInput,
+  CustomerOldestPaymentResult,
   CustomerPaymentInput,
   CustomerPaymentMethod,
   CustomerReceivable,
@@ -113,14 +114,15 @@ type RetailCustomerDrawerProps = {
     receivableId: string,
     input: CustomerPaymentInput,
   ) => Promise<void>
+  onRegisterOldestPayment: (
+    customerId: string,
+    input: CustomerPaymentInput,
+  ) => Promise<CustomerOldestPaymentResult>
   onCreateCollectionActivity: (
     receivableId: string,
     input: CustomerCollectionActivityInput,
   ) => Promise<void>
-  onSendReminderEmail: (
-    receivableId: string,
-    message: string,
-  ) => Promise<void>
+  onSendReminderEmail: (receivableId: string, message: string) => Promise<void>
   onUpdateReceivableTerms: (
     receivableId: string,
     input: CustomerReceivableTermsInput,
@@ -141,6 +143,8 @@ const EMPTY_FORM: CustomerFormState = {
   balance: '0',
   notes: '',
 }
+
+const OLDEST_RECEIVABLE_OPTION = '__oldest_receivables__'
 
 const PAYMENT_METHOD_OPTIONS: Array<{
   value: CustomerPaymentMethod
@@ -189,7 +193,7 @@ function getCollectionChannelLabel(channel: string | null) {
     MANUAL: 'Gestión manual',
   }
 
-  return channel ? labels[channel] ?? channel : 'Sin canal'
+  return channel ? (labels[channel] ?? channel) : 'Sin canal'
 }
 
 function toFormState(customer: CustomerDetail | null): CustomerFormState {
@@ -219,9 +223,7 @@ function parseMoney(value: string) {
   const compactValue = value.replace(/[^\d.,-]/g, '')
   const hasComma = compactValue.includes(',')
   const hasDot = compactValue.includes('.')
-  const looksLikeThousandsWithDots = /^-?\d{1,3}(\.\d{3})+$/.test(
-    compactValue,
-  )
+  const looksLikeThousandsWithDots = /^-?\d{1,3}(\.\d{3})+$/.test(compactValue)
   const normalizedValue =
     hasComma && hasDot
       ? compactValue.replace(/\./g, '').replace(',', '.')
@@ -385,6 +387,7 @@ export function RetailCustomerDrawer({
   onModeChange,
   onRefresh,
   onRegisterPayment,
+  onRegisterOldestPayment,
   onCreateCollectionActivity,
   onSendReminderEmail,
   onUpdateReceivableTerms,
@@ -403,12 +406,14 @@ export function RetailCustomerDrawer({
   const [lastReceipt, setLastReceipt] = useState<PaymentReceiptState | null>(
     null,
   )
-  const [reminderReceivableId, setReminderReceivableId] = useState<string | null>(
-    null,
-  )
+  const [reminderReceivableId, setReminderReceivableId] = useState<
+    string | null
+  >(null)
   const [reminderMessage, setReminderMessage] = useState('')
   const [reminderFeedback, setReminderFeedback] = useState<string | null>(null)
-  const [termsReceivableId, setTermsReceivableId] = useState<string | null>(null)
+  const [termsReceivableId, setTermsReceivableId] = useState<string | null>(
+    null,
+  )
   const [termsForm, setTermsForm] = useState<ReceivableTermsFormState>({
     dueDate: '',
     notes: '',
@@ -427,15 +432,20 @@ export function RetailCustomerDrawer({
 
   const pendingReceivables = useMemo(
     () =>
-      (customer?.receivables ?? []).filter((receivable) => receivable.balance > 0),
+      (customer?.receivables ?? []).filter(
+        (receivable) => receivable.balance > 0,
+      ),
     [customer?.receivables],
   )
+  const isOldestPayment = paymentForm.receivableId === OLDEST_RECEIVABLE_OPTION
   const selectedReceivable =
     pendingReceivables.find(
       (receivable) => receivable.id === paymentForm.receivableId,
-    ) ??
-    pendingReceivables[0] ??
-    null
+    ) ?? null
+  const totalOutstanding = pendingReceivables.reduce(
+    (total, receivable) => total + receivable.balance,
+    0,
+  )
   const reminderReceivable =
     pendingReceivables.find(
       (receivable) => receivable.id === reminderReceivableId,
@@ -448,18 +458,20 @@ export function RetailCustomerDrawer({
     pendingReceivables.find(
       (receivable) => receivable.id === promiseReceivableId,
     ) ?? null
-  const totalPurchased = customer?.purchaseHistory.reduce(
-    (sum, purchase) => sum + purchase.total,
-    0,
-  ) ?? 0
+  const totalPurchased =
+    customer?.purchaseHistory.reduce(
+      (sum, purchase) => sum + purchase.total,
+      0,
+    ) ?? 0
   const averageTicket =
     customer && customer.purchaseCount > 0
       ? totalPurchased / customer.purchaseCount
       : 0
-  const paidReceivables = customer?.receivables.reduce(
-    (sum, receivable) => sum + receivable.paidAmount,
-    0,
-  ) ?? 0
+  const paidReceivables =
+    customer?.receivables.reduce(
+      (sum, receivable) => sum + receivable.paidAmount,
+      0,
+    ) ?? 0
   const drawerTitle =
     mode === 'create'
       ? 'Crear cliente'
@@ -565,9 +577,7 @@ export function RetailCustomerDrawer({
     }
   }
 
-  async function handleRecordReminder(
-    channel: 'WHATSAPP' | 'EMAIL' | 'COPY',
-  ) {
+  async function handleRecordReminder(channel: 'WHATSAPP' | 'EMAIL' | 'COPY') {
     if (!reminderReceivable) {
       return
     }
@@ -603,7 +613,10 @@ export function RetailCustomerDrawer({
       setTermsReceivableId(null)
     } catch (error) {
       setTermsError(
-        getErrorMessage(error, 'No pudimos actualizar las condiciones de cobro.'),
+        getErrorMessage(
+          error,
+          'No pudimos actualizar las condiciones de cobro.',
+        ),
       )
     }
   }
@@ -649,7 +662,9 @@ export function RetailCustomerDrawer({
     setPaymentForm((currentForm) => ({
       ...currentForm,
       receivableId: firstPendingReceivable?.id ?? '',
-      amount: firstPendingReceivable ? String(firstPendingReceivable.balance) : '',
+      amount: firstPendingReceivable
+        ? String(firstPendingReceivable.balance)
+        : '',
     }))
   }, [isOpen, mode, pendingReceivables])
 
@@ -714,7 +729,7 @@ export function RetailCustomerDrawer({
   async function handleRegisterPayment(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    if (!selectedReceivable || !customer) {
+    if ((!selectedReceivable && !isOldestPayment) || !customer) {
       setPaymentError('Selecciona una cuenta por cobrar.')
       return
     }
@@ -726,7 +741,11 @@ export function RetailCustomerDrawer({
       return
     }
 
-    if (amount > selectedReceivable.balance) {
+    const maximumPayment = isOldestPayment
+      ? totalOutstanding
+      : (selectedReceivable?.balance ?? 0)
+
+    if (amount > maximumPayment) {
       setPaymentError('El abono no puede superar el saldo pendiente.')
       return
     }
@@ -743,10 +762,31 @@ export function RetailCustomerDrawer({
         : {}),
     }
 
-    await onRegisterPayment(selectedReceivable.id, input)
+    let receiptSaleNumber: string
+
+    try {
+      if (isOldestPayment) {
+        const result = await onRegisterOldestPayment(customer.id, input)
+        receiptSaleNumber = result.allocations
+          .map((allocation) => allocation.saleNumber)
+          .join(', ')
+      } else {
+        await onRegisterPayment(selectedReceivable!.id, input)
+        receiptSaleNumber = selectedReceivable!.saleNumber
+      }
+    } catch (error) {
+      setPaymentError(
+        getErrorMessage(
+          error,
+          'No pudimos registrar el abono. Intenta otra vez.',
+        ),
+      )
+      return
+    }
+
     setLastReceipt({
       customerName: customer.name,
-      saleNumber: selectedReceivable.saleNumber,
+      saleNumber: receiptSaleNumber,
       amount,
       method: paymentForm.method,
       reference: normalizeOptionalText(paymentForm.reference),
@@ -899,7 +939,11 @@ export function RetailCustomerDrawer({
       return (
         <div className={styles.feedback} role="alert">
           <p>{errorMessage}</p>
-          <button className={styles.secondaryButton} type="button" onClick={onRefresh}>
+          <button
+            className={styles.secondaryButton}
+            type="button"
+            onClick={onRefresh}
+          >
             Reintentar
           </button>
         </div>
@@ -915,7 +959,11 @@ export function RetailCustomerDrawer({
         <section className={styles.profileCard}>
           <div className={styles.avatar} aria-hidden="true">
             {visibleAvatarUrl ? (
-              <img alt="" className={styles.avatarImage} src={visibleAvatarUrl} />
+              <img
+                alt=""
+                className={styles.avatarImage}
+                src={visibleAvatarUrl}
+              />
             ) : (
               customer.name.charAt(0).toUpperCase()
             )}
@@ -930,7 +978,10 @@ export function RetailCustomerDrawer({
           </div>
         </section>
 
-        <section className={styles.infoGrid} aria-label="Informacion de contacto">
+        <section
+          className={styles.infoGrid}
+          aria-label="Informacion de contacto"
+        >
           <InfoItem icon={<Phone />} label="Celular" value={customer.phone} />
           <InfoItem icon={<Mail />} label="Correo" value={customer.email} />
           <InfoItem
@@ -942,7 +993,11 @@ export function RetailCustomerDrawer({
                 : null
             }
           />
-          <InfoItem icon={<MapPin />} label="Direccion" value={customer.address} />
+          <InfoItem
+            icon={<MapPin />}
+            label="Direccion"
+            value={customer.address}
+          />
         </section>
 
         <section className={styles.behaviorGrid} aria-label="Comportamiento">
@@ -965,7 +1020,9 @@ export function RetailCustomerDrawer({
             icon={<CalendarClock />}
             label="Ultima compra"
             value={
-              customer.lastPurchaseAt ? formatDate(customer.lastPurchaseAt) : 'Sin compras'
+              customer.lastPurchaseAt
+                ? formatDate(customer.lastPurchaseAt)
+                : 'Sin compras'
             }
           />
         </section>
@@ -1040,7 +1097,11 @@ export function RetailCustomerDrawer({
                     Abrir WhatsApp
                   </a>
                 ) : (
-                  <button className={styles.disabledContactButton} disabled type="button">
+                  <button
+                    className={styles.disabledContactButton}
+                    disabled
+                    type="button"
+                  >
                     Sin celular registrado
                   </button>
                 )}
@@ -1055,7 +1116,11 @@ export function RetailCustomerDrawer({
                     Preparar correo
                   </a>
                 ) : (
-                  <button className={styles.disabledContactButton} disabled type="button">
+                  <button
+                    className={styles.disabledContactButton}
+                    disabled
+                    type="button"
+                  >
                     Sin correo registrado
                   </button>
                 )}
@@ -1064,7 +1129,9 @@ export function RetailCustomerDrawer({
               {customer.email && canSendConfirmedEmail ? (
                 <button
                   className={styles.sendEmailButton}
-                  disabled={isEmailSubmitting || reminderMessage.trim().length === 0}
+                  disabled={
+                    isEmailSubmitting || reminderMessage.trim().length === 0
+                  }
                   type="button"
                   onClick={() => void handleSendReminderEmail()}
                 >
@@ -1073,8 +1140,8 @@ export function RetailCustomerDrawer({
                 </button>
               ) : customer.email ? (
                 <p className={styles.deliveryNotice}>
-                  El envío directo aún no está configurado. Usa “Preparar correo”
-                  para enviarlo desde tu aplicación de correo.
+                  El envío directo aún no está configurado. Usa “Preparar
+                  correo” para enviarlo desde tu aplicación de correo.
                 </p>
               ) : null}
 
@@ -1094,13 +1161,16 @@ export function RetailCustomerDrawer({
           ) : null}
 
           {promiseReceivable ? (
-            <form className={styles.promiseComposer} onSubmit={handleSubmitPromise}>
+            <form
+              className={styles.promiseComposer}
+              onSubmit={handleSubmitPromise}
+            >
               <div className={styles.reminderHeader}>
                 <div>
                   <h4>Compromiso de pago</h4>
                   <p>
-                    {promiseReceivable.saleNumber} · documenta la fecha y el valor
-                    acordados con el cliente.
+                    {promiseReceivable.saleNumber} · documenta la fecha y el
+                    valor acordados con el cliente.
                   </p>
                 </div>
                 <button
@@ -1198,8 +1268,8 @@ export function RetailCustomerDrawer({
                 <div>
                   <h4>Condiciones de cobro</h4>
                   <p>
-                    {termsReceivable.saleNumber} · ajusta el vencimiento y la nota
-                    interna.
+                    {termsReceivable.saleNumber} · ajusta el vencimiento y la
+                    nota interna.
                   </p>
                 </div>
                 <button
@@ -1280,11 +1350,35 @@ export function RetailCustomerDrawer({
             <div className={styles.historyList}>
               {customer.purchaseHistory.slice(0, 6).map((purchase) => (
                 <article key={purchase.saleId} className={styles.historyItem}>
-                  <div>
-                    <strong>Venta {purchase.saleId}</strong>
-                    <span>{formatDateTime(purchase.createdAt)}</span>
+                  <div className={styles.historyHeader}>
+                    <div>
+                      <strong>{purchase.saleNumber}</strong>
+                      <span>
+                        {formatDateTime(purchase.createdAt)} ·{' '}
+                        {purchase.itemCount}{' '}
+                        {purchase.itemCount === 1 ? 'producto' : 'productos'}
+                      </span>
+                    </div>
+                    <strong>{formatCurrency(purchase.total)}</strong>
                   </div>
-                  <strong>{formatCurrency(purchase.total)}</strong>
+                  <div className={styles.historyProducts}>
+                    {purchase.products.map((product) => (
+                      <div
+                        className={styles.historyProduct}
+                        key={`${purchase.saleId}:${product.productId}`}
+                      >
+                        <div>
+                          <strong>{product.name}</strong>
+                          <span>
+                            {product.quantity} ×{' '}
+                            {formatCurrency(product.unitPrice)}
+                            {product.sku ? ` · SKU ${product.sku}` : ''}
+                          </span>
+                        </div>
+                        <strong>{formatCurrency(product.subtotal)}</strong>
+                      </div>
+                    ))}
+                  </div>
                 </article>
               ))}
             </div>
@@ -1321,11 +1415,23 @@ export function RetailCustomerDrawer({
               >
                 {pendingReceivables.map((receivable) => (
                   <option key={receivable.id} value={receivable.id}>
-                    {receivable.saleNumber} - {formatCurrency(receivable.balance)}
+                    {receivable.saleNumber} -{' '}
+                    {formatCurrency(receivable.balance)}
                   </option>
                 ))}
+                <option value={OLDEST_RECEIVABLE_OPTION}>
+                  Otro valor · aplicar a las ventas más antiguas
+                </option>
               </select>
             </label>
+
+            {isOldestPayment ? (
+              <p className={styles.paymentAllocationNotice}>
+                El valor se aplicará primero a la venta pendiente más antigua y,
+                si sobra, continuará en la siguiente. Saldo total:{' '}
+                <strong>{formatCurrency(totalOutstanding)}</strong>.
+              </p>
+            ) : null}
 
             <div className={styles.twoColumns}>
               <label className={styles.field}>
@@ -1379,7 +1485,9 @@ export function RetailCustomerDrawer({
                 className={styles.textarea}
                 placeholder="Agrega una nota para el comprobante"
                 value={paymentForm.notes}
-                onChange={(event) => updatePaymentValue('notes', event.target.value)}
+                onChange={(event) =>
+                  updatePaymentValue('notes', event.target.value)
+                }
               />
             </label>
 
@@ -1491,7 +1599,11 @@ export function RetailCustomerDrawer({
             >
               Editar cliente
             </button>
-            <button className={styles.primaryButton} type="button" onClick={onClose}>
+            <button
+              className={styles.primaryButton}
+              type="button"
+              onClick={onClose}
+            >
               Listo
             </button>
           </DrawerActionFooter>

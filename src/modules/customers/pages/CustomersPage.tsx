@@ -26,6 +26,7 @@ import {
   useCreateCustomerMutation,
   useCustomersQuery,
   useDeleteCustomerMutation,
+  useRegisterCustomerOldestPaymentMutation,
   useRegisterCustomerPaymentMutation,
   useSendCustomerReminderEmailMutation,
   useUpdateCustomerMutation,
@@ -68,11 +69,7 @@ type CustomerPortfolioFilter =
   | 'OVERDUE_OVER_60'
   | 'UNDATED'
 
-type CollectionAgendaFilter =
-  | 'UPCOMING'
-  | 'BROKEN'
-  | 'FULFILLED'
-  | 'REMINDERS'
+type CollectionAgendaFilter = 'UPCOMING' | 'BROKEN' | 'FULFILLED' | 'REMINDERS'
 
 const CUSTOMER_PORTFOLIO_FILTERS: Array<{
   value: CustomerPortfolioFilter
@@ -85,11 +82,36 @@ const CUSTOMER_PORTFOLIO_FILTERS: Array<{
 ]
 
 const AGING_BUCKETS = [
-  { filter: 'DUE_SOON', label: 'Por vencer', field: 'currentBalance', tone: 'current' },
-  { filter: 'OVERDUE_1_30', label: '1–30 días', field: 'overdue1To30Balance', tone: 'warning' },
-  { filter: 'OVERDUE_31_60', label: '31–60 días', field: 'overdue31To60Balance', tone: 'danger' },
-  { filter: 'OVERDUE_OVER_60', label: 'Más de 60 días', field: 'overdueOver60Balance', tone: 'critical' },
-  { filter: 'UNDATED', label: 'Sin fecha', field: 'undatedBalance', tone: 'neutral' },
+  {
+    filter: 'DUE_SOON',
+    label: 'Por vencer',
+    field: 'currentBalance',
+    tone: 'current',
+  },
+  {
+    filter: 'OVERDUE_1_30',
+    label: '1–30 días',
+    field: 'overdue1To30Balance',
+    tone: 'warning',
+  },
+  {
+    filter: 'OVERDUE_31_60',
+    label: '31–60 días',
+    field: 'overdue31To60Balance',
+    tone: 'danger',
+  },
+  {
+    filter: 'OVERDUE_OVER_60',
+    label: 'Más de 60 días',
+    field: 'overdueOver60Balance',
+    tone: 'critical',
+  },
+  {
+    filter: 'UNDATED',
+    label: 'Sin fecha',
+    field: 'undatedBalance',
+    tone: 'neutral',
+  },
 ] as const
 
 function formatPortfolioDate(value: string | null) {
@@ -153,6 +175,8 @@ export function CustomersPage() {
   const updateCustomerMutation = useUpdateCustomerMutation()
   const uploadCustomerAvatarMutation = useUploadCustomerAvatarMutation()
   const registerPaymentMutation = useRegisterCustomerPaymentMutation()
+  const registerOldestPaymentMutation =
+    useRegisterCustomerOldestPaymentMutation()
   const sendReminderEmailMutation = useSendCustomerReminderEmailMutation()
   const updateReceivableTermsMutation =
     useUpdateCustomerReceivableTermsMutation()
@@ -323,7 +347,10 @@ export function CustomersPage() {
       setExportFeedback('Reporte de cartera descargado correctamente.')
     } catch (error) {
       setExportFeedback(
-        getErrorMessage(error, 'No fue posible descargar el reporte de cartera.'),
+        getErrorMessage(
+          error,
+          'No fue posible descargar el reporte de cartera.',
+        ),
       )
     } finally {
       setIsExporting(false)
@@ -377,6 +404,23 @@ export function CustomersPage() {
       customersQuery.refetch(),
       customerDetailQuery.refetch(),
     ])
+  }
+
+  async function handleRegisterCustomerOldestPayment(
+    customerId: string,
+    input: CustomerPaymentInput,
+  ) {
+    const result = await registerOldestPaymentMutation.mutateAsync({
+      customerId,
+      input,
+    })
+
+    await Promise.allSettled([
+      customersQuery.refetch(),
+      customerDetailQuery.refetch(),
+    ])
+
+    return result
   }
 
   async function handleUpdateCustomerReceivableTerms(
@@ -454,9 +498,12 @@ export function CustomersPage() {
             >
               <Crown aria-hidden="true" />
               <div>
-                <strong>Clientes premium, control total en un solo lugar.</strong>
+                <strong>
+                  Clientes premium, control total en un solo lugar.
+                </strong>
                 <span>
-                  Registra deudas, envia recordatorios y manten todo bajo control.
+                  Registra deudas, envia recordatorios y manten todo bajo
+                  control.
                 </span>
               </div>
               <span>Ver beneficios</span>
@@ -474,7 +521,10 @@ export function CustomersPage() {
                   onChange={(event) => setSearchValue(event.target.value)}
                 />
               </label>
-              <div className={styles.portfolioFilters} aria-label="Filtrar cartera">
+              <div
+                className={styles.portfolioFilters}
+                aria-label="Filtrar cartera"
+              >
                 {CUSTOMER_PORTFOLIO_FILTERS.map((filter) => (
                   <button
                     aria-pressed={portfolioFilter === filter.value}
@@ -512,7 +562,10 @@ export function CustomersPage() {
               />
             </div>
 
-            <section className={styles.agingSection} aria-labelledby="aging-title">
+            <section
+              className={styles.agingSection}
+              aria-labelledby="aging-title"
+            >
               <div className={styles.agingHeading}>
                 <div>
                   <h2 id="aging-title">Antigüedad de cartera</h2>
@@ -522,7 +575,10 @@ export function CustomersPage() {
                   </p>
                 </div>
                 {portfolioFilter !== 'ALL' ? (
-                  <button type="button" onClick={() => setPortfolioFilter('ALL')}>
+                  <button
+                    type="button"
+                    onClick={() => setPortfolioFilter('ALL')}
+                  >
                     Limpiar filtro
                   </button>
                 ) : null}
@@ -562,8 +618,8 @@ export function CustomersPage() {
                   <span>Seguimiento diario</span>
                   <h2 id="collection-agenda-title">Agenda de cobranza</h2>
                   <p>
-                    Revisa compromisos de pago y clientes que necesitan un
-                    nuevo recordatorio.
+                    Revisa compromisos de pago y clientes que necesitan un nuevo
+                    recordatorio.
                   </p>
                 </div>
                 <button
@@ -571,33 +627,51 @@ export function CustomersPage() {
                   disabled={collectionAgendaQuery.isFetching}
                   onClick={() => void collectionAgendaQuery.refetch()}
                 >
-                  {collectionAgendaQuery.isFetching ? 'Actualizando…' : 'Actualizar'}
+                  {collectionAgendaQuery.isFetching
+                    ? 'Actualizando…'
+                    : 'Actualizar'}
                 </button>
               </div>
 
               <div className={styles.agendaSummary}>
                 <button
-                  className={agendaFilter === 'UPCOMING' ? styles.agendaCardActive : styles.agendaCard}
+                  className={
+                    agendaFilter === 'UPCOMING'
+                      ? styles.agendaCardActive
+                      : styles.agendaCard
+                  }
                   type="button"
                   onClick={() => setAgendaFilter('UPCOMING')}
                 >
                   <CalendarCheck aria-hidden="true" />
                   <span>Próximos 7 días</span>
                   <strong>{collectionAgenda?.summary.upcoming ?? 0}</strong>
-                  <small>{collectionAgenda?.summary.dueToday ?? 0} para hoy</small>
+                  <small>
+                    {collectionAgenda?.summary.dueToday ?? 0} para hoy
+                  </small>
                 </button>
                 <button
-                  className={agendaFilter === 'REMINDERS' ? styles.agendaCardActive : styles.agendaCard}
+                  className={
+                    agendaFilter === 'REMINDERS'
+                      ? styles.agendaCardActive
+                      : styles.agendaCard
+                  }
                   type="button"
                   onClick={() => setAgendaFilter('REMINDERS')}
                 >
                   <BellRing aria-hidden="true" />
                   <span>Recordatorios pendientes</span>
-                  <strong>{collectionAgenda?.summary.remindersPending ?? 0}</strong>
+                  <strong>
+                    {collectionAgenda?.summary.remindersPending ?? 0}
+                  </strong>
                   <small>Sin contacto reciente</small>
                 </button>
                 <button
-                  className={agendaFilter === 'BROKEN' ? styles.agendaCardActive : styles.agendaCard}
+                  className={
+                    agendaFilter === 'BROKEN'
+                      ? styles.agendaCardActive
+                      : styles.agendaCard
+                  }
                   type="button"
                   onClick={() => setAgendaFilter('BROKEN')}
                 >
@@ -607,7 +681,11 @@ export function CustomersPage() {
                   <small>Requieren seguimiento</small>
                 </button>
                 <button
-                  className={agendaFilter === 'FULFILLED' ? styles.agendaCardActive : styles.agendaCard}
+                  className={
+                    agendaFilter === 'FULFILLED'
+                      ? styles.agendaCardActive
+                      : styles.agendaCard
+                  }
                   type="button"
                   onClick={() => setAgendaFilter('FULFILLED')}
                 >
@@ -625,7 +703,10 @@ export function CustomersPage() {
                 {collectionAgendaQuery.isError ? (
                   <div className={styles.agendaError} role="alert">
                     <strong>No pudimos cargar la agenda.</strong>
-                    <button type="button" onClick={() => void collectionAgendaQuery.refetch()}>
+                    <button
+                      type="button"
+                      onClick={() => void collectionAgendaQuery.refetch()}
+                    >
                       Reintentar
                     </button>
                   </div>
@@ -633,24 +714,41 @@ export function CustomersPage() {
                 {!collectionAgendaQuery.isLoading &&
                 !collectionAgendaQuery.isError &&
                 agendaFilter === 'REMINDERS'
-                  ? (collectionAgenda?.remindersPending ?? []).map((reminder) => (
-                      <article className={styles.agendaItem} key={reminder.receivableId}>
-                        <div className={styles.agendaItemIcon}>
-                          <BellRing aria-hidden="true" />
-                        </div>
-                        <div>
-                          <strong>{reminder.customerName}</strong>
-                          <span>Venta {reminder.saleNumber} · {formatCurrency(reminder.balance)}</span>
-                        </div>
-                        <div className={styles.agendaItemMeta}>
-                          <span className={styles.agendaStatusReminder}>Recordar</span>
-                          <small>Venció {formatPortfolioDate(reminder.dueDate)}</small>
-                        </div>
-                        <button type="button" onClick={() => openCustomerDetail(reminder.customerId)}>
-                          Gestionar
-                        </button>
-                      </article>
-                    ))
+                  ? (collectionAgenda?.remindersPending ?? []).map(
+                      (reminder) => (
+                        <article
+                          className={styles.agendaItem}
+                          key={reminder.receivableId}
+                        >
+                          <div className={styles.agendaItemIcon}>
+                            <BellRing aria-hidden="true" />
+                          </div>
+                          <div>
+                            <strong>{reminder.customerName}</strong>
+                            <span>
+                              Venta {reminder.saleNumber} ·{' '}
+                              {formatCurrency(reminder.balance)}
+                            </span>
+                          </div>
+                          <div className={styles.agendaItemMeta}>
+                            <span className={styles.agendaStatusReminder}>
+                              Recordar
+                            </span>
+                            <small>
+                              Venció {formatPortfolioDate(reminder.dueDate)}
+                            </small>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              openCustomerDetail(reminder.customerId)
+                            }
+                          >
+                            Gestionar
+                          </button>
+                        </article>
+                      ),
+                    )
                   : null}
                 {!collectionAgendaQuery.isLoading &&
                 !collectionAgendaQuery.isError &&
@@ -669,26 +767,35 @@ export function CustomersPage() {
                         <div>
                           <strong>{promise.customerName}</strong>
                           <span>
-                            Prometió {formatCurrency(promise.promisedAmount ?? 0)} · Venta {promise.saleNumber}
+                            Prometió{' '}
+                            {formatCurrency(promise.promisedAmount ?? 0)} ·
+                            Venta {promise.saleNumber}
                           </span>
                         </div>
                         <div className={styles.agendaItemMeta}>
-                          <span className={
-                            promise.status === 'FULFILLED'
-                              ? styles.agendaStatusFulfilled
-                              : promise.status === 'BROKEN'
-                                ? styles.agendaStatusBroken
-                                : styles.agendaStatusPending
-                          }>
+                          <span
+                            className={
+                              promise.status === 'FULFILLED'
+                                ? styles.agendaStatusFulfilled
+                                : promise.status === 'BROKEN'
+                                  ? styles.agendaStatusBroken
+                                  : styles.agendaStatusPending
+                            }
+                          >
                             {promise.status === 'FULFILLED'
                               ? 'Cumplido'
                               : promise.status === 'BROKEN'
                                 ? 'Incumplido'
                                 : 'Pendiente'}
                           </span>
-                          <small>{formatPortfolioDate(promise.promisedDate)}</small>
+                          <small>
+                            {formatPortfolioDate(promise.promisedDate)}
+                          </small>
                         </div>
-                        <button type="button" onClick={() => openCustomerDetail(promise.customerId)}>
+                        <button
+                          type="button"
+                          onClick={() => openCustomerDetail(promise.customerId)}
+                        >
                           Ver cuenta
                         </button>
                       </article>
@@ -698,7 +805,8 @@ export function CustomersPage() {
                 !collectionAgendaQuery.isError &&
                 ((agendaFilter === 'REMINDERS' &&
                   (collectionAgenda?.remindersPending.length ?? 0) === 0) ||
-                  (agendaFilter !== 'REMINDERS' && visibleAgendaPromises.length === 0)) ? (
+                  (agendaFilter !== 'REMINDERS' &&
+                    visibleAgendaPromises.length === 0)) ? (
                   <p className={styles.agendaEmpty}>
                     No hay gestiones en esta categoría.
                   </p>
@@ -713,7 +821,9 @@ export function CustomersPage() {
             ) : null}
 
             <RetailTableShell
-              isRefreshing={customersQuery.isFetching && !customersQuery.isLoading}
+              isRefreshing={
+                customersQuery.isFetching && !customersQuery.isLoading
+              }
               title="Clientes registrados"
             >
               <table className={retailStyles.table}>
@@ -780,7 +890,10 @@ export function CustomersPage() {
                                       src={avatarUrl}
                                     />
                                   ) : (
-                                    customer.name.trim().charAt(0).toUpperCase() || '?'
+                                    customer.name
+                                      .trim()
+                                      .charAt(0)
+                                      .toUpperCase() || '?'
                                   )}
                                 </span>
                                 <strong className={styles.customerName}>
@@ -788,50 +901,56 @@ export function CustomersPage() {
                                 </strong>
                               </span>
                             </td>
-                          <td>{customer.phone ?? 'Sin celular'}</td>
-                          <td>
-                            {customer.documentNumber
-                              ? `${customer.documentType ?? 'Doc.'} ${customer.documentNumber}`
-                              : 'Sin documento'}
-                          </td>
-                          <td
-                            className={
-                              customer.balance > 0
-                                ? listPageStyles.statusNegative
-                                : listPageStyles.statusPositive
-                            }
-                          >
-                            {formatCurrency(customer.balance)}
-                          </td>
-                          <td>
-                            {customer.overdueReceivablesCount > 0
-                              ? `${customer.overdueReceivablesCount} vencida${customer.overdueReceivablesCount === 1 ? '' : 's'}`
-                              : formatPortfolioDate(customer.nextDueDate)}
-                          </td>
-                          <td>{customer.purchaseCount.toString()}</td>
-                          <td>
-                            <span className={getCollectionPriority(customer).className}>
-                              {getCollectionPriority(customer).label}
-                            </span>
-                          </td>
-                          <td>
-                            <div className={styles.rowActions}>
-                              <button
-                                className={listPageStyles.detailLink}
-                                type="button"
-                                onClick={() => openCustomerDetail(customer.id)}
+                            <td>{customer.phone ?? 'Sin celular'}</td>
+                            <td>
+                              {customer.documentNumber
+                                ? `${customer.documentType ?? 'Doc.'} ${customer.documentNumber}`
+                                : 'Sin documento'}
+                            </td>
+                            <td
+                              className={
+                                customer.balance > 0
+                                  ? listPageStyles.statusNegative
+                                  : listPageStyles.statusPositive
+                              }
+                            >
+                              {formatCurrency(customer.balance)}
+                            </td>
+                            <td>
+                              {customer.overdueReceivablesCount > 0
+                                ? `${customer.overdueReceivablesCount} vencida${customer.overdueReceivablesCount === 1 ? '' : 's'}`
+                                : formatPortfolioDate(customer.nextDueDate)}
+                            </td>
+                            <td>{customer.purchaseCount.toString()}</td>
+                            <td>
+                              <span
+                                className={
+                                  getCollectionPriority(customer).className
+                                }
                               >
-                                Detalle
-                              </button>
-                              <button
-                                className={listPageStyles.detailLink}
-                                type="button"
-                                onClick={() => openEditCustomer(customer.id)}
-                              >
-                                Editar
-                              </button>
-                            </div>
-                          </td>
+                                {getCollectionPriority(customer).label}
+                              </span>
+                            </td>
+                            <td>
+                              <div className={styles.rowActions}>
+                                <button
+                                  className={listPageStyles.detailLink}
+                                  type="button"
+                                  onClick={() =>
+                                    openCustomerDetail(customer.id)
+                                  }
+                                >
+                                  Detalle
+                                </button>
+                                <button
+                                  className={listPageStyles.detailLink}
+                                  type="button"
+                                  onClick={() => openEditCustomer(customer.id)}
+                                >
+                                  Editar
+                                </button>
+                              </div>
+                            </td>
                           </tr>
                         )
                       })
@@ -866,7 +985,10 @@ export function CustomersPage() {
           isLoading={customerDetailQuery.isLoading}
           isDeleting={deleteCustomerMutation.isPending}
           isOpen={isRetailDrawerOpen}
-          isPaymentSubmitting={registerPaymentMutation.isPending}
+          isPaymentSubmitting={
+            registerPaymentMutation.isPending ||
+            registerOldestPaymentMutation.isPending
+          }
           isActivitySubmitting={createCollectionActivityMutation.isPending}
           isEmailSubmitting={sendReminderEmailMutation.isPending}
           canSendConfirmedEmail={
@@ -884,6 +1006,7 @@ export function CustomersPage() {
             updateCustomerMutation.error ??
             uploadCustomerAvatarMutation.error ??
             registerPaymentMutation.error ??
+            registerOldestPaymentMutation.error ??
             updateReceivableTermsMutation.error
           }
           deleteError={deleteCustomerMutation.error}
@@ -894,6 +1017,7 @@ export function CustomersPage() {
             void customerDetailQuery.refetch()
           }}
           onRegisterPayment={handleRegisterCustomerPayment}
+          onRegisterOldestPayment={handleRegisterCustomerOldestPayment}
           onCreateCollectionActivity={handleCreateCollectionActivity}
           onSendReminderEmail={handleSendReminderEmail}
           onUpdateReceivableTerms={handleUpdateCustomerReceivableTerms}
@@ -1009,7 +1133,9 @@ export function CustomersPage() {
           />
 
           <CustomerPurchaseHistoryPanel
-            customerName={selectedCustomer?.name ?? selectedCustomerSummary?.name ?? null}
+            customerName={
+              selectedCustomer?.name ?? selectedCustomerSummary?.name ?? null
+            }
             isLoading={customerDetailQuery.isLoading}
             purchaseHistory={selectedCustomer?.purchaseHistory ?? []}
           />
