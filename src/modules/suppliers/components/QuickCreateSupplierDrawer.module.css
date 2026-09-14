@@ -1,0 +1,96 @@
+.drawerLayer {
+  z-index: 110;
+}
+
+.iconBadge {
+  width: 2.65rem;
+  height: 2.65rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.9rem;
+  background: #fff0df;
+  color: #b9681e;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  padding-top: 0.35rem;
+}
+
+.notice {
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #f1d2ae;
+  border-radius: 0.95rem;
+  background: #fff8ef;
+  color: #675742;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+.notice strong {
+  color: #352b20;
+  font-size: 0.9rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.5rem;
+  color: #1f2a37;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+.field input {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  color: #1f2a37;
+  font: inherit;
+  font-weight: 500;
+}
+.field input:focus {
+  outline: 2px solid rgba(185, 104, 30, 0.16);
+  border-color: #d49b66;
+}
+
+.errorMessage {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #fecaca;
+  border-radius: 0.85rem;
+  background: #fff1f2;
+  color: #b42318;
+  font-size: 0.84rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.primaryButton,
+.secondaryButton {
+  min-height: 3.2rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.95rem;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+.primaryButton {
+  border: 0;
+  background: #1f2a37;
+  color: #ffffff;
+}
+.secondaryButton {
+  border: 1px solid #1f2a37;
+  background: #ffffff;
+  color: #1f2a37;
+}
+.primaryButton:disabled,
+.secondaryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}

@@ -15,12 +15,16 @@ type RetailSupplierDrawerProps = {
   errorMessage: string | null
   supplier?: SupplierSummary | null
   onClose: () => void
-  onSubmit: (input: SupplierMutationInput, avatarFile?: File | null) => Promise<void>
+  onSubmit: (
+    input: SupplierMutationInput,
+    avatarFile?: File | null,
+  ) => Promise<void>
 }
 
 const initialForm = {
   name: '',
   phone: '',
+  documentNumber: '',
   email: '',
 }
 
@@ -44,6 +48,7 @@ export function RetailSupplierDrawer({
       setFormValues({
         name: supplier?.name ?? '',
         phone: supplier?.phone ?? '',
+        documentNumber: supplier?.documentNumber ?? '',
         email: supplier?.email ?? '',
       })
       setLocalError(null)
@@ -74,6 +79,7 @@ export function RetailSupplierDrawer({
     const name = formValues.name.trim()
     const email = formValues.email.trim()
     const phone = formValues.phone.trim()
+    const documentNumber = formValues.documentNumber.trim()
 
     if (name.length < 2) {
       setLocalError('Escribe el nombre del proveedor.')
@@ -85,6 +91,14 @@ export function RetailSupplierDrawer({
       return
     }
 
+    if (
+      documentNumber.length > 0 &&
+      documentNumber.replace(/[^a-zA-Z0-9]/g, '').length < 4
+    ) {
+      setLocalError('El documento debe tener al menos 4 caracteres.')
+      return
+    }
+
     setLocalError(null)
 
     await onSubmit(
@@ -92,6 +106,7 @@ export function RetailSupplierDrawer({
         name,
         email: email.length > 0 ? email : null,
         phone: phone.length > 0 ? phone : null,
+        documentNumber: documentNumber.length > 0 ? documentNumber : null,
       },
       avatarUpload.file,
     )
@@ -138,6 +153,20 @@ export function RetailSupplierDrawer({
             type="tel"
             value={formValues.phone}
             onChange={(event) => updateField('phone', event.target.value)}
+          />
+        </label>
+
+        <label className={styles.field}>
+          <span>Documento</span>
+          <input
+            className={styles.input}
+            maxLength={80}
+            placeholder="Ej: 900123456-7"
+            type="text"
+            value={formValues.documentNumber}
+            onChange={(event) =>
+              updateField('documentNumber', event.target.value)
+            }
           />
         </label>
 

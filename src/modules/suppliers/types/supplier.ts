@@ -3,6 +3,7 @@ export type SupplierSummary = {
   name: string
   email: string | null
   phone: string | null
+  documentNumber: string | null
   avatarUrl: string | null
   purchaseCount: number
   outstandingBalance: number
@@ -74,6 +75,7 @@ export type SupplierMutationInput = {
   name: string
   email?: string | null
   phone?: string | null
+  documentNumber?: string | null
 }
 
 export type SupplierPurchasePaymentInput = {

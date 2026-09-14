@@ -27,6 +27,7 @@ function toSupplierSummary(supplier: SupplierDetail): SupplierSummary {
     name: supplier.name,
     email: supplier.email,
     phone: supplier.phone,
+    documentNumber: supplier.documentNumber,
     avatarUrl: supplier.avatarUrl,
     purchaseCount: supplier.purchaseCount,
     outstandingBalance: supplier.outstandingBalance,
@@ -57,8 +58,12 @@ export function useCreateSupplierMutation() {
   return useMutation({
     mutationFn: (input: SupplierMutationInput) => createSupplier(input),
     onSuccess: (supplier) => {
-      queryClient.setQueryData<SupplierSummary[]>(suppliersQueryKey, (current) =>
-        current ? [toSupplierSummary(supplier), ...current] : [toSupplierSummary(supplier)],
+      queryClient.setQueryData<SupplierSummary[]>(
+        suppliersQueryKey,
+        (current) =>
+          current
+            ? [toSupplierSummary(supplier), ...current]
+            : [toSupplierSummary(supplier)],
       )
 
       queryClient.setQueryData(
@@ -83,10 +88,12 @@ export function useUpdateSupplierMutation() {
       input: SupplierMutationInput
     }) => updateSupplier(supplierId, input),
     onSuccess: (supplier) => {
-      queryClient.setQueryData<SupplierSummary[]>(suppliersQueryKey, (current) =>
-        current?.map((item) =>
-          item.id === supplier.id ? toSupplierSummary(supplier) : item,
-        ),
+      queryClient.setQueryData<SupplierSummary[]>(
+        suppliersQueryKey,
+        (current) =>
+          current?.map((item) =>
+            item.id === supplier.id ? toSupplierSummary(supplier) : item,
+          ),
       )
 
       queryClient.setQueryData(
@@ -207,18 +214,15 @@ export function useUploadSupplierAvatarMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      supplierId,
-      file,
-    }: {
-      supplierId: string
-      file: File
-    }) => uploadSupplierAvatar(supplierId, file),
+    mutationFn: ({ supplierId, file }: { supplierId: string; file: File }) =>
+      uploadSupplierAvatar(supplierId, file),
     onSuccess: (supplier) => {
-      queryClient.setQueryData<SupplierSummary[]>(suppliersQueryKey, (current) =>
-        current?.map((item) =>
-          item.id === supplier.id ? toSupplierSummary(supplier) : item,
-        ),
+      queryClient.setQueryData<SupplierSummary[]>(
+        suppliersQueryKey,
+        (current) =>
+          current?.map((item) =>
+            item.id === supplier.id ? toSupplierSummary(supplier) : item,
+          ),
       )
 
       queryClient.setQueryData(
