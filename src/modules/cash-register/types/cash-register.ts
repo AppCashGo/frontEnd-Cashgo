@@ -22,6 +22,8 @@ export type CashRegisterAssignee = {
 export type CashRegisterPaymentSummary = {
   method: CashRegisterPaymentMethod;
   amount: number;
+  salesAmount: number;
+  collectionsAmount: number;
 };
 
 export type CashRegisterTransaction = {

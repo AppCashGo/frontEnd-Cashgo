@@ -105,8 +105,9 @@ function getPaymentMethodTotal(
   }
 
   return (
-    session.paymentMethods.find((paymentMethod) => paymentMethod.method === method)
-      ?.amount ?? 0
+    session.paymentMethods.find(
+      (paymentMethod) => paymentMethod.method === method,
+    )?.amount ?? 0
   );
 }
 
@@ -123,9 +124,13 @@ function getPaymentMethodRows(
     ];
   }
 
+  const paymentMethod = session.paymentMethods.find(
+    (summary) => summary.method === method,
+  );
+
   return [
-    { label: "Ventas", value: getPaymentMethodTotal(session, method) },
-    { label: "Abonos", value: 0 },
+    { label: "Ventas", value: paymentMethod?.salesAmount ?? 0 },
+    { label: "Abonos", value: paymentMethod?.collectionsAmount ?? 0 },
     { label: "Gastos", value: 0, tone: "danger" },
   ];
 }
@@ -483,7 +488,10 @@ export function CashRegisterSessionDrawer({
         <div className={styles.recordsList}>
           {paymentMethodsOrder.map((paymentMethod) => {
             const isExpanded = expandedPaymentMethod === paymentMethod.method;
-            const balance = getPaymentMethodBalance(session, paymentMethod.method);
+            const balance = getPaymentMethodBalance(
+              session,
+              paymentMethod.method,
+            );
 
             return (
               <section
@@ -610,9 +618,7 @@ export function CashRegisterSessionDrawer({
             <div className={styles.shiftSummaryRow}>
               <span>Total abonos</span>
               <strong>
-                {formatCashRegisterCurrency(
-                  session.receivableCollectionsTotal,
-                )}
+                {formatCashRegisterCurrency(session.receivableCollectionsTotal)}
               </strong>
             </div>
             {closingStep === "review" && hasClosingDifference ? (

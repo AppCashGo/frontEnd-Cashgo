@@ -23,6 +23,10 @@ import type {
   CustomerReminderEmailInput,
   CustomerSummary,
 } from '@/modules/customers/types/customer'
+import {
+  cashRegisterCurrentQueryKey,
+  movementsOverviewQueryKey,
+} from '@/modules/cash-register/hooks/use-cash-register-query'
 
 export const customersQueryKey = ['customers'] as const
 export const customerCollectionAgendaQueryKey = [
@@ -221,6 +225,10 @@ export function useRegisterCustomerPaymentMutation() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: customersQueryKey }),
         queryClient.invalidateQueries({
+          queryKey: cashRegisterCurrentQueryKey,
+        }),
+        queryClient.invalidateQueries({ queryKey: movementsOverviewQueryKey }),
+        queryClient.invalidateQueries({
           queryKey: customerCollectionAgendaQueryKey,
         }),
       ])
@@ -242,6 +250,10 @@ export function useRegisterCustomerOldestPaymentMutation() {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({
+          queryKey: cashRegisterCurrentQueryKey,
+        }),
+        queryClient.invalidateQueries({ queryKey: movementsOverviewQueryKey }),
         queryClient.invalidateQueries({
           queryKey: customerCollectionAgendaQueryKey,
         }),
