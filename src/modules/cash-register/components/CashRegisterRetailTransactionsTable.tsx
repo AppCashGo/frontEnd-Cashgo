@@ -72,6 +72,10 @@ function getPaymentColumnLabel(transaction: MovementLedgerItem) {
     return getPaymentMethodLabel(transaction.paymentMethod);
   }
 
+  if (transaction.scope === "INVENTORY") {
+    return "No aplica";
+  }
+
   if (
     transaction.previousStock !== null &&
     transaction.newStock !== null &&
@@ -84,7 +88,6 @@ function getPaymentColumnLabel(transaction: MovementLedgerItem) {
     return `Stock final ${transaction.newStock}`;
   }
 
-  if (transaction.scope === "INVENTORY") return "Inventario";
   if (transaction.source === "SALE" && transaction.status === "PENDING_PAYMENT") {
     return "Crédito";
   }
