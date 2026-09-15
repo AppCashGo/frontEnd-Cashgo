@@ -63,6 +63,12 @@ import {
 } from "@/modules/sales/hooks/use-create-sale-mutation";
 import { useBusinessSettingsQuery } from "@/modules/settings/hooks/use-settings-query";
 import { useSuppliersQuery } from "@/modules/suppliers/hooks/use-suppliers-query";
+import { OwnerLoansPanel } from "@/modules/owner-loans/components/OwnerLoansPanel";
+import {
+  useCreateOwnerLoanMutation,
+  useCreateOwnerLoanPaymentMutation,
+  useOwnerLoansQuery,
+} from "@/modules/owner-loans/hooks/use-owner-loans-query";
 import { AppIcon } from "@/shared/components/icons/AppIcon";
 import { COLLECTED_PAYMENT_METHOD_OPTIONS } from "@/shared/payments/payment-methods";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
@@ -210,7 +216,10 @@ function matchesLedgerTab(transaction: MovementLedgerItem, activeLedgerTab: Ledg
     );
   }
 
-  return transaction.direction === "OUT" && transaction.status === "PENDING";
+  return (
+    (transaction.direction === "OUT" && transaction.status === "PENDING") ||
+    (transaction.source === "OWNER_LOAN" && transaction.status === "ACTIVE")
+  );
 }
 
 function getTransactionText(transaction: MovementLedgerItem) {
@@ -732,6 +741,9 @@ export function CashRegisterPage() {
   const manualEntryMutation = useCreateCashRegisterManualEntryMutation();
   const createExpenseMutation = useCreateExpenseMutation();
   const createSaleMutation = useCreateSaleMutation();
+  const ownerLoansQuery = useOwnerLoansQuery();
+  const createOwnerLoanMutation = useCreateOwnerLoanMutation();
+  const createOwnerLoanPaymentMutation = useCreateOwnerLoanPaymentMutation();
   const downloadReportMutation = useDownloadCashRegisterReportMutation();
   const downloadMovementsReportMutation = useDownloadMovementsReportMutation();
   const currentSession = currentSessionQuery.data ?? null;
@@ -1243,6 +1255,25 @@ export function CashRegisterPage() {
               </div>
             ) : activeLedgerTab === "receivables" || activeLedgerTab === "payables" ? (
               <div className={styles.debtPanel}>
+                {activeLedgerTab === "payables" ? (
+                  <OwnerLoansPanel
+                    isLoading={ownerLoansQuery.isLoading}
+                    isSubmitting={
+                      createOwnerLoanMutation.isPending ||
+                      createOwnerLoanPaymentMutation.isPending
+                    }
+                    loans={ownerLoansQuery.data ?? []}
+                    onCreate={async (input) => {
+                      await createOwnerLoanMutation.mutateAsync(input);
+                    }}
+                    onPayment={async (ownerLoanId, input) => {
+                      await createOwnerLoanPaymentMutation.mutateAsync({
+                        ownerLoanId,
+                        input,
+                      });
+                    }}
+                  />
+                ) : null}
                 <SummaryCard
                   label={activeLedgerTab === "receivables" ? "Total por cobrar" : "Total por pagar"}
                   value={formatCashRegisterCurrency(

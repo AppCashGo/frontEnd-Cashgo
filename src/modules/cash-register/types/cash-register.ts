@@ -24,6 +24,8 @@ export type CashRegisterPaymentSummary = {
   amount: number;
   salesAmount: number;
   collectionsAmount: number;
+  ownerLoanProceedsAmount: number;
+  ownerLoanPaymentsAmount: number;
 };
 
 export type CashRegisterTransaction = {
@@ -101,6 +103,9 @@ export type CashRegisterSession = {
   transactionCount: number;
   manualIncomeTotal: number;
   manualExpenseTotal: number;
+  ownerLoanProceedsTotal: number;
+  ownerLoanPaymentsTotal: number;
+  ownerLoansOutstandingTotal: number;
   difference: number | null;
   openingNote: string | null;
   closingNote: string | null;

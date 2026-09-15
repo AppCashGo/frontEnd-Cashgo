@@ -115,22 +115,35 @@ function getPaymentMethodRows(
   session: CashRegisterSession,
   method: CashRegisterPaymentMethod,
 ): SummaryRow[] {
+  const paymentMethod = session.paymentMethods.find(
+    (summary) => summary.method === method,
+  );
+  const financingRows = ([
+    {
+      label: "Préstamos recibidos",
+      value: paymentMethod?.ownerLoanProceedsAmount ?? 0,
+    },
+    {
+      label: "Abonos a préstamos",
+      value: paymentMethod?.ownerLoanPaymentsAmount ?? 0,
+      tone: "danger",
+    },
+  ] satisfies SummaryRow[]).filter((row) => row.value > 0);
+
   if (method === "CASH") {
     return [
       { label: "Dinero base", value: session.openingAmount },
       { label: "Ventas", value: session.cashSalesTotal },
       { label: "Abonos", value: session.cashCollectionsTotal },
+      ...financingRows,
       { label: "Gastos", value: session.manualExpenseTotal, tone: "danger" },
     ];
   }
 
-  const paymentMethod = session.paymentMethods.find(
-    (summary) => summary.method === method,
-  );
-
   return [
     { label: "Ventas", value: paymentMethod?.salesAmount ?? 0 },
     { label: "Abonos", value: paymentMethod?.collectionsAmount ?? 0 },
+    ...financingRows,
     { label: "Gastos", value: 0, tone: "danger" },
   ];
 }
@@ -185,7 +198,7 @@ function buildVoucherHtml(
     .map((paymentMethod) => {
       const amount = getPaymentMethodBalance(session, paymentMethod.method);
 
-      if (amount <= 0 && paymentMethod.method !== "CASH") {
+      if (amount === 0 && paymentMethod.method !== "CASH") {
         return "";
       }
 
@@ -621,6 +634,32 @@ export function CashRegisterSessionDrawer({
                 {formatCashRegisterCurrency(session.receivableCollectionsTotal)}
               </strong>
             </div>
+            {session.ownerLoanProceedsTotal > 0 ? (
+              <div className={styles.shiftSummaryRow}>
+                <span>Préstamos recibidos</span>
+                <strong>
+                  {formatCashRegisterCurrency(session.ownerLoanProceedsTotal)}
+                </strong>
+              </div>
+            ) : null}
+            {session.ownerLoanPaymentsTotal > 0 ? (
+              <div className={styles.shiftSummaryRow}>
+                <span>Abonos a préstamos</span>
+                <strong className={styles.negativeValue}>
+                  {getSignedCurrency(session.ownerLoanPaymentsTotal)}
+                </strong>
+              </div>
+            ) : null}
+            {session.ownerLoansOutstandingTotal > 0 ? (
+              <div className={styles.shiftSummaryRow}>
+                <span>Deuda con propietario</span>
+                <strong>
+                  {formatCashRegisterCurrency(
+                    session.ownerLoansOutstandingTotal,
+                  )}
+                </strong>
+              </div>
+            ) : null}
             {closingStep === "review" && hasClosingDifference ? (
               <div className={styles.shiftSummaryRow}>
                 <span>Descuadre</span>
