@@ -39,9 +39,9 @@ const defaultModifierGroups: Array<{
 export const restaurantPaymentMethods = [
   { value: 'CASH', label: 'Efectivo' },
   { value: 'CARD', label: 'Tarjeta' },
-  { value: 'TRANSFER', label: 'Transferencia' },
-  { value: 'DIGITAL_WALLET', label: 'Billetera digital' },
-  { value: 'BANK_DEPOSIT', label: 'Deposito bancario' },
+  { value: 'TRANSFER', label: 'Transferencia bancaria' },
+  { value: 'DIGITAL_WALLET', label: 'Nequi / Daviplata' },
+  { value: 'BANK_DEPOSIT', label: 'Consignación bancaria' },
   { value: 'OTHER', label: 'Otro' },
 ] as const
 

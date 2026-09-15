@@ -15,6 +15,7 @@ import type {
   SaleReturnInput,
 } from '@/modules/sales/types/sale'
 import { AppDrawer } from '@/shared/components/ui/AppDrawer'
+import { COLLECTED_PAYMENT_METHOD_OPTIONS } from '@/shared/payments/payment-methods'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
@@ -30,14 +31,11 @@ type SalesHistoryDrawerProps = {
 
 type DraftMode = 'return' | 'cancel' | null
 
-const refundMethods: Array<{ value: SalePaymentMethod; label: string }> = [
-  { value: 'CASH', label: 'Efectivo' },
-  { value: 'CARD', label: 'Tarjeta' },
-  { value: 'TRANSFER', label: 'Transferencia' },
-  { value: 'DIGITAL_WALLET', label: 'Billetera digital' },
-  { value: 'BANK_DEPOSIT', label: 'Consignación bancaria' },
-  { value: 'OTHER', label: 'Otro' },
-]
+const refundMethods: Array<{ value: SalePaymentMethod; label: string }> =
+  COLLECTED_PAYMENT_METHOD_OPTIONS.map(({ value, label }) => ({
+    value: value as SalePaymentMethod,
+    label,
+  }))
 
 function todayInputValue() {
   const now = new Date()

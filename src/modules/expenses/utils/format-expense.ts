@@ -3,6 +3,7 @@ import type {
   ExpenseStatus,
 } from '@/modules/expenses/types/expense'
 import { formatCurrency } from '@/shared/utils/format-currency'
+import { getSharedPaymentMethodLabel } from '@/shared/payments/payment-methods'
 
 const dateFormatter = new Intl.DateTimeFormat('es-CO', {
   dateStyle: 'medium',
@@ -12,16 +13,6 @@ const dateTimeFormatter = new Intl.DateTimeFormat('es-CO', {
   dateStyle: 'medium',
   timeStyle: 'short',
 })
-
-const paymentMethodLabels: Record<ExpensePaymentMethod, string> = {
-  CASH: 'Efectivo',
-  CARD: 'Tarjeta',
-  TRANSFER: 'Transferencia',
-  DIGITAL_WALLET: 'Billetera digital',
-  BANK_DEPOSIT: 'Consignación',
-  CREDIT: 'Crédito',
-  OTHER: 'Otro',
-}
 
 const expenseStatusLabels: Record<ExpenseStatus, string> = {
   PAID: 'Pagado',
@@ -42,7 +33,7 @@ export function formatExpenseDateTime(value: string | Date) {
 }
 
 export function getExpensePaymentMethodLabel(method: ExpensePaymentMethod) {
-  return paymentMethodLabels[method]
+  return getSharedPaymentMethodLabel(method)
 }
 
 export function getExpenseStatusLabel(status: ExpenseStatus) {

@@ -41,6 +41,10 @@ import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { useImageUploadPreview } from '@/shared/hooks/use-image-upload-preview'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { joinClassNames } from '@/shared/utils/join-class-names'
+import {
+  COLLECTED_PAYMENT_METHOD_OPTIONS,
+  getSharedPaymentMethodLabel,
+} from '@/shared/payments/payment-methods'
 import styles from './RetailCustomerDrawer.module.css'
 
 export type RetailCustomerDrawerMode = 'create' | 'edit' | 'detail'
@@ -147,23 +151,13 @@ const EMPTY_FORM: CustomerFormState = {
 
 const OLDEST_RECEIVABLE_OPTION = '__oldest_receivables__'
 
-const PAYMENT_METHOD_OPTIONS: Array<{
+const PAYMENT_METHOD_OPTIONS = COLLECTED_PAYMENT_METHOD_OPTIONS as Array<{
   value: CustomerPaymentMethod
   label: string
-}> = [
-  { value: 'CASH', label: 'Efectivo' },
-  { value: 'CARD', label: 'Tarjeta' },
-  { value: 'TRANSFER', label: 'Transferencia' },
-  { value: 'DIGITAL_WALLET', label: 'Billetera digital' },
-  { value: 'BANK_DEPOSIT', label: 'Deposito bancario' },
-  { value: 'OTHER', label: 'Otro' },
-]
+}>
 
 function getPaymentMethodLabel(method: CustomerPaymentMethod) {
-  return (
-    PAYMENT_METHOD_OPTIONS.find((option) => option.value === method)?.label ??
-    method
-  )
+  return getSharedPaymentMethodLabel(method)
 }
 
 function getStatusLabel(status: string) {
@@ -762,7 +756,7 @@ export function RetailCustomerDrawer({
       method: paymentForm.method,
       reference: normalizeOptionalText(paymentForm.reference) ?? undefined,
       notes: normalizeOptionalText(paymentForm.notes) ?? undefined,
-      ...(currentCashRegisterId && paymentForm.method === 'CASH'
+      ...(currentCashRegisterId
         ? { cashRegisterId: currentCashRegisterId }
         : {}),
     }

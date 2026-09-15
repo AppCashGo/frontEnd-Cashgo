@@ -64,6 +64,7 @@ import {
 import { useBusinessSettingsQuery } from "@/modules/settings/hooks/use-settings-query";
 import { useSuppliersQuery } from "@/modules/suppliers/hooks/use-suppliers-query";
 import { AppIcon } from "@/shared/components/icons/AppIcon";
+import { COLLECTED_PAYMENT_METHOD_OPTIONS } from "@/shared/payments/payment-methods";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import { RetailPageLayout } from "@/shared/components/retail/RetailPageLayout";
 import { resolveApiAssetUrl } from "@/shared/services/api-client";
@@ -94,13 +95,11 @@ type SelectorItem = {
 const paymentFilterOptions: Array<
   FilterOption & { methods: CashRegisterPaymentMethod[] }
 > = [
-  { id: "CASH", label: "Efectivo", methods: ["CASH"] },
-  { id: "CARD", label: "Tarjeta", methods: ["CARD"] },
-  { id: "TRANSFER", label: "Transferencia bancaria", methods: ["TRANSFER"] },
-  { id: "OTHER", label: "Otro", methods: ["OTHER"] },
-  { id: "NEQUI", label: "Nequi", methods: ["DIGITAL_WALLET"] },
-  { id: "DAVIPLATA", label: "Daviplata", methods: ["DIGITAL_WALLET"] },
-  { id: "DATAPHONE", label: "Datáfono Treinta", methods: ["CARD"] },
+  ...COLLECTED_PAYMENT_METHOD_OPTIONS.map(({ value, label }) => ({
+    id: value,
+    label,
+    methods: [value as CashRegisterPaymentMethod],
+  })),
 ];
 
 const saleOriginOptions: FilterOption[] = [
@@ -262,14 +261,22 @@ function matchesPaymentFilter(
     return true;
   }
 
-  if (!transaction.paymentMethod) {
+  const transactionMethods = transaction.paymentMethods?.length
+    ? transaction.paymentMethods
+    : transaction.paymentMethod
+      ? [transaction.paymentMethod]
+      : [];
+
+  if (transactionMethods.length === 0) {
     return false;
   }
 
   return selectedPaymentFilters.some((filterId) => {
     const filter = paymentFilterOptions.find((option) => option.id === filterId);
 
-    return filter?.methods.includes(transaction.paymentMethod as CashRegisterPaymentMethod);
+    return transactionMethods.some((method) =>
+      filter?.methods.includes(method as CashRegisterPaymentMethod),
+    );
   });
 }
 

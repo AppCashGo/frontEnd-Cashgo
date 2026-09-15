@@ -43,9 +43,9 @@ type PaymentMethodOption = {
 const paymentMethodOptions: PaymentMethodOption[] = [
   { value: "CASH", labelEs: "Efectivo", labelEn: "Cash" },
   { value: "CARD", labelEs: "Tarjeta", labelEn: "Card" },
-  { value: "TRANSFER", labelEs: "Transferencia", labelEn: "Transfer" },
-  { value: "DIGITAL_WALLET", labelEs: "Billetera", labelEn: "Wallet" },
-  { value: "BANK_DEPOSIT", labelEs: "Consignación", labelEn: "Deposit" },
+  { value: "TRANSFER", labelEs: "Transferencia bancaria", labelEn: "Bank transfer" },
+  { value: "DIGITAL_WALLET", labelEs: "Nequi / Daviplata", labelEn: "Nequi / Daviplata" },
+  { value: "BANK_DEPOSIT", labelEs: "Consignación bancaria", labelEn: "Bank deposit" },
   { value: "OTHER", labelEs: "Otro", labelEn: "Other" },
 ];
 

@@ -64,6 +64,10 @@ function getKindIcon(direction: MovementLedgerItem["direction"]) {
 }
 
 function getPaymentColumnLabel(transaction: MovementLedgerItem) {
+  if (transaction.paymentMethods?.length) {
+    return transaction.paymentMethods.map(getPaymentMethodLabel).join(" + ");
+  }
+
   if (transaction.paymentMethod) {
     return getPaymentMethodLabel(transaction.paymentMethod);
   }
@@ -80,7 +84,14 @@ function getPaymentColumnLabel(transaction: MovementLedgerItem) {
     return `Stock final ${transaction.newStock}`;
   }
 
-  return transaction.scope === "INVENTORY" ? "Inventario" : "Sistema";
+  if (transaction.scope === "INVENTORY") return "Inventario";
+  if (transaction.source === "SALE" && transaction.status === "PENDING_PAYMENT") {
+    return "Crédito";
+  }
+  if (transaction.source === "SALE" && transaction.status === "PARTIALLY_PAID") {
+    return "Pago parcial";
+  }
+  return "Sin especificar";
 }
 
 function getValueLabel(transaction: MovementLedgerItem) {
@@ -99,6 +110,18 @@ function getValueLabel(transaction: MovementLedgerItem) {
   }
 
   return "—";
+}
+
+function shouldShowSaleBreakdown(transaction: MovementLedgerItem) {
+  if (transaction.source !== "SALE" || transaction.amount === null) {
+    return false;
+  }
+
+  return (
+    transaction.pendingAmount !== null &&
+    transaction.pendingAmount !== undefined &&
+    transaction.pendingAmount > 0
+  );
 }
 
 function getProductsLabel(transaction: MovementLedgerItem) {
@@ -213,7 +236,19 @@ export function CashRegisterRetailTransactionsTable({
                     {getProductsLabel(transaction)}
                   </span>
                 </td>
-                <td>{getValueLabel(transaction)}</td>
+                <td>
+                  <div className={styles.valueCell}>
+                    <strong>{getValueLabel(transaction)}</strong>
+                    {shouldShowSaleBreakdown(transaction) ? (
+                      <span className={styles.valueBreakdown}>
+                        Ingresó {formatCashRegisterCurrency(transaction.collectedAmount ?? 0)}
+                        <span className={styles.valuePending}>
+                          Pendiente {formatCashRegisterCurrency(transaction.pendingAmount ?? 0)}
+                        </span>
+                      </span>
+                    ) : null}
+                  </div>
+                </td>
                 <td>{getPaymentColumnLabel(transaction)}</td>
                 <td>{formatCashRegisterDateTime(transaction.createdAt)}</td>
                 <td>

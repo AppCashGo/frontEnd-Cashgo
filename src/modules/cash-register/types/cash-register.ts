@@ -31,6 +31,9 @@ export type CashRegisterTransaction = {
   concept: string;
   amount: number;
   paymentMethod: CashRegisterPaymentMethod | null;
+  paymentMethods?: CashRegisterPaymentMethod[];
+  collectedAmount?: number | null;
+  pendingAmount?: number | null;
   status: string;
   createdAt: string;
 };
@@ -46,6 +49,9 @@ export type MovementLedgerItem = {
   amount: number | null;
   quantity: number | null;
   paymentMethod: CashRegisterPaymentMethod | null;
+  paymentMethods?: CashRegisterPaymentMethod[];
+  collectedAmount?: number | null;
+  pendingAmount?: number | null;
   productName: string | null;
   productNames?: string[];
   previousStock: number | null;

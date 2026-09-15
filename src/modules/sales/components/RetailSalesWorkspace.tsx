@@ -57,6 +57,10 @@ import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
+import {
+  COLLECTED_PAYMENT_METHOD_OPTIONS,
+  getSharedPaymentMethodLabel,
+} from '@/shared/payments/payment-methods'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import styles from './RetailSalesWorkspace.module.css'
 
@@ -67,9 +71,9 @@ type RetailPaymentOption =
   | 'CASH'
   | 'CARD'
   | 'TRANSFER'
+  | 'DIGITAL_WALLET'
+  | 'BANK_DEPOSIT'
   | 'OTHER'
-  | 'NEQUI'
-  | 'DAVIPLATA'
 type CatalogPaymentSplit = {
   id: string
   amountInput: string
@@ -134,17 +138,10 @@ type DrawerShellProps = {
 
 const createCustomerSelectValue = '__CREATE_CUSTOMER__'
 
-const paymentOptions: Array<{
+const paymentOptions = COLLECTED_PAYMENT_METHOD_OPTIONS as Array<{
   value: RetailPaymentOption
   label: string
-}> = [
-  { value: 'CASH', label: 'Efectivo' },
-  { value: 'CARD', label: 'Tarjeta' },
-  { value: 'TRANSFER', label: 'Transferencia bancaria' },
-  { value: 'OTHER', label: 'Otro' },
-  { value: 'NEQUI', label: 'Nequi' },
-  { value: 'DAVIPLATA', label: 'Daviplata' },
-]
+}>
 
 const paymentSplitOptions = ['1', '2', '3', '4', '5', '6', 'Otro'] as const
 type PaymentSplitOption = (typeof paymentSplitOptions)[number]
@@ -362,10 +359,7 @@ function normalizeOptionalText(value: string) {
 }
 
 function getPaymentOptionLabel(option: RetailPaymentOption) {
-  return (
-    paymentOptions.find((paymentOption) => paymentOption.value === option)?.label ??
-    'Efectivo'
-  )
+  return getSharedPaymentMethodLabel(option)
 }
 
 function getCashRegisterAudioContext() {
@@ -472,20 +466,12 @@ function playCashRegisterSound() {
 function mapRetailPaymentOptionToSaleMethod(
   option: RetailPaymentOption,
 ): SalePaymentMethod {
-  if (option === 'NEQUI' || option === 'DAVIPLATA') {
-    return 'DIGITAL_WALLET'
-  }
-
   return option
 }
 
 function mapRetailPaymentOptionToExpenseMethod(
   option: RetailPaymentOption,
 ): ExpensePaymentMethod {
-  if (option === 'NEQUI' || option === 'DAVIPLATA') {
-    return 'DIGITAL_WALLET'
-  }
-
   return option
 }
 
@@ -631,6 +617,7 @@ function PaymentMethodIcon({ option }: { option: RetailPaymentOption }) {
         </svg>
       )
     case 'TRANSFER':
+    case 'BANK_DEPOSIT':
       return (
         <svg aria-hidden="true" className={styles.paymentMethodIconSvg} viewBox="0 0 24 24">
           <path d="M4 10h16L12 5 4 10Z" />
@@ -646,14 +633,8 @@ function PaymentMethodIcon({ option }: { option: RetailPaymentOption }) {
           <circle cx="16" cy="16" r="2" />
         </svg>
       )
-    case 'NEQUI':
+    case 'DIGITAL_WALLET':
       return <span className={styles.nequiMark} aria-hidden="true" />
-    case 'DAVIPLATA':
-      return (
-        <span className={styles.daviplataMark} aria-hidden="true">
-          DaviPlata
-        </span>
-      )
     default:
       return null
   }

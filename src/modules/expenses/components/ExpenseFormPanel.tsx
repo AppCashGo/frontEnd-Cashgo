@@ -47,9 +47,9 @@ const paymentMethods: Array<{
 }> = [
   { icon: Banknote, label: 'Efectivo', value: 'CASH' },
   { icon: CreditCard, label: 'Tarjeta', value: 'CARD' },
-  { icon: Landmark, label: 'Transf.', value: 'TRANSFER' },
-  { icon: Smartphone, label: 'Billetera', value: 'DIGITAL_WALLET' },
-  { icon: Building2, label: 'Depósito', value: 'BANK_DEPOSIT' },
+  { icon: Landmark, label: 'Transferencia bancaria', value: 'TRANSFER' },
+  { icon: Smartphone, label: 'Nequi / Daviplata', value: 'DIGITAL_WALLET' },
+  { icon: Building2, label: 'Consignación bancaria', value: 'BANK_DEPOSIT' },
 ]
 
 function getDefaultValues(expense: Expense | null): ExpenseFormValues {

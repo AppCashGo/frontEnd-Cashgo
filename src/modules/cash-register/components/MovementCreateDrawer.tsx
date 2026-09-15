@@ -15,6 +15,7 @@ import type { CashRegisterPaymentMethod } from '@/modules/cash-register/types/ca
 import type { CustomerSummary } from '@/modules/customers/types/customer'
 import type { SupplierSummary } from '@/modules/suppliers/types/supplier'
 import { QuickCreateSupplierDrawer } from '@/modules/suppliers/components/QuickCreateSupplierDrawer'
+import { COLLECTED_PAYMENT_METHOD_OPTIONS } from '@/shared/payments/payment-methods'
 import { CashRegisterRetailDrawer } from './CashRegisterRetailDrawer'
 import styles from './MovementCreateDrawer.module.css'
 
@@ -50,14 +51,10 @@ type MovementCreateDrawerProps = {
 const paymentMethods: Array<{
   value: CashRegisterPaymentMethod
   label: string
-}> = [
-  { value: 'CASH', label: 'Efectivo' },
-  { value: 'CARD', label: 'Tarjeta' },
-  { value: 'TRANSFER', label: 'Transferencia' },
-  { value: 'DIGITAL_WALLET', label: 'Billetera digital' },
-  { value: 'BANK_DEPOSIT', label: 'Consignación' },
-  { value: 'OTHER', label: 'Otro' },
-]
+}> = COLLECTED_PAYMENT_METHOD_OPTIONS.map(({ value, label }) => ({
+  value: value as CashRegisterPaymentMethod,
+  label,
+}))
 
 const drawerCopy = {
   income: {

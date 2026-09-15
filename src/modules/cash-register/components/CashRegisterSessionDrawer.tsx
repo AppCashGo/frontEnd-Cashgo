@@ -51,8 +51,8 @@ const paymentMethodsOrder: PaymentMethodSummary[] = [
   { method: "CASH", label: "Efectivo" },
   { method: "CARD", label: "Tarjeta" },
   { method: "DIGITAL_WALLET", label: "Nequi / Daviplata" },
-  { method: "TRANSFER", label: "Transferencia" },
-  { method: "BANK_DEPOSIT", label: "Consignación" },
+  { method: "TRANSFER", label: "Transferencia bancaria" },
+  { method: "BANK_DEPOSIT", label: "Consignación bancaria" },
   { method: "OTHER", label: "Otros" },
 ];
 

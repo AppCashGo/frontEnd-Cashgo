@@ -313,9 +313,9 @@ const paymentMethodLabels: Record<
   es: {
     CASH: "Efectivo",
     CARD: "Tarjeta",
-    TRANSFER: "Transferencia",
-    DIGITAL_WALLET: "Billetera digital",
-    BANK_DEPOSIT: "Consignación",
+    TRANSFER: "Transferencia bancaria",
+    DIGITAL_WALLET: "Nequi / Daviplata",
+    BANK_DEPOSIT: "Consignación bancaria",
     CREDIT: "Crédito",
     OTHER: "Otro",
   },

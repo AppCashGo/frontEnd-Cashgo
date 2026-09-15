@@ -100,6 +100,25 @@
   line-height: 1.45;
 }
 
+.valueCell {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 8.5rem;
+}
+
+.valueBreakdown {
+  display: grid;
+  gap: 0.1rem;
+  color: #35664d;
+  font-size: 0.69rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.valuePending {
+  color: #b45309;
+}
+
 .statusPill {
   display: inline-flex;
   align-items: center;

@@ -25,6 +25,7 @@ import {
 import { useCreateSaleMutation } from '@/modules/sales/hooks/use-create-sale-mutation'
 import type { SalePaymentMethod } from '@/modules/sales/types/sale'
 import { AppIcon } from '@/shared/components/icons/AppIcon'
+import { getSharedPaymentMethodLabel } from '@/shared/payments/payment-methods'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { joinClassNames } from '@/shared/utils/join-class-names'
@@ -65,15 +66,6 @@ const deliverySources: Array<{
   { value: 'OWN_DELIVERY', label: 'Domicilio propio' },
 ]
 
-const fallbackPaymentLabels = new Map<SalePaymentMethod, string>([
-  ['CASH', 'Efectivo'],
-  ['TRANSFER', 'Transferencia bancaria'],
-  ['CARD', 'Tarjeta'],
-  ['DIGITAL_WALLET', 'Nequi'],
-  ['BANK_DEPOSIT', 'Daviplata'],
-  ['OTHER', 'Otro datafono'],
-])
-
 function parseMoneyInput(value: string) {
   const parsedValue = Number(value.replace(/[^\d.]/g, ''))
 
@@ -110,12 +102,7 @@ function getProductInitials(product: Product) {
 }
 
 function getPaymentLabel(method: SalePaymentMethod) {
-  return (
-    fallbackPaymentLabels.get(method) ??
-    restaurantPaymentMethods.find((paymentMethod) => paymentMethod.value === method)
-      ?.label ??
-    'Otro'
-  )
+  return getSharedPaymentMethodLabel(method)
 }
 
 function getDeliverySourceLabel(source: DeliveryOrderSource | undefined) {

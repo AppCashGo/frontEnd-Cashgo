@@ -2592,9 +2592,9 @@ export function RetailInventoryWorkspace() {
                 >
                   <option value="CASH">{languageCode === 'en' ? 'Cash' : 'Efectivo'}</option>
                   <option value="CARD">{languageCode === 'en' ? 'Card' : 'Tarjeta'}</option>
-                  <option value="TRANSFER">{languageCode === 'en' ? 'Transfer' : 'Transferencia'}</option>
-                  <option value="DIGITAL_WALLET">{languageCode === 'en' ? 'Digital wallet' : 'Billetera digital'}</option>
-                  <option value="BANK_DEPOSIT">{languageCode === 'en' ? 'Bank deposit' : 'Consignación'}</option>
+                  <option value="TRANSFER">{languageCode === 'en' ? 'Bank transfer' : 'Transferencia bancaria'}</option>
+                  <option value="DIGITAL_WALLET">Nequi / Daviplata</option>
+                  <option value="BANK_DEPOSIT">{languageCode === 'en' ? 'Bank deposit' : 'Consignación bancaria'}</option>
                   <option value="CREDIT">{languageCode === 'en' ? 'Credit' : 'Crédito'}</option>
                   <option value="OTHER">{languageCode === 'en' ? 'Other' : 'Otro'}</option>
                 </select>
