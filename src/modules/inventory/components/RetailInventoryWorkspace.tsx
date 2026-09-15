@@ -45,6 +45,7 @@ import {
 } from '@/modules/settings/hooks/use-settings-query'
 import { buildConfiguredCatalogUrl } from '@/modules/settings/utils/virtual-catalog'
 import { useSuppliersQuery } from '@/modules/suppliers/hooks/use-suppliers-query'
+import { QuickCreateSupplierDrawer } from '@/modules/suppliers/components/QuickCreateSupplierDrawer'
 import { routePaths, routeSegments } from '@/routes/route-paths'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
@@ -61,6 +62,8 @@ import styles from './RetailInventoryWorkspace.module.css'
 
 type InventoryFilter = 'ALL' | 'LOW'
 type InventorySort = 'STOCK_ASC' | 'STOCK_DESC'
+
+const CREATE_SUPPLIER_VALUE = '__create_supplier__'
 
 type FeedbackTone = 'success' | 'info' | 'error'
 
@@ -480,6 +483,7 @@ export function RetailInventoryWorkspace() {
   const [isTaxPickerOpen, setTaxPickerOpen] = useState(false)
   const [isTaxOptionsOpen, setTaxOptionsOpen] = useState(false)
   const [isPurchaseDrawerOpen, setPurchaseDrawerOpen] = useState(false)
+  const [isQuickSupplierOpen, setQuickSupplierOpen] = useState(false)
   const [isAdjustmentDrawerOpen, setAdjustmentDrawerOpen] = useState(false)
   const [shareCatalogPhone, setShareCatalogPhone] = useState('')
   const [activeInventoryFilter, setActiveInventoryFilter] =
@@ -722,6 +726,7 @@ export function RetailInventoryWorkspace() {
   }
 
   function handleClosePurchaseDrawer() {
+    setQuickSupplierOpen(false)
     setPurchaseDrawerOpen(false)
     setPurchaseFormState(createDefaultPurchaseFormState())
   }
@@ -2353,37 +2358,66 @@ export function RetailInventoryWorkspace() {
           <div className={styles.drawerStack}>
             <label className={styles.fieldGroup}>
               <span className={styles.fieldLabel}>{copy.purchaseSupplier} *</span>
-              <select
-                className={styles.selectInput}
-                disabled={suppliersQuery.isLoading || suppliers.length === 0}
-                value={purchaseFormState.supplierId}
-                onChange={(event) =>
-                  setPurchaseFormState((currentState) => ({
-                    ...currentState,
-                    supplierId: event.target.value,
-                  }))
-                }
-              >
-                <option value="">{copy.selectOption}</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.name}
+              <div className={styles.supplierPickerRow}>
+                <select
+                  className={styles.selectInput}
+                  disabled={suppliersQuery.isLoading}
+                  value={purchaseFormState.supplierId}
+                  onChange={(event) => {
+                    if (event.target.value === CREATE_SUPPLIER_VALUE) {
+                      setQuickSupplierOpen(true)
+                      return
+                    }
+
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      supplierId: event.target.value,
+                    }))
+                  }}
+                >
+                  <option value="">{copy.selectOption}</option>
+                  <option value={CREATE_SUPPLIER_VALUE}>
+                    {languageCode === 'en'
+                      ? '＋ Create new supplier'
+                      : '＋ Crear proveedor nuevo'}
                   </option>
-                ))}
-              </select>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  aria-label={
+                    languageCode === 'en'
+                      ? 'Create a new supplier'
+                      : 'Crear un proveedor nuevo'
+                  }
+                  className={styles.quickCreateSupplierButton}
+                  title={
+                    languageCode === 'en'
+                      ? 'Create supplier'
+                      : 'Crear proveedor'
+                  }
+                  type="button"
+                  onClick={() => setQuickSupplierOpen(true)}
+                >
+                  <span aria-hidden="true">＋</span>
+                </button>
+              </div>
               <small className={styles.fieldHint}>
                 {suppliers.length > 0
                   ? copy.purchaseSupplierHint
                   : copy.purchaseSupplierEmpty}{' '}
-                {suppliers.length === 0 ? (
-                  <button
-                    className={styles.inlineFieldAction}
-                    type="button"
-                    onClick={() => navigate(routePaths.suppliers)}
-                  >
-                    {languageCode === 'en' ? 'Go to suppliers' : 'Ir a proveedores'}
-                  </button>
-                ) : null}
+                <button
+                  className={styles.inlineFieldAction}
+                  type="button"
+                  onClick={() => setQuickSupplierOpen(true)}
+                >
+                  {languageCode === 'en'
+                    ? 'Create one without leaving this purchase.'
+                    : 'Créalo sin salir de esta compra.'}
+                </button>
               </small>
             </label>
 
@@ -2659,6 +2693,31 @@ export function RetailInventoryWorkspace() {
           </div>
         </DrawerShell>
       ) : null}
+
+      <QuickCreateSupplierDrawer
+        description={
+          languageCode === 'en'
+            ? 'Create it without leaving the purchase and it will be selected automatically.'
+            : 'Créalo sin salir de la compra y quedará seleccionado automáticamente.'
+        }
+        isOpen={isQuickSupplierOpen}
+        suppliers={suppliers}
+        onClose={() => setQuickSupplierOpen(false)}
+        onCreated={(supplier) => {
+          setPurchaseFormState((currentState) => ({
+            ...currentState,
+            supplierId: supplier.id,
+          }))
+          setQuickSupplierOpen(false)
+          setFeedbackMessage({
+            tone: 'success',
+            text:
+              languageCode === 'en'
+                ? `${supplier.name} was created and selected for this purchase.`
+                : `${supplier.name} fue creado y seleccionado para esta compra.`,
+          })
+        }}
+      />
 
       {confirmationDialog}
     </RetailPageLayout>

@@ -10,6 +10,7 @@ import styles from './QuickCreateSupplierDrawer.module.css'
 type QuickCreateSupplierDrawerProps = {
   suppliers: SupplierSummary[]
   isOpen: boolean
+  description?: string
   onClose: () => void
   onCreated: (supplier: SupplierSummary) => void
 }
@@ -48,6 +49,7 @@ function optionalValue(value: string) {
 export function QuickCreateSupplierDrawer({
   suppliers,
   isOpen,
+  description = 'Regístralo sin salir del movimiento y quedará seleccionado automáticamente.',
   onClose,
   onCreated,
 }: QuickCreateSupplierDrawerProps) {
@@ -156,7 +158,7 @@ export function QuickCreateSupplierDrawer({
     <SideDrawer
       className={styles.drawerLayer}
       closeLabel="Cerrar creación de proveedor"
-      description="Regístralo sin salir del movimiento y quedará seleccionado automáticamente."
+      description={description}
       isCloseDisabled={createSupplierMutation.isPending}
       isOpen={isOpen}
       title="Crear proveedor"

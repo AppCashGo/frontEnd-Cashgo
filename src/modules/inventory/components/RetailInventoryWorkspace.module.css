@@ -1332,6 +1332,38 @@
   text-decoration: underline;
 }
 
+.supplierPickerRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 3rem;
+  gap: 0.65rem;
+}
+
+.quickCreateSupplierButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 3rem;
+  min-height: 3rem;
+  padding: 0;
+  border: 1px solid #f2c58a;
+  border-radius: 0.65rem;
+  background: #fff8ed;
+  color: #bf6300;
+  font: inherit;
+  font-size: 1.45rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.quickCreateSupplierButton:hover,
+.quickCreateSupplierButton:focus-visible {
+  border-color: #d97706;
+  background: #fff1d6;
+  outline: none;
+  transform: translateY(-1px);
+}
+
 .purchaseFieldsRow {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1725,6 +1757,10 @@
 
   .purchaseFieldsRow {
     grid-template-columns: 1fr;
+  }
+
+  .supplierPickerRow {
+    grid-template-columns: minmax(0, 1fr) 3rem;
   }
 
   .purchaseItemsHeader {
