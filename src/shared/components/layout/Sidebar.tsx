@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
+import { getCurrentAuthUser } from "@/modules/auth/services/auth-api";
 import {
   getActiveBusiness,
   getActiveBusinessCategory,
@@ -54,11 +55,20 @@ function BusinessAvatar({
   name: string;
 }) {
   const resolvedLogoUrl = resolveApiAssetUrl(logoUrl);
+  const [hasImageError, setHasImageError] = useState(false);
+
+  useEffect(() => {
+    setHasImageError(false);
+  }, [resolvedLogoUrl]);
 
   return (
     <div className={className}>
-      {resolvedLogoUrl ? (
-        <img alt="" src={resolvedLogoUrl} />
+      {resolvedLogoUrl && !hasImageError ? (
+        <img
+          alt=""
+          src={resolvedLogoUrl}
+          onError={() => setHasImageError(true)}
+        />
       ) : (
         name.trim().charAt(0) || "?"
       )}
@@ -127,6 +137,8 @@ export function Sidebar({
   const location = useLocation();
   const businessMenuRef = useRef<HTMLDivElement | null>(null);
   const user = useAuthSessionStore((state) => state.user);
+  const accessToken = useAuthSessionStore((state) => state.accessToken);
+  const setSession = useAuthSessionStore((state) => state.setSession);
   const setActiveBusiness = useAuthSessionStore(
     (state) => state.setActiveBusiness,
   );
@@ -161,6 +173,28 @@ export function Sidebar({
     activeBusinessRole ?? undefined,
     dictionary,
   );
+
+  useEffect(() => {
+    if (!accessToken) {
+      return undefined;
+    }
+
+    let isActive = true;
+
+    void getCurrentAuthUser()
+      .then((freshUser) => {
+        if (isActive) {
+          setSession({ accessToken, user: freshUser });
+        }
+      })
+      .catch(() => {
+        // Other authenticated requests handle expired sessions globally.
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [accessToken, setSession]);
 
   useEffect(() => {
     if (!isBusinessMenuOpen) {

@@ -1,5 +1,7 @@
-import { postJson } from "@/shared/services/api-client";
+import { getJson, postJson } from "@/shared/services/api-client";
+import { getAuthAccessToken } from "@/shared/services/auth-session";
 import type {
+  AuthUser,
   GoogleLoginPayload,
   LoginCredentials,
   LoginResponse,
@@ -12,6 +14,12 @@ import type {
   RegisterVerifyPayload,
   RegisterVerifyResponse,
 } from "@/modules/auth/types/auth-session";
+
+export function getCurrentAuthUser() {
+  return getJson<AuthUser>("/auth/me", {
+    accessToken: getAuthAccessToken(),
+  });
+}
 
 export function login(credentials: LoginCredentials) {
   return postJson<LoginResponse, LoginCredentials>("/auth/login", credentials);
