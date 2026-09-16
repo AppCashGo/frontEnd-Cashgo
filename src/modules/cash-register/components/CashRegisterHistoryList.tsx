@@ -89,7 +89,7 @@ export function CashRegisterHistoryList({
                 </strong>
               </div>
               <div className={styles.metric}>
-                <span className={styles.metricLabel}>Contado</span>
+                <span className={styles.metricLabel}>Efectivo contado</span>
                 <strong>
                   {formatCashRegisterCurrency(session.closingAmount ?? 0)}
                 </strong>

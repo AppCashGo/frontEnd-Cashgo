@@ -16,8 +16,10 @@ import {
 } from '@/modules/cash-register/components/CashRegisterSessionDrawer'
 import {
   useCashRegisterAssigneesQuery,
+  useCashRegisterHistoryQuery,
   useCloseCashRegisterMutation,
   useCreateCashRegisterManualEntryMutation,
+  useCreatePaymentMethodTransferMutation,
   useCurrentCashRegisterQuery,
   useOpenCashRegisterMutation,
 } from '@/modules/cash-register/hooks/use-cash-register-query'
@@ -1027,10 +1029,12 @@ export function RetailSalesWorkspace() {
   const customersQuery = useCustomersQuery()
   const cashRegisterAssigneesQuery = useCashRegisterAssigneesQuery()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
+  const cashRegisterHistoryQuery = useCashRegisterHistoryQuery()
   const openCashRegisterMutation = useOpenCashRegisterMutation()
   const closeCashRegisterMutation = useCloseCashRegisterMutation()
   const createCashRegisterManualEntryMutation =
     useCreateCashRegisterManualEntryMutation()
+  const paymentMethodTransferMutation = useCreatePaymentMethodTransferMutation()
   const createSaleMutation = useCreateSaleMutation()
   const salesQuery = useSalesQuery()
   const expenseCategoriesQuery = useExpenseCategoriesQuery()
@@ -1045,6 +1049,13 @@ export function RetailSalesWorkspace() {
   )
   const salesHistory = useMemo(() => salesQuery.data ?? [], [salesQuery.data])
   const currentCashRegister = currentCashRegisterQuery.data ?? null
+  const latestClosedCashRegister = useMemo(
+    () =>
+      (cashRegisterHistoryQuery.data ?? []).find(
+        (session) => session.status === 'CLOSED',
+      ) ?? null,
+    [cashRegisterHistoryQuery.data],
+  )
   const expenseCategories = useMemo(
     () => expenseCategoriesQuery.data ?? [],
     [expenseCategoriesQuery.data],
@@ -1064,7 +1075,8 @@ export function RetailSalesWorkspace() {
   const isCashRegisterSubmitting =
     openCashRegisterMutation.isPending ||
     closeCashRegisterMutation.isPending ||
-    createCashRegisterManualEntryMutation.isPending
+    createCashRegisterManualEntryMutation.isPending ||
+    paymentMethodTransferMutation.isPending
 
   useEffect(() => {
     if (!currentCashRegister) {
@@ -2532,6 +2544,7 @@ export function RetailSalesWorkspace() {
       <CashRegisterSessionDrawer
         assignees={cashRegisterAssigneesQuery.data ?? []}
         currentSession={currentCashRegister}
+        latestClosedSession={latestClosedCashRegister}
         initialMode={cashRegisterDrawerMode}
         isOpen={isCashRegisterDrawerOpen}
         isSubmitting={isCashRegisterSubmitting}
@@ -2544,6 +2557,9 @@ export function RetailSalesWorkspace() {
         }}
         onOpenSession={async (input) => {
           await openCashRegisterMutation.mutateAsync(input)
+        }}
+        onTransfer={async (input) => {
+          await paymentMethodTransferMutation.mutateAsync(input)
         }}
       />
 

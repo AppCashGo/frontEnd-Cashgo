@@ -36,6 +36,7 @@ import {
   useCashRegisterHistoryQuery,
   useCloseCashRegisterMutation,
   useCreateCashRegisterManualEntryMutation,
+  useCreatePaymentMethodTransferMutation,
   useCurrentCashRegisterQuery,
   useDownloadCashRegisterReportMutation,
   useDownloadMovementsReportMutation,
@@ -744,6 +745,7 @@ export function CashRegisterPage() {
   const openMutation = useOpenCashRegisterMutation();
   const closeMutation = useCloseCashRegisterMutation();
   const manualEntryMutation = useCreateCashRegisterManualEntryMutation();
+  const paymentMethodTransferMutation = useCreatePaymentMethodTransferMutation();
   const createExpenseMutation = useCreateExpenseMutation();
   const createSaleMutation = useCreateSaleMutation();
   const ownerLoansQuery = useOwnerLoansQuery();
@@ -767,6 +769,10 @@ export function CashRegisterPage() {
         return sessionDate >= dateRange.from && sessionDate <= dateRange.to;
       }),
     [dateRange.from, dateRange.to, history],
+  );
+  const latestClosedSession = useMemo(
+    () => (history ?? []).find((session) => session.status === "CLOSED") ?? null,
+    [history],
   );
   const activeFiltersCount =
     selectedPaymentFilters.length +
@@ -894,7 +900,8 @@ export function CashRegisterPage() {
   const isSubmitting =
     openMutation.isPending ||
     closeMutation.isPending ||
-    manualEntryMutation.isPending;
+    manualEntryMutation.isPending ||
+    paymentMethodTransferMutation.isPending;
   const isCreatingMovement =
     manualEntryMutation.isPending ||
     createExpenseMutation.isPending ||
@@ -1340,6 +1347,7 @@ export function CashRegisterPage() {
         businessLogoUrl={resolveApiAssetUrl(businessSettingsQuery.data?.logoUrl)}
         businessName={businessSettingsQuery.data?.businessName}
         currentSession={currentSession}
+        latestClosedSession={latestClosedSession}
         initialMode={sessionDrawerMode}
         isOpen={isSessionDrawerOpen}
         isSubmitting={isSubmitting}
@@ -1349,6 +1357,9 @@ export function CashRegisterPage() {
           await manualEntryMutation.mutateAsync(input);
         }}
         onOpenSession={handleOpen}
+        onTransfer={async (input) => {
+          await paymentMethodTransferMutation.mutateAsync(input);
+        }}
       />
 
       <MovementCreateDrawer

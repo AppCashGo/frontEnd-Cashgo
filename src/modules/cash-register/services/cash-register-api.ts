@@ -8,6 +8,7 @@ import type {
   CloseCashRegisterInput,
   MovementsOverview,
   OpenCashRegisterInput,
+  PaymentMethodTransferInput,
 } from "@/modules/cash-register/types/cash-register";
 
 export function getCashRegisterAssignees() {
@@ -85,6 +86,16 @@ export function createCashRegisterManualEntry(
 ) {
   return postJson<CashRegisterSession, CashRegisterManualEntryInput>(
     "/cash-register/manual-entry",
+    input,
+    {
+      accessToken: getAuthAccessToken(),
+    },
+  );
+}
+
+export function createPaymentMethodTransfer(input: PaymentMethodTransferInput) {
+  return postJson<CashRegisterSession, PaymentMethodTransferInput>(
+    "/cash-register/transfer",
     input,
     {
       accessToken: getAuthAccessToken(),

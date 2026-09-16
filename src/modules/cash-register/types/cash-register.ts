@@ -27,6 +27,21 @@ export type CashRegisterPaymentSummary = {
   expensesAmount: number;
   ownerLoanProceedsAmount: number;
   ownerLoanPaymentsAmount: number;
+  openingAmount: number;
+  transfersInAmount: number;
+  transfersOutAmount: number;
+  expectedAmount: number;
+  closingAmount: number | null;
+  difference: number | null;
+};
+
+export type PaymentMethodTransfer = {
+  id: string;
+  fromMethod: CashRegisterPaymentMethod;
+  toMethod: CashRegisterPaymentMethod;
+  amount: number;
+  notes: string | null;
+  createdAt: string;
 };
 
 export type CashRegisterTransaction = {
@@ -114,17 +129,32 @@ export type CashRegisterSession = {
   closedAt: string | null;
   entries: CashRegisterEntry[];
   transactions: CashRegisterTransaction[];
+  transfers: PaymentMethodTransfer[];
+};
+
+export type CashRegisterMethodBalanceInput = {
+  method: CashRegisterPaymentMethod;
+  amount: number;
 };
 
 export type OpenCashRegisterInput = {
   responsibleUserId?: string;
   openingAmount: number;
+  openingBalances?: CashRegisterMethodBalanceInput[];
   openingNote?: string;
 };
 
 export type CloseCashRegisterInput = {
   closingAmount: number;
+  closingBalances?: CashRegisterMethodBalanceInput[];
   closingNote?: string;
+};
+
+export type PaymentMethodTransferInput = {
+  fromMethod: CashRegisterPaymentMethod;
+  toMethod: CashRegisterPaymentMethod;
+  amount: number;
+  notes?: string;
 };
 
 export type CashRegisterManualEntryInput = {

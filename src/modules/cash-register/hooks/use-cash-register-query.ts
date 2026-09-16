@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   closeCashRegister,
   createCashRegisterManualEntry,
+  createPaymentMethodTransfer,
   downloadCashRegisterReport,
   downloadMovementsReport,
   getCashRegisterAssignees,
@@ -15,6 +16,7 @@ import type {
   CashRegisterReportDownloadInput,
   CloseCashRegisterInput,
   OpenCashRegisterInput,
+  PaymentMethodTransferInput,
 } from "@/modules/cash-register/types/cash-register";
 
 export const cashRegisterCurrentQueryKey = [
@@ -108,6 +110,18 @@ export function useCreateCashRegisterManualEntryMutation() {
   return useMutation({
     mutationFn: (input: CashRegisterManualEntryInput) =>
       createCashRegisterManualEntry(input),
+    onSuccess: async () => {
+      await invalidateCashRegisterQueries(queryClient);
+    },
+  });
+}
+
+export function useCreatePaymentMethodTransferMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: PaymentMethodTransferInput) =>
+      createPaymentMethodTransfer(input),
     onSuccess: async () => {
       await invalidateCashRegisterQueries(queryClient);
     },

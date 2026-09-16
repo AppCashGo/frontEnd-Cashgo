@@ -1,4 +1,5 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -440,6 +441,7 @@ export function RetailInventoryWorkspace() {
   const suppliersQuery = useSuppliersQuery()
   const categoriesQuery = useInventoryCategoriesQuery()
   const lowStockQuery = useInventoryLowStockQuery()
+  const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const createCategoryMutation = useCreateInventoryCategoryMutation()
   const deleteCategoryMutation = useDeleteInventoryCategoryMutation()
   const updateCategoryMutation = useUpdateInventoryCategoryMutation()
@@ -536,6 +538,24 @@ export function RetailInventoryWorkspace() {
   const partialPurchaseAmount = parsePositiveNumber(
     purchaseFormState.amountPaid,
   )
+  const purchasePaymentAmount =
+    purchaseFormState.status === 'PAID'
+      ? estimatedPurchaseTotal
+      : purchaseFormState.status === 'PARTIAL'
+        ? partialPurchaseAmount
+        : 0
+  const purchaseMethodBalance =
+    currentCashRegisterQuery.data?.paymentMethods.find(
+      (paymentMethod) => paymentMethod.method === purchaseFormState.paymentMethod,
+    )?.expectedAmount ?? 0
+  const purchaseBalanceShortfall = Math.max(
+    purchasePaymentAmount - purchaseMethodBalance,
+    0,
+  )
+  const shouldWarnPurchaseBalance =
+    purchaseFormState.paymentMethod !== 'CREDIT' &&
+    purchasePaymentAmount > 0 &&
+    purchaseBalanceShortfall >= 0.01
   const hasInvalidPurchaseDueDate = Boolean(
     purchaseFormState.dueDate &&
       purchaseFormState.purchaseDate &&
@@ -2658,6 +2678,19 @@ export function RetailInventoryWorkspace() {
                   }
                 />
               </label>
+            ) : null}
+
+            {shouldWarnPurchaseBalance ? (
+              <div className={styles.purchaseBalanceWarning} role="alert">
+                <strong>Saldo insuficiente en este medio de pago</strong>
+                <span>
+                  Disponible: {formatCurrency(purchaseMethodBalance)} · Pago: {formatCurrency(purchasePaymentAmount)}.
+                  Si continúas, quedará en {formatCurrency(-purchaseBalanceShortfall)}.
+                </span>
+                <small>
+                  Revisa la apertura de caja, registra una transferencia entre medios o cambia el método de pago.
+                </small>
+              </div>
             ) : null}
 
             <div className={styles.purchaseTotalCard}>

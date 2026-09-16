@@ -1451,6 +1451,26 @@
   font-weight: 900;
 }
 
+.purchaseBalanceWarning {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #f2b84b;
+  border-radius: 0.7rem;
+  background: #fff8e6;
+  color: #7a4c00;
+  line-height: 1.4;
+}
+
+.purchaseBalanceWarning span {
+  font-size: 0.86rem;
+}
+
+.purchaseBalanceWarning small {
+  color: #8a5d16;
+  font-size: 0.78rem;
+}
+
 .taxSelectionCard {
   display: grid;
   grid-template-columns: auto 1fr;

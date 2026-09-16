@@ -99,7 +99,7 @@ export function CashRegisterSummaryPanel({
         <div className={styles.paymentHeader}>
           <span className={styles.paymentTitle}>Métodos de pago</span>
           <span className={styles.paymentHint}>
-            Solo el efectivo entra al arqueo esperado.
+            Cada medio conserva su saldo inicial, movimientos y saldo esperado.
           </span>
         </div>
 

@@ -1,5 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useState } from 'react'
+import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import type { ExpensePaymentMethod } from '@/modules/expenses/types/expense'
 import {
   getExpensePaymentMethodLabel,
@@ -82,6 +83,7 @@ export function SupplierSupplyHistoryPanel({
   onDownloadCreditNote,
 }: SupplierSupplyHistoryPanelProps) {
   const { languageCode } = useAppTranslation()
+  const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const isEnglish = languageCode === 'en'
   const [paymentDraft, setPaymentDraft] = useState<PaymentDraft | null>(null)
   const [cancellationDraft, setCancellationDraft] = useState<{
@@ -171,6 +173,18 @@ export function SupplierSupplyHistoryPanel({
           ) : null}
           {purchaseHistory.map((purchase) => {
             const isPaymentOpen = paymentDraft?.purchaseId === purchase.purchaseId
+            const draftedPaymentAmount = isPaymentOpen
+              ? Number(paymentDraft?.amount ?? 0)
+              : 0
+            const draftedMethodBalance = isPaymentOpen
+              ? currentCashRegisterQuery.data?.paymentMethods.find(
+                  (paymentMethod) => paymentMethod.method === paymentDraft?.method,
+                )?.expectedAmount ?? 0
+              : 0
+            const draftedPaymentShortfall = Math.max(
+              draftedPaymentAmount - draftedMethodBalance,
+              0,
+            )
             const isPartial = purchase.status === 'PENDING' && purchase.paidAmount > 0
             const returnAmount = returnDraft?.purchaseId === purchase.purchaseId
               ? purchase.items.reduce(
@@ -553,6 +567,21 @@ export function SupplierSupplyHistoryPanel({
                         onChange={(event) => setPaymentDraft({ ...paymentDraft, reference: event.target.value })}
                       />
                     </label>
+                    {paymentDraft.method !== 'CREDIT' &&
+                    draftedPaymentShortfall >= 0.01 ? (
+                      <div className={styles.paymentBalanceWarning} role="alert">
+                        <strong>
+                          {isEnglish
+                            ? 'Insufficient balance in this payment method'
+                            : 'Saldo insuficiente en este medio de pago'}
+                        </strong>
+                        <span>
+                          {isEnglish ? 'Available' : 'Disponible'}: {formatCurrency(draftedMethodBalance)} ·{' '}
+                          {isEnglish ? 'It would remain at' : 'Quedaría en'}{' '}
+                          {formatCurrency(-draftedPaymentShortfall)}.
+                        </span>
+                      </div>
+                    ) : null}
                     <div className={styles.paymentFormActions}>
                       <button type="button" onClick={() => setPaymentDraft(null)}>
                         {isEnglish ? 'Cancel' : 'Cancelar'}

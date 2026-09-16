@@ -9,6 +9,7 @@ import type {
   CashRegisterSession,
   CloseCashRegisterInput,
   OpenCashRegisterInput,
+  PaymentMethodTransferInput,
 } from "@/modules/cash-register/types/cash-register";
 import {
   formatCashRegisterCurrency,
@@ -25,6 +26,7 @@ type CashRegisterSessionDrawerProps = {
   isOpen: boolean;
   assignees: CashRegisterAssignee[];
   currentSession: CashRegisterSession | null;
+  latestClosedSession?: CashRegisterSession | null;
   businessLogoUrl?: string | null;
   businessName?: string | null;
   initialMode?: CashRegisterDrawerMode;
@@ -35,6 +37,7 @@ type CashRegisterSessionDrawerProps = {
     input: CloseCashRegisterInput,
   ) => Promise<CashRegisterSession | void>;
   onManualEntry: (input: CashRegisterManualEntryInput) => Promise<void>;
+  onTransfer: (input: PaymentMethodTransferInput) => Promise<void>;
 };
 
 type PaymentMethodSummary = {
@@ -56,6 +59,50 @@ const paymentMethodsOrder: PaymentMethodSummary[] = [
   { method: "BANK_DEPOSIT", label: "Consignación bancaria" },
   { method: "OTHER", label: "Otros" },
 ];
+
+type MethodAmounts = Record<CashRegisterPaymentMethod, string>;
+
+function createEmptyMethodAmounts(): MethodAmounts {
+  return {
+    CASH: "0",
+    CARD: "0",
+    TRANSFER: "0",
+    DIGITAL_WALLET: "0",
+    BANK_DEPOSIT: "0",
+    CREDIT: "0",
+    OTHER: "0",
+  };
+}
+
+function getSuggestedOpeningBalances(
+  latestClosedSession?: CashRegisterSession | null,
+): MethodAmounts {
+  const balances = createEmptyMethodAmounts();
+
+  for (const paymentMethod of latestClosedSession?.paymentMethods ?? []) {
+    if (paymentMethod.method === "CREDIT") {
+      continue;
+    }
+
+    balances[paymentMethod.method] = String(
+      paymentMethod.closingAmount ?? paymentMethod.expectedAmount,
+    );
+  }
+
+  return balances;
+}
+
+function getExpectedClosingBalances(session: CashRegisterSession): MethodAmounts {
+  const balances = createEmptyMethodAmounts();
+
+  for (const paymentMethod of session.paymentMethods) {
+    if (paymentMethod.method !== "CREDIT") {
+      balances[paymentMethod.method] = String(paymentMethod.expectedAmount);
+    }
+  }
+
+  return balances;
+}
 
 function getInitialAssigneeId(
   assignees: CashRegisterAssignee[],
@@ -101,14 +148,10 @@ function getPaymentMethodTotal(
   session: CashRegisterSession,
   method: CashRegisterPaymentMethod,
 ) {
-  if (method === "CASH") {
-    return session.cashExpectedTotal;
-  }
-
   return (
     session.paymentMethods.find(
       (paymentMethod) => paymentMethod.method === method,
-    )?.amount ?? 0
+    )?.expectedAmount ?? 0
   );
 }
 
@@ -130,6 +173,17 @@ function getPaymentMethodRows(
       tone: "danger",
     },
   ] satisfies SummaryRow[]).filter((row) => row.value > 0);
+  const transferRows = ([
+    {
+      label: "Transferencias recibidas",
+      value: paymentMethod?.transfersInAmount ?? 0,
+    },
+    {
+      label: "Transferencias enviadas",
+      value: paymentMethod?.transfersOutAmount ?? 0,
+      tone: "danger",
+    },
+  ] satisfies SummaryRow[]).filter((row) => row.value > 0);
 
   if (method === "CASH") {
     const manualIncomeRows =
@@ -143,11 +197,12 @@ function getPaymentMethodRows(
         : [];
 
     return [
-      { label: "Dinero base", value: session.openingAmount },
+      { label: "Saldo inicial", value: paymentMethod?.openingAmount ?? session.openingAmount },
       { label: "Ventas", value: session.cashSalesTotal },
       { label: "Abonos", value: session.cashCollectionsTotal },
       ...manualIncomeRows,
       ...financingRows,
+      ...transferRows,
       {
         label: "Gastos",
         value: paymentMethod?.expensesAmount ?? session.manualExpenseTotal,
@@ -157,9 +212,11 @@ function getPaymentMethodRows(
   }
 
   return [
+    { label: "Saldo inicial", value: paymentMethod?.openingAmount ?? 0 },
     { label: "Ventas", value: paymentMethod?.salesAmount ?? 0 },
     { label: "Abonos", value: paymentMethod?.collectionsAmount ?? 0 },
     ...financingRows,
+    ...transferRows,
     {
       label: "Gastos",
       value: paymentMethod?.expensesAmount ?? 0,
@@ -180,11 +237,9 @@ function getPaymentMethodBalance(
 }
 
 function getShiftBalance(session: CashRegisterSession, difference = 0) {
-  return (
-    session.openingAmount +
-    session.totalIncome -
-    session.expensesTotal +
-    difference
+  return session.paymentMethods.reduce(
+    (total, paymentMethod) => total + paymentMethod.expectedAmount,
+    difference,
   );
 }
 
@@ -373,6 +428,7 @@ export function CashRegisterSessionDrawer({
   isOpen,
   assignees,
   currentSession,
+  latestClosedSession,
   businessLogoUrl,
   businessName,
   initialMode = "manage",
@@ -381,6 +437,7 @@ export function CashRegisterSessionDrawer({
   onOpenSession,
   onCloseSession,
   onManualEntry,
+  onTransfer,
 }: CashRegisterSessionDrawerProps) {
   const [assigneeId, setAssigneeId] = useState(
     getInitialAssigneeId(assignees, currentSession),
@@ -390,12 +447,22 @@ export function CashRegisterSessionDrawer({
   const [closingStep, setClosingStep] = useState<"form" | "review">("form");
   const [expandedPaymentMethod, setExpandedPaymentMethod] =
     useState<CashRegisterPaymentMethod>("CASH");
-  const [openingAmount, setOpeningAmount] = useState("0");
+  const [openingBalances, setOpeningBalances] = useState<MethodAmounts>(() =>
+    getSuggestedOpeningBalances(latestClosedSession),
+  );
   const [entryType, setEntryType] = useState<CashRegisterEntryType>("INCOME");
   const [entryAmount, setEntryAmount] = useState("");
   const [entryReason, setEntryReason] = useState("");
-  const [closingAmount, setClosingAmount] = useState("");
+  const [closingBalances, setClosingBalances] = useState<MethodAmounts>(
+    createEmptyMethodAmounts,
+  );
   const [closingNote, setClosingNote] = useState("");
+  const [transferFrom, setTransferFrom] =
+    useState<CashRegisterPaymentMethod>("CASH");
+  const [transferTo, setTransferTo] =
+    useState<CashRegisterPaymentMethod>("DIGITAL_WALLET");
+  const [transferAmount, setTransferAmount] = useState("");
+  const [transferNotes, setTransferNotes] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -408,26 +475,44 @@ export function CashRegisterSessionDrawer({
     setClosingStep("form");
     setExpandedPaymentMethod("CASH");
     setErrorMessage(null);
-  }, [assignees, currentSession, initialMode, isOpen]);
+    if (!currentSession) {
+      setOpeningBalances(getSuggestedOpeningBalances(latestClosedSession));
+    }
+  }, [assignees, currentSession, initialMode, isOpen, latestClosedSession]);
 
   useEffect(() => {
     if (!currentSession) {
-      setClosingAmount("");
+      setClosingBalances(createEmptyMethodAmounts());
       setClosingNote("");
       return;
     }
 
-    setClosingAmount(currentSession.cashExpectedTotal.toFixed(2));
+    setClosingBalances(getExpectedClosingBalances(currentSession));
   }, [currentSession]);
 
   const closingAmountValue = useMemo(
-    () => parseAmountInput(closingAmount),
-    [closingAmount],
+    () => parseAmountInput(closingBalances.CASH),
+    [closingBalances.CASH],
   );
-  const closingDifference = currentSession
-    ? closingAmountValue - currentSession.cashExpectedTotal
-    : 0;
-  const hasClosingDifference = Math.abs(closingDifference) >= 0.01;
+  const closingDifferences = useMemo(
+    () =>
+      paymentMethodsOrder.map(({ method, label }) => {
+        const expected = currentSession
+          ? getPaymentMethodBalance(currentSession, method)
+          : 0;
+        const counted = parseAmountInput(closingBalances[method]);
+
+        return { method, label, expected, counted, difference: counted - expected };
+      }),
+    [closingBalances, currentSession],
+  );
+  const closingDifference = closingDifferences.reduce(
+    (total, item) => total + item.difference,
+    0,
+  );
+  const hasClosingDifference = closingDifferences.some(
+    (item) => Math.abs(item.difference) >= 0.01,
+  );
   const drawerTitle = !currentSession
     ? "Abrir caja"
     : activeMode === "summary" || closingStep === "review"
@@ -451,9 +536,13 @@ export function CashRegisterSessionDrawer({
     try {
       await onOpenSession({
         responsibleUserId: assigneeId || undefined,
-        openingAmount: parseAmountInput(openingAmount),
+        openingAmount: parseAmountInput(openingBalances.CASH),
+        openingBalances: paymentMethodsOrder.map(({ method }) => ({
+          method,
+          amount: parseAmountInput(openingBalances[method]),
+        })),
       });
-      setOpeningAmount("0");
+      setOpeningBalances(createEmptyMethodAmounts());
       onClose();
     } catch (error) {
       setErrorMessage(
@@ -490,6 +579,28 @@ export function CashRegisterSessionDrawer({
     }
   }
 
+  async function handleTransferSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    try {
+      await onTransfer({
+        fromMethod: transferFrom,
+        toMethod: transferTo,
+        amount: parseAmountInput(transferAmount),
+        notes: transferNotes.trim() || undefined,
+      });
+      setTransferAmount("");
+      setTransferNotes("");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "No fue posible transferir el dinero entre medios.",
+      );
+    }
+  }
+
   function handleCloseCountRequest() {
     setErrorMessage(null);
     setClosingStep("review");
@@ -507,6 +618,10 @@ export function CashRegisterSessionDrawer({
     try {
       await onCloseSession({
         closingAmount: closingAmountValue,
+        closingBalances: paymentMethodsOrder.map(({ method }) => ({
+          method,
+          amount: parseAmountInput(closingBalances[method]),
+        })),
         closingNote: closingNote.trim() || undefined,
       });
       setClosingNote("");
@@ -590,20 +705,32 @@ export function CashRegisterSessionDrawer({
 
         {closingStep === "review" ? (
           <>
-            <section className={styles.cashCountCard}>
-              <div>
-                <strong>Dinero en efectivo</strong>
-                <span>{formatCashRegisterCurrency(closingAmountValue)}</span>
-              </div>
-              <span
-                className={
-                  hasClosingDifference
-                    ? styles.cashStatusPillDanger
-                    : styles.cashStatusPillSuccess
-                }
-              >
-                {hasClosingDifference ? "Descuadre" : "Caja completa"}
-              </span>
+            <section className={styles.reconciliationCard}>
+              <h4>Conteo por medio de pago</h4>
+              {closingDifferences.map((item) => (
+                <div className={styles.reconciliationRow} key={item.method}>
+                  <span>
+                    <strong>{item.label}</strong>
+                    <small>
+                      Esperado {formatCashRegisterCurrency(item.expected)}
+                    </small>
+                  </span>
+                  <span>
+                    <strong>{formatCashRegisterCurrency(item.counted)}</strong>
+                    <small
+                      className={
+                        Math.abs(item.difference) >= 0.01
+                          ? styles.negativeValue
+                          : styles.reconciledValue
+                      }
+                    >
+                      {Math.abs(item.difference) < 0.01
+                        ? "Cuadra"
+                        : `Diferencia ${formatCashRegisterCurrency(item.difference)}`}
+                    </small>
+                  </span>
+                </div>
+              ))}
             </section>
 
             {hasClosingDifference ? (
@@ -614,10 +741,10 @@ export function CashRegisterSessionDrawer({
                     {closingDifference < 0
                       ? `Te faltan ${formatCashRegisterCurrency(
                           Math.abs(closingDifference),
-                        )} en efectivo.`
+                        )} entre todos los medios.`
                       : `Te sobran ${formatCashRegisterCurrency(
                           closingDifference,
-                        )} en efectivo.`}
+                        )} entre todos los medios.`}
                   </strong>
                 </div>
 
@@ -824,21 +951,39 @@ export function CashRegisterSessionDrawer({
             </SearchableSelect>
           </label>
 
-          <label className={styles.field}>
-            <span className={styles.label}>
-              ¿Con cuánto dinero empiezas el turno? *
-            </span>
-            <input
-              className={styles.input}
-              inputMode="decimal"
-              min="0"
-              placeholder="$ 0"
-              step="0.01"
-              type="number"
-              value={openingAmount}
-              onChange={(event) => setOpeningAmount(event.target.value)}
-            />
-          </label>
+          <section className={styles.balanceSection}>
+            <div className={styles.balanceSectionHeader}>
+              <span>
+                <strong>Saldos al iniciar el turno</strong>
+                <small>
+                  Registra lo que realmente tienes disponible en cada medio.
+                </small>
+              </span>
+              {latestClosedSession ? <em>Sugerido desde el último cierre</em> : null}
+            </div>
+            <div className={styles.balanceGrid}>
+              {paymentMethodsOrder.map(({ method, label }) => (
+                <label className={styles.field} key={method}>
+                  <span className={styles.label}>{label}</span>
+                  <input
+                    className={styles.input}
+                    inputMode="decimal"
+                    min="0"
+                    placeholder="$ 0"
+                    step="0.01"
+                    type="number"
+                    value={openingBalances[method]}
+                    onChange={(event) =>
+                      setOpeningBalances((current) => ({
+                        ...current,
+                        [method]: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+          </section>
 
           {errorMessage ? (
             <p className={styles.errorMessage}>{errorMessage}</p>
@@ -873,19 +1018,41 @@ export function CashRegisterSessionDrawer({
             </SearchableSelect>
           </label>
 
-          <label className={styles.field}>
-            <span className={styles.label}>
-              ¿Cuánto dinero tienes en efectivo? *
-            </span>
-            <input
-              className={styles.input}
-              inputMode="decimal"
-              placeholder="$ 0"
-              type="text"
-              value={closingAmount}
-              onChange={(event) => setClosingAmount(event.target.value)}
-            />
-          </label>
+          <section className={styles.balanceSection}>
+            <div className={styles.balanceSectionHeader}>
+              <span>
+                <strong>Conteo real al cerrar</strong>
+                <small>
+                  Cuenta el efectivo y consulta los saldos reales de tus otros medios.
+                </small>
+              </span>
+            </div>
+            <div className={styles.balanceGrid}>
+              {paymentMethodsOrder.map(({ method, label }) => (
+                <label className={styles.field} key={method}>
+                  <span className={styles.label}>{label}</span>
+                  <input
+                    className={styles.input}
+                    inputMode="decimal"
+                    placeholder="$ 0"
+                    type="text"
+                    value={closingBalances[method]}
+                    onChange={(event) =>
+                      setClosingBalances((current) => ({
+                        ...current,
+                        [method]: event.target.value,
+                      }))
+                    }
+                  />
+                  <small className={styles.expectedHint}>
+                    Esperado: {formatCashRegisterCurrency(
+                      getPaymentMethodBalance(currentSession, method),
+                    )}
+                  </small>
+                </label>
+              ))}
+            </div>
+          </section>
 
           {errorMessage ? (
             <p className={styles.errorMessage}>{errorMessage}</p>
@@ -972,6 +1139,84 @@ export function CashRegisterSessionDrawer({
               type="submit"
             >
               {isSubmitting ? "Guardando..." : "Crear movimiento"}
+            </button>
+          </form>
+
+          <form
+            className={`${styles.form} ${styles.transferForm}`}
+            noValidate
+            onSubmit={handleTransferSubmit}
+          >
+            <div>
+              <h4 className={styles.sectionTitle}>Mover dinero entre medios</h4>
+              <p className={styles.sectionDescription}>
+                Úsalo, por ejemplo, cuando pases efectivo a Nequi o retires dinero de Nequi para la caja.
+              </p>
+            </div>
+
+            <div className={styles.inlineFields}>
+              <label className={styles.field}>
+                <span className={styles.label}>Desde</span>
+                <SearchableSelect
+                  className={styles.select}
+                  value={transferFrom}
+                  onChange={(event) =>
+                    setTransferFrom(event.target.value as CashRegisterPaymentMethod)
+                  }
+                >
+                  {paymentMethodsOrder.map(({ method, label }) => (
+                    <option key={method} value={method}>{label}</option>
+                  ))}
+                </SearchableSelect>
+              </label>
+
+              <label className={styles.field}>
+                <span className={styles.label}>Hacia</span>
+                <SearchableSelect
+                  className={styles.select}
+                  value={transferTo}
+                  onChange={(event) =>
+                    setTransferTo(event.target.value as CashRegisterPaymentMethod)
+                  }
+                >
+                  {paymentMethodsOrder.map(({ method, label }) => (
+                    <option key={method} value={method}>{label}</option>
+                  ))}
+                </SearchableSelect>
+              </label>
+            </div>
+
+            <label className={styles.field}>
+              <span className={styles.label}>Monto</span>
+              <input
+                className={styles.input}
+                inputMode="decimal"
+                min="0.01"
+                placeholder="$ 0"
+                step="0.01"
+                type="number"
+                value={transferAmount}
+                onChange={(event) => setTransferAmount(event.target.value)}
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.label}>Nota opcional</span>
+              <input
+                className={styles.input}
+                placeholder="Ej. consignación de efectivo a Nequi"
+                type="text"
+                value={transferNotes}
+                onChange={(event) => setTransferNotes(event.target.value)}
+              />
+            </label>
+
+            <button
+              className={retailStyles.buttonOutline}
+              disabled={isSubmitting || transferFrom === transferTo}
+              type="submit"
+            >
+              {isSubmitting ? "Guardando..." : "Registrar transferencia"}
             </button>
           </form>
 
