@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { type FormEvent, useEffect, useState } from 'react'
 import type {
   BusinessPrintSettingsInput,
@@ -129,7 +130,7 @@ export function PrintSettingsPanel({
         <div className={styles.controls}>
           <label className={styles.field}>
             <span>Ancho del ticket</span>
-            <select
+            <SearchableSelect
               className={styles.input}
               value={settings.ticketWidth}
               onChange={(event) =>
@@ -141,7 +142,7 @@ export function PrintSettingsPanel({
             >
               <option value="80mm">80 mm</option>
               <option value="58mm">58 mm</option>
-            </select>
+            </SearchableSelect>
           </label>
 
           <label className={styles.checkField}>

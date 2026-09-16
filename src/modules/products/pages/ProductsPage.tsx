@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight, ImageIcon, MoreVertical, Plus, Search, Upload } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
@@ -162,16 +163,16 @@ export function ProductsPage() {
             </label>
             <label className={styles.selectField}>
               <span className={styles.srOnly}>Filtrar por categoría</span>
-              <select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
+              <SearchableSelect value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
                 <option value="ALL">Todas las categorías</option>
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-              </select>
+              </SearchableSelect>
             </label>
             <label className={styles.selectField}>
               <span className={styles.srOnly}>Filtrar por stock</span>
-              <select value={stockFilter} onChange={(event) => setStockFilter(event.target.value as StockFilter)}>
+              <SearchableSelect value={stockFilter} onChange={(event) => setStockFilter(event.target.value as StockFilter)}>
                 <option value="ALL">Cualquier stock</option><option value="IN_STOCK">En stock</option><option value="LOW_STOCK">Stock bajo</option><option value="OUT_OF_STOCK">Agotado</option>
-              </select>
+              </SearchableSelect>
             </label>
           </div>
 

@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import {
@@ -134,7 +135,7 @@ export function InventoryAdjustmentPanel({
           <label className={styles.label} htmlFor="inventory-product">
             Product
           </label>
-          <select
+          <SearchableSelect
             aria-describedby={
               errors.productId ? 'inventory-product-error' : undefined
             }
@@ -150,7 +151,7 @@ export function InventoryAdjustmentPanel({
                 {product.name} - Current stock {product.stock.toString()}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
           {errors.productId ? (
             <p className={styles.errorMessage} id="inventory-product-error">
               {errors.productId.message}
@@ -163,7 +164,7 @@ export function InventoryAdjustmentPanel({
             <label className={styles.label} htmlFor="inventory-type">
               Movement type
             </label>
-            <select
+            <SearchableSelect
               aria-describedby={errors.type ? 'inventory-type-error' : undefined}
               aria-invalid={Boolean(errors.type)}
               className={styles.select}
@@ -174,7 +175,7 @@ export function InventoryAdjustmentPanel({
               <option value="IN">IN</option>
               <option value="OUT">OUT</option>
               <option value="ADJUSTMENT">ADJUSTMENT</option>
-            </select>
+            </SearchableSelect>
             {errors.type ? (
               <p className={styles.errorMessage} id="inventory-type-error">
                 {errors.type.message}

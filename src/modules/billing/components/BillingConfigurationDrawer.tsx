@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -248,7 +249,7 @@ export function BillingConfigurationDrawer({
               <span className={styles.fieldLabel}>
                 {copy.configTaxResponsibility}
               </span>
-              <select className={styles.select} {...register("taxResponsibility")}>
+              <SearchableSelect className={styles.select} {...register("taxResponsibility")}>
                 <option value="">Seleccionar...</option>
                 {hasCustomTaxResponsibility ? (
                   <option value={selectedTaxResponsibility}>
@@ -258,7 +259,7 @@ export function BillingConfigurationDrawer({
                 {taxResponsibilityOptions.map((option) => (
                   <option key={option} value={option}>{option}</option>
                 ))}
-              </select>
+              </SearchableSelect>
             </label>
 
             <label className={styles.field}>

@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useState } from "react";
 import {
   ArrowUp,
@@ -225,7 +226,7 @@ export function PrivacyPolicyPage() {
 
       <div className={styles.mobileIndex}>
         <label htmlFor="privacy-section">Ir a una sección</label>
-        <select
+        <SearchableSelect
           id="privacy-section"
           value={activeSection}
           onChange={(event) => {
@@ -237,7 +238,7 @@ export function PrivacyPolicyPage() {
           {privacySections.map((section) => (
             <option key={section.id} value={section.id}>{section.title}</option>
           ))}
-        </select>
+        </SearchableSelect>
       </div>
 
       <div className={styles.layout}>

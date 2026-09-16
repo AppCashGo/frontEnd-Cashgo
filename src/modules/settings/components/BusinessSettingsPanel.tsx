@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
 import { ChevronDown, ChevronUp, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -247,7 +248,7 @@ export function BusinessSettingsPanel({
               <label className={styles.retailField}>
                 <span className={styles.retailLabel}>Tipo de negocio*</span>
                 <span className={styles.selectWrap}>
-                  <select
+                  <SearchableSelect
                     aria-invalid={Boolean(errors.businessCategory)}
                     className={styles.retailInput}
                     disabled={isDisabled}
@@ -258,8 +259,7 @@ export function BusinessSettingsPanel({
                         {dictionary.categories[category]}
                       </option>
                     ))}
-                  </select>
-                  <ChevronDown aria-hidden="true" className={styles.selectIcon} />
+                  </SearchableSelect>
                 </span>
                 {errors.businessCategory ? (
                   <span className={styles.errorMessage}>

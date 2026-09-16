@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { useForm } from "react-hook-form";
@@ -461,7 +462,7 @@ export function RegistrationWizard({
                   />
                   <span className={styles.countryDivider} />
                   <span className={styles.countryChevron}>⌄</span>
-                  <select
+                  <SearchableSelect
                     aria-label={dictionary.common.language}
                     className={styles.countrySelect}
                     {...startForm.register("countryCode")}
@@ -471,7 +472,7 @@ export function RegistrationWizard({
                         {option.label} {option.dialCode}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </span>
 
                 <input

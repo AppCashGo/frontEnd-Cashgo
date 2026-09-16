@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ConvertQuotationDrawer } from "@/modules/quotes/components/ConvertQuotationDrawer";
@@ -410,7 +411,7 @@ export function QuotesPage() {
           <label
             className={`${retailStyles.selectField} ${styles.selectField}`}
           >
-            <select
+            <SearchableSelect
               className={retailStyles.select}
               value={selectedCustomerId}
               onChange={(event) => setSelectedCustomerId(event.target.value)}
@@ -421,13 +422,13 @@ export function QuotesPage() {
                   {customer.name}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </label>
 
           <label
             className={`${retailStyles.selectField} ${styles.selectField}`}
           >
-            <select
+            <SearchableSelect
               className={retailStyles.select}
               value={selectedStatus}
               onChange={(event) =>
@@ -441,7 +442,7 @@ export function QuotesPage() {
                     : getQuotationStatusLabel(status, languageCode)}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </label>
         </div>
 

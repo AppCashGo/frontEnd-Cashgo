@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   Banknote,
@@ -244,14 +245,14 @@ export function ExpenseFormPanel({
 
         <label className={styles.field}>
           <span className={styles.label}>Categoría</span>
-          <select className={styles.select} {...register('categoryId')}>
+          <SearchableSelect className={styles.select} {...register('categoryId')}>
             <option value="">Selecciona una categoría</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
                 {category.name}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </label>
 
         <fieldset className={styles.paymentFieldset}>

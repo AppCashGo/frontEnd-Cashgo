@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   ArrowLeft,
@@ -1163,7 +1164,7 @@ export function QuotationFormWorkspace({
                       {copy.createCustomer}
                     </button>
                   </span>
-                  <select
+                  <SearchableSelect
                     className={styles.input}
                     {...register("customerId", {
                       onChange: () => clearErrors("customerId"),
@@ -1175,7 +1176,7 @@ export function QuotationFormWorkspace({
                         {customer.name}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   {errors.customerId?.message ? (
                     <small className={styles.errorMessage}>
                       {errors.customerId.message}

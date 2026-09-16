@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useState } from "react";
 import {
   ArrowUp,
@@ -212,7 +213,7 @@ export function TermsAndConditionsPage() {
 
       <div className={styles.mobileIndex}>
         <label htmlFor="terms-section">Ir a una sección</label>
-        <select
+        <SearchableSelect
           id="terms-section"
           value={activeSection}
           onChange={(event) => {
@@ -224,7 +225,7 @@ export function TermsAndConditionsPage() {
           {termsSections.map((section) => (
             <option key={section.id} value={section.id}>{section.title}</option>
           ))}
-        </select>
+        </SearchableSelect>
       </div>
 
       <div className={styles.layout}>

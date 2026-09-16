@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import type { CashRegisterSession } from '@/modules/cash-register/types/cash-register'
 import { getPaymentMethodLabel } from '@/modules/cash-register/utils/format-cash-register'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
@@ -228,7 +229,7 @@ export function SaleCartPanel({
               <label className={styles.label} htmlFor="sale-customer">
                 Cliente
               </label>
-              <select
+              <SearchableSelect
                 className={styles.input}
                 id="sale-customer"
                 value={selectedCustomerId}
@@ -243,7 +244,7 @@ export function SaleCartPanel({
                       : ''}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
               {selectedCustomer ? (
                 <p className={styles.helperText}>
                   {selectedCustomer.phone ?? selectedCustomer.email ?? 'Sin contacto'} ·
@@ -282,7 +283,7 @@ export function SaleCartPanel({
                 <label className={styles.label} htmlFor="sale-payment-method">
                   Método de pago
                 </label>
-                <select
+                <SearchableSelect
                   className={styles.input}
                   id="sale-payment-method"
                   value={paymentMethod}
@@ -295,7 +296,7 @@ export function SaleCartPanel({
                       {getPaymentMethodLabel(method)}
                     </option>
                   ))}
-                </select>
+                </SearchableSelect>
               </div>
 
               <div className={styles.field}>

@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useState } from 'react'
 import type { ExpensePaymentMethod } from '@/modules/expenses/types/expense'
 import {
@@ -393,14 +394,14 @@ export function SupplierSupplyHistoryPanel({
                         <span>
                           {isEnglish ? 'Refund method' : 'Método de reembolso'} · {formatCurrency(refundRequired)}
                         </span>
-                        <select
+                        <SearchableSelect
                           value={returnDraft.refundMethod}
                           onChange={(event) => setReturnDraft({ ...returnDraft, refundMethod: event.target.value as ExpensePaymentMethod })}
                         >
                           {paymentMethods.filter((method) => method !== 'CREDIT').map((method) => (
                             <option key={method} value={method}>{getPaymentMethodLabel(method)}</option>
                           ))}
-                        </select>
+                        </SearchableSelect>
                       </label>
                     ) : (
                       <p className={styles.balanceApplicationNotice}>
@@ -527,14 +528,14 @@ export function SupplierSupplyHistoryPanel({
                     </label>
                     <label>
                       <span>{isEnglish ? 'Payment method' : 'Método de pago'}</span>
-                      <select
+                      <SearchableSelect
                         value={paymentDraft.method}
                         onChange={(event) => setPaymentDraft({ ...paymentDraft, method: event.target.value as ExpensePaymentMethod })}
                       >
                         {paymentMethods.map((method) => (
                           <option key={method} value={method}>{getPaymentMethodLabel(method)}</option>
                         ))}
-                      </select>
+                      </SearchableSelect>
                     </label>
                     <label>
                       <span>{isEnglish ? 'Payment date' : 'Fecha del pago'}</span>

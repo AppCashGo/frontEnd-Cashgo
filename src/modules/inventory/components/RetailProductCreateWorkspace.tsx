@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   type ChangeEvent,
@@ -1477,7 +1478,7 @@ export function RetailProductCreateWorkspace({
                         {copy.purchaseUnit}
                         <span className={styles.required}>*</span>
                       </span>
-                      <select
+                      <SearchableSelect
                         className={styles.select}
                         value={purchaseUnit}
                         onChange={(event) =>
@@ -1489,7 +1490,7 @@ export function RetailProductCreateWorkspace({
                             {unitLabel(unit)}
                           </option>
                         ))}
-                      </select>
+                      </SearchableSelect>
                     </label>
 
                     <div className={styles.gridTwo}>
@@ -1830,7 +1831,7 @@ export function RetailProductCreateWorkspace({
 
                   <label className={styles.field}>
                     <span className={styles.label}>{copy.taxBase}</span>
-                    <select
+                    <SearchableSelect
                       className={styles.select}
                       {...register("taxOptionId")}
                     >
@@ -1840,7 +1841,7 @@ export function RetailProductCreateWorkspace({
                           {taxOption.label}
                         </option>
                       ))}
-                    </select>
+                    </SearchableSelect>
                   </label>
                 </div>
               </div>
@@ -1897,7 +1898,7 @@ export function RetailProductCreateWorkspace({
 
                   <label className={styles.field}>
                     <span className={styles.label}>{copy.taxBase}</span>
-                    <select
+                    <SearchableSelect
                       className={styles.select}
                       {...register("taxOptionId")}
                     >
@@ -1907,7 +1908,7 @@ export function RetailProductCreateWorkspace({
                           {taxOption.label}
                         </option>
                       ))}
-                    </select>
+                    </SearchableSelect>
                   </label>
 
                   {activeTab === "measures" ? (
@@ -1917,7 +1918,7 @@ export function RetailProductCreateWorkspace({
                           {copy.saleUnit}
                           <span className={styles.required}>*</span>
                         </span>
-                        <select
+                        <SearchableSelect
                           className={styles.select}
                           value={saleUnit}
                           onChange={(event) =>
@@ -1929,7 +1930,7 @@ export function RetailProductCreateWorkspace({
                               {unitLabel(unit)}
                             </option>
                           ))}
-                        </select>
+                        </SearchableSelect>
                       </label>
 
                       <label className={styles.field}>

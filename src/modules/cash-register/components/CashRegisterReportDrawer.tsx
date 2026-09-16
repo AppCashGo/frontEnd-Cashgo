@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useState } from "react";
 import type {
   CashRegisterEntryType,
@@ -82,7 +83,7 @@ export function CashRegisterReportDrawer({
       <div className={styles.form}>
         <label className={styles.field}>
           <span className={styles.label}>Vista del reporte</span>
-          <select
+          <SearchableSelect
             className={styles.select}
             value={view}
             onChange={(event) =>
@@ -91,7 +92,7 @@ export function CashRegisterReportDrawer({
           >
             <option value="transactions">Transacciones</option>
             <option value="closures">Cierres de caja</option>
-          </select>
+          </SearchableSelect>
         </label>
 
         <label className={styles.field}>

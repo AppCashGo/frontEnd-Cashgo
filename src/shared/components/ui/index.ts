@@ -11,6 +11,7 @@ export * from "./DrawerActionFooter";
 export * from "./LanguageSelect";
 export * from "./MetricCard";
 export * from "./ModalShell";
+export * from "./SearchableSelect";
 export * from "./SideDrawer";
 export * from "./SurfaceCard";
 export * from "./ToastProvider";

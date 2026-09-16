@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -225,7 +226,7 @@ export function EmployeeFormDrawer({
             <label className={styles.label} htmlFor="employee-role">
               Rol operativo
             </label>
-            <select
+            <SearchableSelect
               aria-describedby={errors.role ? 'employee-role-error' : undefined}
               aria-invalid={Boolean(errors.role)}
               className={styles.select}
@@ -237,7 +238,7 @@ export function EmployeeFormDrawer({
                   {userRoleLabels[role]}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
             {errors.role ? (
               <p className={styles.errorMessage} id="employee-role-error">
                 {errors.role.message}

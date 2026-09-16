@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import type {
   ExpenseCategory,
   ExpenseStatus,
@@ -57,7 +58,7 @@ export function ExpensesFiltersBar({
 
         <label className={styles.field}>
           <span className={styles.label}>Estado</span>
-          <select
+          <SearchableSelect
             className={styles.select}
             value={selectedStatus}
             onChange={(event) =>
@@ -68,12 +69,12 @@ export function ExpensesFiltersBar({
             <option value="PAID">Pagados</option>
             <option value="PENDING">Pendientes</option>
             <option value="CANCELLED">Cancelados</option>
-          </select>
+          </SearchableSelect>
         </label>
 
         <label className={styles.field}>
           <span className={styles.label}>Categoría</span>
-          <select
+          <SearchableSelect
             className={styles.select}
             value={selectedCategoryId}
             onChange={(event) => onCategoryChange(event.target.value)}
@@ -84,7 +85,7 @@ export function ExpensesFiltersBar({
                 {category.name}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </label>
 
         <label className={styles.field}>

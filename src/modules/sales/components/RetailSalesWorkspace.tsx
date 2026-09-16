@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useMutation } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
@@ -2182,7 +2183,7 @@ export function RetailSalesWorkspace() {
                       Cliente{settlement === 'CREDIT' ? ' *' : ''}
                     </span>
                     <div className={styles.customerSelectRow}>
-                      <select
+                      <SearchableSelect
                         className={styles.select}
                         value={selectedCustomerId}
                         onChange={(event) => {
@@ -2203,7 +2204,7 @@ export function RetailSalesWorkspace() {
                             {customer.name}
                           </option>
                         ))}
-                      </select>
+                      </SearchableSelect>
                       <button
                         aria-label="Crear cliente sin salir de la venta"
                         className={styles.addCustomerButton}
@@ -2320,7 +2321,7 @@ export function RetailSalesWorkspace() {
 
                               <label className={styles.splitField}>
                                 <span>Método de pago</span>
-                                <select
+                                <SearchableSelect
                                   className={styles.splitSelect}
                                   value={paymentSplit.paymentOption}
                                   onChange={(event) =>
@@ -2335,7 +2336,7 @@ export function RetailSalesWorkspace() {
                                       {option.label}
                                     </option>
                                   ))}
-                                </select>
+                                </SearchableSelect>
                               </label>
                             </div>
                           ))}
@@ -2648,7 +2649,7 @@ export function RetailSalesWorkspace() {
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Agrega un cliente a la venta *</span>
               <div className={styles.customerSelectRow}>
-                <select
+                <SearchableSelect
                   className={styles.select}
                   value={quickSaleForm.customerId}
                   onChange={(event) => {
@@ -2672,7 +2673,7 @@ export function RetailSalesWorkspace() {
                       {customer.name}
                     </option>
                   ))}
-                </select>
+                </SearchableSelect>
                 <button
                   aria-label="Crear cliente sin salir de la venta"
                   className={styles.addCustomerButton}
@@ -2782,7 +2783,7 @@ export function RetailSalesWorkspace() {
 
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Categoría del gasto *</span>
-              <select
+              <SearchableSelect
                 className={styles.select}
                 value={quickExpenseForm.categoryId}
                 onChange={(event) =>
@@ -2798,7 +2799,7 @@ export function RetailSalesWorkspace() {
                     {category.name}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </label>
 
             <label className={styles.field}>
@@ -2847,7 +2848,7 @@ export function RetailSalesWorkspace() {
                 Agrega un proveedor al gasto
                 {quickExpenseForm.status === 'PENDING' ? ' *' : ''}
               </span>
-              <select
+              <SearchableSelect
                 className={styles.select}
                 value={quickExpenseForm.supplierId}
                 onChange={(event) =>
@@ -2863,7 +2864,7 @@ export function RetailSalesWorkspace() {
                     {supplier.name}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </label>
 
             {quickExpenseForm.status === 'PAID' ? (

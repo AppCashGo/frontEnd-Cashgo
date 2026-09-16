@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
@@ -1183,7 +1184,7 @@ export function CashRegisterPage() {
           ) : null}
 
           <label className={styles.selectShell}>
-            <select
+            <SearchableSelect
               aria-label="Periodo"
               value={periodOption}
               onChange={(event) => setPeriodOption(event.target.value as PeriodOption)}
@@ -1191,7 +1192,7 @@ export function CashRegisterPage() {
               <option value="daily">Diario</option>
               <option value="weekly">Semanal</option>
               <option value="monthly">Mensual</option>
-            </select>
+            </SearchableSelect>
           </label>
 
           <label className={styles.dateShell}>

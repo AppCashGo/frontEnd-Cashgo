@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from 'react'
 import { Download, RotateCcw, Search, XCircle } from 'lucide-react'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
@@ -428,7 +429,7 @@ export function SalesHistoryDrawer({
                 {estimatedRefund > 0 ? (
                   <label>
                     <span>Método de reembolso</span>
-                    <select
+                    <SearchableSelect
                       value={refundMethod}
                       onChange={(event) =>
                         setRefundMethod(event.target.value as SalePaymentMethod)
@@ -439,7 +440,7 @@ export function SalesHistoryDrawer({
                           {method.label}
                         </option>
                       ))}
-                    </select>
+                    </SearchableSelect>
                   </label>
                 ) : (
                   <div className={styles.balanceNotice}>

@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
@@ -1187,7 +1188,7 @@ export function RestaurantTablesWorkspace() {
 
         <label className={styles.field}>
           <span>Empleado encargado</span>
-          <select
+          <SearchableSelect
             value={employeeId}
             onChange={(event) => setEmployeeId(event.target.value)}
           >
@@ -1196,7 +1197,7 @@ export function RestaurantTablesWorkspace() {
                 {employee.name}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </label>
 
         <div className={styles.field}>
@@ -1300,7 +1301,7 @@ export function RestaurantTablesWorkspace() {
 
           <label className={styles.field}>
             <span>Cliente</span>
-            <select
+            <SearchableSelect
               value={customerId}
               onChange={(event) => setCustomerId(event.target.value)}
             >
@@ -1310,7 +1311,7 @@ export function RestaurantTablesWorkspace() {
                   {customer.name}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </label>
 
           <div className={styles.twoColumns}>
@@ -1638,7 +1639,7 @@ export function RestaurantTablesWorkspace() {
 
               <label className={styles.field}>
                 <span>Cliente</span>
-                <select
+                <SearchableSelect
                   value={counterSaleCustomerId}
                   onChange={(event) => setCounterSaleCustomerId(event.target.value)}
                 >
@@ -1648,7 +1649,7 @@ export function RestaurantTablesWorkspace() {
                       {customer.name}
                     </option>
                   ))}
-                </select>
+                </SearchableSelect>
               </label>
 
               <div className={styles.twoColumns}>
@@ -1777,7 +1778,7 @@ export function RestaurantTablesWorkspace() {
 
           <label className={styles.field}>
             <span>Cliente</span>
-            <select
+            <SearchableSelect
               value={freeSaleCustomerId}
               onChange={(event) => setFreeSaleCustomerId(event.target.value)}
             >
@@ -1787,7 +1788,7 @@ export function RestaurantTablesWorkspace() {
                   {customer.name}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </label>
 
           <div className={styles.paymentGrid}>
@@ -1948,7 +1949,7 @@ export function RestaurantTablesWorkspace() {
                 <h4>Nueva mesa</h4>
                 <label className={styles.field}>
                   <span>Sala</span>
-                  <select
+                  <SearchableSelect
                     value={newTableZoneId}
                     onChange={(event) => setNewTableZoneId(event.target.value)}
                   >
@@ -1957,7 +1958,7 @@ export function RestaurantTablesWorkspace() {
                         {zone.name}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </label>
                 <label className={styles.field}>
                   <span>Nombre de la mesa</span>
@@ -2459,7 +2460,7 @@ export function RestaurantTablesWorkspace() {
 
             <label className={styles.field}>
               <span>Zona</span>
-              <select
+              <SearchableSelect
                 value={moveTargetZoneId}
                 onChange={(event) => {
                   setMoveTargetZoneId(event.target.value)
@@ -2471,12 +2472,12 @@ export function RestaurantTablesWorkspace() {
                     {zone.name}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </label>
 
             <label className={styles.field}>
               <span>Nueva mesa</span>
-              <select
+              <SearchableSelect
                 value={moveTargetTableId}
                 onChange={(event) => setMoveTargetTableId(event.target.value)}
               >
@@ -2488,7 +2489,7 @@ export function RestaurantTablesWorkspace() {
                       {table.name}
                     </option>
                   ))}
-              </select>
+              </SearchableSelect>
             </label>
 
             <button

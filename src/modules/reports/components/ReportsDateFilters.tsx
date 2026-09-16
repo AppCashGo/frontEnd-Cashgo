@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import type { ReportRangePreset } from '@/modules/reports/types/report'
 import styles from './ReportsDateFilters.module.css'
 
@@ -49,7 +50,7 @@ export function ReportsDateFilters({
       >
         <label className={styles.field}>
           <span className={styles.fieldLabel}>Periodo</span>
-          <select
+          <SearchableSelect
             className={styles.input}
             value={selectedPreset}
             onChange={(event) =>
@@ -64,7 +65,7 @@ export function ReportsDateFilters({
             <option value="SEMESTER">Semestral</option>
             <option value="ALL">Todo</option>
             <option value="CUSTOM">Personalizado</option>
-          </select>
+          </SearchableSelect>
         </label>
 
         <label className={styles.field}>

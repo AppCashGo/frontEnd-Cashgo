@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { ReportsChartCard } from '@/modules/reports/components/ReportsChartCard'
 import { ReportsDateFilters } from '@/modules/reports/components/ReportsDateFilters'
@@ -710,7 +711,7 @@ export function ReportsPage() {
         <div className={retailPageStyles.page}>
           <div className={retailPageStyles.filtersRow}>
             <label className={retailPageStyles.selectField}>
-              <select
+              <SearchableSelect
                 className={retailPageStyles.select}
                 value={selectedPreset}
                 onChange={(event) =>
@@ -723,7 +724,7 @@ export function ReportsPage() {
                 <option value="MONTH">{copy.filters.month}</option>
                 <option value="QUARTER">{copy.filters.quarter}</option>
                 <option value="SEMESTER">{copy.filters.semester}</option>
-              </select>
+              </SearchableSelect>
             </label>
             <label className={retailPageStyles.dateField}>
               <input

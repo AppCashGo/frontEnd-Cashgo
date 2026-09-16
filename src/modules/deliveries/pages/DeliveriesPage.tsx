@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from 'react'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
@@ -756,7 +757,7 @@ export function DeliveriesPage() {
 
               <label className={styles.field}>
                 <span>Origen del pedido*</span>
-                <select
+                <SearchableSelect
                   value={deliverySource}
                   onChange={(event) =>
                     setDeliverySource(event.target.value as DeliveryOrderSource)
@@ -767,7 +768,7 @@ export function DeliveriesPage() {
                       {source.label}
                     </option>
                   ))}
-                </select>
+                </SearchableSelect>
               </label>
 
               <label className={styles.field}>

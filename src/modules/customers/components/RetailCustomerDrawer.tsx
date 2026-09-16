@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import {
   type FormEvent,
   type ReactNode,
@@ -846,7 +847,7 @@ export function RetailCustomerDrawer({
         <div className={styles.twoColumns}>
           <label className={styles.field}>
             <span>Tipo de documento</span>
-            <select
+            <SearchableSelect
               className={styles.input}
               value={form.documentType}
               onChange={(event) =>
@@ -857,7 +858,7 @@ export function RetailCustomerDrawer({
               <option value="NIT">NIT</option>
               <option value="CE">CE</option>
               <option value="PASAPORTE">Pasaporte</option>
-            </select>
+            </SearchableSelect>
           </label>
 
           <label className={styles.field}>
@@ -1409,7 +1410,7 @@ export function RetailCustomerDrawer({
 
             <label className={styles.field}>
               <span>Cuenta por cobrar</span>
-              <select
+              <SearchableSelect
                 className={styles.input}
                 value={paymentForm.receivableId}
                 onChange={(event) => {
@@ -1433,7 +1434,7 @@ export function RetailCustomerDrawer({
                 <option value={OLDEST_RECEIVABLE_OPTION}>
                   Otro valor · aplicar a las ventas más antiguas
                 </option>
-              </select>
+              </SearchableSelect>
             </label>
 
             {isOldestPayment ? (
@@ -1459,7 +1460,7 @@ export function RetailCustomerDrawer({
 
               <label className={styles.field}>
                 <span>Medio de pago</span>
-                <select
+                <SearchableSelect
                   className={styles.input}
                   value={paymentForm.method}
                   onChange={(event) =>
@@ -1474,7 +1475,7 @@ export function RetailCustomerDrawer({
                       {option.label}
                     </option>
                   ))}
-                </select>
+                </SearchableSelect>
               </label>
             </div>
 

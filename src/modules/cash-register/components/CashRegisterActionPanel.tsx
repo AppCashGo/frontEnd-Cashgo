@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from "react";
 import { SurfaceCard } from "@/shared/components/ui/SurfaceCard";
 import type {
@@ -155,7 +156,7 @@ export function CashRegisterActionPanel({
             <label className={styles.label} htmlFor="cash-register-assignee">
               Responsable del turno
             </label>
-            <select
+            <SearchableSelect
               className={styles.select}
               id="cash-register-assignee"
               value={assigneeId}
@@ -166,7 +167,7 @@ export function CashRegisterActionPanel({
                   {assignee.name} · {assignee.role}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </div>
 
           <div className={styles.field}>
@@ -250,7 +251,7 @@ export function CashRegisterActionPanel({
               >
                 Tipo
               </label>
-              <select
+              <SearchableSelect
                 className={styles.select}
                 id="cash-register-entry-type"
                 value={entryType}
@@ -260,7 +261,7 @@ export function CashRegisterActionPanel({
               >
                 <option value="INCOME">Ingreso</option>
                 <option value="EXPENSE">Egreso</option>
-              </select>
+              </SearchableSelect>
             </div>
 
             <div className={styles.field}>

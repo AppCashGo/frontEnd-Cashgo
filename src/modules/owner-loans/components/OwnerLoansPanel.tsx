@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { HandCoins, Plus, WalletCards } from 'lucide-react'
@@ -125,7 +126,7 @@ export function OwnerLoansPanel({
           </label>
           <label>
             <span>Medio de ingreso</span>
-            <select
+            <SearchableSelect
               value={method}
               onChange={(event) =>
                 setMethod(event.target.value as CashRegisterPaymentMethod)
@@ -136,7 +137,7 @@ export function OwnerLoansPanel({
                   {option.label}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </label>
           <label>
             <span>Fecha</span>
@@ -218,7 +219,7 @@ export function OwnerLoansPanel({
                     value={paymentAmount}
                     onChange={(event) => setPaymentAmount(event.target.value)}
                   />
-                  <select
+                  <SearchableSelect
                     value={paymentMethod}
                     onChange={(event) =>
                       setPaymentMethod(
@@ -231,7 +232,7 @@ export function OwnerLoansPanel({
                         {option.label}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                   <button disabled={isSubmitting} type="submit">
                     Confirmar abono
                   </button>

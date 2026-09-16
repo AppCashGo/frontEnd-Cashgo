@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import type { TranslationRecord } from "@/shared/types/translation";
 import styles from "./LanguageSelect.module.css";
 
@@ -19,7 +20,7 @@ export function LanguageSelect({
   return (
     <label className={styles.field} htmlFor={id}>
       <span className={styles.label}>{label}</span>
-      <select
+      <SearchableSelect
         className={styles.select}
         id={id}
         value={value ?? ""}
@@ -38,7 +39,7 @@ export function LanguageSelect({
             {option.nativeName}
           </option>
         ))}
-      </select>
+      </SearchableSelect>
     </label>
   );
 }

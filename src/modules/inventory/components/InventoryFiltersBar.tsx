@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import type { InventoryMovementFilterType } from '@/modules/inventory/types/inventory'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import styles from './InventoryFiltersBar.module.css'
@@ -49,7 +50,7 @@ export function InventoryFiltersBar({
       <div className={styles.filtersGrid}>
         <label className={styles.field}>
           <span className={styles.label}>Movement type</span>
-          <select
+          <SearchableSelect
             className={styles.select}
             value={movementType}
             onChange={(event) =>
@@ -62,7 +63,7 @@ export function InventoryFiltersBar({
             <option value="IN">IN</option>
             <option value="OUT">OUT</option>
             <option value="ADJUSTMENT">ADJUSTMENT</option>
-          </select>
+          </SearchableSelect>
         </label>
 
         <label className={styles.field}>

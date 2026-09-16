@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useDeferredValue, useMemo, useState } from "react";
 import { Download, FileCog, ReceiptText } from "lucide-react";
 import { BillingConfigurationDrawer } from "@/modules/billing/components/BillingConfigurationDrawer";
@@ -322,7 +323,7 @@ export function BillingPage() {
         </label>
 
         <label className={`${retailStyles.selectField} ${styles.selectField}`}>
-          <select
+          <SearchableSelect
             className={retailStyles.select}
             value={selectedCustomerId}
             onChange={(event) => setSelectedCustomerId(event.target.value)}
@@ -333,11 +334,11 @@ export function BillingPage() {
                 {customer.name}
               </option>
             ))}
-          </select>
+          </SearchableSelect>
         </label>
 
         <label className={`${retailStyles.selectField} ${styles.selectField}`}>
-          <select
+          <SearchableSelect
             className={retailStyles.select}
             value={selectedStatus}
             onChange={(event) =>
@@ -360,7 +361,7 @@ export function BillingPage() {
             <option value="CANCELLED">
               {getBillingStatusLabel("CANCELLED", languageCode)}
             </option>
-          </select>
+          </SearchableSelect>
         </label>
 
         <label className={`${retailStyles.dateField} ${styles.dateField}`}>

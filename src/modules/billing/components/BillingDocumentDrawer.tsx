@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -515,7 +516,7 @@ export function BillingDocumentDrawer({
 
                   <label className={styles.field}>
                     <span className={styles.fieldLabel}>{copy.collectMethod}</span>
-                    <select className={styles.select} {...register("method")}>
+                    <SearchableSelect className={styles.select} {...register("method")}>
                       <option value="CASH">
                         {getBillingPaymentMethodLabel("CASH", languageCode)}
                       </option>
@@ -537,7 +538,7 @@ export function BillingDocumentDrawer({
                       <option value="OTHER">
                         {getBillingPaymentMethodLabel("OTHER", languageCode)}
                       </option>
-                    </select>
+                    </SearchableSelect>
                   </label>
 
                   <label className={styles.field}>

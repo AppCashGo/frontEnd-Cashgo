@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -213,14 +214,14 @@ export function ConvertQuotationDrawer({
                 {copy.convertCustomer}
                 {paymentStatus === "CREDIT" ? " *" : ""}
               </span>
-              <select className={styles.select} {...register("customerId")}>
+              <SearchableSelect className={styles.select} {...register("customerId")}>
                 <option value="">{copy.noCustomer}</option>
                 {customers.map((customer) => (
                   <option key={customer.id} value={customer.id}>
                     {customer.name}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
               {errors.customerId ? (
                 <p className={styles.errorMessage}>{errors.customerId.message}</p>
               ) : null}

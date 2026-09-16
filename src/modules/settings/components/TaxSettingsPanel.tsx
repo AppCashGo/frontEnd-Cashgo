@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   ArrowLeft,
@@ -368,7 +369,7 @@ function RetailTaxSettingsPanel({
           <div className={styles.retailTaxGrid}>
             <span className={styles.retailLabel}>Impuesto base</span>
             <label className={styles.selectWrapper}>
-              <select
+              <SearchableSelect
                 className={styles.retailSelect}
                 disabled={isLoading || isSubmitting || businessSettings === null}
                 value={baseTaxOptionId}
@@ -382,8 +383,7 @@ function RetailTaxSettingsPanel({
                     {formatTaxOptionLabel(option)}
                   </option>
                 ))}
-              </select>
-              <ChevronDown aria-hidden="true" className={styles.selectIcon} />
+              </SearchableSelect>
             </label>
 
             <span className={styles.retailLabel}>Impuesto por producto</span>
@@ -466,7 +466,7 @@ function RetailTaxSettingsPanel({
           <label className={styles.drawerField}>
             <span className={styles.drawerLabel}>Impuesto base</span>
             <span className={styles.selectWrapper}>
-              <select
+              <SearchableSelect
                 className={styles.drawerSelect}
                 value={selectedTaxOptionId}
                 onChange={(event) =>
@@ -479,8 +479,7 @@ function RetailTaxSettingsPanel({
                     {formatTaxOptionLabel(option)}
                   </option>
                 ))}
-              </select>
-              <ChevronDown aria-hidden="true" className={styles.selectIcon} />
+              </SearchableSelect>
             </span>
           </label>
         </div>
@@ -731,7 +730,7 @@ export function TaxSettingsPanel({
             <label className={styles.label} htmlFor="settings-currency">
               Currency
             </label>
-            <select
+            <SearchableSelect
               aria-describedby={
                 errors.currency ? 'settings-currency-error' : undefined
               }
@@ -746,7 +745,7 @@ export function TaxSettingsPanel({
                   {currency}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
             {errors.currency ? (
               <p className={styles.errorMessage} id="settings-currency-error">
                 {errors.currency.message}

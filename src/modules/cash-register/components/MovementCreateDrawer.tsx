@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import {
@@ -286,7 +287,7 @@ export function MovementCreateDrawer({
               <span>Cliente *</span>
               <div className={styles.inputWithIcon}>
                 <UserRound />
-                <select
+                <SearchableSelect
                   value={partyId}
                   onChange={(event) => setPartyId(event.target.value)}
                 >
@@ -296,7 +297,7 @@ export function MovementCreateDrawer({
                       {party.name}
                     </option>
                   ))}
-                </select>
+                </SearchableSelect>
               </div>
             </label>
           ) : null}
@@ -307,7 +308,7 @@ export function MovementCreateDrawer({
               <div className={styles.partyPickerRow}>
                 <div className={styles.inputWithIcon}>
                   <UserRound />
-                  <select
+                  <SearchableSelect
                     value={partyId}
                     onChange={(event) => {
                       if (event.target.value === CREATE_SUPPLIER_VALUE) {
@@ -326,7 +327,7 @@ export function MovementCreateDrawer({
                         {party.name}
                       </option>
                     ))}
-                  </select>
+                  </SearchableSelect>
                 </div>
                 <button
                   aria-label="Crear proveedor"
@@ -347,7 +348,7 @@ export function MovementCreateDrawer({
           {isExpense ? (
             <label className={styles.field}>
               <span>Medio de pago</span>
-              <select
+              <SearchableSelect
                 value={paymentMethod}
                 onChange={(event) =>
                   setPaymentMethod(
@@ -360,7 +361,7 @@ export function MovementCreateDrawer({
                     {method.label}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </label>
           ) : null}
 

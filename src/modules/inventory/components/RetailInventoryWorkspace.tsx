@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import type { KeyboardEvent, ReactNode } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -1438,7 +1439,7 @@ export function RetailInventoryWorkspace() {
             </label>
             <label className={styles.compactSelectWrap}>
               <span aria-hidden="true">≡</span>
-              <select
+              <SearchableSelect
                 aria-label={copy.categories}
                 className={styles.compactSelect}
                 value={activeCategoryId ?? ''}
@@ -1453,12 +1454,12 @@ export function RetailInventoryWorkspace() {
                     {category.name}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </label>
 
             <label className={styles.compactSelectWrap}>
               <span aria-hidden="true">●</span>
-              <select
+              <SearchableSelect
                 aria-label={copy.stockStatus}
                 className={styles.compactSelect}
                 value={activeInventoryFilter}
@@ -1468,12 +1469,12 @@ export function RetailInventoryWorkspace() {
               >
                 <option value="ALL">{copy.allProducts}</option>
                 <option value="LOW">{copy.lowStockOnly}</option>
-              </select>
+              </SearchableSelect>
             </label>
 
             <label className={styles.compactSelectWrap}>
               <span aria-hidden="true">↕</span>
-              <select
+              <SearchableSelect
                 aria-label={copy.stockOrder}
                 className={styles.compactSelect}
                 value={inventorySort}
@@ -1481,7 +1482,7 @@ export function RetailInventoryWorkspace() {
               >
                 <option value="STOCK_ASC">{copy.stockAscending}</option>
                 <option value="STOCK_DESC">{copy.stockDescending}</option>
-              </select>
+              </SearchableSelect>
             </label>
           </div>
 
@@ -2214,7 +2215,7 @@ export function RetailInventoryWorkspace() {
 
             <label className={styles.fieldGroup}>
               <span className={styles.fieldLabel}>{copy.purchaseProduct}</span>
-              <select
+              <SearchableSelect
                 className={styles.selectInput}
                 value={adjustmentFormState.productId}
                 onChange={(event) =>
@@ -2230,14 +2231,14 @@ export function RetailInventoryWorkspace() {
                     {product.name}
                   </option>
                 ))}
-              </select>
+              </SearchableSelect>
             </label>
 
             <label className={styles.fieldGroup}>
               <span className={styles.fieldLabel}>
                 {copy.adjustmentMovementType}
               </span>
-              <select
+              <SearchableSelect
                 className={styles.selectInput}
                 value={adjustmentFormState.type}
                 onChange={(event) =>
@@ -2252,7 +2253,7 @@ export function RetailInventoryWorkspace() {
                   {copy.adjustmentTypeAdjustment}
                 </option>
                 <option value="IN">{copy.adjustmentTypeIn}</option>
-              </select>
+              </SearchableSelect>
             </label>
 
             <label className={styles.fieldGroup}>
@@ -2359,7 +2360,7 @@ export function RetailInventoryWorkspace() {
             <label className={styles.fieldGroup}>
               <span className={styles.fieldLabel}>{copy.purchaseSupplier} *</span>
               <div className={styles.supplierPickerRow}>
-                <select
+                <SearchableSelect
                   className={styles.selectInput}
                   disabled={suppliersQuery.isLoading}
                   value={purchaseFormState.supplierId}
@@ -2386,7 +2387,7 @@ export function RetailInventoryWorkspace() {
                       {supplier.name}
                     </option>
                   ))}
-                </select>
+                </SearchableSelect>
                 <button
                   aria-label={
                     languageCode === 'en'
@@ -2465,7 +2466,7 @@ export function RetailInventoryWorkspace() {
 
                   <label className={styles.fieldGroup}>
                     <span className={styles.fieldLabel}>{copy.purchaseProduct}</span>
-                    <select
+                    <SearchableSelect
                       className={styles.selectInput}
                       value={item.productId}
                       onChange={(event) =>
@@ -2485,7 +2486,7 @@ export function RetailInventoryWorkspace() {
                           {product.name}
                         </option>
                       ))}
-                    </select>
+                    </SearchableSelect>
                   </label>
 
                   <div className={styles.purchaseFieldsRow}>
@@ -2580,7 +2581,7 @@ export function RetailInventoryWorkspace() {
             <div className={styles.purchaseFieldsRow}>
               <label className={styles.fieldGroup}>
                 <span className={styles.fieldLabel}>{copy.purchasePaymentMethod}</span>
-                <select
+                <SearchableSelect
                   className={styles.selectInput}
                   value={purchaseFormState.paymentMethod}
                   onChange={(event) =>
@@ -2597,12 +2598,12 @@ export function RetailInventoryWorkspace() {
                   <option value="BANK_DEPOSIT">{languageCode === 'en' ? 'Bank deposit' : 'Consignación bancaria'}</option>
                   <option value="CREDIT">{languageCode === 'en' ? 'Credit' : 'Crédito'}</option>
                   <option value="OTHER">{languageCode === 'en' ? 'Other' : 'Otro'}</option>
-                </select>
+                </SearchableSelect>
               </label>
 
               <label className={styles.fieldGroup}>
                 <span className={styles.fieldLabel}>{copy.purchaseStatus}</span>
-                <select
+                <SearchableSelect
                   className={styles.selectInput}
                   value={purchaseFormState.status}
                   onChange={(event) =>
@@ -2615,7 +2616,7 @@ export function RetailInventoryWorkspace() {
                   <option value="PAID">{copy.purchaseStatusPaid}</option>
                   <option value="PARTIAL">{copy.purchaseStatusPartial}</option>
                   <option value="PENDING">{copy.purchaseStatusPending}</option>
-                </select>
+                </SearchableSelect>
               </label>
             </div>
 

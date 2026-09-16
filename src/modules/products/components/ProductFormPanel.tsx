@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -329,7 +330,7 @@ export function ProductFormPanel({
             <label className={styles.label} htmlFor="product-unit">
               Unidad de venta
             </label>
-            <select
+            <SearchableSelect
               aria-describedby={errors.unit ? 'product-unit-error' : undefined}
               aria-invalid={Boolean(errors.unit)}
               className={styles.input}
@@ -341,7 +342,7 @@ export function ProductFormPanel({
                   {option.label}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
             {errors.unit ? (
               <p className={styles.errorMessage} id="product-unit-error">
                 {errors.unit.message}

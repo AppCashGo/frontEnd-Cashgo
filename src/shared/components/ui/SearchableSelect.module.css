@@ -1,0 +1,151 @@
+.root {
+  position: relative;
+  min-width: 0;
+}
+
+.trigger {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  background-image: none !important;
+  appearance: none;
+}
+
+.trigger:disabled {
+  cursor: not-allowed;
+}
+
+.value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex: 0 0 auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  opacity: 0.72;
+  transform: translateY(-0.15rem) rotate(45deg);
+  transition: transform 160ms ease;
+}
+
+.chevronOpen {
+  transform: translateY(0.15rem) rotate(225deg);
+}
+
+.nativeSelect {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  clip-path: inset(50%) !important;
+  border: 0 !important;
+  white-space: nowrap !important;
+}
+
+.menu {
+  position: fixed;
+  z-index: 10000;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  border: 1px solid #dce3ef;
+  border-radius: 0.9rem;
+  background: #fff;
+  box-shadow: 0 18px 48px rgb(15 23 42 / 20%);
+}
+
+.searchWrap {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  width: 1rem;
+  height: 1rem;
+  color: #667085;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.search {
+  width: 100%;
+  min-height: 2.55rem;
+  padding: 0.55rem 0.75rem 0.55rem 2.25rem;
+  border: 1px solid #cfd8e6;
+  border-radius: 0.7rem;
+  outline: none;
+  background: #fff;
+  color: #172033;
+  font: inherit;
+}
+
+.search:focus {
+  border-color: #4f63ff;
+  box-shadow: 0 0 0 3px rgb(79 99 255 / 14%);
+}
+
+.options {
+  display: grid;
+  max-height: min(17rem, 42vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.option {
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: transparent;
+  color: #263247;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.option:hover,
+.option:focus-visible {
+  outline: none;
+  background: #f2f5ff;
+}
+
+.optionSelected {
+  background: #e9edff;
+  color: #3046d3;
+  font-weight: 700;
+}
+
+.option:disabled {
+  color: #98a2b3;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.empty {
+  margin: 0;
+  padding: 0.85rem 0.75rem;
+  color: #667085;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .menu {
+    max-width: calc(100vw - 1rem);
+  }
+}

@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type {
@@ -810,7 +811,7 @@ export function CashRegisterSessionDrawer({
         >
           <label className={styles.field}>
             <span className={styles.label}>Empleado encargado</span>
-            <select
+            <SearchableSelect
               className={styles.select}
               value={assigneeId}
               onChange={(event) => setAssigneeId(event.target.value)}
@@ -820,7 +821,7 @@ export function CashRegisterSessionDrawer({
                   {assignee.name} · {assignee.role}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </label>
 
           <label className={styles.field}>
@@ -859,7 +860,7 @@ export function CashRegisterSessionDrawer({
         >
           <label className={styles.field}>
             <span className={styles.label}>Empleado encargado</span>
-            <select
+            <SearchableSelect
               className={styles.select}
               value={assigneeId}
               onChange={(event) => setAssigneeId(event.target.value)}
@@ -869,7 +870,7 @@ export function CashRegisterSessionDrawer({
                   {assignee.name} · {assignee.role}
                 </option>
               ))}
-            </select>
+            </SearchableSelect>
           </label>
 
           <label className={styles.field}>
@@ -927,7 +928,7 @@ export function CashRegisterSessionDrawer({
             <div className={styles.inlineFields}>
               <label className={styles.field}>
                 <span className={styles.label}>Tipo</span>
-                <select
+                <SearchableSelect
                   className={styles.select}
                   value={entryType}
                   onChange={(event) =>
@@ -936,7 +937,7 @@ export function CashRegisterSessionDrawer({
                 >
                   <option value="INCOME">Ingreso</option>
                   <option value="EXPENSE">Egreso</option>
-                </select>
+                </SearchableSelect>
               </label>
 
               <label className={styles.field}>

@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from 'react'
 import { UserPlus } from 'lucide-react'
 import { useCreateCustomerMutation } from '@/modules/customers/hooks/use-customers-query'
@@ -249,7 +250,7 @@ export function QuickCreateCustomerDrawer({
         <div className={styles.documentGrid}>
           <label className={styles.field}>
             <span>Tipo</span>
-            <select
+            <SearchableSelect
               value={form.documentType}
               onChange={(event) => updateField('documentType', event.target.value)}
             >
@@ -257,7 +258,7 @@ export function QuickCreateCustomerDrawer({
               <option value="CE">Cédula extranjería</option>
               <option value="NIT">NIT</option>
               <option value="PASSPORT">Pasaporte</option>
-            </select>
+            </SearchableSelect>
           </label>
 
           <label className={styles.field}>

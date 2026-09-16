@@ -1,3 +1,4 @@
+import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Search } from "lucide-react";
 import { useDeferredValue, useState } from "react";
@@ -161,7 +162,7 @@ export function CreateBillingInvoiceDrawer({
 
           <label className={styles.field}>
             <span className={styles.fieldLabel}>{copy.createInvoiceType}</span>
-            <select className={styles.select} {...register("type")}>
+            <SearchableSelect className={styles.select} {...register("type")}>
               <option value="SIMPLE_RECEIPT">
                 {getBillingInvoiceTypeLabel("SIMPLE_RECEIPT", languageCode)}
               </option>
@@ -172,7 +173,7 @@ export function CreateBillingInvoiceDrawer({
                 {getBillingInvoiceTypeLabel("ELECTRONIC_INVOICE", languageCode)} ·{" "}
                 {languageCode === "en" ? "Coming soon" : "Próximamente"}
               </option>
-            </select>
+            </SearchableSelect>
           </label>
 
           <label className={styles.field}>
