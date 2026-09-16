@@ -3,6 +3,7 @@ import type {
   ExpensePaymentMethod,
   ExpenseStatus,
 } from "@/modules/expenses/types/expense";
+import type { PaymentFundSource } from "@/modules/cash-register/types/cash-register";
 
 export const inventoryMovementTypes = [
   "INITIAL_STOCK",
@@ -88,6 +89,7 @@ export type InventoryPurchaseInput = {
   }>;
   reference?: string;
   paymentMethod?: ExpensePaymentMethod;
+  fundSource?: PaymentFundSource;
   status?: Exclude<ExpenseStatus, "CANCELLED">;
   amountPaid?: number;
   purchaseDate?: string;

@@ -1,6 +1,10 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useState } from 'react'
-import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
+import {
+  useCurrentCashRegisterQuery,
+  useReserveSummaryQuery,
+} from '@/modules/cash-register/hooks/use-cash-register-query'
+import type { PaymentFundSource } from '@/modules/cash-register/types/cash-register'
 import type { ExpensePaymentMethod } from '@/modules/expenses/types/expense'
 import {
   getExpensePaymentMethodLabel,
@@ -44,6 +48,7 @@ type PaymentDraft = {
   purchaseId: string
   amount: string
   method: ExpensePaymentMethod
+  fundSource: PaymentFundSource
   reference: string
   paymentDate: string
 }
@@ -84,6 +89,7 @@ export function SupplierSupplyHistoryPanel({
 }: SupplierSupplyHistoryPanelProps) {
   const { languageCode } = useAppTranslation()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
+  const reserveSummaryQuery = useReserveSummaryQuery()
   const isEnglish = languageCode === 'en'
   const [paymentDraft, setPaymentDraft] = useState<PaymentDraft | null>(null)
   const [cancellationDraft, setCancellationDraft] = useState<{
@@ -109,6 +115,7 @@ export function SupplierSupplyHistoryPanel({
       purchaseId: purchase.purchaseId,
       amount: String(purchase.balance),
       method: purchase.paymentMethod,
+      fundSource: 'REGISTER',
       reference: '',
       paymentDate: toExpenseDateInputValue(new Date()),
     })
@@ -177,9 +184,13 @@ export function SupplierSupplyHistoryPanel({
               ? Number(paymentDraft?.amount ?? 0)
               : 0
             const draftedMethodBalance = isPaymentOpen
-              ? currentCashRegisterQuery.data?.paymentMethods.find(
-                  (paymentMethod) => paymentMethod.method === paymentDraft?.method,
-                )?.expectedAmount ?? 0
+              ? paymentDraft?.fundSource === 'RESERVE'
+                ? reserveSummaryQuery.data?.balances.find(
+                    (balance) => balance.method === paymentDraft.method,
+                  )?.amount ?? 0
+                : currentCashRegisterQuery.data?.paymentMethods.find(
+                    (paymentMethod) => paymentMethod.method === paymentDraft?.method,
+                  )?.expectedAmount ?? 0
               : 0
             const draftedPaymentShortfall = Math.max(
               draftedPaymentAmount - draftedMethodBalance,
@@ -257,7 +268,13 @@ export function SupplierSupplyHistoryPanel({
                     <strong>{isEnglish ? 'Payments' : 'Pagos registrados'}</strong>
                     {purchase.payments.map((payment) => (
                       <div key={payment.id}>
-                        <span>{getPaymentMethodLabel(payment.method)} · {formatDateTime(payment.paymentDate)}</span>
+                        <span>
+                          {getPaymentMethodLabel(payment.method)} ·{' '}
+                          {payment.fundSource === 'RESERVE'
+                            ? isEnglish ? 'Reserve' : 'Reserva'
+                            : isEnglish ? 'Open register' : 'Caja abierta'} ·{' '}
+                          {formatDateTime(payment.paymentDate)}
+                        </span>
                         <strong>{formatCurrency(payment.amount)}</strong>
                       </div>
                     ))}
@@ -541,6 +558,25 @@ export function SupplierSupplyHistoryPanel({
                       />
                     </label>
                     <label>
+                      <span>{isEnglish ? 'Money source' : '¿De dónde sale el dinero?'}</span>
+                      <SearchableSelect
+                        value={paymentDraft.fundSource}
+                        onChange={(event) =>
+                          setPaymentDraft({
+                            ...paymentDraft,
+                            fundSource: event.target.value as PaymentFundSource,
+                          })
+                        }
+                      >
+                        <option value="REGISTER">
+                          {isEnglish ? 'Open register' : 'Caja abierta del turno'}
+                        </option>
+                        <option value="RESERVE">
+                          {isEnglish ? 'Business reserve' : 'Reserva del negocio'}
+                        </option>
+                      </SearchableSelect>
+                    </label>
+                    <label>
                       <span>{isEnglish ? 'Payment method' : 'Método de pago'}</span>
                       <SearchableSelect
                         value={paymentDraft.method}
@@ -576,7 +612,9 @@ export function SupplierSupplyHistoryPanel({
                             : 'Saldo insuficiente en este medio de pago'}
                         </strong>
                         <span>
-                          {isEnglish ? 'Available' : 'Disponible'}: {formatCurrency(draftedMethodBalance)} ·{' '}
+                          {paymentDraft.fundSource === 'RESERVE'
+                            ? isEnglish ? 'Reserve available' : 'Reserva disponible'
+                            : isEnglish ? 'Register available' : 'Caja disponible'}: {formatCurrency(draftedMethodBalance)} ·{' '}
                           {isEnglish ? 'It would remain at' : 'Quedaría en'}{' '}
                           {formatCurrency(-draftedPaymentShortfall)}.
                         </span>
@@ -597,6 +635,7 @@ export function SupplierSupplyHistoryPanel({
                           onRegisterPayment?.(purchase.purchaseId, {
                             amount: Number(paymentDraft.amount),
                             method: paymentDraft.method,
+                            fundSource: paymentDraft.fundSource,
                             reference: paymentDraft.reference.trim() || undefined,
                             paymentDate: toExpenseRequestDate(paymentDraft.paymentDate),
                           })

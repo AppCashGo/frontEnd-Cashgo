@@ -1,14 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  adjustReserveBalance,
   closeCashRegister,
   createCashRegisterManualEntry,
   createPaymentMethodTransfer,
+  createReserveTransfer,
   downloadCashRegisterReport,
   downloadMovementsReport,
   getCashRegisterAssignees,
   getCashRegisterHistory,
   getCurrentCashRegisterSession,
   getMovementsOverview,
+  getReserveSummary,
   openCashRegister,
 } from "@/modules/cash-register/services/cash-register-api";
 import type {
@@ -17,6 +20,8 @@ import type {
   CloseCashRegisterInput,
   OpenCashRegisterInput,
   PaymentMethodTransferInput,
+  ReserveTransferInput,
+  ReserveBalanceAdjustmentInput,
 } from "@/modules/cash-register/types/cash-register";
 
 export const cashRegisterCurrentQueryKey = [
@@ -32,6 +37,7 @@ export const cashRegisterAssigneesQueryKey = [
   "assignees",
 ] as const;
 export const movementsOverviewQueryKey = ["movements", "overview"] as const;
+export const reserveSummaryQueryKey = ["cash-register", "reserve"] as const;
 
 export function invalidateCashRegisterQueries(
   queryClient: ReturnType<typeof useQueryClient>,
@@ -46,6 +52,7 @@ export function invalidateCashRegisterQueries(
     queryClient.invalidateQueries({
       queryKey: movementsOverviewQueryKey,
     }),
+    queryClient.invalidateQueries({ queryKey: reserveSummaryQueryKey }),
   ]);
 }
 
@@ -53,6 +60,13 @@ export function useCurrentCashRegisterQuery() {
   return useQuery({
     queryKey: cashRegisterCurrentQueryKey,
     queryFn: getCurrentCashRegisterSession,
+  });
+}
+
+export function useReserveSummaryQuery() {
+  return useQuery({
+    queryKey: reserveSummaryQueryKey,
+    queryFn: getReserveSummary,
   });
 }
 
@@ -122,6 +136,29 @@ export function useCreatePaymentMethodTransferMutation() {
   return useMutation({
     mutationFn: (input: PaymentMethodTransferInput) =>
       createPaymentMethodTransfer(input),
+    onSuccess: async () => {
+      await invalidateCashRegisterQueries(queryClient);
+    },
+  });
+}
+
+export function useCreateReserveTransferMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: ReserveTransferInput) => createReserveTransfer(input),
+    onSuccess: async () => {
+      await invalidateCashRegisterQueries(queryClient);
+    },
+  });
+}
+
+export function useAdjustReserveBalanceMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: ReserveBalanceAdjustmentInput) =>
+      adjustReserveBalance(input),
     onSuccess: async () => {
       await invalidateCashRegisterQueries(queryClient);
     },

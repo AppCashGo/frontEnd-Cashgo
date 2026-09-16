@@ -1,3 +1,6 @@
+import type { PaymentFundSource } from '@/modules/cash-register/types/cash-register'
+import type { ExpensePaymentMethod, ExpenseStatus } from '@/modules/expenses/types/expense'
+
 export type SupplierSummary = {
   id: string
   name: string
@@ -41,6 +44,7 @@ export type SupplierSupplyHistoryItem = {
   payments: Array<{
     id: string
     method: ExpensePaymentMethod
+    fundSource: PaymentFundSource
     amount: number
     reference: string | null
     notes: string | null
@@ -81,6 +85,7 @@ export type SupplierMutationInput = {
 export type SupplierPurchasePaymentInput = {
   amount: number
   method: ExpensePaymentMethod
+  fundSource?: PaymentFundSource
   reference?: string
   notes?: string
   paymentDate?: string
@@ -99,7 +104,3 @@ export type SupplierPurchaseReturnInput = {
   refundMethod?: ExpensePaymentMethod
   returnDate?: string
 }
-import type {
-  ExpensePaymentMethod,
-  ExpenseStatus,
-} from '@/modules/expenses/types/expense'

@@ -10,6 +10,10 @@ import type {
   CloseCashRegisterInput,
   OpenCashRegisterInput,
   PaymentMethodTransferInput,
+  ReserveSummary,
+  ReserveBalanceAdjustmentInput,
+  ReserveTransferDirection,
+  ReserveTransferInput,
 } from "@/modules/cash-register/types/cash-register";
 import {
   formatCashRegisterCurrency,
@@ -27,6 +31,7 @@ type CashRegisterSessionDrawerProps = {
   assignees: CashRegisterAssignee[];
   currentSession: CashRegisterSession | null;
   latestClosedSession?: CashRegisterSession | null;
+  reserveSummary?: ReserveSummary | null;
   businessLogoUrl?: string | null;
   businessName?: string | null;
   initialMode?: CashRegisterDrawerMode;
@@ -38,6 +43,8 @@ type CashRegisterSessionDrawerProps = {
   ) => Promise<CashRegisterSession | void>;
   onManualEntry: (input: CashRegisterManualEntryInput) => Promise<void>;
   onTransfer: (input: PaymentMethodTransferInput) => Promise<void>;
+  onReserveTransfer: (input: ReserveTransferInput) => Promise<void>;
+  onReserveAdjust: (input: ReserveBalanceAdjustmentInput) => Promise<void>;
 };
 
 type PaymentMethodSummary = {
@@ -429,6 +436,7 @@ export function CashRegisterSessionDrawer({
   assignees,
   currentSession,
   latestClosedSession,
+  reserveSummary,
   businessLogoUrl,
   businessName,
   initialMode = "manage",
@@ -438,6 +446,8 @@ export function CashRegisterSessionDrawer({
   onCloseSession,
   onManualEntry,
   onTransfer,
+  onReserveTransfer,
+  onReserveAdjust,
 }: CashRegisterSessionDrawerProps) {
   const [assigneeId, setAssigneeId] = useState(
     getInitialAssigneeId(assignees, currentSession),
@@ -463,6 +473,15 @@ export function CashRegisterSessionDrawer({
     useState<CashRegisterPaymentMethod>("DIGITAL_WALLET");
   const [transferAmount, setTransferAmount] = useState("");
   const [transferNotes, setTransferNotes] = useState("");
+  const [reserveTransferMethod, setReserveTransferMethod] =
+    useState<CashRegisterPaymentMethod>("CASH");
+  const [reserveTransferDirection, setReserveTransferDirection] =
+    useState<ReserveTransferDirection>("TO_RESERVE");
+  const [reserveTransferAmount, setReserveTransferAmount] = useState("");
+  const [reserveTransferNotes, setReserveTransferNotes] = useState("");
+  const [reserveAdjustmentMethod, setReserveAdjustmentMethod] =
+    useState<CashRegisterPaymentMethod>("CASH");
+  const [reserveAdjustmentAmount, setReserveAdjustmentAmount] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -597,6 +616,52 @@ export function CashRegisterSessionDrawer({
         error instanceof Error
           ? error.message
           : "No fue posible transferir el dinero entre medios.",
+      );
+    }
+  }
+
+  async function handleReserveTransferSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    try {
+      await onReserveTransfer({
+        method: reserveTransferMethod,
+        direction: reserveTransferDirection,
+        amount: parseAmountInput(reserveTransferAmount),
+        notes: reserveTransferNotes.trim() || undefined,
+      });
+      setReserveTransferAmount("");
+      setReserveTransferNotes("");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "No fue posible mover el dinero entre la caja y la reserva.",
+      );
+    }
+  }
+
+  async function handleReserveAdjustmentSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
+    event.preventDefault();
+    setErrorMessage(null);
+
+    try {
+      await onReserveAdjust({
+        method: reserveAdjustmentMethod,
+        amount: parseAmountInput(reserveAdjustmentAmount),
+        notes: "Conciliación del dinero que ya estaba guardado",
+      });
+      setReserveAdjustmentAmount("");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error
+          ? error.message
+          : "No fue posible conciliar la reserva.",
       );
     }
   }
@@ -1071,17 +1136,58 @@ export function CashRegisterSessionDrawer({
 
             <div className={styles.metricsGrid}>
               <div className={styles.metric}>
-                <span>Base</span>
+                <span>Base en efectivo</span>
                 <strong>
                   {formatCashRegisterCurrency(currentSession.openingAmount)}
                 </strong>
               </div>
               <div className={styles.metric}>
-                <span>Esperado</span>
+                <span>Efectivo esperado</span>
                 <strong>
                   {formatCashRegisterCurrency(currentSession.cashExpectedTotal)}
                 </strong>
               </div>
+              <div className={styles.metric}>
+                <span>Total del turno</span>
+                <strong>
+                  {formatCashRegisterCurrency(getShiftBalance(currentSession))}
+                </strong>
+              </div>
+              <div className={styles.metric}>
+                <span>Total negocio disponible</span>
+                <strong>
+                  {formatCashRegisterCurrency(
+                    getShiftBalance(currentSession) + (reserveSummary?.total ?? 0),
+                  )}
+                </strong>
+              </div>
+            </div>
+          </section>
+
+          <section className={styles.reserveCard}>
+            <div className={styles.reserveCardHeader}>
+              <span>
+                <small>Reserva del negocio</small>
+                <strong>
+                  {formatCashRegisterCurrency(reserveSummary?.total ?? 0)}
+                </strong>
+              </span>
+              <em>No pertenece al turno</em>
+            </div>
+            <div className={styles.reserveBalances}>
+              {paymentMethodsOrder.map(({ method, label }) => {
+                const amount =
+                  reserveSummary?.balances.find(
+                    (balance) => balance.method === method,
+                  )?.amount ?? 0;
+
+                return (
+                  <div key={method}>
+                    <span>{label}</span>
+                    <strong>{formatCashRegisterCurrency(amount)}</strong>
+                  </div>
+                );
+              })}
             </div>
           </section>
 
@@ -1217,6 +1323,138 @@ export function CashRegisterSessionDrawer({
               type="submit"
             >
               {isSubmitting ? "Guardando..." : "Registrar transferencia"}
+            </button>
+          </form>
+
+          <form
+            className={`${styles.form} ${styles.transferForm}`}
+            noValidate
+            onSubmit={handleReserveTransferSubmit}
+          >
+            <div>
+              <h4 className={styles.sectionTitle}>Caja del turno ↔ reserva</h4>
+              <p className={styles.sectionDescription}>
+                Guarda dinero fuera del turno o vuelve a traerlo cuando lo necesites. Este movimiento no cambia la ganancia.
+              </p>
+            </div>
+
+            <div className={styles.inlineFields}>
+              <label className={styles.field}>
+                <span className={styles.label}>Movimiento</span>
+                <SearchableSelect
+                  className={styles.select}
+                  value={reserveTransferDirection}
+                  onChange={(event) =>
+                    setReserveTransferDirection(
+                      event.target.value as ReserveTransferDirection,
+                    )
+                  }
+                >
+                  <option value="TO_RESERVE">Caja → reserva</option>
+                  <option value="FROM_RESERVE">Reserva → caja</option>
+                </SearchableSelect>
+              </label>
+
+              <label className={styles.field}>
+                <span className={styles.label}>Medio</span>
+                <SearchableSelect
+                  className={styles.select}
+                  value={reserveTransferMethod}
+                  onChange={(event) =>
+                    setReserveTransferMethod(
+                      event.target.value as CashRegisterPaymentMethod,
+                    )
+                  }
+                >
+                  {paymentMethodsOrder.map(({ method, label }) => (
+                    <option key={method} value={method}>{label}</option>
+                  ))}
+                </SearchableSelect>
+              </label>
+            </div>
+
+            <label className={styles.field}>
+              <span className={styles.label}>Monto</span>
+              <input
+                className={styles.input}
+                inputMode="decimal"
+                min="0.01"
+                placeholder="$ 0"
+                step="0.01"
+                type="number"
+                value={reserveTransferAmount}
+                onChange={(event) => setReserveTransferAmount(event.target.value)}
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span className={styles.label}>Nota opcional</span>
+              <input
+                className={styles.input}
+                placeholder="Ej. dinero guardado en caja fuerte"
+                type="text"
+                value={reserveTransferNotes}
+                onChange={(event) => setReserveTransferNotes(event.target.value)}
+              />
+            </label>
+
+            <button
+              className={retailStyles.buttonOutline}
+              disabled={isSubmitting}
+              type="submit"
+            >
+              {isSubmitting ? "Guardando..." : "Mover dinero"}
+            </button>
+          </form>
+
+          <form
+            className={`${styles.form} ${styles.reserveAdjustmentForm}`}
+            noValidate
+            onSubmit={handleReserveAdjustmentSubmit}
+          >
+            <div>
+              <h4 className={styles.sectionTitle}>Conciliar dinero ya guardado</h4>
+              <p className={styles.sectionDescription}>
+                Úsalo para registrar el valor real que ya tenías fuera de la caja. Escribe el saldo total de la reserva, no solo la diferencia.
+              </p>
+            </div>
+            <div className={styles.inlineFields}>
+              <label className={styles.field}>
+                <span className={styles.label}>Medio</span>
+                <SearchableSelect
+                  className={styles.select}
+                  value={reserveAdjustmentMethod}
+                  onChange={(event) =>
+                    setReserveAdjustmentMethod(
+                      event.target.value as CashRegisterPaymentMethod,
+                    )
+                  }
+                >
+                  {paymentMethodsOrder.map(({ method, label }) => (
+                    <option key={method} value={method}>{label}</option>
+                  ))}
+                </SearchableSelect>
+              </label>
+              <label className={styles.field}>
+                <span className={styles.label}>Saldo real guardado</span>
+                <input
+                  className={styles.input}
+                  inputMode="decimal"
+                  min="0"
+                  placeholder="$ 0"
+                  step="0.01"
+                  type="number"
+                  value={reserveAdjustmentAmount}
+                  onChange={(event) => setReserveAdjustmentAmount(event.target.value)}
+                />
+              </label>
+            </div>
+            <button
+              className={retailStyles.buttonOutline}
+              disabled={isSubmitting}
+              type="submit"
+            >
+              {isSubmitting ? "Guardando..." : "Actualizar reserva"}
             </button>
           </form>
 

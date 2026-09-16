@@ -1,5 +1,9 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
-import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
+import {
+  useCurrentCashRegisterQuery,
+  useReserveSummaryQuery,
+} from '@/modules/cash-register/hooks/use-cash-register-query'
+import type { PaymentFundSource } from '@/modules/cash-register/types/cash-register'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -93,6 +97,7 @@ type PurchaseFormState = {
   items: PurchaseLineState[]
   reference: string
   paymentMethod: ExpensePaymentMethod
+  fundSource: PaymentFundSource
   status: 'PAID' | 'PENDING' | 'PARTIAL'
   amountPaid: string
   purchaseDate: string
@@ -163,6 +168,7 @@ function createDefaultPurchaseFormState(): PurchaseFormState {
     items: [createPurchaseLineState()],
     reference: '',
     paymentMethod: 'CASH',
+    fundSource: 'REGISTER',
     status: 'PAID',
     amountPaid: '',
     purchaseDate: toExpenseDateInputValue(new Date()),
@@ -442,6 +448,7 @@ export function RetailInventoryWorkspace() {
   const categoriesQuery = useInventoryCategoriesQuery()
   const lowStockQuery = useInventoryLowStockQuery()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
+  const reserveSummaryQuery = useReserveSummaryQuery()
   const createCategoryMutation = useCreateInventoryCategoryMutation()
   const deleteCategoryMutation = useDeleteInventoryCategoryMutation()
   const updateCategoryMutation = useUpdateInventoryCategoryMutation()
@@ -545,9 +552,13 @@ export function RetailInventoryWorkspace() {
         ? partialPurchaseAmount
         : 0
   const purchaseMethodBalance =
-    currentCashRegisterQuery.data?.paymentMethods.find(
-      (paymentMethod) => paymentMethod.method === purchaseFormState.paymentMethod,
-    )?.expectedAmount ?? 0
+    purchaseFormState.fundSource === 'RESERVE'
+      ? reserveSummaryQuery.data?.balances.find(
+          (balance) => balance.method === purchaseFormState.paymentMethod,
+        )?.amount ?? 0
+      : currentCashRegisterQuery.data?.paymentMethods.find(
+          (paymentMethod) => paymentMethod.method === purchaseFormState.paymentMethod,
+        )?.expectedAmount ?? 0
   const purchaseBalanceShortfall = Math.max(
     purchasePaymentAmount - purchaseMethodBalance,
     0,
@@ -1125,6 +1136,7 @@ export function RetailInventoryWorkspace() {
         items: purchaseItems,
         reference: normalizeOptionalText(purchaseFormState.reference),
         paymentMethod: purchaseFormState.paymentMethod,
+        fundSource: purchaseFormState.fundSource,
         status:
           purchaseFormState.status === 'PAID' ? 'PAID' : 'PENDING',
         amountPaid,
@@ -2641,6 +2653,28 @@ export function RetailInventoryWorkspace() {
               </label>
             </div>
 
+            {purchaseFormState.status !== 'PENDING' ? (
+              <label className={styles.fieldGroup}>
+                <span className={styles.fieldLabel}>¿De dónde sale el dinero?</span>
+                <SearchableSelect
+                  className={styles.selectInput}
+                  value={purchaseFormState.fundSource}
+                  onChange={(event) =>
+                    setPurchaseFormState((currentState) => ({
+                      ...currentState,
+                      fundSource: event.target.value as PaymentFundSource,
+                    }))
+                  }
+                >
+                  <option value="REGISTER">Caja abierta del turno</option>
+                  <option value="RESERVE">Reserva del negocio</option>
+                </SearchableSelect>
+                <small className={styles.fieldHint}>
+                  La reserva no modifica el saldo de la caja abierta.
+                </small>
+              </label>
+            ) : null}
+
             {purchaseFormState.status === 'PARTIAL' ? (
               <label className={styles.fieldGroup}>
                 <span className={styles.fieldLabel}>{copy.purchaseAmountPaid} *</span>
@@ -2684,7 +2718,7 @@ export function RetailInventoryWorkspace() {
               <div className={styles.purchaseBalanceWarning} role="alert">
                 <strong>Saldo insuficiente en este medio de pago</strong>
                 <span>
-                  Disponible: {formatCurrency(purchaseMethodBalance)} · Pago: {formatCurrency(purchasePaymentAmount)}.
+                  {purchaseFormState.fundSource === 'RESERVE' ? 'Reserva' : 'Caja del turno'} disponible: {formatCurrency(purchaseMethodBalance)} · Pago: {formatCurrency(purchasePaymentAmount)}.
                   Si continúas, quedará en {formatCurrency(-purchaseBalanceShortfall)}.
                 </span>
                 <small>

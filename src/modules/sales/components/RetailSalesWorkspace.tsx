@@ -16,12 +16,15 @@ import {
 } from '@/modules/cash-register/components/CashRegisterSessionDrawer'
 import {
   useCashRegisterAssigneesQuery,
+  useAdjustReserveBalanceMutation,
   useCashRegisterHistoryQuery,
   useCloseCashRegisterMutation,
   useCreateCashRegisterManualEntryMutation,
   useCreatePaymentMethodTransferMutation,
+  useCreateReserveTransferMutation,
   useCurrentCashRegisterQuery,
   useOpenCashRegisterMutation,
+  useReserveSummaryQuery,
 } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { QuickCreateCustomerDrawer } from '@/modules/customers/components/QuickCreateCustomerDrawer'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
@@ -1035,6 +1038,9 @@ export function RetailSalesWorkspace() {
   const createCashRegisterManualEntryMutation =
     useCreateCashRegisterManualEntryMutation()
   const paymentMethodTransferMutation = useCreatePaymentMethodTransferMutation()
+  const reserveTransferMutation = useCreateReserveTransferMutation()
+  const reserveAdjustmentMutation = useAdjustReserveBalanceMutation()
+  const reserveSummaryQuery = useReserveSummaryQuery()
   const createSaleMutation = useCreateSaleMutation()
   const salesQuery = useSalesQuery()
   const expenseCategoriesQuery = useExpenseCategoriesQuery()
@@ -1076,7 +1082,9 @@ export function RetailSalesWorkspace() {
     openCashRegisterMutation.isPending ||
     closeCashRegisterMutation.isPending ||
     createCashRegisterManualEntryMutation.isPending ||
-    paymentMethodTransferMutation.isPending
+    paymentMethodTransferMutation.isPending ||
+    reserveTransferMutation.isPending ||
+    reserveAdjustmentMutation.isPending
 
   useEffect(() => {
     if (!currentCashRegister) {
@@ -2545,6 +2553,7 @@ export function RetailSalesWorkspace() {
         assignees={cashRegisterAssigneesQuery.data ?? []}
         currentSession={currentCashRegister}
         latestClosedSession={latestClosedCashRegister}
+        reserveSummary={reserveSummaryQuery.data ?? null}
         initialMode={cashRegisterDrawerMode}
         isOpen={isCashRegisterDrawerOpen}
         isSubmitting={isCashRegisterSubmitting}
@@ -2560,6 +2569,12 @@ export function RetailSalesWorkspace() {
         }}
         onTransfer={async (input) => {
           await paymentMethodTransferMutation.mutateAsync(input)
+        }}
+        onReserveTransfer={async (input) => {
+          await reserveTransferMutation.mutateAsync(input)
+        }}
+        onReserveAdjust={async (input) => {
+          await reserveAdjustmentMutation.mutateAsync(input)
         }}
       />
 

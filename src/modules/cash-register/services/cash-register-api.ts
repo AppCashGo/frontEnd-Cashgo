@@ -9,6 +9,9 @@ import type {
   MovementsOverview,
   OpenCashRegisterInput,
   PaymentMethodTransferInput,
+  ReserveSummary,
+  ReserveBalanceAdjustmentInput,
+  ReserveTransferInput,
 } from "@/modules/cash-register/types/cash-register";
 
 export function getCashRegisterAssignees() {
@@ -96,6 +99,32 @@ export function createCashRegisterManualEntry(
 export function createPaymentMethodTransfer(input: PaymentMethodTransferInput) {
   return postJson<CashRegisterSession, PaymentMethodTransferInput>(
     "/cash-register/transfer",
+    input,
+    {
+      accessToken: getAuthAccessToken(),
+    },
+  );
+}
+
+export function getReserveSummary() {
+  return getJson<ReserveSummary>("/cash-register/reserve", {
+    accessToken: getAuthAccessToken(),
+  });
+}
+
+export function createReserveTransfer(input: ReserveTransferInput) {
+  return postJson<ReserveSummary, ReserveTransferInput>(
+    "/cash-register/reserve/transfer",
+    input,
+    {
+      accessToken: getAuthAccessToken(),
+    },
+  );
+}
+
+export function adjustReserveBalance(input: ReserveBalanceAdjustmentInput) {
+  return postJson<ReserveSummary, ReserveBalanceAdjustmentInput>(
+    "/cash-register/reserve/adjust",
     input,
     {
       accessToken: getAuthAccessToken(),

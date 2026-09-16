@@ -12,6 +12,8 @@ export type CashRegisterPaymentMethod =
   | "OTHER";
 export type MovementLedgerScope = "CASH" | "INVENTORY";
 export type MovementLedgerDirection = "IN" | "OUT" | "ADJUSTMENT";
+export type PaymentFundSource = "REGISTER" | "RESERVE";
+export type ReserveTransferDirection = "TO_RESERVE" | "FROM_RESERVE";
 
 export type CashRegisterAssignee = {
   id: string;
@@ -153,6 +155,45 @@ export type CloseCashRegisterInput = {
 export type PaymentMethodTransferInput = {
   fromMethod: CashRegisterPaymentMethod;
   toMethod: CashRegisterPaymentMethod;
+  amount: number;
+  notes?: string;
+};
+
+export type ReserveBalance = {
+  method: CashRegisterPaymentMethod;
+  amount: number;
+};
+
+export type ReserveMovement = {
+  id: string;
+  cashRegisterId: string | null;
+  method: CashRegisterPaymentMethod;
+  kind:
+    | "TRANSFER_FROM_REGISTER"
+    | "TRANSFER_TO_REGISTER"
+    | "SUPPLIER_PAYMENT"
+    | "SUPPLIER_REFUND"
+    | "ADJUSTMENT";
+  amount: number;
+  notes: string | null;
+  createdAt: string;
+};
+
+export type ReserveSummary = {
+  balances: ReserveBalance[];
+  total: number;
+  movements: ReserveMovement[];
+};
+
+export type ReserveTransferInput = {
+  method: CashRegisterPaymentMethod;
+  direction: ReserveTransferDirection;
+  amount: number;
+  notes?: string;
+};
+
+export type ReserveBalanceAdjustmentInput = {
+  method: CashRegisterPaymentMethod;
   amount: number;
   notes?: string;
 };

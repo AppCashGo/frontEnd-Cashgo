@@ -103,6 +103,7 @@
 
 .balanceSection,
 .transferForm,
+.reserveAdjustmentForm,
 .reconciliationCard {
   display: grid;
   gap: 1rem;
@@ -110,6 +111,69 @@
   border: 1px solid rgba(203, 213, 225, 0.92);
   border-radius: 1rem;
   background: #f8fafc;
+}
+
+.reserveAdjustmentForm {
+  border-style: dashed;
+  background: #fffdf5;
+}
+
+.reserveCard {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid #c7d2fe;
+  border-radius: 1rem;
+  background: #eef2ff;
+}
+
+.reserveCardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.reserveCardHeader > span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.reserveCardHeader small {
+  color: #4f5f78;
+  font-weight: 800;
+}
+
+.reserveCardHeader strong {
+  color: #1f2937;
+  font-size: 1.25rem;
+}
+
+.reserveCardHeader em {
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #4f46e5;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.reserveBalances {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.reserveBalances > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #4f5f78;
+  font-size: 0.82rem;
+}
+
+.reserveBalances strong {
+  color: #334155;
 }
 
 .balanceSectionHeader {

@@ -33,15 +33,18 @@ import {
 } from "@/modules/cash-register/components/CashRegisterSessionDrawer";
 import {
   useCashRegisterAssigneesQuery,
+  useAdjustReserveBalanceMutation,
   useCashRegisterHistoryQuery,
   useCloseCashRegisterMutation,
   useCreateCashRegisterManualEntryMutation,
   useCreatePaymentMethodTransferMutation,
+  useCreateReserveTransferMutation,
   useCurrentCashRegisterQuery,
   useDownloadCashRegisterReportMutation,
   useDownloadMovementsReportMutation,
   useMovementsOverviewQuery,
   useOpenCashRegisterMutation,
+  useReserveSummaryQuery,
 } from "@/modules/cash-register/hooks/use-cash-register-query";
 import type {
   CashRegisterEntryType,
@@ -746,6 +749,9 @@ export function CashRegisterPage() {
   const closeMutation = useCloseCashRegisterMutation();
   const manualEntryMutation = useCreateCashRegisterManualEntryMutation();
   const paymentMethodTransferMutation = useCreatePaymentMethodTransferMutation();
+  const reserveTransferMutation = useCreateReserveTransferMutation();
+  const reserveAdjustmentMutation = useAdjustReserveBalanceMutation();
+  const reserveSummaryQuery = useReserveSummaryQuery();
   const createExpenseMutation = useCreateExpenseMutation();
   const createSaleMutation = useCreateSaleMutation();
   const ownerLoansQuery = useOwnerLoansQuery();
@@ -901,7 +907,9 @@ export function CashRegisterPage() {
     openMutation.isPending ||
     closeMutation.isPending ||
     manualEntryMutation.isPending ||
-    paymentMethodTransferMutation.isPending;
+    paymentMethodTransferMutation.isPending ||
+    reserveTransferMutation.isPending ||
+    reserveAdjustmentMutation.isPending;
   const isCreatingMovement =
     manualEntryMutation.isPending ||
     createExpenseMutation.isPending ||
@@ -1348,6 +1356,7 @@ export function CashRegisterPage() {
         businessName={businessSettingsQuery.data?.businessName}
         currentSession={currentSession}
         latestClosedSession={latestClosedSession}
+        reserveSummary={reserveSummaryQuery.data ?? null}
         initialMode={sessionDrawerMode}
         isOpen={isSessionDrawerOpen}
         isSubmitting={isSubmitting}
@@ -1359,6 +1368,12 @@ export function CashRegisterPage() {
         onOpenSession={handleOpen}
         onTransfer={async (input) => {
           await paymentMethodTransferMutation.mutateAsync(input);
+        }}
+        onReserveTransfer={async (input) => {
+          await reserveTransferMutation.mutateAsync(input);
+        }}
+        onReserveAdjust={async (input) => {
+          await reserveAdjustmentMutation.mutateAsync(input);
         }}
       />
 
