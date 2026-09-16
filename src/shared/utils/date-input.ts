@@ -26,3 +26,38 @@ export function toDateInputValue(value: string | Date) {
 export function getTodayDateInput() {
   return toDateInputValue(new Date())
 }
+
+export function toOperationDateTime(
+  value: string,
+  timeSource: string | Date = new Date(),
+) {
+  if (!DATE_INPUT_PATTERN.test(value)) {
+    return value
+  }
+
+  const operationDate = createLocalDateFromDateInput(value)
+  const sourceDate = new Date(timeSource)
+
+  if (Number.isNaN(operationDate.getTime()) || Number.isNaN(sourceDate.getTime())) {
+    return value
+  }
+
+  operationDate.setHours(
+    sourceDate.getHours(),
+    sourceDate.getMinutes(),
+    sourceDate.getSeconds(),
+    sourceDate.getMilliseconds(),
+  )
+
+  return operationDate.toISOString()
+}
+
+export function toDateOnlyRequestDate(value: string) {
+  if (!DATE_INPUT_PATTERN.test(value)) {
+    return value
+  }
+
+  const date = createLocalDateFromDateInput(value)
+  date.setHours(12, 0, 0, 0)
+  return date.toISOString()
+}

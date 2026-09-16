@@ -12,6 +12,7 @@ import {
 import { useMemo, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { resolveProductImageUrl } from "@/modules/products/utils/resolve-product-image-url";
+import { formatTime12Hour } from "@/shared/utils/time";
 import { usePublicCatalogQuery } from "../hooks/use-public-catalog-query";
 import type {
   PublicCatalogCategory,
@@ -168,7 +169,8 @@ export function PublicCatalogPage() {
               {enabledHours.map((businessHour) => (
                 <span key={businessHour.day}>
                   <strong>{businessHour.label}</strong>
-                  {businessHour.opensAt} - {businessHour.closesAt}
+                  {formatTime12Hour(businessHour.opensAt)} -{" "}
+                  {formatTime12Hour(businessHour.closesAt)}
                 </span>
               ))}
             </div>

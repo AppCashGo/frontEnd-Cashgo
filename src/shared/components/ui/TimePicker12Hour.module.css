@@ -1,0 +1,67 @@
+.picker {
+  display: grid;
+  grid-template-columns: minmax(4.6rem, 1fr) auto minmax(4.6rem, 1fr) auto;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.segment {
+  min-height: 2.9rem;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.7rem;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-weight: 800;
+}
+
+.separator {
+  color: #64748b;
+  font-weight: 900;
+}
+
+.periodToggle {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  padding: 0.2rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.7rem;
+  background: #eef2f7;
+}
+
+.periodToggle button {
+  min-height: 2.45rem;
+  padding: 0.45rem 0.6rem;
+  border: 0;
+  border-radius: 0.52rem;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.76rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.periodToggle button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.periodToggle .periodActive {
+  background: #fff;
+  color: #3046d3;
+  box-shadow: 0 0.15rem 0.45rem rgba(15, 23, 42, 0.12);
+}
+
+@media (max-width: 480px) {
+  .picker {
+    grid-template-columns: minmax(4.2rem, 1fr) auto minmax(4.2rem, 1fr);
+  }
+
+  .periodToggle {
+    grid-column: 1 / -1;
+  }
+}

@@ -4,6 +4,7 @@ import type {
 } from '@/modules/expenses/types/expense'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getSharedPaymentMethodLabel } from '@/shared/payments/payment-methods'
+import { toOperationDateTime } from '@/shared/utils/date-input'
 
 const dateFormatter = new Intl.DateTimeFormat('es-CO', {
   dateStyle: 'medium',
@@ -49,6 +50,9 @@ export function toExpenseDateInputValue(value: string | Date) {
   return `${year}-${month}-${day}`
 }
 
-export function toExpenseRequestDate(value: string) {
-  return new Date(`${value}T12:00:00`).toISOString()
+export function toExpenseRequestDate(
+  value: string,
+  timeSource: string | Date = new Date(),
+) {
+  return toOperationDateTime(value, timeSource)
 }

@@ -21,6 +21,7 @@ import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { toOperationDateTime } from '@/shared/utils/date-input'
 import styles from './SalesHistoryDrawer.module.css'
 
 type SalesHistoryDrawerProps = {
@@ -191,7 +192,7 @@ export function SalesHistoryDrawer({
     const input: SaleReturnInput = {
       items,
       reason: reason.trim(),
-      returnDate,
+      returnDate: toOperationDateTime(returnDate),
       refundMethod: estimatedRefund > 0 ? refundMethod : undefined,
     }
 

@@ -9,6 +9,7 @@ import {
   Truck,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { TimePicker12Hour } from "@/shared/components/ui";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import type {
   BusinessSettings,
@@ -457,39 +458,37 @@ export function VirtualCatalogSettingsPanel({
                   </div>
 
                   <div className={styles.quickScheduleFields}>
-                    <label className={styles.timeField}>
+                    <div className={styles.timeField}>
                       <span>Hora de apertura</span>
-                      <input
-                        aria-label="Hora de apertura para los días seleccionados"
+                      <TimePicker12Hour
+                        ariaLabel="Hora de apertura para los días seleccionados"
                         disabled={isDisabled || savingSection === "hours"}
-                        type="time"
                         value={quickSchedule.opensAt}
-                        onChange={(event) =>
+                        onChange={(opensAt) =>
                           setQuickSchedule((currentSchedule) => ({
                             ...currentSchedule,
-                            opensAt: event.target.value,
+                            opensAt,
                           }))
                         }
                       />
-                    </label>
+                    </div>
                     <span aria-hidden="true" className={styles.timeSeparator}>
                       hasta
                     </span>
-                    <label className={styles.timeField}>
+                    <div className={styles.timeField}>
                       <span>Hora de cierre</span>
-                      <input
-                        aria-label="Hora de cierre para los días seleccionados"
+                      <TimePicker12Hour
+                        ariaLabel="Hora de cierre para los días seleccionados"
                         disabled={isDisabled || savingSection === "hours"}
-                        type="time"
                         value={quickSchedule.closesAt}
-                        onChange={(event) =>
+                        onChange={(closesAt) =>
                           setQuickSchedule((currentSchedule) => ({
                             ...currentSchedule,
-                            closesAt: event.target.value,
+                            closesAt,
                           }))
                         }
                       />
-                    </label>
+                    </div>
                     <button
                       className={styles.applyScheduleButton}
                       disabled={
@@ -554,34 +553,32 @@ export function VirtualCatalogSettingsPanel({
                         </label>
 
                         <div className={styles.timeFields}>
-                          <label className={styles.timeField}>
+                          <div className={styles.timeField}>
                             <span>Abre</span>
-                            <input
-                              aria-label={`Hora de apertura ${weekday.label}`}
+                            <TimePicker12Hour
+                              ariaLabel={`Hora de apertura ${weekday.label}`}
                               disabled={isHourDisabled || !businessHour.enabled}
-                              type="time"
                               value={businessHour.opensAt}
-                              onChange={(event) =>
+                              onChange={(opensAt) =>
                                 updateHour(weekday.id, {
-                                  opensAt: event.target.value,
+                                  opensAt,
                                 })
                               }
                             />
-                          </label>
-                          <label className={styles.timeField}>
+                          </div>
+                          <div className={styles.timeField}>
                             <span>Cierra</span>
-                            <input
-                              aria-label={`Hora de cierre ${weekday.label}`}
+                            <TimePicker12Hour
+                              ariaLabel={`Hora de cierre ${weekday.label}`}
                               disabled={isHourDisabled || !businessHour.enabled}
-                              type="time"
                               value={businessHour.closesAt}
-                              onChange={(event) =>
+                              onChange={(closesAt) =>
                                 updateHour(weekday.id, {
-                                  closesAt: event.target.value,
+                                  closesAt,
                                 })
                               }
                             />
-                          </label>
+                          </div>
                         </div>
                       </div>
                     );

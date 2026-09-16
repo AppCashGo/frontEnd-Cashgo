@@ -29,6 +29,7 @@ import {
   toExpenseDateInputValue,
   toExpenseRequestDate,
 } from '@/modules/expenses/utils/format-expense'
+import { toDateOnlyRequestDate } from '@/shared/utils/date-input'
 import type {
   InventoryAdjustmentInput,
   InventoryProductCategory,
@@ -1109,7 +1110,7 @@ export function RetailInventoryWorkspace() {
         amountPaid,
         purchaseDate: toExpenseRequestDate(purchaseFormState.purchaseDate),
         dueDate: purchaseFormState.dueDate
-          ? toExpenseRequestDate(purchaseFormState.dueDate)
+          ? toDateOnlyRequestDate(purchaseFormState.dueDate)
           : undefined,
         reason: normalizeOptionalText(purchaseFormState.reason),
       })

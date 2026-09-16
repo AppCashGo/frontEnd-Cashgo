@@ -19,7 +19,11 @@ import { useSaleCart } from '@/modules/sales/hooks/use-sale-cart'
 import type { SalePaymentMethod } from '@/modules/sales/types/sale'
 import { routePaths } from '@/routes/route-paths'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
-import { getTodayDateInput } from '@/shared/utils/date-input'
+import {
+  getTodayDateInput,
+  toDateOnlyRequestDate,
+  toOperationDateTime,
+} from '@/shared/utils/date-input'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './SalesPage.module.css'
@@ -186,8 +190,9 @@ function StandardSalesPage() {
         discountTotal,
         taxTotal,
         notes: normalizeOptionalText(notes),
-        saleDate: dueDate,
-        dueDate: pendingBalance > 0 ? dueDate : undefined,
+        saleDate: toOperationDateTime(dueDate),
+        dueDate:
+          pendingBalance > 0 ? toDateOnlyRequestDate(dueDate) : undefined,
         payments:
           paidAmount > 0
             ? [

@@ -10,7 +10,10 @@ import type {
   OwnerLoan,
 } from '@/modules/owner-loans/types/owner-loan'
 import { COLLECTED_PAYMENT_METHOD_OPTIONS } from '@/shared/payments/payment-methods'
-import { toDateInputValue } from '@/shared/utils/date-input'
+import {
+  toDateInputValue,
+  toOperationDateTime,
+} from '@/shared/utils/date-input'
 import styles from './OwnerLoansPanel.module.css'
 
 type Props = {
@@ -55,7 +58,7 @@ export function OwnerLoansPanel({
         lenderName: lenderName.trim(),
         amount: Number(amount),
         method,
-        receivedAt: date,
+        receivedAt: toOperationDateTime(date),
         notes: notes.trim() || undefined,
       })
       setAmount('')
@@ -77,7 +80,7 @@ export function OwnerLoansPanel({
       await onPayment(loan.id, {
         amount: Number(paymentAmount),
         method: paymentMethod,
-        paymentDate: toDateInputValue(new Date()),
+        paymentDate: new Date().toISOString(),
       })
       setPaymentAmount('')
       setPaymentLoanId(null)

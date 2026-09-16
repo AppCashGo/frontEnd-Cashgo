@@ -53,7 +53,11 @@ import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
-import { getTodayDateInput } from '@/shared/utils/date-input'
+import {
+  getTodayDateInput,
+  toDateOnlyRequestDate,
+  toOperationDateTime,
+} from '@/shared/utils/date-input'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
@@ -1671,8 +1675,11 @@ export function RetailSalesWorkspace() {
         cashRegisterId: currentCashRegister?.id,
         discountTotal,
         notes: normalizeOptionalText(receiptNote),
-        saleDate,
-        dueDate: settlement === 'CREDIT' ? saleDate : undefined,
+        saleDate: toOperationDateTime(saleDate),
+        dueDate:
+          settlement === 'CREDIT'
+            ? toDateOnlyRequestDate(saleDate)
+            : undefined,
         payments: settlement === 'PAID' ? paidPayments : [],
       })
 
@@ -1721,10 +1728,10 @@ export function RetailSalesWorkspace() {
         customerId: normalizeOptionalText(quickSaleForm.customerId),
         cashRegisterId: currentCashRegister?.id,
         notes: normalizeOptionalText(quickSaleForm.note),
-        saleDate: quickSaleForm.saleDate,
+        saleDate: toOperationDateTime(quickSaleForm.saleDate),
         dueDate:
           quickSaleForm.settlement === 'CREDIT'
-            ? quickSaleForm.saleDate
+            ? toDateOnlyRequestDate(quickSaleForm.saleDate)
             : undefined,
         payments:
           quickSaleForm.settlement === 'PAID'
@@ -1792,7 +1799,7 @@ export function RetailSalesWorkspace() {
             ? mapRetailPaymentOptionToExpenseMethod(quickExpenseForm.paymentOption)
             : 'CREDIT',
         status: quickExpenseForm.status,
-        expenseDate: quickExpenseForm.expenseDate,
+        expenseDate: toOperationDateTime(quickExpenseForm.expenseDate),
         notes: normalizeOptionalText(quickExpenseForm.note),
       })
 

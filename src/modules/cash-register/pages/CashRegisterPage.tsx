@@ -75,7 +75,11 @@ import { COLLECTED_PAYMENT_METHOD_OPTIONS } from "@/shared/payments/payment-meth
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import { RetailPageLayout } from "@/shared/components/retail/RetailPageLayout";
 import { resolveApiAssetUrl } from "@/shared/services/api-client";
-import { toDateInputValue } from "@/shared/utils/date-input";
+import {
+  toDateInputValue,
+  toDateOnlyRequestDate,
+  toOperationDateTime,
+} from "@/shared/utils/date-input";
 import { downloadBlobFile } from "@/shared/utils/download-blob-file";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import { joinClassNames } from "@/shared/utils/join-class-names";
@@ -1035,8 +1039,10 @@ export function CashRegisterPage() {
         manualSubtotal: input.amount,
         customerId: input.partyId,
         notes: input.concept,
-        saleDate: input.movementDate,
-        dueDate: input.dueDate,
+        saleDate: toOperationDateTime(input.movementDate),
+        dueDate: input.dueDate
+          ? toDateOnlyRequestDate(input.dueDate)
+          : undefined,
         payments: [],
       });
       return;
@@ -1048,7 +1054,7 @@ export function CashRegisterPage() {
       amount: input.amount,
       paymentMethod: input.kind === "payables" ? "CREDIT" : input.paymentMethod,
       status: input.kind === "payables" ? "PENDING" : "PAID",
-      expenseDate: input.movementDate,
+      expenseDate: toOperationDateTime(input.movementDate),
       notes: null,
     });
   }

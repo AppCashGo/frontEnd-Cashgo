@@ -119,7 +119,10 @@ export function ExpenseFormPanel({
         amount: values.amount,
         paymentMethod: values.paymentMethod,
         status: values.status,
-        expenseDate: toExpenseRequestDate(values.expenseDate),
+        expenseDate: toExpenseRequestDate(
+          values.expenseDate,
+          expense?.expenseDate ?? new Date(),
+        ),
         notes: normalizeOptionalValue(values.notes) ?? null,
       })
     } catch (error) {
