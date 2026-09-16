@@ -131,10 +131,21 @@ function getPaymentMethodRows(
   ] satisfies SummaryRow[]).filter((row) => row.value > 0);
 
   if (method === "CASH") {
+    const manualIncomeRows =
+      session.manualIncomeTotal > 0
+        ? ([
+            {
+              label: "Otros ingresos",
+              value: session.manualIncomeTotal,
+            },
+          ] satisfies SummaryRow[])
+        : [];
+
     return [
       { label: "Dinero base", value: session.openingAmount },
       { label: "Ventas", value: session.cashSalesTotal },
       { label: "Abonos", value: session.cashCollectionsTotal },
+      ...manualIncomeRows,
       ...financingRows,
       {
         label: "Gastos",
