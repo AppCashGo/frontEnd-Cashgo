@@ -136,7 +136,11 @@ function getPaymentMethodRows(
       { label: "Ventas", value: session.cashSalesTotal },
       { label: "Abonos", value: session.cashCollectionsTotal },
       ...financingRows,
-      { label: "Gastos", value: session.manualExpenseTotal, tone: "danger" },
+      {
+        label: "Gastos",
+        value: paymentMethod?.expensesAmount ?? session.manualExpenseTotal,
+        tone: "danger",
+      },
     ];
   }
 
@@ -144,7 +148,11 @@ function getPaymentMethodRows(
     { label: "Ventas", value: paymentMethod?.salesAmount ?? 0 },
     { label: "Abonos", value: paymentMethod?.collectionsAmount ?? 0 },
     ...financingRows,
-    { label: "Gastos", value: 0, tone: "danger" },
+    {
+      label: "Gastos",
+      value: paymentMethod?.expensesAmount ?? 0,
+      tone: "danger",
+    },
   ];
 }
 

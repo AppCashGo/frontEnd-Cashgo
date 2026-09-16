@@ -24,6 +24,7 @@ export type CashRegisterPaymentSummary = {
   amount: number;
   salesAmount: number;
   collectionsAmount: number;
+  expensesAmount: number;
   ownerLoanProceedsAmount: number;
   ownerLoanPaymentsAmount: number;
 };
