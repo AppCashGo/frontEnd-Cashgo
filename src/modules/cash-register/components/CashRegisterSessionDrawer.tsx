@@ -179,7 +179,12 @@ function getPaymentMethodBalance(
 }
 
 function getShiftBalance(session: CashRegisterSession, difference = 0) {
-  return session.totalIncome - session.expensesTotal + difference;
+  return (
+    session.openingAmount +
+    session.totalIncome -
+    session.expensesTotal +
+    difference
+  );
 }
 
 function getSignedCurrency(value: number) {
