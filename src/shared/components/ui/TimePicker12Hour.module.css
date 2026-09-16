@@ -1,5 +1,6 @@
 .picker {
   display: grid;
+  width: 100%;
   grid-template-columns: minmax(4.6rem, 1fr) auto minmax(4.6rem, 1fr) auto;
   align-items: center;
   gap: 0.4rem;
@@ -7,6 +8,7 @@
 }
 
 .segment {
+  width: 100%;
   min-height: 2.9rem;
   padding: 0.65rem 0.7rem;
   border: 1px solid #cbd5e1;
@@ -56,12 +58,22 @@
   box-shadow: 0 0.15rem 0.45rem rgba(15, 23, 42, 0.12);
 }
 
-@media (max-width: 480px) {
+@container (max-width: 30rem) {
   .picker {
     grid-template-columns: minmax(4.2rem, 1fr) auto minmax(4.2rem, 1fr);
   }
 
   .periodToggle {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .picker {
+    gap: 0.3rem;
+  }
+
+  .periodToggle button {
+    min-height: 2.3rem;
   }
 }

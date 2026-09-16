@@ -102,6 +102,7 @@
 }
 
 .quickScheduleCard {
+  container-type: inline-size;
   display: grid;
   gap: 1rem;
   padding: 1rem;
@@ -324,6 +325,7 @@
 }
 
 .timeField {
+  container-type: inline-size;
   display: grid;
   gap: 0.4rem;
   min-width: 0;
@@ -554,6 +556,10 @@
     width: 100%;
   }
 
+  .quickDayPicker {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .quickScheduleFields {
     grid-template-columns: 1fr 1fr;
   }
@@ -598,9 +604,34 @@
   }
 
   .quickDayPicker {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .quickScheduleFields {
+    grid-template-columns: 1fr;
+  }
+
+  .applyScheduleButton {
+    grid-column: auto;
+  }
+}
+
+@container (max-width: 72rem) {
+  .quickScheduleFields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .timeSeparator {
+    display: none;
+  }
+
+  .applyScheduleButton {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
+@container (max-width: 40rem) {
   .quickScheduleFields {
     grid-template-columns: 1fr;
   }
