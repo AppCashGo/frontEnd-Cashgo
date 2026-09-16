@@ -101,6 +101,169 @@
   gap: 0.85rem;
 }
 
+.quickScheduleCard {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid #cfdaf0;
+  border-radius: 0.9rem;
+  background: linear-gradient(135deg, #f7f9ff 0%, #f4fbf7 100%);
+}
+
+.quickScheduleHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.quickScheduleHeading strong {
+  color: #172033;
+  font-size: 1rem;
+}
+
+.quickScheduleHeading p {
+  margin: 0.3rem 0 0;
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+.openDaysCount {
+  flex: 0 0 auto;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: #e6f8ee;
+  color: #147548;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.dayPresets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dayPresets button {
+  min-height: 2.15rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 999px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.dayPresets button:hover:not(:disabled) {
+  border-color: #5970df;
+  color: #3046d3;
+}
+
+.dayPresets button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.quickDayPicker {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.quickDay {
+  position: relative;
+  display: grid;
+  min-height: 2.7rem;
+  place-items: center;
+  border: 1px solid #d5deea;
+  border-radius: 0.7rem;
+  background: #fff;
+  color: #64748b;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 900;
+  text-transform: capitalize;
+}
+
+.quickDay input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.quickDay:has(input:focus-visible) {
+  outline: 3px solid rgba(79, 99, 255, 0.18);
+  outline-offset: 2px;
+}
+
+.quickDaySelected {
+  border-color: #4f63df;
+  background: #4f63df;
+  color: #fff;
+  box-shadow: 0 0.35rem 0.8rem rgba(79, 99, 223, 0.2);
+}
+
+.quickScheduleFields {
+  display: grid;
+  grid-template-columns: minmax(9rem, 1fr) auto minmax(9rem, 1fr) auto;
+  align-items: end;
+  gap: 0.7rem;
+}
+
+.timeSeparator {
+  align-self: end;
+  padding-bottom: 0.8rem;
+  color: #64748b;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.applyScheduleButton {
+  min-height: 2.9rem;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 0.75rem;
+  background: #243246;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.applyScheduleButton:hover:not(:disabled) {
+  background: #111d2e;
+}
+
+.applyScheduleButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.scheduleDetailHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-top: 0.15rem;
+}
+
+.scheduleDetailHeading strong {
+  color: #27364a;
+  font-size: 0.9rem;
+}
+
+.scheduleDetailHeading span {
+  color: #718096;
+  font-size: 0.78rem;
+}
+
 .dayCard {
   display: grid;
   gap: 0.9rem;
@@ -390,6 +553,18 @@
   .primaryButton {
     width: 100%;
   }
+
+  .quickScheduleFields {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .timeSeparator {
+    display: none;
+  }
+
+  .applyScheduleButton {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 480px) {
@@ -411,5 +586,26 @@
 
   .dayStatus {
     display: none;
+  }
+
+  .quickScheduleHeading,
+  .scheduleDetailHeading {
+    display: grid;
+  }
+
+  .openDaysCount {
+    justify-self: start;
+  }
+
+  .quickDayPicker {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .quickScheduleFields {
+    grid-template-columns: 1fr;
+  }
+
+  .applyScheduleButton {
+    grid-column: auto;
   }
 }

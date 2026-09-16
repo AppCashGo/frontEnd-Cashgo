@@ -40,6 +40,11 @@ type FeedbackMessage = {
   text: string;
 };
 
+type QuickSchedule = {
+  opensAt: string;
+  closesAt: string;
+};
+
 const weekdays: Array<{ id: CatalogWeekdayId; label: string }> = [
   { id: "monday", label: "Lunes" },
   { id: "tuesday", label: "Martes" },
@@ -63,8 +68,8 @@ function buildDefaultHours(): CatalogBusinessHour[] {
   return weekdays.map((weekday) => ({
     day: weekday.id,
     enabled: false,
-    opensAt: "00:00",
-    closesAt: "00:00",
+    opensAt: "08:00",
+    closesAt: "22:00",
   }));
 }
 
@@ -110,6 +115,10 @@ export function VirtualCatalogSettingsPanel({
   const [businessHours, setBusinessHours] = useState<CatalogBusinessHour[]>(
     buildDefaultHours,
   );
+  const [quickSchedule, setQuickSchedule] = useState<QuickSchedule>({
+    opensAt: "08:00",
+    closesAt: "22:00",
+  });
   const [outOfStockBehavior, setOutOfStockBehavior] =
     useState<CatalogOutOfStockBehavior>("SHOW_NORMALLY");
   const [pickupEnabled, setPickupEnabled] = useState(false);
@@ -122,7 +131,28 @@ export function VirtualCatalogSettingsPanel({
   const isDisabled = isLoading || isSubmitting || !businessSettings;
 
   useEffect(() => {
-    setBusinessHours(mergeBusinessHours(businessSettings?.catalogBusinessHours));
+    const nextBusinessHours = mergeBusinessHours(
+      businessSettings?.catalogBusinessHours,
+    );
+    const scheduleReference =
+      nextBusinessHours.find((businessHour) => businessHour.enabled) ??
+      nextBusinessHours[0];
+
+    setBusinessHours(nextBusinessHours);
+    if (scheduleReference) {
+      setQuickSchedule({
+        opensAt:
+          scheduleReference.opensAt === "00:00" &&
+          scheduleReference.closesAt === "00:00"
+            ? "08:00"
+            : scheduleReference.opensAt,
+        closesAt:
+          scheduleReference.opensAt === "00:00" &&
+          scheduleReference.closesAt === "00:00"
+            ? "22:00"
+            : scheduleReference.closesAt,
+      });
+    }
     setOutOfStockBehavior(
       businessSettings?.catalogOutOfStockBehavior ?? "SHOW_NORMALLY",
     );
@@ -148,6 +178,34 @@ export function VirtualCatalogSettingsPanel({
       currentHours.map((businessHour) =>
         businessHour.day === day ? { ...businessHour, ...patch } : businessHour,
       ),
+    );
+  }
+
+  function toggleBusinessDay(day: CatalogWeekdayId, enabled: boolean) {
+    updateHour(day, {
+      enabled,
+      ...(enabled
+        ? {
+            opensAt: quickSchedule.opensAt,
+            closesAt: quickSchedule.closesAt,
+          }
+        : {}),
+    });
+  }
+
+  function setEnabledDays(days: CatalogWeekdayId[]) {
+    const enabledDays = new Set(days);
+    setBusinessHours((currentHours) =>
+      currentHours.map((businessHour) => ({
+        ...businessHour,
+        enabled: enabledDays.has(businessHour.day),
+        ...(enabledDays.has(businessHour.day)
+          ? {
+              opensAt: quickSchedule.opensAt,
+              closesAt: quickSchedule.closesAt,
+            }
+          : {}),
+      })),
     );
   }
 
@@ -177,12 +235,27 @@ export function VirtualCatalogSettingsPanel({
     }
   }
 
-  async function handleSaveHours() {
+  async function handleSaveHours(hours = businessHours) {
     await saveSettings(
       "hours",
-      { catalogBusinessHours: businessHours },
+      { catalogBusinessHours: hours },
       "Horarios actualizados.",
     );
+  }
+
+  async function handleApplyQuickSchedule() {
+    const nextBusinessHours = businessHours.map((businessHour) =>
+      businessHour.enabled
+        ? {
+            ...businessHour,
+            opensAt: quickSchedule.opensAt,
+            closesAt: quickSchedule.closesAt,
+          }
+        : businessHour,
+    );
+
+    setBusinessHours(nextBusinessHours);
+    await handleSaveHours(nextBusinessHours);
   }
 
   async function handleStockBehaviorChange(
@@ -295,6 +368,153 @@ export function VirtualCatalogSettingsPanel({
 
             {openSections.hours ? (
               <div className={styles.innerBody}>
+                <section className={styles.quickScheduleCard}>
+                  <div className={styles.quickScheduleHeading}>
+                    <div>
+                      <strong>Configuración rápida</strong>
+                      <p>
+                        Elige los días que atiendes y guarda un mismo horario
+                        para todos.
+                      </p>
+                    </div>
+                    <span className={styles.openDaysCount}>
+                      {businessHours.filter((businessHour) => businessHour.enabled)
+                        .length}{" "}
+                      días abiertos
+                    </span>
+                  </div>
+
+                  <div
+                    aria-label="Selección rápida de días"
+                    className={styles.dayPresets}
+                    role="group"
+                  >
+                    <button
+                      disabled={isDisabled || savingSection === "hours"}
+                      type="button"
+                      onClick={() =>
+                        setEnabledDays([
+                          "monday",
+                          "tuesday",
+                          "wednesday",
+                          "thursday",
+                          "friday",
+                        ])
+                      }
+                    >
+                      Lunes a viernes
+                    </button>
+                    <button
+                      disabled={isDisabled || savingSection === "hours"}
+                      type="button"
+                      onClick={() =>
+                        setEnabledDays(weekdays.map((weekday) => weekday.id))
+                      }
+                    >
+                      Todos los días
+                    </button>
+                    <button
+                      disabled={isDisabled || savingSection === "hours"}
+                      type="button"
+                      onClick={() => setEnabledDays([])}
+                    >
+                      Cerrar todos
+                    </button>
+                  </div>
+
+                  <div className={styles.quickDayPicker}>
+                    {weekdays.map((weekday) => {
+                      const isEnabled = businessHours.some(
+                        (businessHour) =>
+                          businessHour.day === weekday.id &&
+                          businessHour.enabled,
+                      );
+
+                      return (
+                        <label
+                          className={
+                            isEnabled
+                              ? `${styles.quickDay} ${styles.quickDaySelected}`
+                              : styles.quickDay
+                          }
+                          key={weekday.id}
+                        >
+                          <input
+                            checked={isEnabled}
+                            disabled={isDisabled || savingSection === "hours"}
+                            type="checkbox"
+                            onChange={(event) =>
+                              toggleBusinessDay(
+                                weekday.id,
+                                event.target.checked,
+                              )
+                            }
+                          />
+                          <span>{weekday.label.slice(0, 3)}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+
+                  <div className={styles.quickScheduleFields}>
+                    <label className={styles.timeField}>
+                      <span>Hora de apertura</span>
+                      <input
+                        aria-label="Hora de apertura para los días seleccionados"
+                        disabled={isDisabled || savingSection === "hours"}
+                        type="time"
+                        value={quickSchedule.opensAt}
+                        onChange={(event) =>
+                          setQuickSchedule((currentSchedule) => ({
+                            ...currentSchedule,
+                            opensAt: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <span aria-hidden="true" className={styles.timeSeparator}>
+                      hasta
+                    </span>
+                    <label className={styles.timeField}>
+                      <span>Hora de cierre</span>
+                      <input
+                        aria-label="Hora de cierre para los días seleccionados"
+                        disabled={isDisabled || savingSection === "hours"}
+                        type="time"
+                        value={quickSchedule.closesAt}
+                        onChange={(event) =>
+                          setQuickSchedule((currentSchedule) => ({
+                            ...currentSchedule,
+                            closesAt: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <button
+                      className={styles.applyScheduleButton}
+                      disabled={
+                        isDisabled ||
+                        savingSection === "hours"
+                      }
+                      type="button"
+                      onClick={() => {
+                        void handleApplyQuickSchedule();
+                      }}
+                    >
+                      {savingSection === "hours"
+                        ? "Guardando..."
+                        : "Aplicar y guardar"}
+                    </button>
+                  </div>
+                </section>
+
+                <div className={styles.scheduleDetailHeading}>
+                  <strong>Ajustes por día</strong>
+                  <span>
+                    Modifica aquí únicamente los días con un horario diferente.
+                  </span>
+                </div>
+
                 <div className={styles.hoursGrid}>
                   {weekdays.map((weekday) => {
                     const businessHour =
@@ -321,9 +541,10 @@ export function VirtualCatalogSettingsPanel({
                             disabled={isHourDisabled}
                             type="checkbox"
                             onChange={(event) =>
-                              updateHour(weekday.id, {
-                                enabled: event.target.checked,
-                              })
+                              toggleBusinessDay(
+                                weekday.id,
+                                event.target.checked,
+                              )
                             }
                           />
                           <span className={styles.dayName}>{weekday.label}</span>
