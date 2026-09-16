@@ -380,9 +380,18 @@
   padding: 0 1rem;
 }
 
-.selectShell span,
-.dateShell span,
-.searchShell span {
+.selectShell:focus-within {
+  border-color: #4f63df;
+  box-shadow: 0 0 0 3px rgba(79, 99, 223, 0.12);
+}
+
+.selectShell button:focus-visible {
+  outline: none;
+}
+
+.selectShell > span,
+.dateShell > span,
+.searchShell > span {
   color: #66758a;
   font-size: 0.72rem;
   font-weight: 800;
