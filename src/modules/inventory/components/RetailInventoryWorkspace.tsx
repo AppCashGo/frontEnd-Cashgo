@@ -477,6 +477,7 @@ export function RetailInventoryWorkspace() {
   const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(
     null,
   )
+  const [purchaseFormError, setPurchaseFormError] = useState<string | null>(null)
   const [productDrafts, setProductDrafts] = useState<InlineProductDrafts>({})
   const [savingProductField, setSavingProductField] = useState<string | null>(
     null,
@@ -573,6 +574,47 @@ export function RetailInventoryWorkspace() {
       purchaseFormState.purchaseDate &&
       purchaseFormState.dueDate < purchaseFormState.purchaseDate,
   )
+  const invalidPurchaseItemIndex = purchaseFormState.items.findIndex(
+    (item) =>
+      !item.productId ||
+      parsePositiveNumber(item.quantity) <= 0 ||
+      parsePositiveNumber(item.unitCost) <= 0,
+  )
+  const purchaseValidationError = !purchaseFormState.supplierId
+    ? languageCode === 'en'
+      ? 'Select a supplier.'
+      : 'Selecciona un proveedor.'
+    : !purchaseFormState.purchaseDate
+      ? languageCode === 'en'
+        ? 'Select the purchase date.'
+        : 'Selecciona la fecha de compra.'
+      : purchaseFormState.items.length === 0
+        ? languageCode === 'en'
+          ? 'Add at least one product.'
+          : 'Agrega al menos un producto.'
+        : invalidPurchaseItemIndex >= 0
+          ? languageCode === 'en'
+            ? `Review product ${invalidPurchaseItemIndex + 1}: select a product and enter a valid quantity and unit cost.`
+            : `Revisa el producto ${invalidPurchaseItemIndex + 1}: selecciona el producto e ingresa una cantidad y un costo unitario válidos.`
+          : hasDuplicatePurchaseProducts
+            ? languageCode === 'en'
+              ? 'Each product must appear only once in the purchase.'
+              : 'Hay productos repetidos. Cada producto debe aparecer una sola vez en la compra.'
+            : estimatedPurchaseTotal <= 0
+              ? languageCode === 'en'
+                ? 'The purchase total must be greater than zero.'
+                : 'El total de la compra debe ser mayor que cero.'
+              : purchaseFormState.status === 'PARTIAL' &&
+                  (partialPurchaseAmount <= 0 ||
+                    partialPurchaseAmount >= estimatedPurchaseTotal)
+                ? languageCode === 'en'
+                  ? 'The partial payment must be greater than zero and less than the purchase total.'
+                  : 'El abono debe ser mayor que cero y menor que el total de la compra.'
+                : hasInvalidPurchaseDueDate
+                  ? languageCode === 'en'
+                    ? 'The due date cannot be earlier than the purchase date.'
+                    : 'La fecha de vencimiento no puede ser anterior a la fecha de compra.'
+                  : null
 
   useEffect(() => {
     if (searchParams.get('mode') !== 'purchase') {
@@ -762,6 +804,7 @@ export function RetailInventoryWorkspace() {
   function handleClosePurchaseDrawer() {
     setQuickSupplierOpen(false)
     setPurchaseDrawerOpen(false)
+    setPurchaseFormError(null)
     setPurchaseFormState(createDefaultPurchaseFormState())
   }
 
@@ -1105,31 +1148,26 @@ export function RetailInventoryWorkspace() {
           ? 0
           : parsePositiveNumber(purchaseFormState.amountPaid)
 
-    if (
-      !purchaseFormState.supplierId ||
-      !purchaseFormState.purchaseDate ||
-      purchaseItems.length === 0 ||
-      hasInvalidItem ||
-      estimatedPurchaseTotal <= 0 ||
-      amountPaid > estimatedPurchaseTotal ||
-      (purchaseFormState.status === 'PARTIAL' &&
-        (amountPaid <= 0 || amountPaid >= estimatedPurchaseTotal)) ||
-      hasInvalidPurchaseDueDate
-    ) {
-      setFeedbackMessage({
-        tone: 'error',
-        text: 'Revisa proveedor, productos, cantidades, costos y valor pagado.',
-      })
+    if (purchaseValidationError || hasInvalidItem || amountPaid > estimatedPurchaseTotal) {
+      setPurchaseFormError(
+        purchaseValidationError ??
+          (languageCode === 'en'
+            ? 'Review the products, quantities, costs, and amount paid.'
+            : 'Revisa los productos, las cantidades, los costos y el valor pagado.'),
+      )
       return
     }
 
     if (hasDuplicateProduct) {
-      setFeedbackMessage({
-        tone: 'error',
-        text: 'Cada producto debe aparecer una sola vez en la compra.',
-      })
+      setPurchaseFormError(
+        languageCode === 'en'
+          ? 'Each product must appear only once in the purchase.'
+          : 'Hay productos repetidos. Cada producto debe aparecer una sola vez en la compra.',
+      )
       return
     }
+
+    setPurchaseFormError(null)
 
     try {
       await registerPurchaseMutation.mutateAsync({
@@ -1149,16 +1187,16 @@ export function RetailInventoryWorkspace() {
       })
 
       setPurchaseDrawerOpen(false)
+      setPurchaseFormError(null)
       setPurchaseFormState(createDefaultPurchaseFormState())
       setFeedbackMessage({
         tone: 'success',
         text: copy.purchaseSuccess,
       })
     } catch (error) {
-      setFeedbackMessage({
-        tone: 'error',
-        text: getErrorMessage(error, 'No fue posible registrar la compra.'),
-      })
+      setPurchaseFormError(
+        getErrorMessage(error, 'No fue posible registrar la compra.'),
+      )
     }
   }
 
@@ -2359,22 +2397,7 @@ export function RetailInventoryWorkspace() {
               </button>
               <button
                 className={retailStyles.buttonDark}
-                disabled={
-                  !purchaseFormState.supplierId ||
-                  !purchaseFormState.purchaseDate ||
-                  purchaseFormState.items.some(
-                    (item) =>
-                      !item.productId ||
-                      parsePositiveNumber(item.quantity) <= 0 ||
-                      parsePositiveNumber(item.unitCost) <= 0,
-                  ) ||
-                  hasDuplicatePurchaseProducts ||
-                  (purchaseFormState.status === 'PARTIAL' &&
-                    (partialPurchaseAmount <= 0 ||
-                      partialPurchaseAmount >= estimatedPurchaseTotal)) ||
-                  hasInvalidPurchaseDueDate ||
-                  registerPurchaseMutation.isPending
-                }
+                disabled={registerPurchaseMutation.isPending}
                 type="button"
                 onClick={() => {
                   void handleRegisterPurchase()
@@ -2725,6 +2748,12 @@ export function RetailInventoryWorkspace() {
                 <small>
                   Revisa la apertura de caja, registra una transferencia entre medios o cambia el método de pago.
                 </small>
+              </div>
+            ) : null}
+
+            {purchaseFormError ? (
+              <div aria-live="assertive" className={styles.feedbackError} role="alert">
+                <span>{purchaseFormError}</span>
               </div>
             ) : null}
 
