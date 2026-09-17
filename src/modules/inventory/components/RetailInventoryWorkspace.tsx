@@ -328,6 +328,7 @@ function DrawerShell({
       className={styles.drawerBackdrop}
       closeButtonClassName={styles.drawerClose}
       closeLabel="Cerrar"
+      confirmClose
       footer={footer}
       footerClassName={styles.drawerFooter}
       isOpen

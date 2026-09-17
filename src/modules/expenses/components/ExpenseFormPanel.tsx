@@ -137,6 +137,7 @@ export function ExpenseFormPanel({
       bodyClassName={styles.drawerBody}
       closeButtonClassName={styles.closeButton}
       closeLabel="Cerrar formulario de gasto"
+      confirmClose
       description={isEditing ? 'Actualiza la información del gasto operativo.' : 'Registra un gasto operativo del negocio.'}
       footer={
         <div className={styles.footer}>

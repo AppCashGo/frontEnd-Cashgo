@@ -200,6 +200,7 @@ export function MovementCreateDrawer({
   return (
     <>
       <CashRegisterRetailDrawer
+        confirmClose
         isOpen={isOpen}
         title={copy.title}
         description={copy.description}

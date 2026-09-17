@@ -115,6 +115,7 @@ export function RetailSupplierDrawer({
   return (
     <SideDrawer
       bodyClassName={styles.drawerBody}
+      confirmClose
       isOpen={isOpen}
       title={supplier ? 'Editar proveedor' : 'Crear proveedor'}
       onClose={onClose}

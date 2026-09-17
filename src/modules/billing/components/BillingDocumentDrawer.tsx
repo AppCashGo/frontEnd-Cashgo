@@ -150,6 +150,7 @@ export function BillingDocumentDrawer({
 
   return (
     <CashRegisterRetailDrawer
+      confirmClose
       description={copy.drawerDescription}
       isOpen={isOpen}
       title={document?.documentNumber ?? copy.drawerTitle}

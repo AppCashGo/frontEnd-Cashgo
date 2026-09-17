@@ -564,6 +564,7 @@ function CategoryCreateDrawer({
       closeButtonClassName={styles.categoryDrawerClose}
       closeContent={<CloseIcon />}
       closeLabel="Cerrar"
+      confirmClose
       footer={
         <button
           className={styles.categoryDrawerSubmit}

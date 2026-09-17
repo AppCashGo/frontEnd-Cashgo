@@ -144,6 +144,7 @@ export function ConvertQuotationDrawer({
 
   return (
     <CashRegisterRetailDrawer
+      confirmClose
       description={copy.convertDescription}
       footer={
         <DrawerActionFooter layout="inline">

@@ -91,6 +91,7 @@ export function ExpenseCategoriesPanel({
       bodyClassName={styles.drawerBody}
       closeButtonClassName={styles.closeButton}
       closeLabel="Cerrar categorías de gastos"
+      confirmClose
       description="Organiza tus egresos para leer mejor reportes y flujo de caja."
       isCloseDisabled={isSubmitting}
       isOpen={isOpen}

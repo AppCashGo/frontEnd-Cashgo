@@ -550,6 +550,7 @@ export function RetailEmployeeDrawer({
         ariaLabel={drawerTitle}
         bodyClassName={styles.drawerBody}
         className={styles.drawerBackdrop}
+        confirmClose
         closeButtonClassName={styles.backButton}
         closeButtonPlacement="start"
         closeContent={<ArrowLeft />}

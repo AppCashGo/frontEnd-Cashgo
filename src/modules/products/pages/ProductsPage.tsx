@@ -210,7 +210,7 @@ export function ProductsPage() {
         </section>
       </RetailPageLayout>
 
-      <SideDrawer isOpen={isImportOpen} isCloseDisabled={importMutation.isPending} panelClassName={styles.importDrawer} title="Carga masiva de productos" description="Importa o actualiza tu catálogo desde un archivo CSV o Excel." closeLabel="Cerrar carga masiva" onClose={closeWorkspace}>
+      <SideDrawer isOpen={isImportOpen} isCloseDisabled={importMutation.isPending} panelClassName={styles.importDrawer} title="Carga masiva de productos" description="Importa o actualiza tu catálogo desde un archivo CSV o Excel." closeLabel="Cerrar carga masiva" confirmClose onClose={closeWorkspace}>
         {isImportOpen ? (
           <Suspense
             fallback={(

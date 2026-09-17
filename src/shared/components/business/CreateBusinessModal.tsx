@@ -117,6 +117,7 @@ export function CreateBusinessModal({
         bodyClassName={styles.drawerBody}
         className={styles.backdrop}
         closeLabel={dictionary.common.close}
+        confirmClose
         description={dictionary.layout.sidebar.createBusiness.requiredHint}
         footer={
           <button

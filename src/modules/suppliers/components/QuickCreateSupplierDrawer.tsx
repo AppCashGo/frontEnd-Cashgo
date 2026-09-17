@@ -158,6 +158,7 @@ export function QuickCreateSupplierDrawer({
     <SideDrawer
       className={styles.drawerLayer}
       closeLabel="Cerrar creación de proveedor"
+      confirmClose
       description={description}
       isCloseDisabled={createSupplierMutation.isPending}
       isOpen={isOpen}

@@ -177,6 +177,7 @@ export function QuickCreateCustomerDrawer({
   return (
     <SideDrawer
       closeLabel="Cerrar creación de cliente"
+      confirmClose
       description="Regístralo sin salir de la venta y quedará seleccionado automáticamente."
       isCloseDisabled={createCustomerMutation.isPending}
       isOpen={isOpen}

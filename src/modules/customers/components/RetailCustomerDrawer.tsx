@@ -1569,6 +1569,7 @@ export function RetailCustomerDrawer({
   return (
     <SideDrawer
       bodyClassName={styles.drawerBody}
+      confirmClose={mode !== 'detail'}
       footer={
         mode === 'detail' && customer ? (
           <DrawerActionFooter>

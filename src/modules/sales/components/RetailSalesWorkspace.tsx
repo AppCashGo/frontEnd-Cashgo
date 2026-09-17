@@ -566,6 +566,7 @@ function DrawerShell({
       bodyClassName={styles.drawerBody}
       className={styles.drawerBackdrop}
       closeLabel="Cerrar"
+      confirmClose
       description={subtitle}
       isOpen
       panelClassName={styles.drawer}

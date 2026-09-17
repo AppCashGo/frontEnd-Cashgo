@@ -1409,6 +1409,7 @@ export function QuotationFormWorkspace({
   return (
     <CashRegisterRetailDrawer
       bodyClassName={styles.workspaceBody}
+      confirmClose
       isOpen={isOpen}
       panelClassName={styles.workspacePanel}
       title={quotation ? copy.editTitle : copy.createTitle}

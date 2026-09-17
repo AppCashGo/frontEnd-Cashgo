@@ -403,6 +403,7 @@ function RetailTaxSettingsPanel({
         bodyClassName={styles.drawerContent}
         className={styles.drawerOverlay}
         closeLabel="Cerrar"
+        confirmClose
         footer={
           <DrawerActionFooter layout="stack">
             <button

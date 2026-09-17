@@ -911,6 +911,7 @@ export function CashRegisterSessionDrawer({
   return (
     <CashRegisterRetailDrawer
       bodyClassName={shouldUseRecordsLayout ? styles.recordsBody : undefined}
+      confirmClose
       footer={
         !currentSession ? (
           <button

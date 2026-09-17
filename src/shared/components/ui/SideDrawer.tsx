@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { joinClassNames } from "@/shared/utils/join-class-names";
+import { ConfirmDialog } from "./ConfirmDialog";
 import styles from "./SideDrawer.module.css";
 
 type SideDrawerProps = {
@@ -15,6 +16,9 @@ type SideDrawerProps = {
   closeButtonPlacement?: "start" | "end";
   closeContent?: ReactNode;
   closeLabel?: string;
+  confirmClose?: boolean;
+  confirmCloseDescription?: string;
+  confirmCloseTitle?: string;
   className?: string;
   panelClassName?: string;
   bodyClassName?: string;
@@ -35,14 +39,44 @@ export function SideDrawer({
   closeButtonPlacement = "end",
   closeContent,
   closeLabel = "Close",
+  confirmClose = false,
+  confirmCloseDescription =
+    "Si sales ahora, la información que estás registrando no se guardará.",
+  confirmCloseTitle = "¿Descartar los cambios?",
   className,
   panelClassName,
   bodyClassName,
   footerClassName,
   onClose,
 }: SideDrawerProps) {
+  const [isCloseConfirmationOpen, setCloseConfirmationOpen] = useState(false);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setCloseConfirmationOpen(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) {
     return null;
+  }
+
+  function requestClose() {
+    if (isCloseDisabled) {
+      return;
+    }
+
+    if (confirmClose) {
+      setCloseConfirmationOpen(true);
+      return;
+    }
+
+    onClose();
+  }
+
+  function confirmCloseDrawer() {
+    setCloseConfirmationOpen(false);
+    onClose();
   }
 
   const closeButton = (
@@ -51,52 +85,65 @@ export function SideDrawer({
       className={joinClassNames(styles.closeButton, closeButtonClassName)}
       disabled={isCloseDisabled}
       type="button"
-      onClick={onClose}
+      onClick={requestClose}
     >
       {closeContent ?? <>&times;</>}
     </button>
   );
 
   return (
-    <div
-      className={joinClassNames(styles.backdrop, className)}
-      role="presentation"
-      onClick={() => {
-        if (!isCloseDisabled) {
-          onClose();
-        }
-      }}
-    >
+    <>
       <div
-        aria-label={ariaLabel ?? title}
-        aria-modal="true"
-        className={joinClassNames(styles.drawer, panelClassName)}
-        role="dialog"
-        onClick={(event) => event.stopPropagation()}
+        className={joinClassNames(styles.backdrop, className)}
+        role="presentation"
+        onClick={requestClose}
       >
-        <div className={styles.header}>
-          {closeButtonPlacement === "start" ? closeButton : null}
+        <div
+          aria-label={ariaLabel ?? title}
+          aria-modal="true"
+          className={joinClassNames(styles.drawer, panelClassName)}
+          role="dialog"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <div className={styles.header}>
+            {closeButtonPlacement === "start" ? closeButton : null}
 
-          {titleAccessory ? (
-            <span className={styles.titleAccessory}>{titleAccessory}</span>
+            {titleAccessory ? (
+              <span className={styles.titleAccessory}>{titleAccessory}</span>
+            ) : null}
+
+            <div className={styles.headerCopy}>
+              <h3 className={styles.title}>{title}</h3>
+              {description ? (
+                <p className={styles.description}>{description}</p>
+              ) : null}
+            </div>
+
+            {closeButtonPlacement === "end" ? closeButton : null}
+          </div>
+
+          <div className={joinClassNames(styles.body, bodyClassName)}>
+            {children}
+          </div>
+
+          {footer ? (
+            <div className={joinClassNames(styles.footer, footerClassName)}>
+              {footer}
+            </div>
           ) : null}
-
-          <div className={styles.headerCopy}>
-            <h3 className={styles.title}>{title}</h3>
-            {description ? <p className={styles.description}>{description}</p> : null}
-          </div>
-
-          {closeButtonPlacement === "end" ? closeButton : null}
         </div>
-
-        <div className={joinClassNames(styles.body, bodyClassName)}>{children}</div>
-
-        {footer ? (
-          <div className={joinClassNames(styles.footer, footerClassName)}>
-            {footer}
-          </div>
-        ) : null}
       </div>
-    </div>
+
+      <ConfirmDialog
+        cancelLabel="Continuar editando"
+        confirmLabel="Sí, salir"
+        description={confirmCloseDescription}
+        isOpen={isCloseConfirmationOpen}
+        title={confirmCloseTitle}
+        tone="warning"
+        onCancel={() => setCloseConfirmationOpen(false)}
+        onConfirm={confirmCloseDrawer}
+      />
+    </>
   );
 }

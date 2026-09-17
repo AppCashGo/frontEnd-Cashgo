@@ -161,6 +161,7 @@ export function BillingConfigurationDrawer({
 
   return (
     <CashRegisterRetailDrawer
+      confirmClose
       description={copy.configDescription}
       footer={
         <DrawerActionFooter>

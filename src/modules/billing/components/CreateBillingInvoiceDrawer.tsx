@@ -111,6 +111,7 @@ export function CreateBillingInvoiceDrawer({
 
   return (
     <CashRegisterRetailDrawer
+      confirmClose
       description={copy.createInvoiceDescription}
       footer={
         <DrawerActionFooter>

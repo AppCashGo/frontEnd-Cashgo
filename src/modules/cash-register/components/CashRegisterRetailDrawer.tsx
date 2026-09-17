@@ -3,6 +3,7 @@ import { SideDrawer } from "@/shared/components/ui/SideDrawer";
 
 type CashRegisterRetailDrawerProps = {
   isOpen: boolean;
+  confirmClose?: boolean;
   title: string;
   description?: string;
   footer?: ReactNode;
@@ -16,6 +17,7 @@ type CashRegisterRetailDrawerProps = {
 
 export function CashRegisterRetailDrawer({
   isOpen,
+  confirmClose = false,
   title,
   description,
   footer,
@@ -34,6 +36,7 @@ export function CashRegisterRetailDrawer({
       description={description}
       footer={footer}
       footerClassName={footerClassName}
+      confirmClose={confirmClose}
       isOpen={isOpen}
       panelClassName={panelClassName}
       title={title}
