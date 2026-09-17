@@ -20,6 +20,7 @@ import {
   formatCashRegisterDateTime,
 } from "@/modules/cash-register/utils/format-cash-register";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import { downloadBlobFile } from "@/shared/utils/download-blob-file";
 import { CashRegisterRetailDrawer } from "./CashRegisterRetailDrawer";
 import styles from "./CashRegisterSessionDrawer.module.css";
@@ -602,6 +603,18 @@ export function CashRegisterSessionDrawer({
     event.preventDefault();
     setErrorMessage(null);
 
+    if (transferFrom === transferTo) {
+      setErrorMessage(
+        "Selecciona dos medios de pago diferentes para realizar la transferencia.",
+      );
+      return;
+    }
+
+    if (parseAmountInput(transferAmount) <= 0) {
+      setErrorMessage("Ingresa un monto mayor que cero para la transferencia.");
+      return;
+    }
+
     try {
       await onTransfer({
         fromMethod: transferFrom,
@@ -1126,6 +1139,10 @@ export function CashRegisterSessionDrawer({
         </form>
       ) : (
         <div className={styles.sections}>
+          {errorMessage ? (
+            <FormValidationAlert message={errorMessage} />
+          ) : null}
+
           <section className={styles.summaryCard}>
             <span className={styles.summaryLabel}>Turno actual</span>
             <strong className={styles.summaryValue}>
@@ -1320,7 +1337,7 @@ export function CashRegisterSessionDrawer({
 
             <button
               className={retailStyles.buttonOutline}
-              disabled={isSubmitting || transferFrom === transferTo}
+              disabled={isSubmitting}
               type="submit"
             >
               {isSubmitting ? "Guardando..." : "Registrar transferencia"}

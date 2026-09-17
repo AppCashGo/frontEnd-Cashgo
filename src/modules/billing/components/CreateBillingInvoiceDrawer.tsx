@@ -21,6 +21,7 @@ import {
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
 import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
+import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import styles from "./BillingFormDrawer.module.css";
 
 type CreateBillingInvoiceDrawerProps = {
@@ -125,7 +126,7 @@ export function CreateBillingInvoiceDrawer({
           </button>
           <button
             className={retailStyles.buttonDark}
-            disabled={isSubmitting || !selectedSaleId}
+            disabled={isSubmitting}
             form={formId}
             type="submit"
           >
@@ -284,7 +285,7 @@ export function CreateBillingInvoiceDrawer({
         </section>
 
         {errors.root?.message ? (
-          <div className={styles.errorBanner}>{errors.root.message}</div>
+          <FormValidationAlert message={errors.root.message} />
         ) : null}
       </form>
     </CashRegisterRetailDrawer>

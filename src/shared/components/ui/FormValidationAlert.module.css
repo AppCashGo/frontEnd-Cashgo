@@ -1,0 +1,35 @@
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid #f4b4ad;
+  border-radius: 0.75rem;
+  background: #fff4f2;
+  color: #9f2119;
+}
+
+.icon {
+  flex: 0 0 auto;
+  margin-top: 0.05rem;
+}
+
+.copy {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.copy strong {
+  color: #7a1712;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .alert {
+    padding: 0.75rem 0.8rem;
+  }
+}

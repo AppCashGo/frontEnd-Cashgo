@@ -3,6 +3,7 @@ import { Truck } from 'lucide-react'
 import { useCreateSupplierMutation } from '@/modules/suppliers/hooks/use-suppliers-query'
 import type { SupplierSummary } from '@/modules/suppliers/types/supplier'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
+import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './QuickCreateSupplierDrawer.module.css'
@@ -180,9 +181,7 @@ export function QuickCreateSupplierDrawer({
           </button>
           <button
             className={styles.primaryButton}
-            disabled={
-              createSupplierMutation.isPending || form.name.trim().length < 2
-            }
+            disabled={createSupplierMutation.isPending}
             form="quick-create-supplier-form"
             type="submit"
           >
@@ -245,9 +244,7 @@ export function QuickCreateSupplierDrawer({
         </label>
 
         {duplicateError || errorMessage ? (
-          <p className={styles.errorMessage} role="alert">
-            {errorMessage ?? duplicateError}
-          </p>
+          <FormValidationAlert message={errorMessage ?? duplicateError ?? ''} />
         ) : null}
       </form>
     </SideDrawer>

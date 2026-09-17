@@ -44,6 +44,7 @@ import type { SalePaymentMethod } from '@/modules/sales/types/sale'
 import { routePaths } from '@/routes/route-paths'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
+import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './RestaurantTablesWorkspace.module.css'
@@ -602,6 +603,14 @@ export function RestaurantTablesWorkspace() {
 
   function handleOpenTable() {
     if (!selectedTable) {
+      setOperationError('Selecciona una mesa antes de continuar.')
+      return
+    }
+
+    if (!employeeId || employeeOptions.length === 0) {
+      setOperationError(
+        'Necesitas seleccionar un empleado encargado. Si no aparece ninguno, crea un empleado primero.',
+      )
       return
     }
 
@@ -1237,7 +1246,6 @@ export function RestaurantTablesWorkspace() {
 
         <button
           className={styles.primaryAction}
-          disabled={!selectedTable || employeeOptions.length === 0}
           type="button"
           onClick={handleOpenTable}
         >
@@ -1582,6 +1590,10 @@ export function RestaurantTablesWorkspace() {
             </div>
 
             <aside className={styles.counterSalePanel}>
+              {operationError ? (
+                <FormValidationAlert message={operationError} />
+              ) : null}
+
               <div className={styles.panelSectionHeader}>
                 <h4>Productos</h4>
                 <span>{counterSaleItems.length}</span>
@@ -1721,9 +1733,7 @@ export function RestaurantTablesWorkspace() {
 
               <button
                 className={styles.primaryAction}
-                disabled={
-                  createSaleMutation.isPending || counterSaleItems.length === 0
-                }
+                disabled={createSaleMutation.isPending}
                 type="button"
                 onClick={() => {
                   void handleCreateCounterSale()
@@ -1756,6 +1766,10 @@ export function RestaurantTablesWorkspace() {
               <h3>Registrar servicio o venta sin producto</h3>
             </div>
           </div>
+
+          {operationError ? (
+            <FormValidationAlert message={operationError} />
+          ) : null}
 
           <label className={styles.field}>
             <span>Concepto</span>
@@ -1829,7 +1843,7 @@ export function RestaurantTablesWorkspace() {
 
           <button
             className={styles.primaryAction}
-            disabled={createSaleMutation.isPending || freeSaleAmount <= 0}
+            disabled={createSaleMutation.isPending}
             type="button"
             onClick={() => {
               void handleCreateFreeSale()

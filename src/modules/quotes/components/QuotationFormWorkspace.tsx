@@ -1075,7 +1075,6 @@ export function QuotationFormWorkspace({
               <div className={styles.sideFooter}>
                 <button
                   className={styles.primaryFooterButton}
-                  disabled={watchedItems.length === 0}
                   type="button"
                   onClick={handleGoToDetails}
                 >
@@ -1359,7 +1358,7 @@ export function QuotationFormWorkspace({
                 </button>
                 <button
                   className={styles.primaryFooterButton}
-                  disabled={isSubmitting || watchedItems.length === 0}
+                  disabled={isSubmitting}
                   form={formId}
                   type="submit"
                 >

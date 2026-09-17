@@ -1,4 +1,5 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import { useMutation } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
@@ -2507,12 +2508,7 @@ export function RetailSalesWorkspace() {
                       disabled={
                         createSaleMutation.isPending ||
                         cartItems.length === 0 ||
-                        totalAmount <= 0 ||
-                        (settlement === 'CREDIT' &&
-                          selectedCustomerId.trim().length === 0) ||
-                        (settlement === 'PAID' &&
-                          usesSplitPayments &&
-                          !areSplitPaymentsBalanced)
+                        totalAmount <= 0
                       }
                       type="button"
                       onClick={handleCatalogSaleSubmit}
@@ -2741,13 +2737,13 @@ export function RetailSalesWorkspace() {
               />
             </label>
 
+            {checkoutErrorMessage ? (
+              <FormValidationAlert message={checkoutErrorMessage} />
+            ) : null}
+
             <button
               className={styles.primaryActionButton}
-              disabled={
-                createSaleMutation.isPending ||
-                quickSaleAmount <= 0 ||
-                quickSaleForm.customerId.trim().length === 0
-              }
+              disabled={createSaleMutation.isPending}
               type="button"
               onClick={() => {
                 prepareCashRegisterSound()
@@ -2940,14 +2936,13 @@ export function RetailSalesWorkspace() {
               />
             </label>
 
+            {checkoutErrorMessage ? (
+              <FormValidationAlert message={checkoutErrorMessage} />
+            ) : null}
+
             <button
               className={styles.primaryActionButton}
-              disabled={
-                createExpenseMutation.isPending ||
-                quickExpenseAmount <= 0 ||
-                (quickExpenseForm.status === 'PENDING' &&
-                  quickExpenseForm.supplierId.trim().length === 0)
-              }
+              disabled={createExpenseMutation.isPending}
               type="button"
               onClick={() => {
                 void handleCreateQuickExpense()

@@ -61,6 +61,7 @@ import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
+import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -544,6 +545,11 @@ export function RetailInventoryWorkspace() {
     .filter(Boolean)
   const hasDuplicatePurchaseProducts =
     new Set(purchaseProductIds).size !== purchaseProductIds.length
+  const duplicatePurchaseProductIds = new Set(
+    purchaseProductIds.filter(
+      (productId, index) => purchaseProductIds.indexOf(productId) !== index,
+    ),
+  )
   const partialPurchaseAmount = parsePositiveNumber(
     purchaseFormState.amountPaid,
   )
@@ -614,7 +620,11 @@ export function RetailInventoryWorkspace() {
                   ? languageCode === 'en'
                     ? 'The due date cannot be earlier than the purchase date.'
                     : 'La fecha de vencimiento no puede ser anterior a la fecha de compra.'
-                  : null
+                : null
+
+  useEffect(() => {
+    setPurchaseFormError(null)
+  }, [purchaseFormState])
 
   useEffect(() => {
     if (searchParams.get('mode') !== 'purchase') {
@@ -1155,6 +1165,25 @@ export function RetailInventoryWorkspace() {
             ? 'Review the products, quantities, costs, and amount paid.'
             : 'Revisa los productos, las cantidades, los costos y el valor pagado.'),
       )
+      const duplicateItemIndex = purchaseFormState.items.findIndex((item) =>
+        duplicatePurchaseProductIds.has(item.productId),
+      )
+      const targetId = !purchaseFormState.supplierId
+        ? 'purchase-supplier'
+        : invalidPurchaseItemIndex >= 0
+          ? `purchase-line-${purchaseFormState.items[invalidPurchaseItemIndex]?.id}`
+          : duplicateItemIndex >= 0
+            ? `purchase-line-${purchaseFormState.items[duplicateItemIndex]?.id}`
+            : !purchaseFormState.purchaseDate
+              ? 'purchase-date'
+              : 'purchase-validation-alert'
+
+      window.requestAnimationFrame(() => {
+        document.getElementById(targetId)?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+        })
+      })
       return
     }
 
@@ -1208,7 +1237,10 @@ export function RetailInventoryWorkspace() {
         ? parseNonNegativeNumber(adjustmentFormState.quantity)
         : parsePositiveNumber(adjustmentFormState.quantity)
 
-    if (!adjustmentFormState.productId || quantity < 0) {
+    const hasInvalidQuantity =
+      adjustmentFormState.type === 'ADJUSTMENT' ? quantity < 0 : quantity <= 0
+
+    if (!adjustmentFormState.productId || hasInvalidQuantity) {
       setFeedbackMessage({
         tone: 'error',
         text: copy.adjustmentValidation,
@@ -2258,13 +2290,7 @@ export function RetailInventoryWorkspace() {
               </button>
               <button
                 className={retailStyles.buttonDark}
-                disabled={
-                  !adjustmentFormState.productId ||
-                  (adjustmentFormState.type === 'ADJUSTMENT'
-                    ? parseNonNegativeNumber(adjustmentFormState.quantity) < 0
-                    : parsePositiveNumber(adjustmentFormState.quantity) <= 0) ||
-                  createAdjustmentMutation.isPending
-                }
+                disabled={createAdjustmentMutation.isPending}
                 type="button"
                 onClick={() => {
                   void handleRegisterAdjustment()
@@ -2374,6 +2400,10 @@ export function RetailInventoryWorkspace() {
                 }
               />
             </label>
+
+            {feedbackMessage?.tone === 'error' ? (
+              <FormValidationAlert message={feedbackMessage.text} />
+            ) : null}
           </div>
         </DrawerShell>
       ) : null}
@@ -2418,6 +2448,7 @@ export function RetailInventoryWorkspace() {
               <span className={styles.fieldLabel}>{copy.purchaseSupplier} *</span>
               <div className={styles.supplierPickerRow}>
                 <SearchableSelect
+                  id="purchase-supplier"
                   className={styles.selectInput}
                   disabled={suppliersQuery.isLoading}
                   value={purchaseFormState.supplierId}
@@ -2479,6 +2510,14 @@ export function RetailInventoryWorkspace() {
               </small>
             </label>
 
+            {purchaseFormError ? (
+              <FormValidationAlert
+                className={styles.purchaseValidationAlert}
+                id="purchase-validation-alert"
+                message={purchaseFormError}
+              />
+            ) : null}
+
             <div className={styles.purchaseItemsSection}>
               <div className={styles.purchaseItemsHeader}>
                 <div>
@@ -2499,8 +2538,26 @@ export function RetailInventoryWorkspace() {
                 </button>
               </div>
 
-              {purchaseFormState.items.map((item, index) => (
-                <article className={styles.purchaseItemCard} key={item.id}>
+              {purchaseFormState.items.map((item, index) => {
+                const isDuplicate =
+                  Boolean(purchaseFormError) &&
+                  duplicatePurchaseProductIds.has(item.productId)
+                const isInvalid =
+                  Boolean(purchaseFormError) &&
+                  (!item.productId ||
+                    parsePositiveNumber(item.quantity) <= 0 ||
+                    parsePositiveNumber(item.unitCost) <= 0)
+
+                return (
+                  <article
+                    className={`${styles.purchaseItemCard} ${
+                      isDuplicate || isInvalid
+                        ? styles.purchaseItemCardInvalid
+                        : ''
+                    }`}
+                    id={`purchase-line-${item.id}`}
+                    key={item.id}
+                  >
                   <div className={styles.purchaseItemTitleRow}>
                     <strong>{copy.purchaseLine.replace('{number}', String(index + 1))}</strong>
                     {purchaseFormState.items.length > 1 ? (
@@ -2598,8 +2655,20 @@ export function RetailInventoryWorkspace() {
                         parsePositiveNumber(item.unitCost),
                     )}
                   </span>
-                </article>
-              ))}
+                  {isDuplicate || isInvalid ? (
+                    <small className={styles.purchaseItemError} role="alert">
+                      {isDuplicate
+                        ? languageCode === 'en'
+                          ? 'This product is repeated. Remove it or select a different one.'
+                          : 'Este producto está repetido. Quítalo o selecciona uno diferente.'
+                        : languageCode === 'en'
+                          ? 'Select a product and enter a valid quantity and unit cost.'
+                          : 'Selecciona el producto e ingresa una cantidad y un costo unitario válidos.'}
+                    </small>
+                  ) : null}
+                  </article>
+                )
+              })}
             </div>
 
             <div className={styles.purchaseFieldsRow}>
@@ -2607,6 +2676,7 @@ export function RetailInventoryWorkspace() {
                 <span className={styles.fieldLabel}>{copy.purchaseDate} *</span>
                 <input
                   className={styles.textInput}
+                  id="purchase-date"
                   type="date"
                   value={purchaseFormState.purchaseDate}
                   onChange={(event) =>
@@ -2748,12 +2818,6 @@ export function RetailInventoryWorkspace() {
                 <small>
                   Revisa la apertura de caja, registra una transferencia entre medios o cambia el método de pago.
                 </small>
-              </div>
-            ) : null}
-
-            {purchaseFormError ? (
-              <div aria-live="assertive" className={styles.feedbackError} role="alert">
-                <span>{purchaseFormError}</span>
               </div>
             ) : null}
 

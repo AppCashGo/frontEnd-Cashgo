@@ -31,6 +31,7 @@ import type {
 } from '@/modules/settings/types/settings'
 import { supportedCurrencies } from '@/modules/settings/types/settings'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
+import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
@@ -181,10 +182,6 @@ function RetailTaxSettingsPanel({
     (option) => option.id === selectedTaxOptionId,
   )
   const hasSelectedProducts = selectedProductIds.length > 0
-  const canSaveProductTaxes =
-    hasSelectedProducts &&
-    Boolean(selectedTaxOption) &&
-    !updateProductTaxesMutation.isPending
 
   useEffect(() => {
     setBaseTaxOptionId(findTaxOptionBySettings(businessSettings)?.id ?? '')
@@ -292,7 +289,19 @@ function RetailTaxSettingsPanel({
   }
 
   async function handleSaveProductTaxes() {
-    if (!selectedTaxOption || selectedProductIds.length === 0) {
+    if (selectedProductIds.length === 0) {
+      setFeedbackMessage({
+        tone: 'error',
+        text: 'Selecciona al menos un producto para modificar sus impuestos.',
+      })
+      return
+    }
+
+    if (!selectedTaxOption) {
+      setFeedbackMessage({
+        tone: 'error',
+        text: 'Selecciona el impuesto que quieres aplicar a los productos.',
+      })
       return
     }
 
@@ -408,7 +417,7 @@ function RetailTaxSettingsPanel({
           <DrawerActionFooter layout="stack">
             <button
               className={styles.drawerPrimaryButton}
-              disabled={!canSaveProductTaxes}
+              disabled={updateProductTaxesMutation.isPending}
               type="button"
               onClick={() => {
                 void handleSaveProductTaxes()
@@ -433,6 +442,10 @@ function RetailTaxSettingsPanel({
         title="Modificar impuestos"
         onClose={handleCloseDrawer}
       >
+        {feedbackMessage?.tone === 'error' ? (
+          <FormValidationAlert message={feedbackMessage.text} />
+        ) : null}
+
         <div className={styles.drawerSectionHeader}>
           <span className={styles.drawerLabel}>
             Selecciona los productos a modificar

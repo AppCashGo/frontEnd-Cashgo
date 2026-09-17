@@ -4,6 +4,7 @@ import { UserPlus } from 'lucide-react'
 import { useCreateCustomerMutation } from '@/modules/customers/hooks/use-customers-query'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
+import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './QuickCreateCustomerDrawer.module.css'
@@ -199,7 +200,7 @@ export function QuickCreateCustomerDrawer({
           </button>
           <button
             className={styles.primaryButton}
-            disabled={createCustomerMutation.isPending || form.name.trim().length < 2}
+            disabled={createCustomerMutation.isPending}
             form="quick-create-customer-form"
             type="submit"
           >
@@ -300,9 +301,7 @@ export function QuickCreateCustomerDrawer({
         </label>
 
         {duplicateError || errorMessage ? (
-          <p className={styles.errorMessage} role="alert">
-            {errorMessage ?? duplicateError}
-          </p>
+          <FormValidationAlert message={errorMessage ?? duplicateError ?? ''} />
         ) : null}
       </form>
     </SideDrawer>

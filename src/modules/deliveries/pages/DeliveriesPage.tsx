@@ -728,7 +728,6 @@ export function DeliveriesPage() {
               <button
                 className={styles.stickyAction}
                 type="button"
-                disabled={!canContinueToCustomer}
                 onClick={handleContinueToCustomer}
               >
                 <span>{items.length}</span>
@@ -823,7 +822,6 @@ export function DeliveriesPage() {
               <button
                 className={styles.stickyAction}
                 type="button"
-                disabled={!phone.trim() || !customerName.trim() || !address.trim()}
                 onClick={handleContinueToPayment}
               >
                 Siguiente
@@ -906,7 +904,7 @@ export function DeliveriesPage() {
               <button
                 className={styles.stickyAction}
                 type="button"
-                disabled={!canCreateOrder || createDeliveryOrderMutation.isPending}
+                disabled={createDeliveryOrderMutation.isPending}
                 onClick={() => {
                   void handleCreateOrder()
                 }}

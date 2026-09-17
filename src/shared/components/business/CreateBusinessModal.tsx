@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { BusinessCategoryPickerModal } from "@/shared/components/business/BusinessCategoryPickerModal";
 import { SideDrawer } from "@/shared/components/ui/SideDrawer";
+import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import {
   businessCategoryOptions,
@@ -74,7 +75,7 @@ export function CreateBusinessModal({
     setError,
     setValue,
     watch,
-    formState: { errors, isValid },
+    formState: { errors },
   } = useForm<CreateBusinessModalValues>({
     resolver: zodResolver(schema),
     mode: "onChange",
@@ -122,7 +123,7 @@ export function CreateBusinessModal({
         footer={
           <button
             className={styles.primaryButton}
-            disabled={isSubmitting || !isValid}
+            disabled={isSubmitting}
             form={formId}
             type="submit"
           >
@@ -141,7 +142,11 @@ export function CreateBusinessModal({
           className={styles.form}
           id={formId}
           noValidate
-          onSubmit={handleSubmit(submitForm)}
+          onSubmit={handleSubmit(submitForm, () => {
+            setError("root", {
+              message: dictionary.layout.sidebar.createBusiness.requiredHint,
+            });
+          })}
         >
           <label className={styles.field}>
             <span className={styles.label}>
@@ -254,9 +259,7 @@ export function CreateBusinessModal({
           </label>
 
           {errors.root?.message ? (
-            <div className={styles.errorBanner} role="alert">
-              {errors.root.message}
-            </div>
+            <FormValidationAlert message={errors.root.message} />
           ) : null}
         </form>
       </SideDrawer>

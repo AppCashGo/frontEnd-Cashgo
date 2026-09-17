@@ -1,4 +1,5 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   type ChangeEvent,
@@ -555,8 +556,6 @@ function CategoryCreateDrawer({
   onToggleProduct: (productId: string) => void;
   onToggleVisibility: () => void;
 }) {
-  const canSubmit = name.trim().length >= 2 && !isSubmitting;
-
   return (
     <SideDrawer
       bodyClassName={styles.categoryDrawerBody}
@@ -568,7 +567,7 @@ function CategoryCreateDrawer({
       footer={
         <button
           className={styles.categoryDrawerSubmit}
-          disabled={!canSubmit}
+          disabled={isSubmitting}
           type="button"
           onClick={onSubmit}
         >
@@ -786,7 +785,7 @@ export function RetailProductCreateWorkspace({
     reset,
     setValue,
     setError,
-    formState: { errors, isValid, isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<RetailProductCreateValues>({
     resolver: zodResolver(retailProductCreateSchema),
     defaultValues: getDefaultValues(),
@@ -1414,7 +1413,12 @@ export function RetailProductCreateWorkspace({
         <form
           className={styles.form}
           noValidate
-          onSubmit={handleSubmit(handlePersistProduct)}
+          onSubmit={handleSubmit(handlePersistProduct, () => {
+            setError("root", {
+              message:
+                "No pudimos guardar todavía. Revisa los campos marcados y completa los datos obligatorios.",
+            });
+          })}
         >
           <input
             ref={imageInputRef}
@@ -1956,7 +1960,10 @@ export function RetailProductCreateWorkspace({
           </section>
 
           {errors.root?.message ? (
-            <p className={styles.submitError}>{errors.root.message}</p>
+            <FormValidationAlert
+              className={styles.submitError}
+              message={errors.root.message}
+            />
           ) : null}
 
           <footer className={styles.footer}>
@@ -1975,7 +1982,7 @@ export function RetailProductCreateWorkspace({
 
             <button
               className={styles.submitButton}
-              disabled={!isValid || isMutationPending}
+              disabled={isMutationPending}
               type="submit"
             >
               {isEditMode ? copy.saveProductChanges : copy.createProduct}
