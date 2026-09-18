@@ -1,4 +1,4 @@
-import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { useState } from 'react'
 import {
   useCurrentCashRegisterQuery,
@@ -21,6 +21,7 @@ import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDateTime } from '@/shared/utils/format-date-time'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import styles from './SupplierSupplyHistoryPanel.module.css'
 
 type SupplierSupplyHistoryPanelProps = {
@@ -142,15 +143,21 @@ export function SupplierSupplyHistoryPanel({
         <span className={styles.countPill}>
           {purchaseHistory.length.toString()}{' '}
           {purchaseHistory.length === 1
-            ? isEnglish ? 'entry' : 'registro'
-            : isEnglish ? 'entries' : 'registros'}
+            ? isEnglish
+              ? 'entry'
+              : 'registro'
+            : isEnglish
+              ? 'entries'
+              : 'registros'}
         </span>
       </div>
 
       {isLoading ? (
         <div className={styles.loadingState}>
           <p className={styles.loadingTitle}>
-            {isEnglish ? 'Loading purchase history...' : 'Cargando historial...'}
+            {isEnglish
+              ? 'Loading purchase history...'
+              : 'Cargando historial...'}
           </p>
           <p className={styles.loadingDescription}>
             {isEnglish
@@ -179,33 +186,41 @@ export function SupplierSupplyHistoryPanel({
             <p className={styles.paymentError}>{paymentError}</p>
           ) : null}
           {purchaseHistory.map((purchase) => {
-            const isPaymentOpen = paymentDraft?.purchaseId === purchase.purchaseId
+            const invoiceImageUrl = resolveApiAssetUrl(purchase.invoiceImageUrl)
+            const isPaymentOpen =
+              paymentDraft?.purchaseId === purchase.purchaseId
             const draftedPaymentAmount = isPaymentOpen
               ? Number(paymentDraft?.amount ?? 0)
               : 0
             const draftedMethodBalance = isPaymentOpen
               ? paymentDraft?.fundSource === 'RESERVE'
-                ? reserveSummaryQuery.data?.balances.find(
+                ? (reserveSummaryQuery.data?.balances.find(
                     (balance) => balance.method === paymentDraft.method,
-                  )?.amount ?? 0
-                : currentCashRegisterQuery.data?.paymentMethods.find(
-                    (paymentMethod) => paymentMethod.method === paymentDraft?.method,
-                  )?.expectedAmount ?? 0
+                  )?.amount ?? 0)
+                : (currentCashRegisterQuery.data?.paymentMethods.find(
+                    (paymentMethod) =>
+                      paymentMethod.method === paymentDraft?.method,
+                  )?.expectedAmount ?? 0)
               : 0
             const draftedPaymentShortfall = Math.max(
               draftedPaymentAmount - draftedMethodBalance,
               0,
             )
-            const isPartial = purchase.status === 'PENDING' && purchase.paidAmount > 0
-            const returnAmount = returnDraft?.purchaseId === purchase.purchaseId
-              ? purchase.items.reduce(
-                  (total, item) =>
-                    total +
-                    Math.max(0, Number(returnDraft.quantities[item.id] ?? 0)) *
-                      item.unitCost,
-                  0,
-                )
-              : 0
+            const isPartial =
+              purchase.status === 'PENDING' && purchase.paidAmount > 0
+            const returnAmount =
+              returnDraft?.purchaseId === purchase.purchaseId
+                ? purchase.items.reduce(
+                    (total, item) =>
+                      total +
+                      Math.max(
+                        0,
+                        Number(returnDraft.quantities[item.id] ?? 0),
+                      ) *
+                        item.unitCost,
+                    0,
+                  )
+                : 0
             const refundRequired = Math.max(0, returnAmount - purchase.balance)
 
             return (
@@ -228,15 +243,22 @@ export function SupplierSupplyHistoryPanel({
                     {formatCurrency(purchase.netTotal)}
                     {purchase.returnedAmount > 0 ? (
                       <small>
-                        {isEnglish ? 'Original' : 'Original'}: {formatCurrency(purchase.total)}
+                        {isEnglish ? 'Original' : 'Original'}:{' '}
+                        {formatCurrency(purchase.total)}
                       </small>
                     ) : null}
                   </strong>
                 </div>
 
                 <div className={styles.balanceGrid}>
-                  <div><span>{isEnglish ? 'Paid' : 'Pagado'}</span><strong>{formatCurrency(purchase.paidAmount)}</strong></div>
-                  <div><span>{isEnglish ? 'Outstanding' : 'Pendiente'}</span><strong>{formatCurrency(purchase.balance)}</strong></div>
+                  <div>
+                    <span>{isEnglish ? 'Paid' : 'Pagado'}</span>
+                    <strong>{formatCurrency(purchase.paidAmount)}</strong>
+                  </div>
+                  <div>
+                    <span>{isEnglish ? 'Outstanding' : 'Pendiente'}</span>
+                    <strong>{formatCurrency(purchase.balance)}</strong>
+                  </div>
                   <span
                     className={`${styles.statusPill} ${
                       purchase.status === 'PAID'
@@ -247,7 +269,9 @@ export function SupplierSupplyHistoryPanel({
                     }`}
                   >
                     {isPartial
-                      ? isEnglish ? 'Partial' : 'Parcial'
+                      ? isEnglish
+                        ? 'Partial'
+                        : 'Parcial'
                       : isEnglish
                         ? englishStatusLabels[purchase.status]
                         : getExpenseStatusLabel(purchase.status)}
@@ -257,23 +281,42 @@ export function SupplierSupplyHistoryPanel({
                 <div className={styles.purchaseItemsList}>
                   {purchase.items.map((item) => (
                     <div key={item.id}>
-                      <span>{item.productName} × {item.quantity}</span>
-                      <strong>{formatCurrency(item.subtotal)}</strong>
+                      <span>
+                        {item.productName} × {item.quantity}
+                        {item.unitCost === 0 ? (
+                          <small className={styles.giftItemBadge}>
+                            {isEnglish ? 'Gift' : 'Obsequio'}
+                          </small>
+                        ) : null}
+                      </span>
+                      <strong>
+                        {item.unitCost === 0
+                          ? isEnglish
+                            ? 'Gift · $0'
+                            : 'Obsequio · $0'
+                          : formatCurrency(item.subtotal)}
+                      </strong>
                     </div>
                   ))}
                 </div>
 
                 {purchase.payments.length > 0 ? (
                   <div className={styles.paymentsList}>
-                    <strong>{isEnglish ? 'Payments' : 'Pagos registrados'}</strong>
+                    <strong>
+                      {isEnglish ? 'Payments' : 'Pagos registrados'}
+                    </strong>
                     {purchase.payments.map((payment) => (
                       <div key={payment.id}>
                         <span>
                           {getPaymentMethodLabel(payment.method)} ·{' '}
                           {payment.fundSource === 'RESERVE'
-                            ? isEnglish ? 'Reserve' : 'Reserva'
-                            : isEnglish ? 'Open register' : 'Caja abierta'} ·{' '}
-                          {formatDateTime(payment.paymentDate)}
+                            ? isEnglish
+                              ? 'Reserve'
+                              : 'Reserva'
+                            : isEnglish
+                              ? 'Open register'
+                              : 'Caja abierta'}{' '}
+                          · {formatDateTime(payment.paymentDate)}
                         </span>
                         <strong>{formatCurrency(payment.amount)}</strong>
                       </div>
@@ -283,17 +326,27 @@ export function SupplierSupplyHistoryPanel({
 
                 {purchase.returns.length > 0 ? (
                   <div className={styles.creditNotesList}>
-                    <strong>{isEnglish ? 'Credit notes' : 'Notas crédito'}</strong>
+                    <strong>
+                      {isEnglish ? 'Credit notes' : 'Notas crédito'}
+                    </strong>
                     {purchase.returns.map((purchaseReturn) => (
                       <div key={purchaseReturn.id}>
                         <span>
-                          {purchaseReturn.creditNumber} · {formatDateTime(purchaseReturn.returnDate)}
+                          {purchaseReturn.creditNumber} ·{' '}
+                          {formatDateTime(purchaseReturn.returnDate)}
                         </span>
-                        <strong>-{formatCurrency(purchaseReturn.amount)}</strong>
+                        <strong>
+                          -{formatCurrency(purchaseReturn.amount)}
+                        </strong>
                         {onDownloadCreditNote ? (
                           <button
                             type="button"
-                            onClick={() => onDownloadCreditNote(purchase.purchaseId, purchaseReturn.id)}
+                            onClick={() =>
+                              onDownloadCreditNote(
+                                purchase.purchaseId,
+                                purchaseReturn.id,
+                              )
+                            }
                           >
                             {isEnglish ? 'Download' : 'Descargar'}
                           </button>
@@ -307,12 +360,44 @@ export function SupplierSupplyHistoryPanel({
                   <p className={styles.purchaseNotes}>{purchase.notes}</p>
                 ) : null}
 
+                {invoiceImageUrl ? (
+                  <a
+                    className={styles.invoiceAttachment}
+                    href={invoiceImageUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    <img
+                      src={invoiceImageUrl}
+                      alt={
+                        isEnglish
+                          ? `Invoice for purchase ${purchase.purchaseId}`
+                          : `Factura de la compra ${purchase.purchaseId}`
+                      }
+                    />
+                    <span>
+                      <strong>
+                        {isEnglish ? 'Invoice attached' : 'Factura adjunta'}
+                      </strong>
+                      <small>
+                        {isEnglish
+                          ? 'Open the original photo'
+                          : 'Abrir la foto original'}
+                      </small>
+                    </span>
+                  </a>
+                ) : null}
+
                 {purchase.status === 'CANCELLED' ? (
                   <div className={styles.cancellationNotice}>
-                    <strong>{isEnglish ? 'Cancelled purchase' : 'Compra anulada'}</strong>
+                    <strong>
+                      {isEnglish ? 'Cancelled purchase' : 'Compra anulada'}
+                    </strong>
                     <span>
                       {purchase.cancellationReason ??
-                        (isEnglish ? 'No reason recorded.' : 'Sin motivo registrado.')}
+                        (isEnglish
+                          ? 'No reason recorded.'
+                          : 'Sin motivo registrado.')}
                     </span>
                     {purchase.cancelledAt ? (
                       <small>{formatDateTime(purchase.cancelledAt)}</small>
@@ -322,12 +407,18 @@ export function SupplierSupplyHistoryPanel({
 
                 <div className={styles.purchaseActions}>
                   {onDownloadReceipt ? (
-                    <button type="button" onClick={() => onDownloadReceipt(purchase.purchaseId)}>
+                    <button
+                      type="button"
+                      onClick={() => onDownloadReceipt(purchase.purchaseId)}
+                    >
                       {isEnglish ? 'Download receipt' : 'Descargar comprobante'}
                     </button>
                   ) : null}
                   {purchase.status === 'PENDING' && onRegisterPayment ? (
-                    <button type="button" onClick={() => startPayment(purchase)}>
+                    <button
+                      type="button"
+                      onClick={() => startPayment(purchase)}
+                    >
                       {isEnglish ? 'Register payment' : 'Registrar abono'}
                     </button>
                   ) : null}
@@ -375,7 +466,11 @@ export function SupplierSupplyHistoryPanel({
                   <div className={styles.returnForm}>
                     <div className={styles.returnFormHeader}>
                       <div>
-                        <strong>{isEnglish ? 'Create credit note' : 'Crear nota crédito'}</strong>
+                        <strong>
+                          {isEnglish
+                            ? 'Create credit note'
+                            : 'Crear nota crédito'}
+                        </strong>
                         <p>
                           {isEnglish
                             ? 'Choose the products and quantities returned to the supplier.'
@@ -390,7 +485,8 @@ export function SupplierSupplyHistoryPanel({
                           <span>
                             <strong>{item.productName}</strong>
                             <small>
-                              {isEnglish ? 'Available' : 'Disponible'}: {item.availableToReturn}
+                              {isEnglish ? 'Available' : 'Disponible'}:{' '}
+                              {item.availableToReturn}
                             </small>
                           </span>
                           <input
@@ -413,25 +509,43 @@ export function SupplierSupplyHistoryPanel({
                       ))}
                     </div>
                     <label>
-                      <span>{isEnglish ? 'Return date' : 'Fecha de devolución'}</span>
+                      <span>
+                        {isEnglish ? 'Return date' : 'Fecha de devolución'}
+                      </span>
                       <input
                         type="date"
                         value={returnDraft.returnDate}
-                        onChange={(event) => setReturnDraft({ ...returnDraft, returnDate: event.target.value })}
+                        onChange={(event) =>
+                          setReturnDraft({
+                            ...returnDraft,
+                            returnDate: event.target.value,
+                          })
+                        }
                       />
                     </label>
                     {refundRequired > 0 ? (
                       <label>
                         <span>
-                          {isEnglish ? 'Refund method' : 'Método de reembolso'} · {formatCurrency(refundRequired)}
+                          {isEnglish ? 'Refund method' : 'Método de reembolso'}{' '}
+                          · {formatCurrency(refundRequired)}
                         </span>
                         <SearchableSelect
                           value={returnDraft.refundMethod}
-                          onChange={(event) => setReturnDraft({ ...returnDraft, refundMethod: event.target.value as ExpensePaymentMethod })}
+                          onChange={(event) =>
+                            setReturnDraft({
+                              ...returnDraft,
+                              refundMethod: event.target
+                                .value as ExpensePaymentMethod,
+                            })
+                          }
                         >
-                          {paymentMethods.filter((method) => method !== 'CREDIT').map((method) => (
-                            <option key={method} value={method}>{getPaymentMethodLabel(method)}</option>
-                          ))}
+                          {paymentMethods
+                            .filter((method) => method !== 'CREDIT')
+                            .map((method) => (
+                              <option key={method} value={method}>
+                                {getPaymentMethodLabel(method)}
+                              </option>
+                            ))}
                         </SearchableSelect>
                       </label>
                     ) : (
@@ -442,16 +556,26 @@ export function SupplierSupplyHistoryPanel({
                       </p>
                     )}
                     <label className={styles.returnReason}>
-                      <span>{isEnglish ? 'Reason' : 'Motivo de la devolución'}</span>
+                      <span>
+                        {isEnglish ? 'Reason' : 'Motivo de la devolución'}
+                      </span>
                       <textarea
                         maxLength={255}
                         rows={3}
                         value={returnDraft.reason}
-                        onChange={(event) => setReturnDraft({ ...returnDraft, reason: event.target.value })}
+                        onChange={(event) =>
+                          setReturnDraft({
+                            ...returnDraft,
+                            reason: event.target.value,
+                          })
+                        }
                       />
                     </label>
                     <div className={styles.paymentFormActions}>
-                      <button type="button" onClick={() => setReturnDraft(null)}>
+                      <button
+                        type="button"
+                        onClick={() => setReturnDraft(null)}
+                      >
                         {isEnglish ? 'Go back' : 'Volver'}
                       </button>
                       <button
@@ -461,8 +585,14 @@ export function SupplierSupplyHistoryPanel({
                           !returnDraft.returnDate ||
                           returnDraft.reason.trim().length < 3 ||
                           purchase.items.some((item) => {
-                            const quantity = Number(returnDraft.quantities[item.id] ?? 0)
-                            return !Number.isInteger(quantity) || quantity < 0 || quantity > item.availableToReturn
+                            const quantity = Number(
+                              returnDraft.quantities[item.id] ?? 0,
+                            )
+                            return (
+                              !Number.isInteger(quantity) ||
+                              quantity < 0 ||
+                              quantity > item.availableToReturn
+                            )
                           })
                         }
                         type="button"
@@ -471,19 +601,30 @@ export function SupplierSupplyHistoryPanel({
                             items: purchase.items
                               .map((item) => ({
                                 purchaseItemId: Number(item.id),
-                                quantity: Number(returnDraft.quantities[item.id] ?? 0),
+                                quantity: Number(
+                                  returnDraft.quantities[item.id] ?? 0,
+                                ),
                               }))
                               .filter((item) => item.quantity > 0),
                             reason: returnDraft.reason.trim(),
-                            refundMethod: refundRequired > 0 ? returnDraft.refundMethod : undefined,
-                            returnDate: toExpenseRequestDate(returnDraft.returnDate),
+                            refundMethod:
+                              refundRequired > 0
+                                ? returnDraft.refundMethod
+                                : undefined,
+                            returnDate: toExpenseRequestDate(
+                              returnDraft.returnDate,
+                            ),
                           })
                           setReturnDraft(null)
                         }}
                       >
                         {returningPurchaseId === purchase.purchaseId
-                          ? isEnglish ? 'Saving...' : 'Guardando...'
-                          : isEnglish ? 'Create credit note' : 'Crear nota crédito'}
+                          ? isEnglish
+                            ? 'Saving...'
+                            : 'Guardando...'
+                          : isEnglish
+                            ? 'Create credit note'
+                            : 'Crear nota crédito'}
                       </button>
                     </div>
                   </div>
@@ -504,7 +645,9 @@ export function SupplierSupplyHistoryPanel({
                       </p>
                     </div>
                     <label>
-                      <span>{isEnglish ? 'Reason' : 'Motivo de la anulación'}</span>
+                      <span>
+                        {isEnglish ? 'Reason' : 'Motivo de la anulación'}
+                      </span>
                       <textarea
                         maxLength={255}
                         rows={3}
@@ -518,7 +661,10 @@ export function SupplierSupplyHistoryPanel({
                       />
                     </label>
                     <div className={styles.paymentFormActions}>
-                      <button type="button" onClick={() => setCancellationDraft(null)}>
+                      <button
+                        type="button"
+                        onClick={() => setCancellationDraft(null)}
+                      >
                         {isEnglish ? 'Go back' : 'Volver'}
                       </button>
                       <button
@@ -537,8 +683,12 @@ export function SupplierSupplyHistoryPanel({
                         }}
                       >
                         {cancellingPurchaseId === purchase.purchaseId
-                          ? isEnglish ? 'Cancelling...' : 'Anulando...'
-                          : isEnglish ? 'Confirm cancellation' : 'Confirmar anulación'}
+                          ? isEnglish
+                            ? 'Cancelling...'
+                            : 'Anulando...'
+                          : isEnglish
+                            ? 'Confirm cancellation'
+                            : 'Confirmar anulación'}
                       </button>
                     </div>
                   </div>
@@ -554,11 +704,20 @@ export function SupplierSupplyHistoryPanel({
                         step="0.01"
                         type="number"
                         value={paymentDraft.amount}
-                        onChange={(event) => setPaymentDraft({ ...paymentDraft, amount: event.target.value })}
+                        onChange={(event) =>
+                          setPaymentDraft({
+                            ...paymentDraft,
+                            amount: event.target.value,
+                          })
+                        }
                       />
                     </label>
                     <label>
-                      <span>{isEnglish ? 'Money source' : '¿De dónde sale el dinero?'}</span>
+                      <span>
+                        {isEnglish
+                          ? 'Money source'
+                          : '¿De dónde sale el dinero?'}
+                      </span>
                       <SearchableSelect
                         value={paymentDraft.fundSource}
                         onChange={(event) =>
@@ -569,30 +728,50 @@ export function SupplierSupplyHistoryPanel({
                         }
                       >
                         <option value="REGISTER">
-                          {isEnglish ? 'Open register' : 'Caja abierta del turno'}
+                          {isEnglish
+                            ? 'Open register'
+                            : 'Caja abierta del turno'}
                         </option>
                         <option value="RESERVE">
-                          {isEnglish ? 'Business reserve' : 'Reserva del negocio'}
+                          {isEnglish
+                            ? 'Business reserve'
+                            : 'Reserva del negocio'}
                         </option>
                       </SearchableSelect>
                     </label>
                     <label>
-                      <span>{isEnglish ? 'Payment method' : 'Método de pago'}</span>
+                      <span>
+                        {isEnglish ? 'Payment method' : 'Método de pago'}
+                      </span>
                       <SearchableSelect
                         value={paymentDraft.method}
-                        onChange={(event) => setPaymentDraft({ ...paymentDraft, method: event.target.value as ExpensePaymentMethod })}
+                        onChange={(event) =>
+                          setPaymentDraft({
+                            ...paymentDraft,
+                            method: event.target.value as ExpensePaymentMethod,
+                          })
+                        }
                       >
                         {paymentMethods.map((method) => (
-                          <option key={method} value={method}>{getPaymentMethodLabel(method)}</option>
+                          <option key={method} value={method}>
+                            {getPaymentMethodLabel(method)}
+                          </option>
                         ))}
                       </SearchableSelect>
                     </label>
                     <label>
-                      <span>{isEnglish ? 'Payment date' : 'Fecha del pago'}</span>
+                      <span>
+                        {isEnglish ? 'Payment date' : 'Fecha del pago'}
+                      </span>
                       <input
                         type="date"
                         value={paymentDraft.paymentDate}
-                        onChange={(event) => setPaymentDraft({ ...paymentDraft, paymentDate: event.target.value })}
+                        onChange={(event) =>
+                          setPaymentDraft({
+                            ...paymentDraft,
+                            paymentDate: event.target.value,
+                          })
+                        }
                       />
                     </label>
                     <label>
@@ -600,12 +779,20 @@ export function SupplierSupplyHistoryPanel({
                       <input
                         maxLength={120}
                         value={paymentDraft.reference}
-                        onChange={(event) => setPaymentDraft({ ...paymentDraft, reference: event.target.value })}
+                        onChange={(event) =>
+                          setPaymentDraft({
+                            ...paymentDraft,
+                            reference: event.target.value,
+                          })
+                        }
                       />
                     </label>
                     {paymentDraft.method !== 'CREDIT' &&
                     draftedPaymentShortfall >= 0.01 ? (
-                      <div className={styles.paymentBalanceWarning} role="alert">
+                      <div
+                        className={styles.paymentBalanceWarning}
+                        role="alert"
+                      >
                         <strong>
                           {isEnglish
                             ? 'Insufficient balance in this payment method'
@@ -613,15 +800,23 @@ export function SupplierSupplyHistoryPanel({
                         </strong>
                         <span>
                           {paymentDraft.fundSource === 'RESERVE'
-                            ? isEnglish ? 'Reserve available' : 'Reserva disponible'
-                            : isEnglish ? 'Register available' : 'Caja disponible'}: {formatCurrency(draftedMethodBalance)} ·{' '}
+                            ? isEnglish
+                              ? 'Reserve available'
+                              : 'Reserva disponible'
+                            : isEnglish
+                              ? 'Register available'
+                              : 'Caja disponible'}
+                          : {formatCurrency(draftedMethodBalance)} ·{' '}
                           {isEnglish ? 'It would remain at' : 'Quedaría en'}{' '}
                           {formatCurrency(-draftedPaymentShortfall)}.
                         </span>
                       </div>
                     ) : null}
                     <div className={styles.paymentFormActions}>
-                      <button type="button" onClick={() => setPaymentDraft(null)}>
+                      <button
+                        type="button"
+                        onClick={() => setPaymentDraft(null)}
+                      >
                         {isEnglish ? 'Cancel' : 'Cancelar'}
                       </button>
                       <button
@@ -636,15 +831,22 @@ export function SupplierSupplyHistoryPanel({
                             amount: Number(paymentDraft.amount),
                             method: paymentDraft.method,
                             fundSource: paymentDraft.fundSource,
-                            reference: paymentDraft.reference.trim() || undefined,
-                            paymentDate: toExpenseRequestDate(paymentDraft.paymentDate),
+                            reference:
+                              paymentDraft.reference.trim() || undefined,
+                            paymentDate: toExpenseRequestDate(
+                              paymentDraft.paymentDate,
+                            ),
                           })
                           setPaymentDraft(null)
                         }}
                       >
                         {payingPurchaseId === purchase.purchaseId
-                          ? isEnglish ? 'Saving...' : 'Guardando...'
-                          : isEnglish ? 'Save payment' : 'Guardar abono'}
+                          ? isEnglish
+                            ? 'Saving...'
+                            : 'Guardando...'
+                          : isEnglish
+                            ? 'Save payment'
+                            : 'Guardar abono'}
                       </button>
                     </div>
                   </div>

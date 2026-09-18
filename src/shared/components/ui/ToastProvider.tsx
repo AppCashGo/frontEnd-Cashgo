@@ -15,6 +15,7 @@ import {
 } from 'react'
 import { ToastContext, type ToastInput, type ToastTone } from '@/shared/hooks/use-toast'
 import { getApiErrorMessage } from '@/shared/services/api-client'
+import { subscribeToApiWriteErrors } from '@/shared/services/api-write-error-notifications'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './ToastProvider.module.css'
 
@@ -163,6 +164,17 @@ export function ToastProvider({ children }: PropsWithChildren) {
       timersRef.current.clear()
     },
     [],
+  )
+
+  useEffect(
+    () =>
+      subscribeToApiWriteErrors((error) => {
+        show({
+          message: getApiErrorMessage(error),
+          tone: 'error',
+        })
+      }),
+    [show],
   )
 
   return (

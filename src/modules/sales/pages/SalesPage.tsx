@@ -117,6 +117,7 @@ function StandardSalesPage() {
     increaseProductQuantity,
     markCheckoutError,
     removeProduct,
+    setProductQuantity,
   } = useSaleCart(products)
 
   const filteredProducts = filterProductsByInventoryState(
@@ -347,6 +348,7 @@ function StandardSalesPage() {
           onDueDateChange={setDueDate}
           onFinalizeSale={handleFinalizeSale}
           onIncreaseQuantity={increaseProductQuantity}
+          onQuantityChange={setProductQuantity}
           onNotesChange={setNotes}
           onPaidAmountInputChange={setPaidAmountInput}
           onPaymentMethodChange={setPaymentMethod}

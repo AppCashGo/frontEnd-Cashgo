@@ -8,6 +8,7 @@ import {
   getInventoryLowStockAlerts,
   getInventoryMovements,
   registerInventoryPurchase,
+  uploadInventoryPurchaseInvoice,
   updateInventoryCategory,
   updateInventoryProductTaxes,
 } from '@/modules/inventory/services/inventory-api'
@@ -156,6 +157,17 @@ export function useRegisterInventoryPurchaseMutation() {
       registerInventoryPurchase(input),
     onSuccess: async () => {
       await invalidateInventoryDependencies(queryClient)
+    },
+  })
+}
+
+export function useUploadInventoryPurchaseInvoiceMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: uploadInventoryPurchaseInvoice,
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: suppliersQueryKey })
     },
   })
 }

@@ -1,4 +1,4 @@
-import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import {
   useCurrentCashRegisterQuery,
   useReserveSummaryQuery,
@@ -23,6 +23,7 @@ import {
   useInventoryLowStockQuery,
   useCreateInventoryAdjustmentMutation,
   useRegisterInventoryPurchaseMutation,
+  useUploadInventoryPurchaseInvoiceMutation,
   useUpdateInventoryCategoryMutation,
   useUpdateInventoryProductTaxesMutation,
 } from '@/modules/inventory/hooks/use-inventory-query'
@@ -72,6 +73,12 @@ type InventoryFilter = 'ALL' | 'LOW'
 type InventorySort = 'STOCK_ASC' | 'STOCK_DESC'
 
 const CREATE_SUPPLIER_VALUE = '__create_supplier__'
+const MAX_PURCHASE_INVOICE_SIZE_BYTES = 5 * 1024 * 1024
+const PURCHASE_INVOICE_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+])
 
 type FeedbackTone = 'success' | 'info' | 'error'
 
@@ -111,6 +118,7 @@ type PurchaseLineState = {
   productId: string
   quantity: string
   unitCost: string
+  isGift: boolean
 }
 
 type AdjustmentFormState = {
@@ -160,6 +168,7 @@ function createPurchaseLineState(): PurchaseLineState {
     productId: '',
     quantity: '1',
     unitCost: '',
+    isGift: false,
   }
 }
 
@@ -212,6 +221,10 @@ function parseNonNegativeNumber(value: string) {
   const parsedValue = Number(normalizedValue)
 
   return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : -1
+}
+
+function roundMonetaryAmount(value: number) {
+  return Math.round((value + Number.EPSILON) * 100) / 100
 }
 
 function formatEditableNumber(value: number) {
@@ -458,6 +471,8 @@ export function RetailInventoryWorkspace() {
   const updateProductTaxesMutation = useUpdateInventoryProductTaxesMutation()
   const updateProductMutation = useUpdateProductMutation()
   const registerPurchaseMutation = useRegisterInventoryPurchaseMutation()
+  const uploadPurchaseInvoiceMutation =
+    useUploadInventoryPurchaseInvoiceMutation()
   const businessSettingsQuery = useBusinessSettingsQuery()
   const updateBusinessSettingsMutation = useUpdateBusinessSettingsMutation()
   const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data])
@@ -475,10 +490,14 @@ export function RetailInventoryWorkspace() {
     [lowStockQuery.data],
   )
   const [isPremiumBannerVisible, setPremiumBannerVisible] = useState(true)
-  const [feedbackMessage, setFeedbackMessage] = useState<FeedbackMessage | null>(
+  const [feedbackMessage, setFeedbackMessage] =
+    useState<FeedbackMessage | null>(null)
+  const [purchaseFormError, setPurchaseFormError] = useState<string | null>(
     null,
   )
-  const [purchaseFormError, setPurchaseFormError] = useState<string | null>(null)
+  const [purchaseInvoiceFile, setPurchaseInvoiceFile] = useState<File | null>(
+    null,
+  )
   const [productDrafts, setProductDrafts] = useState<InlineProductDrafts>({})
   const [savingProductField, setSavingProductField] = useState<string | null>(
     null,
@@ -489,6 +508,7 @@ export function RetailInventoryWorkspace() {
   const [taxProductSearchTerm, setTaxProductSearchTerm] = useState('')
   const [isCreateMenuOpen, setCreateMenuOpen] = useState(false)
   const createMenuRef = useRef<HTMLDivElement>(null)
+  const purchaseInvoiceInputRef = useRef<HTMLInputElement>(null)
   const tableSectionRef = useRef<HTMLElement>(null)
   const [isCategoriesDrawerOpen, setCategoriesDrawerOpen] = useState(false)
   const [isCategoryEditorOpen, setCategoryEditorOpen] = useState(false)
@@ -507,12 +527,24 @@ export function RetailInventoryWorkspace() {
   const [taxPickerCategoryId, setTaxPickerCategoryId] = useState<string | null>(
     null,
   )
-  const [categoryEditorState, setCategoryEditorState] = useState<CategoryEditorState>(
-    createDefaultCategoryEditorState(),
-  )
+  const [categoryEditorState, setCategoryEditorState] =
+    useState<CategoryEditorState>(createDefaultCategoryEditorState())
   const [purchaseFormState, setPurchaseFormState] = useState<PurchaseFormState>(
     createDefaultPurchaseFormState(),
   )
+  const purchaseInvoicePreviewUrl = useMemo(
+    () =>
+      purchaseInvoiceFile ? URL.createObjectURL(purchaseInvoiceFile) : null,
+    [purchaseInvoiceFile],
+  )
+
+  useEffect(() => {
+    return () => {
+      if (purchaseInvoicePreviewUrl) {
+        URL.revokeObjectURL(purchaseInvoicePreviewUrl)
+      }
+    }
+  }, [purchaseInvoicePreviewUrl])
   const [adjustmentFormState, setAdjustmentFormState] =
     useState<AdjustmentFormState>(createDefaultAdjustmentFormState())
   const [taxFormState, setTaxFormState] = useState<TaxFormState>(
@@ -521,7 +553,9 @@ export function RetailInventoryWorkspace() {
   const productId = searchParams.get('productId')
   const rawTab = searchParams.get('tab')
   const productWorkspaceReturnPath =
-    searchParams.get('returnTo') === routeSegments.sales ? routePaths.sales : null
+    searchParams.get('returnTo') === routeSegments.sales
+      ? routePaths.sales
+      : null
   const productWorkspaceTab: RetailProductCreateWorkspaceTab =
     rawTab === 'variants' || rawTab === 'measures' ? rawTab : 'basic'
   const isManualCreateDrawerOpen = searchParams.get('create') === 'manual'
@@ -532,14 +566,15 @@ export function RetailInventoryWorkspace() {
   const selectedAdjustmentProduct = products.find(
     (product) => product.id === adjustmentFormState.productId,
   )
-  const estimatedPurchaseTotal =
+  const estimatedPurchaseTotal = roundMonetaryAmount(
     purchaseFormState.items.reduce(
       (total, item) =>
         total +
         parsePositiveNumber(item.quantity) *
-          parsePositiveNumber(item.unitCost),
+          roundMonetaryAmount(parsePositiveNumber(item.unitCost)),
       0,
-    )
+    ),
+  )
   const purchaseProductIds = purchaseFormState.items
     .map((item) => item.productId)
     .filter(Boolean)
@@ -561,12 +596,13 @@ export function RetailInventoryWorkspace() {
         : 0
   const purchaseMethodBalance =
     purchaseFormState.fundSource === 'RESERVE'
-      ? reserveSummaryQuery.data?.balances.find(
+      ? (reserveSummaryQuery.data?.balances.find(
           (balance) => balance.method === purchaseFormState.paymentMethod,
-        )?.amount ?? 0
-      : currentCashRegisterQuery.data?.paymentMethods.find(
-          (paymentMethod) => paymentMethod.method === purchaseFormState.paymentMethod,
-        )?.expectedAmount ?? 0
+        )?.amount ?? 0)
+      : (currentCashRegisterQuery.data?.paymentMethods.find(
+          (paymentMethod) =>
+            paymentMethod.method === purchaseFormState.paymentMethod,
+        )?.expectedAmount ?? 0)
   const purchaseBalanceShortfall = Math.max(
     purchasePaymentAmount - purchaseMethodBalance,
     0,
@@ -577,14 +613,14 @@ export function RetailInventoryWorkspace() {
     purchaseBalanceShortfall >= 0.01
   const hasInvalidPurchaseDueDate = Boolean(
     purchaseFormState.dueDate &&
-      purchaseFormState.purchaseDate &&
-      purchaseFormState.dueDate < purchaseFormState.purchaseDate,
+    purchaseFormState.purchaseDate &&
+    purchaseFormState.dueDate < purchaseFormState.purchaseDate,
   )
   const invalidPurchaseItemIndex = purchaseFormState.items.findIndex(
     (item) =>
       !item.productId ||
       parsePositiveNumber(item.quantity) <= 0 ||
-      parsePositiveNumber(item.unitCost) <= 0,
+      (!item.isGift && parsePositiveNumber(item.unitCost) <= 0),
   )
   const purchaseValidationError = !purchaseFormState.supplierId
     ? languageCode === 'en'
@@ -600,26 +636,22 @@ export function RetailInventoryWorkspace() {
           : 'Agrega al menos un producto.'
         : invalidPurchaseItemIndex >= 0
           ? languageCode === 'en'
-            ? `Review product ${invalidPurchaseItemIndex + 1}: select a product and enter a valid quantity and unit cost.`
-            : `Revisa el producto ${invalidPurchaseItemIndex + 1}: selecciona el producto e ingresa una cantidad y un costo unitario válidos.`
+            ? `Review product ${invalidPurchaseItemIndex + 1}: select a product and enter a valid quantity and unit cost, or mark it as a gift.`
+            : `Revisa el producto ${invalidPurchaseItemIndex + 1}: selecciona el producto e ingresa una cantidad y un costo unitario válidos, o márcalo como obsequio.`
           : hasDuplicatePurchaseProducts
             ? languageCode === 'en'
               ? 'Each product must appear only once in the purchase.'
               : 'Hay productos repetidos. Cada producto debe aparecer una sola vez en la compra.'
-            : estimatedPurchaseTotal <= 0
+            : purchaseFormState.status === 'PARTIAL' &&
+                (partialPurchaseAmount <= 0 ||
+                  partialPurchaseAmount >= estimatedPurchaseTotal)
               ? languageCode === 'en'
-                ? 'The purchase total must be greater than zero.'
-                : 'El total de la compra debe ser mayor que cero.'
-              : purchaseFormState.status === 'PARTIAL' &&
-                  (partialPurchaseAmount <= 0 ||
-                    partialPurchaseAmount >= estimatedPurchaseTotal)
+                ? 'The partial payment must be greater than zero and less than the purchase total.'
+                : 'El abono debe ser mayor que cero y menor que el total de la compra.'
+              : hasInvalidPurchaseDueDate
                 ? languageCode === 'en'
-                  ? 'The partial payment must be greater than zero and less than the purchase total.'
-                  : 'El abono debe ser mayor que cero y menor que el total de la compra.'
-                : hasInvalidPurchaseDueDate
-                  ? languageCode === 'en'
-                    ? 'The due date cannot be earlier than the purchase date.'
-                    : 'La fecha de vencimiento no puede ser anterior a la fecha de compra.'
+                  ? 'The due date cannot be earlier than the purchase date.'
+                  : 'La fecha de vencimiento no puede ser anterior a la fecha de compra.'
                 : null
 
   useEffect(() => {
@@ -649,7 +681,10 @@ export function RetailInventoryWorkspace() {
   useEffect(() => {
     setProductDrafts(
       Object.fromEntries(
-        products.map((product) => [product.id, createInlineProductDraft(product)]),
+        products.map((product) => [
+          product.id,
+          createInlineProductDraft(product),
+        ]),
       ),
     )
   }, [products])
@@ -709,12 +744,20 @@ export function RetailInventoryWorkspace() {
         const stockDifference = firstProduct.stock - secondProduct.stock
 
         if (stockDifference !== 0) {
-          return inventorySort === 'STOCK_ASC' ? stockDifference : -stockDifference
+          return inventorySort === 'STOCK_ASC'
+            ? stockDifference
+            : -stockDifference
         }
 
         return firstProduct.name.localeCompare(secondProduct.name)
       })
-  }, [activeCategoryId, activeInventoryFilter, inventorySort, products, searchTerm])
+  }, [
+    activeCategoryId,
+    activeInventoryFilter,
+    inventorySort,
+    products,
+    searchTerm,
+  ])
 
   const filteredCategories = useMemo(() => {
     const normalizedSearchTerm = categorySearchTerm.trim().toLowerCase()
@@ -815,7 +858,38 @@ export function RetailInventoryWorkspace() {
     setQuickSupplierOpen(false)
     setPurchaseDrawerOpen(false)
     setPurchaseFormError(null)
+    setPurchaseInvoiceFile(null)
+    if (purchaseInvoiceInputRef.current) {
+      purchaseInvoiceInputRef.current.value = ''
+    }
     setPurchaseFormState(createDefaultPurchaseFormState())
+  }
+
+  function handlePurchaseInvoiceSelection(file: File | undefined) {
+    if (!file) {
+      return
+    }
+
+    if (!PURCHASE_INVOICE_MIME_TYPES.has(file.type)) {
+      setPurchaseFormError(
+        languageCode === 'en'
+          ? 'The invoice photo must be a JPG, PNG, or WEBP image.'
+          : 'La foto de la factura debe ser una imagen JPG, PNG o WEBP.',
+      )
+      return
+    }
+
+    if (file.size > MAX_PURCHASE_INVOICE_SIZE_BYTES) {
+      setPurchaseFormError(
+        languageCode === 'en'
+          ? 'The invoice photo must be 5 MB or less.'
+          : 'La foto de la factura debe pesar máximo 5 MB.',
+      )
+      return
+    }
+
+    setPurchaseInvoiceFile(file)
+    setPurchaseFormError(null)
   }
 
   function handleCloseAdjustmentDrawer() {
@@ -855,7 +929,9 @@ export function RetailInventoryWorkspace() {
     setCategoryEditorState((currentState) => ({
       ...currentState,
       productIds: currentState.productIds.includes(productId)
-        ? currentState.productIds.filter((currentProductId) => currentProductId !== productId)
+        ? currentState.productIds.filter(
+            (currentProductId) => currentProductId !== productId,
+          )
         : [...currentState.productIds, productId],
     }))
   }
@@ -894,7 +970,8 @@ export function RetailInventoryWorkspace() {
     product: Product,
     field: InlineProductField,
   ) {
-    const currentDraft = productDrafts[product.id] ?? createInlineProductDraft(product)
+    const currentDraft =
+      productDrafts[product.id] ?? createInlineProductDraft(product)
     const parsedValue =
       field === 'stock'
         ? parseEditableStock(currentDraft[field])
@@ -1145,20 +1222,30 @@ export function RetailInventoryWorkspace() {
     const purchaseItems = purchaseFormState.items.map((item) => ({
       productId: item.productId,
       quantity: parsePositiveNumber(item.quantity),
-      unitCost: parsePositiveNumber(item.unitCost),
+      unitCost: item.isGift
+        ? 0
+        : roundMonetaryAmount(parsePositiveNumber(item.unitCost)),
     }))
     const hasInvalidItem = purchaseItems.some(
-      (item) => !item.productId || item.quantity <= 0 || item.unitCost <= 0,
+      (item, index) =>
+        !item.productId ||
+        item.quantity <= 0 ||
+        (!purchaseFormState.items[index]?.isGift && item.unitCost <= 0),
     )
     const hasDuplicateProduct = hasDuplicatePurchaseProducts
-    const amountPaid =
+    const amountPaid = roundMonetaryAmount(
       purchaseFormState.status === 'PAID'
         ? estimatedPurchaseTotal
         : purchaseFormState.status === 'PENDING'
           ? 0
-          : parsePositiveNumber(purchaseFormState.amountPaid)
+          : parsePositiveNumber(purchaseFormState.amountPaid),
+    )
 
-    if (purchaseValidationError || hasInvalidItem || amountPaid > estimatedPurchaseTotal) {
+    if (
+      purchaseValidationError ||
+      hasInvalidItem ||
+      amountPaid > estimatedPurchaseTotal
+    ) {
       setPurchaseFormError(
         purchaseValidationError ??
           (languageCode === 'en'
@@ -1199,14 +1286,13 @@ export function RetailInventoryWorkspace() {
     setPurchaseFormError(null)
 
     try {
-      await registerPurchaseMutation.mutateAsync({
+      const purchase = await registerPurchaseMutation.mutateAsync({
         supplierId: purchaseFormState.supplierId,
         items: purchaseItems,
         reference: normalizeOptionalText(purchaseFormState.reference),
         paymentMethod: purchaseFormState.paymentMethod,
         fundSource: purchaseFormState.fundSource,
-        status:
-          purchaseFormState.status === 'PAID' ? 'PAID' : 'PENDING',
+        status: purchaseFormState.status === 'PAID' ? 'PAID' : 'PENDING',
         amountPaid,
         purchaseDate: toExpenseRequestDate(purchaseFormState.purchaseDate),
         dueDate: purchaseFormState.dueDate
@@ -1215,8 +1301,37 @@ export function RetailInventoryWorkspace() {
         reason: normalizeOptionalText(purchaseFormState.reason),
       })
 
+      if (purchaseInvoiceFile) {
+        try {
+          await uploadPurchaseInvoiceMutation.mutateAsync({
+            supplierId: purchase.supplierId,
+            purchaseId: purchase.id,
+            file: purchaseInvoiceFile,
+          })
+        } catch (error) {
+          const uploadError = getErrorMessage(
+            error,
+            languageCode === 'en'
+              ? 'The server rejected the image.'
+              : 'El servidor rechazó la imagen.',
+          )
+          setPurchaseDrawerOpen(false)
+          setPurchaseFormState(createDefaultPurchaseFormState())
+          setPurchaseInvoiceFile(null)
+          setFeedbackMessage({
+            tone: 'error',
+            text:
+              languageCode === 'en'
+                ? `The purchase was registered, but the invoice photo could not be attached. Do not register the purchase again. Detail: ${uploadError}`
+                : `La compra quedó registrada, pero no fue posible adjuntar la foto de la factura. No vuelvas a registrar la compra. Detalle: ${uploadError}`,
+          })
+          return
+        }
+      }
+
       setPurchaseDrawerOpen(false)
       setPurchaseFormError(null)
+      setPurchaseInvoiceFile(null)
       setPurchaseFormState(createDefaultPurchaseFormState())
       setFeedbackMessage({
         tone: 'success',
@@ -1301,7 +1416,10 @@ export function RetailInventoryWorkspace() {
     } catch (error) {
       setFeedbackMessage({
         tone: 'error',
-        text: getErrorMessage(error, 'No fue posible actualizar los impuestos.'),
+        text: getErrorMessage(
+          error,
+          'No fue posible actualizar los impuestos.',
+        ),
       })
     }
   }
@@ -1429,7 +1547,6 @@ export function RetailInventoryWorkspace() {
         </>
       }
     >
-
       {feedbackMessage ? (
         <div
           aria-live={feedbackMessage.tone === 'error' ? 'assertive' : 'polite'}
@@ -1500,7 +1617,9 @@ export function RetailInventoryWorkspace() {
       <section className={styles.summaryGrid}>
         <article className={styles.summaryCard}>
           <div className={styles.summaryCardHeader}>
-            <span className={styles.summaryIcon}><BoxIcon /></span>
+            <span className={styles.summaryIcon}>
+              <BoxIcon />
+            </span>
             <span>{copy.totalReferences}</span>
           </div>
           <strong>{products.length.toLocaleString()}</strong>
@@ -1509,7 +1628,9 @@ export function RetailInventoryWorkspace() {
 
         <article className={styles.summaryCard}>
           <div className={styles.summaryCardHeader}>
-            <span className={`${styles.summaryIcon} ${styles.summaryIconGreen}`}>
+            <span
+              className={`${styles.summaryIcon} ${styles.summaryIconGreen}`}
+            >
               <span>$</span>
             </span>
             <span>{copy.totalInventoryCost}</span>
@@ -1568,7 +1689,9 @@ export function RetailInventoryWorkspace() {
                 className={styles.compactSelect}
                 value={activeInventoryFilter}
                 onChange={(event) =>
-                  setActiveInventoryFilter(event.target.value as InventoryFilter)
+                  setActiveInventoryFilter(
+                    event.target.value as InventoryFilter,
+                  )
                 }
               >
                 <option value="ALL">{copy.allProducts}</option>
@@ -1582,7 +1705,9 @@ export function RetailInventoryWorkspace() {
                 aria-label={copy.stockOrder}
                 className={styles.compactSelect}
                 value={inventorySort}
-                onChange={(event) => setInventorySort(event.target.value as InventorySort)}
+                onChange={(event) =>
+                  setInventorySort(event.target.value as InventorySort)
+                }
               >
                 <option value="STOCK_ASC">{copy.stockAscending}</option>
                 <option value="STOCK_DESC">{copy.stockDescending}</option>
@@ -1655,7 +1780,9 @@ export function RetailInventoryWorkspace() {
               {visibleProducts.map((product) => {
                 const productDraft =
                   productDrafts[product.id] ?? createInlineProductDraft(product)
-                const productImageUrl = resolveProductImageUrl(product.imageUrls)
+                const productImageUrl = resolveProductImageUrl(
+                  product.imageUrls,
+                )
                 const gain = product.price - product.cost
                 const margin =
                   product.price > 0
@@ -1700,7 +1827,9 @@ export function RetailInventoryWorkspace() {
                         <input
                           aria-label={`Precio de ${product.name}`}
                           className={styles.inlineEditInput}
-                          disabled={savingProductField === `${product.id}:price`}
+                          disabled={
+                            savingProductField === `${product.id}:price`
+                          }
                           inputMode="decimal"
                           type="text"
                           value={productDraft.price}
@@ -1763,7 +1892,9 @@ export function RetailInventoryWorkspace() {
                         <input
                           aria-label={`Cantidad disponible de ${product.name}`}
                           className={styles.inlineEditInput}
-                          disabled={savingProductField === `${product.id}:stock`}
+                          disabled={
+                            savingProductField === `${product.id}:stock`
+                          }
                           inputMode="numeric"
                           min="0"
                           step="1"
@@ -1832,7 +1963,10 @@ export function RetailInventoryWorkspace() {
                 </div>
               </>
             ) : (
-              <RetailEmptyState description={copy.noResults} title={copy.title} />
+              <RetailEmptyState
+                description={copy.noResults}
+                title={copy.title}
+              />
             )}
           </div>
         ) : null}
@@ -1910,7 +2044,9 @@ export function RetailInventoryWorkspace() {
                   placeholder={copy.searchProduct}
                   type="search"
                   value={assignedProductSearchTerm}
-                  onChange={(event) => setAssignedProductSearchTerm(event.target.value)}
+                  onChange={(event) =>
+                    setAssignedProductSearchTerm(event.target.value)
+                  }
                 />
               </label>
 
@@ -1918,7 +2054,9 @@ export function RetailInventoryWorkspace() {
                 {categoryEditorProducts.map((product) => (
                   <label className={styles.selectionRow} key={product.id}>
                     <input
-                      checked={categoryEditorState.productIds.includes(product.id)}
+                      checked={categoryEditorState.productIds.includes(
+                        product.id,
+                      )}
                       type="checkbox"
                       onChange={() => handleToggleCategoryProduct(product.id)}
                     />
@@ -1951,7 +2089,9 @@ export function RetailInventoryWorkspace() {
                   placeholder={copy.searchCategory}
                   type="search"
                   value={categorySearchTerm}
-                  onChange={(event) => setCategorySearchTerm(event.target.value)}
+                  onChange={(event) =>
+                    setCategorySearchTerm(event.target.value)
+                  }
                 />
               </label>
 
@@ -1964,7 +2104,9 @@ export function RetailInventoryWorkspace() {
                     onClick={() => handleOpenEditCategory(category)}
                   >
                     <div className={styles.categoryCardCopy}>
-                      <span className={styles.categoryCardTitle}>{category.name}</span>
+                      <span className={styles.categoryCardTitle}>
+                        {category.name}
+                      </span>
                       <span className={styles.categoryCardMeta}>
                         <span
                           className={
@@ -2006,7 +2148,9 @@ export function RetailInventoryWorkspace() {
         </p>
 
         <label className={styles.fieldGroup}>
-          <span className={styles.fieldLabel}>{copy.shareCatalogPhoneLabel}</span>
+          <span className={styles.fieldLabel}>
+            {copy.shareCatalogPhoneLabel}
+          </span>
           <div className={styles.phoneInputWrap}>
             <span className={styles.phonePrefix}>CO</span>
             <input
@@ -2099,14 +2243,18 @@ export function RetailInventoryWorkspace() {
 
             <div className={styles.separator} />
 
-            <span className={styles.sectionEyebrow}>{copy.taxConfiguration}</span>
+            <span className={styles.sectionEyebrow}>
+              {copy.taxConfiguration}
+            </span>
 
             <label className={styles.fieldGroup}>
               <span className={styles.fieldLabel}>{copy.taxBase}</span>
               <button
                 className={styles.selectionTrigger}
                 type="button"
-                onClick={() => setTaxOptionsOpen((currentValue) => !currentValue)}
+                onClick={() =>
+                  setTaxOptionsOpen((currentValue) => !currentValue)
+                }
               >
                 <span>{activeTaxOption?.label ?? copy.selectOption}</span>
                 <ChevronRightIcon />
@@ -2191,14 +2339,18 @@ export function RetailInventoryWorkspace() {
                   placeholder={copy.searchProduct}
                   type="search"
                   value={taxProductSearchTerm}
-                  onChange={(event) => setTaxProductSearchTerm(event.target.value)}
+                  onChange={(event) =>
+                    setTaxProductSearchTerm(event.target.value)
+                  }
                 />
               </label>
 
               <div className={styles.chipsRow}>
                 <button
                   className={
-                    taxPickerCategoryId === null ? styles.chipActive : styles.chip
+                    taxPickerCategoryId === null
+                      ? styles.chipActive
+                      : styles.chip
                   }
                   type="button"
                   onClick={() => setTaxPickerCategoryId(null)}
@@ -2243,7 +2395,9 @@ export function RetailInventoryWorkspace() {
                           onChange={() =>
                             setTaxFormState((currentState) => ({
                               ...currentState,
-                              productIds: currentState.productIds.includes(product.id)
+                              productIds: currentState.productIds.includes(
+                                product.id,
+                              )
                                 ? currentState.productIds.filter(
                                     (currentProductId) =>
                                       currentProductId !== product.id,
@@ -2419,7 +2573,10 @@ export function RetailInventoryWorkspace() {
             <DrawerActionFooter>
               <button
                 className={retailStyles.buttonOutline}
-                disabled={registerPurchaseMutation.isPending}
+                disabled={
+                  registerPurchaseMutation.isPending ||
+                  uploadPurchaseInvoiceMutation.isPending
+                }
                 type="button"
                 onClick={handleClosePurchaseDrawer}
               >
@@ -2427,25 +2584,38 @@ export function RetailInventoryWorkspace() {
               </button>
               <button
                 className={retailStyles.buttonDark}
-                disabled={registerPurchaseMutation.isPending}
+                disabled={
+                  registerPurchaseMutation.isPending ||
+                  uploadPurchaseInvoiceMutation.isPending
+                }
                 type="button"
                 onClick={() => {
                   void handleRegisterPurchase()
                 }}
               >
-                {registerPurchaseMutation.isPending
-                  ? copy.registering
+                {registerPurchaseMutation.isPending ||
+                uploadPurchaseInvoiceMutation.isPending
+                  ? uploadPurchaseInvoiceMutation.isPending
+                    ? languageCode === 'en'
+                      ? 'Uploading invoice...'
+                      : 'Subiendo factura...'
+                    : copy.registering
                   : copy.purchaseSubmit}
               </button>
             </DrawerActionFooter>
           }
-          isBusy={registerPurchaseMutation.isPending}
+          isBusy={
+            registerPurchaseMutation.isPending ||
+            uploadPurchaseInvoiceMutation.isPending
+          }
           title={copy.purchaseTitle}
           onClose={handleClosePurchaseDrawer}
         >
           <div className={styles.drawerStack}>
             <label className={styles.fieldGroup}>
-              <span className={styles.fieldLabel}>{copy.purchaseSupplier} *</span>
+              <span className={styles.fieldLabel}>
+                {copy.purchaseSupplier} *
+              </span>
               <div className={styles.supplierPickerRow}>
                 <SearchableSelect
                   id="purchase-supplier"
@@ -2521,8 +2691,12 @@ export function RetailInventoryWorkspace() {
             <div className={styles.purchaseItemsSection}>
               <div className={styles.purchaseItemsHeader}>
                 <div>
-                  <span className={styles.fieldLabel}>{copy.purchaseProducts} *</span>
-                  <small className={styles.fieldHint}>{copy.purchaseProductHint}</small>
+                  <span className={styles.fieldLabel}>
+                    {copy.purchaseProducts} *
+                  </span>
+                  <small className={styles.fieldHint}>
+                    {copy.purchaseProductHint}
+                  </small>
                 </div>
                 <button
                   className={styles.addPurchaseItemButton}
@@ -2546,7 +2720,7 @@ export function RetailInventoryWorkspace() {
                   Boolean(purchaseFormError) &&
                   (!item.productId ||
                     parsePositiveNumber(item.quantity) <= 0 ||
-                    parsePositiveNumber(item.unitCost) <= 0)
+                    (!item.isGift && parsePositiveNumber(item.unitCost) <= 0))
 
                 return (
                   <article
@@ -2558,114 +2732,181 @@ export function RetailInventoryWorkspace() {
                     id={`purchase-line-${item.id}`}
                     key={item.id}
                   >
-                  <div className={styles.purchaseItemTitleRow}>
-                    <strong>{copy.purchaseLine.replace('{number}', String(index + 1))}</strong>
-                    {purchaseFormState.items.length > 1 ? (
-                      <button
-                        className={styles.removePurchaseItemButton}
-                        type="button"
-                        onClick={() =>
+                    <div className={styles.purchaseItemTitleRow}>
+                      <strong>
+                        {copy.purchaseLine.replace(
+                          '{number}',
+                          String(index + 1),
+                        )}
+                      </strong>
+                      {purchaseFormState.items.length > 1 ? (
+                        <button
+                          className={styles.removePurchaseItemButton}
+                          type="button"
+                          onClick={() =>
+                            setPurchaseFormState((currentState) => ({
+                              ...currentState,
+                              items: currentState.items.filter(
+                                (currentItem) => currentItem.id !== item.id,
+                              ),
+                            }))
+                          }
+                        >
+                          {copy.remove}
+                        </button>
+                      ) : null}
+                    </div>
+
+                    <label className={styles.fieldGroup}>
+                      <span className={styles.fieldLabel}>
+                        {copy.purchaseProduct}
+                      </span>
+                      <SearchableSelect
+                        className={styles.selectInput}
+                        value={item.productId}
+                        onChange={(event) =>
                           setPurchaseFormState((currentState) => ({
                             ...currentState,
-                            items: currentState.items.filter(
-                              (currentItem) => currentItem.id !== item.id,
+                            items: currentState.items.map((currentItem) =>
+                              currentItem.id === item.id
+                                ? {
+                                    ...currentItem,
+                                    productId: event.target.value,
+                                  }
+                                : currentItem,
                             ),
                           }))
                         }
                       >
-                        {copy.remove}
-                      </button>
+                        <option value="">{copy.selectOption}</option>
+                        {products.map((product) => (
+                          <option key={product.id} value={product.id}>
+                            {product.name}
+                          </option>
+                        ))}
+                      </SearchableSelect>
+                    </label>
+
+                    <label className={styles.purchaseGiftToggle}>
+                      <input
+                        checked={item.isGift}
+                        type="checkbox"
+                        onChange={(event) =>
+                          setPurchaseFormState((currentState) => ({
+                            ...currentState,
+                            items: currentState.items.map((currentItem) =>
+                              currentItem.id === item.id
+                                ? {
+                                    ...currentItem,
+                                    isGift: event.target.checked,
+                                    unitCost: event.target.checked ? '0' : '',
+                                  }
+                                : currentItem,
+                            ),
+                          }))
+                        }
+                      />
+                      <span>
+                        <strong>
+                          {languageCode === 'en'
+                            ? 'Gift from supplier'
+                            : 'Producto obsequiado por el proveedor'}
+                        </strong>
+                        <small>
+                          {languageCode === 'en'
+                            ? 'Adds stock without increasing the purchase total.'
+                            : 'Suma existencias sin aumentar el total de la compra.'}
+                        </small>
+                      </span>
+                    </label>
+
+                    <div className={styles.purchaseFieldsRow}>
+                      <label className={styles.fieldGroup}>
+                        <span className={styles.fieldLabel}>
+                          {copy.purchaseQuantity}
+                        </span>
+                        <input
+                          className={styles.textInput}
+                          inputMode="numeric"
+                          min="1"
+                          step="1"
+                          type="number"
+                          value={item.quantity}
+                          onChange={(event) =>
+                            setPurchaseFormState((currentState) => ({
+                              ...currentState,
+                              items: currentState.items.map((currentItem) =>
+                                currentItem.id === item.id
+                                  ? {
+                                      ...currentItem,
+                                      quantity: event.target.value,
+                                    }
+                                  : currentItem,
+                              ),
+                            }))
+                          }
+                        />
+                      </label>
+
+                      <label className={styles.fieldGroup}>
+                        <span className={styles.fieldLabel}>
+                          {copy.purchaseUnitCost}
+                        </span>
+                        <input
+                          className={`${styles.textInput} ${
+                            item.isGift ? styles.purchaseGiftCostInput : ''
+                          }`}
+                          disabled={item.isGift}
+                          inputMode="decimal"
+                          min="0.01"
+                          placeholder="$ 0.00"
+                          step="0.01"
+                          type="number"
+                          value={item.unitCost}
+                          onChange={(event) =>
+                            setPurchaseFormState((currentState) => ({
+                              ...currentState,
+                              items: currentState.items.map((currentItem) =>
+                                currentItem.id === item.id
+                                  ? {
+                                      ...currentItem,
+                                      unitCost: event.target.value,
+                                    }
+                                  : currentItem,
+                              ),
+                            }))
+                          }
+                        />
+                      </label>
+                    </div>
+                    <span className={styles.purchaseLineSubtotal}>
+                      {item.isGift ? (
+                        <span className={styles.purchaseGiftBadge}>
+                          {languageCode === 'en'
+                            ? 'Gift · $0'
+                            : 'Obsequio · $0'}
+                        </span>
+                      ) : (
+                        <>
+                          {copy.purchaseSubtotal}:{' '}
+                          {formatCurrency(
+                            parsePositiveNumber(item.quantity) *
+                              parsePositiveNumber(item.unitCost),
+                          )}
+                        </>
+                      )}
+                    </span>
+                    {isDuplicate || isInvalid ? (
+                      <small className={styles.purchaseItemError} role="alert">
+                        {isDuplicate
+                          ? languageCode === 'en'
+                            ? 'This product is repeated. Remove it or select a different one.'
+                            : 'Este producto está repetido. Quítalo o selecciona uno diferente.'
+                          : languageCode === 'en'
+                            ? 'Select a product and enter a valid quantity and unit cost, or mark it as a gift.'
+                            : 'Selecciona el producto e ingresa una cantidad y un costo unitario válidos, o márcalo como obsequio.'}
+                      </small>
                     ) : null}
-                  </div>
-
-                  <label className={styles.fieldGroup}>
-                    <span className={styles.fieldLabel}>{copy.purchaseProduct}</span>
-                    <SearchableSelect
-                      className={styles.selectInput}
-                      value={item.productId}
-                      onChange={(event) =>
-                        setPurchaseFormState((currentState) => ({
-                          ...currentState,
-                          items: currentState.items.map((currentItem) =>
-                            currentItem.id === item.id
-                              ? { ...currentItem, productId: event.target.value }
-                              : currentItem,
-                          ),
-                        }))
-                      }
-                    >
-                      <option value="">{copy.selectOption}</option>
-                      {products.map((product) => (
-                        <option key={product.id} value={product.id}>
-                          {product.name}
-                        </option>
-                      ))}
-                    </SearchableSelect>
-                  </label>
-
-                  <div className={styles.purchaseFieldsRow}>
-                    <label className={styles.fieldGroup}>
-                      <span className={styles.fieldLabel}>{copy.purchaseQuantity}</span>
-                      <input
-                        className={styles.textInput}
-                        inputMode="numeric"
-                        min="1"
-                        step="1"
-                        type="number"
-                        value={item.quantity}
-                        onChange={(event) =>
-                          setPurchaseFormState((currentState) => ({
-                            ...currentState,
-                            items: currentState.items.map((currentItem) =>
-                              currentItem.id === item.id
-                                ? { ...currentItem, quantity: event.target.value }
-                                : currentItem,
-                            ),
-                          }))
-                        }
-                      />
-                    </label>
-
-                    <label className={styles.fieldGroup}>
-                      <span className={styles.fieldLabel}>{copy.purchaseUnitCost}</span>
-                      <input
-                        className={styles.textInput}
-                        inputMode="decimal"
-                        min="0.01"
-                        placeholder="$ 0.00"
-                        step="0.01"
-                        type="number"
-                        value={item.unitCost}
-                        onChange={(event) =>
-                          setPurchaseFormState((currentState) => ({
-                            ...currentState,
-                            items: currentState.items.map((currentItem) =>
-                              currentItem.id === item.id
-                                ? { ...currentItem, unitCost: event.target.value }
-                                : currentItem,
-                            ),
-                          }))
-                        }
-                      />
-                    </label>
-                  </div>
-                  <span className={styles.purchaseLineSubtotal}>
-                    {copy.purchaseSubtotal}: {formatCurrency(
-                      parsePositiveNumber(item.quantity) *
-                        parsePositiveNumber(item.unitCost),
-                    )}
-                  </span>
-                  {isDuplicate || isInvalid ? (
-                    <small className={styles.purchaseItemError} role="alert">
-                      {isDuplicate
-                        ? languageCode === 'en'
-                          ? 'This product is repeated. Remove it or select a different one.'
-                          : 'Este producto está repetido. Quítalo o selecciona uno diferente.'
-                        : languageCode === 'en'
-                          ? 'Select a product and enter a valid quantity and unit cost.'
-                          : 'Selecciona el producto e ingresa una cantidad y un costo unitario válidos.'}
-                    </small>
-                  ) : null}
                   </article>
                 )
               })}
@@ -2689,7 +2930,9 @@ export function RetailInventoryWorkspace() {
               </label>
 
               <label className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>{copy.purchaseReference}</span>
+                <span className={styles.fieldLabel}>
+                  {copy.purchaseReference}
+                </span>
                 <input
                   className={styles.textInput}
                   maxLength={120}
@@ -2707,7 +2950,9 @@ export function RetailInventoryWorkspace() {
 
             <div className={styles.purchaseFieldsRow}>
               <label className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>{copy.purchasePaymentMethod}</span>
+                <span className={styles.fieldLabel}>
+                  {copy.purchasePaymentMethod}
+                </span>
                 <SearchableSelect
                   className={styles.selectInput}
                   value={purchaseFormState.paymentMethod}
@@ -2718,13 +2963,29 @@ export function RetailInventoryWorkspace() {
                     }))
                   }
                 >
-                  <option value="CASH">{languageCode === 'en' ? 'Cash' : 'Efectivo'}</option>
-                  <option value="CARD">{languageCode === 'en' ? 'Card' : 'Tarjeta'}</option>
-                  <option value="TRANSFER">{languageCode === 'en' ? 'Bank transfer' : 'Transferencia bancaria'}</option>
+                  <option value="CASH">
+                    {languageCode === 'en' ? 'Cash' : 'Efectivo'}
+                  </option>
+                  <option value="CARD">
+                    {languageCode === 'en' ? 'Card' : 'Tarjeta'}
+                  </option>
+                  <option value="TRANSFER">
+                    {languageCode === 'en'
+                      ? 'Bank transfer'
+                      : 'Transferencia bancaria'}
+                  </option>
                   <option value="DIGITAL_WALLET">Nequi / Daviplata</option>
-                  <option value="BANK_DEPOSIT">{languageCode === 'en' ? 'Bank deposit' : 'Consignación bancaria'}</option>
-                  <option value="CREDIT">{languageCode === 'en' ? 'Credit' : 'Crédito'}</option>
-                  <option value="OTHER">{languageCode === 'en' ? 'Other' : 'Otro'}</option>
+                  <option value="BANK_DEPOSIT">
+                    {languageCode === 'en'
+                      ? 'Bank deposit'
+                      : 'Consignación bancaria'}
+                  </option>
+                  <option value="CREDIT">
+                    {languageCode === 'en' ? 'Credit' : 'Crédito'}
+                  </option>
+                  <option value="OTHER">
+                    {languageCode === 'en' ? 'Other' : 'Otro'}
+                  </option>
                 </SearchableSelect>
               </label>
 
@@ -2749,7 +3010,9 @@ export function RetailInventoryWorkspace() {
 
             {purchaseFormState.status !== 'PENDING' ? (
               <label className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>¿De dónde sale el dinero?</span>
+                <span className={styles.fieldLabel}>
+                  ¿De dónde sale el dinero?
+                </span>
                 <SearchableSelect
                   className={styles.selectInput}
                   value={purchaseFormState.fundSource}
@@ -2771,7 +3034,9 @@ export function RetailInventoryWorkspace() {
 
             {purchaseFormState.status === 'PARTIAL' ? (
               <label className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>{copy.purchaseAmountPaid} *</span>
+                <span className={styles.fieldLabel}>
+                  {copy.purchaseAmountPaid} *
+                </span>
                 <input
                   className={styles.textInput}
                   inputMode="decimal"
@@ -2792,7 +3057,9 @@ export function RetailInventoryWorkspace() {
 
             {purchaseFormState.status !== 'PAID' ? (
               <label className={styles.fieldGroup}>
-                <span className={styles.fieldLabel}>{copy.purchaseDueDate}</span>
+                <span className={styles.fieldLabel}>
+                  {copy.purchaseDueDate}
+                </span>
                 <input
                   className={styles.textInput}
                   min={purchaseFormState.purchaseDate}
@@ -2812,34 +3079,129 @@ export function RetailInventoryWorkspace() {
               <div className={styles.purchaseBalanceWarning} role="alert">
                 <strong>Saldo insuficiente en este medio de pago</strong>
                 <span>
-                  {purchaseFormState.fundSource === 'RESERVE' ? 'Reserva' : 'Caja del turno'} disponible: {formatCurrency(purchaseMethodBalance)} · Pago: {formatCurrency(purchasePaymentAmount)}.
-                  Si continúas, quedará en {formatCurrency(-purchaseBalanceShortfall)}.
+                  {purchaseFormState.fundSource === 'RESERVE'
+                    ? 'Reserva'
+                    : 'Caja del turno'}{' '}
+                  disponible: {formatCurrency(purchaseMethodBalance)} · Pago:{' '}
+                  {formatCurrency(purchasePaymentAmount)}. Si continúas, quedará
+                  en {formatCurrency(-purchaseBalanceShortfall)}.
                 </span>
                 <small>
-                  Revisa la apertura de caja, registra una transferencia entre medios o cambia el método de pago.
+                  Revisa la apertura de caja, registra una transferencia entre
+                  medios o cambia el método de pago.
                 </small>
               </div>
             ) : null}
 
             <div className={styles.purchaseTotalCard}>
-              <div><span>{copy.estimatedTotal}</span><strong>{formatCurrency(estimatedPurchaseTotal)}</strong></div>
-              <div><span>{copy.purchaseBalance}</span><strong>{formatCurrency(
-                Math.max(
-                  estimatedPurchaseTotal -
-                    (purchaseFormState.status === 'PAID'
-                      ? estimatedPurchaseTotal
-                      : purchaseFormState.status === 'PARTIAL'
-                        ? parsePositiveNumber(purchaseFormState.amountPaid)
-                        : 0),
-                  0,
-                ),
-              )}</strong></div>
+              <div>
+                <span>{copy.estimatedTotal}</span>
+                <strong>{formatCurrency(estimatedPurchaseTotal)}</strong>
+              </div>
+              <div>
+                <span>{copy.purchaseBalance}</span>
+                <strong>
+                  {formatCurrency(
+                    Math.max(
+                      estimatedPurchaseTotal -
+                        (purchaseFormState.status === 'PAID'
+                          ? estimatedPurchaseTotal
+                          : purchaseFormState.status === 'PARTIAL'
+                            ? parsePositiveNumber(purchaseFormState.amountPaid)
+                            : 0),
+                      0,
+                    ),
+                  )}
+                </strong>
+              </div>
+            </div>
+
+            <div className={styles.invoiceUploadSection}>
+              <div className={styles.invoiceUploadHeading}>
+                <div>
+                  <span className={styles.fieldLabel}>
+                    {languageCode === 'en'
+                      ? 'Invoice photo (optional)'
+                      : 'Foto de la factura (opcional)'}
+                  </span>
+                  <small>
+                    {languageCode === 'en'
+                      ? 'JPG, PNG, or WEBP · maximum 5 MB'
+                      : 'JPG, PNG o WEBP · máximo 5 MB'}
+                  </small>
+                </div>
+                {purchaseInvoiceFile ? (
+                  <button
+                    className={styles.invoiceRemoveButton}
+                    type="button"
+                    onClick={() => {
+                      setPurchaseInvoiceFile(null)
+                      if (purchaseInvoiceInputRef.current) {
+                        purchaseInvoiceInputRef.current.value = ''
+                      }
+                    }}
+                  >
+                    {languageCode === 'en' ? 'Remove' : 'Quitar'}
+                  </button>
+                ) : null}
+              </div>
+
+              <input
+                ref={purchaseInvoiceInputRef}
+                className={styles.visuallyHiddenFileInput}
+                accept="image/jpeg,image/png,image/webp"
+                capture="environment"
+                type="file"
+                onChange={(event) =>
+                  handlePurchaseInvoiceSelection(event.target.files?.[0])
+                }
+              />
+
+              <button
+                className={styles.invoiceUploadButton}
+                type="button"
+                onClick={() => purchaseInvoiceInputRef.current?.click()}
+              >
+                {purchaseInvoicePreviewUrl ? (
+                  <img
+                    src={purchaseInvoicePreviewUrl}
+                    alt={
+                      languageCode === 'en'
+                        ? 'Selected invoice preview'
+                        : 'Vista previa de la factura seleccionada'
+                    }
+                  />
+                ) : (
+                  <span className={styles.invoiceUploadIcon} aria-hidden="true">
+                    +
+                  </span>
+                )}
+                <span>
+                  <strong>
+                    {purchaseInvoiceFile
+                      ? languageCode === 'en'
+                        ? 'Change invoice photo'
+                        : 'Cambiar foto de la factura'
+                      : languageCode === 'en'
+                        ? 'Take or select a photo'
+                        : 'Tomar o seleccionar una foto'}
+                  </strong>
+                  <small>
+                    {purchaseInvoiceFile?.name ??
+                      (languageCode === 'en'
+                        ? 'The photo will be saved with this purchase.'
+                        : 'La foto quedará guardada con esta compra.')}
+                  </small>
+                </span>
+              </button>
             </div>
 
             <div className={styles.separator} />
 
             <label className={styles.fieldGroup}>
-              <span className={styles.fieldLabel}>{copy.purchaseReasonSupplier}</span>
+              <span className={styles.fieldLabel}>
+                {copy.purchaseReasonSupplier}
+              </span>
               <textarea
                 className={styles.textareaInput}
                 placeholder={copy.purchaseReasonPlaceholder}

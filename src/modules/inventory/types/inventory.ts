@@ -104,6 +104,7 @@ export type InventoryPurchaseResult = {
   paidAmount: number | string;
   balance: number | string;
   status: ExpenseStatus;
+  invoiceImageUrl?: string | null;
 };
 
 export type InventoryExportFilters = {

@@ -7,6 +7,7 @@ import {
   formatCashRegisterDateTime,
 } from "@/modules/cash-register/utils/format-cash-register";
 import { joinClassNames } from "@/shared/utils/join-class-names";
+import { formatSystemGeneratedText } from "@/shared/utils/format-system-generated-text";
 import { SurfaceCard } from "@/shared/components/ui/SurfaceCard";
 import styles from "./CashRegisterTransactionsList.module.css";
 
@@ -101,7 +102,9 @@ export function CashRegisterTransactionsList({
                   </span>
                 </div>
 
-                <p className={styles.entryReason}>{entry.reason}</p>
+                <p className={styles.entryReason}>
+                  {formatSystemGeneratedText(entry.reason)}
+                </p>
               </div>
 
               <strong

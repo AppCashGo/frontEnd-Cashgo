@@ -2,6 +2,7 @@ import type { InventoryMovement } from '@/modules/inventory/types/inventory'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { formatDateTime } from '@/shared/utils/format-date-time'
 import { joinClassNames } from '@/shared/utils/join-class-names'
+import { formatSystemGeneratedText } from '@/shared/utils/format-system-generated-text'
 import styles from './InventoryMovementsTable.module.css'
 
 type InventoryMovementsTableProps = {
@@ -105,7 +106,12 @@ export function InventoryMovementsTable({
 
                 <div className={styles.mobileMeta}>
                   <span>Quantity: {movement.quantity.toString()}</span>
-                  <span>Reason: {movement.reason ?? 'No reason provided'}</span>
+                  <span>
+                    Motivo:{' '}
+                    {movement.reason
+                      ? formatSystemGeneratedText(movement.reason)
+                      : 'Sin motivo registrado'}
+                  </span>
                 </div>
               </article>
             ))}
@@ -138,7 +144,11 @@ export function InventoryMovementsTable({
                       </span>
                     </td>
                     <td>{movement.quantity.toString()}</td>
-                    <td>{movement.reason ?? 'No reason provided'}</td>
+                    <td>
+                      {movement.reason
+                        ? formatSystemGeneratedText(movement.reason)
+                        : 'Sin motivo registrado'}
+                    </td>
                   </tr>
                 ))}
               </tbody>

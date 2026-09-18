@@ -8,6 +8,7 @@ import type {
   SaleReceipt,
 } from '@/modules/sales/types/sale'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { SaleQuantityInput } from '@/modules/sales/components/SaleQuantityInput'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import styles from './SaleCartPanel.module.css'
@@ -39,6 +40,7 @@ type SaleCartPanelProps = {
   dueDate: string
   onIncreaseQuantity: (productId: string) => void
   onDecreaseQuantity: (productId: string) => void
+  onQuantityChange: (productId: string, quantity: number) => void
   onRemoveProduct: (productId: string) => void
   onClearCart: () => void
   onFinalizeSale: () => void
@@ -88,6 +90,7 @@ export function SaleCartPanel({
   dueDate,
   onIncreaseQuantity,
   onDecreaseQuantity,
+  onQuantityChange,
   onRemoveProduct,
   onClearCart,
   onFinalizeSale,
@@ -204,7 +207,15 @@ export function SaleCartPanel({
                       >
                         -
                       </button>
-                      <span className={styles.quantityValue}>{item.quantity}</span>
+                      <SaleQuantityInput
+                        className={styles.quantityInput}
+                        max={item.product.stock}
+                        productName={item.product.name}
+                        quantity={item.quantity}
+                        onQuantityChange={(quantity) =>
+                          onQuantityChange(item.product.id, quantity)
+                        }
+                      />
                       <button
                         className={styles.quantityButton}
                         disabled={!canIncreaseQuantity}

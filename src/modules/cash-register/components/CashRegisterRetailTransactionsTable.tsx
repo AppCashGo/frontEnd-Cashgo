@@ -6,6 +6,7 @@ import {
   getPaymentMethodLabel,
 } from "@/modules/cash-register/utils/format-cash-register";
 import { joinClassNames } from "@/shared/utils/join-class-names";
+import { formatSystemGeneratedText } from "@/shared/utils/format-system-generated-text";
 import styles from "./CashRegisterRetailTransactionsTable.module.css";
 
 type CashRegisterRetailTransactionsTableProps = {
@@ -222,7 +223,7 @@ export function CashRegisterRetailTransactionsTable({
                 <td>
                   <div className={styles.conceptCell}>
                     <strong className={styles.conceptTitle}>
-                      {transaction.concept}
+                      {formatSystemGeneratedText(transaction.concept)}
                     </strong>
                     {transaction.details ? (
                       <span className={styles.conceptDetails}>

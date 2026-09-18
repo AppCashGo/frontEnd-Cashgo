@@ -135,6 +135,35 @@ export function useSaleCart(
     )
   }
 
+  function setProductQuantity(productId: string, quantity: number) {
+    clearCheckoutFeedback()
+
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      return
+    }
+
+    setCartEntries((currentEntries) =>
+      currentEntries.map((entry) => {
+        if (entry.productId !== productId) {
+          return entry
+        }
+
+        const product = productsById.get(productId)
+
+        if (!product) {
+          return entry
+        }
+
+        return {
+          ...entry,
+          quantity: allowSaleWithoutStock
+            ? quantity
+            : Math.min(quantity, product.stock),
+        }
+      }),
+    )
+  }
+
   function removeProduct(productId: string) {
     clearCheckoutFeedback()
 
@@ -174,5 +203,6 @@ export function useSaleCart(
     increaseProductQuantity,
     markCheckoutError,
     removeProduct,
+    setProductQuantity,
   }
 }

@@ -20,6 +20,7 @@ import {
   deleteJson,
   getBlob,
   getJson,
+  patchFormData,
   patchJson,
   postJson,
 } from "@/shared/services/api-client";
@@ -240,6 +241,21 @@ export async function registerInventoryPurchase(input: InventoryPurchaseInput) {
     id: String(purchase.id),
     supplierId: String(purchase.supplierId),
   };
+}
+
+export async function uploadInventoryPurchaseInvoice(input: {
+  supplierId: string;
+  purchaseId: string;
+  file: File;
+}) {
+  const formData = new FormData();
+  formData.append("file", input.file);
+
+  return patchFormData(
+    `/suppliers/${input.supplierId}/purchases/${input.purchaseId}/invoice-image`,
+    formData,
+    { accessToken: getAuthAccessToken() },
+  );
 }
 
 export async function exportInventoryReport(filters: InventoryExportFilters) {

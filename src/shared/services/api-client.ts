@@ -5,6 +5,7 @@ import {
   getAuthBusinessId,
   notifyAuthSessionExpired,
 } from "@/shared/services/auth-session";
+import { notifyApiWriteError } from "@/shared/services/api-write-error-notifications";
 
 export class ApiError extends Error {
   status: number;
@@ -280,7 +281,7 @@ function getApiErrorKindFromStatus(
 }
 
 function getApiErrorUserMessage(kind: ApiErrorKind, rawMessage?: string | null) {
-  const normalizedMessage = rawMessage?.trim();
+  const normalizedMessage = translateValidationMessage(rawMessage?.trim());
 
   if (kind === "validation" && normalizedMessage) {
     return normalizedMessage;
@@ -310,6 +311,39 @@ function getApiErrorUserMessage(kind: ApiErrorKind, rawMessage?: string | null) 
     default:
       return normalizedMessage || "No pudimos completar la acción. Intenta nuevamente.";
   }
+}
+
+const validationFieldLabels: Record<string, string> = {
+  amount: "El valor",
+  amountPaid: "El valor pagado",
+  balance: "El saldo",
+  closingAmount: "El valor de cierre",
+  cost: "El costo",
+  deliveryFee: "El costo del domicilio",
+  discount: "El descuento",
+  discountAmount: "El descuento",
+  discountOverride: "El descuento",
+  discountTotal: "El descuento total",
+  manualSubtotal: "El subtotal",
+  openingAmount: "El dinero base",
+  price: "El precio",
+  taxTotal: "El total de impuestos",
+  tipAmount: "La propina",
+  unitCost: "El costo unitario",
+  unitPrice: "El precio unitario",
+  unitPriceOverride: "El precio unitario",
+}
+
+function translateValidationMessage(message?: string | null) {
+  if (!message) {
+    return message
+  }
+
+  return message.replace(
+    /\b([A-Za-z][A-Za-z0-9]*) must be a valid monetary amount\./g,
+    (_match, field: string) =>
+      `${validationFieldLabels[field] ?? "El valor ingresado"} debe ser un valor monetario válido con máximo dos decimales.`,
+  )
 }
 
 export function normalizeApiError(
@@ -446,7 +480,13 @@ async function requestJson<TResponse, TBody = undefined>(
 
     return response.data;
   } catch (error) {
-    throw await toApiError(error);
+    const apiError = await toApiError(error);
+
+    if (method !== "GET") {
+      notifyApiWriteError(apiError);
+    }
+
+    throw apiError;
   }
 }
 
@@ -466,7 +506,9 @@ async function requestFormData<TResponse>(
 
     return response.data;
   } catch (error) {
-    throw await toApiError(error);
+    const apiError = await toApiError(error);
+    notifyApiWriteError(apiError);
+    throw apiError;
   }
 }
 

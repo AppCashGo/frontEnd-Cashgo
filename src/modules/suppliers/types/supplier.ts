@@ -27,6 +27,7 @@ export type SupplierSupplyHistoryItem = {
   dueDate: string | null
   cancelledAt: string | null
   cancellationReason: string | null
+  invoiceImageUrl: string | null
   returnedAmount: number
   netTotal: number
   notes: string | null

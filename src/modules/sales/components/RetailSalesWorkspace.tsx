@@ -50,6 +50,7 @@ import {
 } from '@/modules/sales/hooks/use-create-sale-mutation'
 import { useSaleCart } from '@/modules/sales/hooks/use-sale-cart'
 import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
+import { SaleQuantityInput } from '@/modules/sales/components/SaleQuantityInput'
 import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
 import type { SalePaymentMethod, SaleReceipt } from '@/modules/sales/types/sale'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
@@ -1108,6 +1109,7 @@ export function RetailSalesWorkspace() {
     increaseProductQuantity,
     markCheckoutError,
     removeProduct,
+    setProductQuantity,
   } = useSaleCart(products, {
     allowSaleWithoutStock,
   })
@@ -2115,11 +2117,25 @@ export function RetailSalesWorkspace() {
                                 >
                                   −
                                 </button>
-                                <span className={styles.quantityValue}>
-                                  {item.quantity.toString()}
-                                </span>
+                                <SaleQuantityInput
+                                  className={styles.quantityInput}
+                                  max={
+                                    allowSaleWithoutStock
+                                      ? undefined
+                                      : item.product.stock
+                                  }
+                                  productName={item.product.name}
+                                  quantity={item.quantity}
+                                  onQuantityChange={(quantity) =>
+                                    setProductQuantity(item.product.id, quantity)
+                                  }
+                                />
                                 <button
                                   className={styles.quantityButton}
+                                  disabled={
+                                    !allowSaleWithoutStock &&
+                                    item.quantity >= item.product.stock
+                                  }
                                   type="button"
                                   onClick={() =>
                                     increaseProductQuantity(item.product.id)
