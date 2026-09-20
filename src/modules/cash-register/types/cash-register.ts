@@ -27,6 +27,7 @@ export type CashRegisterPaymentSummary = {
   salesAmount: number;
   collectionsAmount: number;
   expensesAmount: number;
+  reversalsAmount: number;
   ownerLoanProceedsAmount: number;
   ownerLoanPaymentsAmount: number;
   openingAmount: number;
@@ -114,6 +115,7 @@ export type CashRegisterSession = {
   receivableCollectionsTotal: number;
   totalIncome: number;
   expensesTotal: number;
+  reversalsTotal: number;
   cashExpectedTotal: number;
   cashSalesTotal: number;
   cashCollectionsTotal: number;

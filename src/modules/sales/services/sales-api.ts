@@ -6,6 +6,7 @@ import type {
   SalesHistoryResponse,
 } from '@/modules/sales/types/sale'
 import {
+  ApiError,
   getBlob,
   getJson,
   patchJson,
@@ -22,6 +23,7 @@ const pendingSaleRequests = new Map<
   string,
   Promise<ReturnType<typeof normalizeSaleRecord>>
 >()
+const saleAttemptKeys = new Map<string, string>()
 
 function createIdempotencyKey() {
   if (typeof globalThis.crypto?.randomUUID === 'function') {
@@ -40,9 +42,14 @@ export async function createSale(input: CreateSaleInput) {
     return pendingRequest
   }
 
+  const idempotencyKey =
+    input.idempotencyKey ??
+    saleAttemptKeys.get(requestSignature) ??
+    createIdempotencyKey()
+  saleAttemptKeys.set(requestSignature, idempotencyKey)
   const requestInput = {
     ...input,
-    idempotencyKey: input.idempotencyKey ?? createIdempotencyKey(),
+    idempotencyKey,
   }
   const request = postJson<SaleApiRecord, CreateSaleInput>(
     '/sales',
@@ -57,9 +64,23 @@ export async function createSale(input: CreateSaleInput) {
         if (pendingSaleRequests.get(requestSignature) === request) {
           pendingSaleRequests.delete(requestSignature)
         }
+        saleAttemptKeys.delete(requestSignature)
       }, 5_000)
     },
-    () => pendingSaleRequests.delete(requestSignature),
+    (error) => {
+      pendingSaleRequests.delete(requestSignature)
+      if (
+        !(error instanceof ApiError) ||
+        error.code !== 'CASH_SESSION_REQUIRED'
+      ) {
+        saleAttemptKeys.delete(requestSignature)
+      } else {
+        globalThis.setTimeout(
+          () => saleAttemptKeys.delete(requestSignature),
+          30 * 60 * 1_000,
+        )
+      }
+    },
   )
 
   return request
@@ -148,7 +169,7 @@ export async function getSalesHistory(filters: SalesHistoryFilters) {
   } satisfies SalesHistoryResponse
 }
 
-export async function cancelSale(saleId: string, input: CancelSaleInput = {}) {
+export async function cancelSale(saleId: string, input: CancelSaleInput) {
   const sale = await patchJson<SaleApiRecord, CancelSaleInput>(
     `/sales/${saleId}/cancel`,
     input,

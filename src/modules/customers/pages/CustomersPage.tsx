@@ -43,6 +43,7 @@ import type {
   CustomerSummary,
 } from '@/modules/customers/types/customer'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
+import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashRegisterFlowDrawer'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { RetailTableShell } from '@/shared/components/retail/RetailTableShell'
@@ -159,6 +160,7 @@ export function CustomersPage() {
   const [retailDrawerMode, setRetailDrawerMode] =
     useState<RetailCustomerDrawerMode>('detail')
   const [isRetailDrawerOpen, setRetailDrawerOpen] = useState(false)
+  const [isCashRegisterFlowOpen, setCashRegisterFlowOpen] = useState(false)
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false)
   const [portfolioFilter, setPortfolioFilter] =
     useState<CustomerPortfolioFilter>('ALL')
@@ -1042,6 +1044,7 @@ export function CustomersPage() {
           }
           isLoading={customerDetailQuery.isLoading}
           isOpen={isRetailDrawerOpen}
+          isSuspended={isCashRegisterFlowOpen}
           isPaymentSubmitting={
             registerPaymentMutation.isPending ||
             registerOldestPaymentMutation.isPending
@@ -1081,6 +1084,13 @@ export function CustomersPage() {
           onSendReminderEmail={handleSendReminderEmail}
           onUpdateReceivableTerms={handleUpdateCustomerReceivableTerms}
           onSubmitCustomer={handleSubmitCustomer}
+          onCashSessionRequired={() => setCashRegisterFlowOpen(true)}
+        />
+
+        <CashRegisterFlowDrawer
+          isOpen={isCashRegisterFlowOpen}
+          onClose={() => setCashRegisterFlowOpen(false)}
+          onOpened={() => setCashRegisterFlowOpen(false)}
         />
 
         {isPremiumModalOpen ? (

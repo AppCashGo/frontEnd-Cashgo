@@ -41,6 +41,7 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { formatDateTime } from '@/shared/utils/format-date-time'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { isCashSessionRequiredError } from '@/modules/cash-register/utils/is-cash-session-required-error'
 import { AvatarUploadField } from '@/shared/components/ui/AvatarUploadField'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { useImageUploadPreview } from '@/shared/hooks/use-image-upload-preview'
@@ -105,6 +106,7 @@ type RetailCustomerDrawerProps = {
   errorMessage: string | null
   isLoading: boolean
   isOpen: boolean
+  isSuspended?: boolean
   isActivitySubmitting: boolean
   isEmailSubmitting: boolean
   isPaymentSubmitting: boolean
@@ -140,6 +142,7 @@ type RetailCustomerDrawerProps = {
     input: CustomerMutationInput,
     avatarFile?: File | null,
   ) => Promise<void>
+  onCashSessionRequired?: () => void
 }
 
 const EMPTY_FORM: CustomerFormState = {
@@ -280,6 +283,7 @@ export function RetailCustomerDrawer({
   errorMessage,
   isLoading,
   isOpen,
+  isSuspended = false,
   isActivitySubmitting,
   isEmailSubmitting,
   isPaymentSubmitting,
@@ -297,6 +301,7 @@ export function RetailCustomerDrawer({
   onSendReminderEmail,
   onUpdateReceivableTerms,
   onSubmitCustomer,
+  onCashSessionRequired,
 }: RetailCustomerDrawerProps) {
   const [form, setForm] = useState<CustomerFormState>(EMPTY_FORM)
   const [formError, setFormError] = useState<string | null>(null)
@@ -858,6 +863,11 @@ export function RetailCustomerDrawer({
         saleNumbers = [selectedReceivable!.saleNumber]
       }
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        setPaymentError('Debes abrir caja para registrar el abono.')
+        onCashSessionRequired?.()
+        return
+      }
       setPaymentError(
         getErrorMessage(
           error,
@@ -1727,7 +1737,7 @@ export function RetailCustomerDrawer({
           </DrawerActionFooter>
         ) : null
       }
-      isOpen={isOpen}
+      isOpen={isOpen && !isSuspended}
       title={drawerTitle}
       onClose={onClose}
     >

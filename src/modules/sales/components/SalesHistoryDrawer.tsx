@@ -22,6 +22,7 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { toOperationDateTime } from '@/shared/utils/date-input'
+import { isCashSessionRequiredError } from '@/modules/cash-register/utils/is-cash-session-required-error'
 import styles from './SalesHistoryDrawer.module.css'
 
 type SalesHistoryDrawerProps = {
@@ -29,6 +30,7 @@ type SalesHistoryDrawerProps = {
   isOpen: boolean
   sales: SaleReceipt[]
   onClose: () => void
+  onCashSessionRequired?: () => void
 }
 
 type DraftMode = 'return' | 'cancel' | null
@@ -63,6 +65,7 @@ export function SalesHistoryDrawer({
   isOpen,
   sales,
   onClose,
+  onCashSessionRequired,
 }: SalesHistoryDrawerProps) {
   const currentUser = useAuthSessionStore((state) => state.user)
   const canManageReturns = ['OWNER', 'ADMIN', 'MANAGER'].includes(
@@ -205,21 +208,33 @@ export function SalesHistoryDrawer({
       setQuantities({})
       setReason('')
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        onCashSessionRequired?.()
+        return
+      }
       setFeedback(getErrorMessage(error, 'No pudimos registrar la devolución.'))
     }
   }
 
   async function submitCancellation() {
     if (!selectedSale) return
+    if (reason.trim().length < 3) {
+      setFeedback('Escribe un motivo de anulación de al menos 3 caracteres.')
+      return
+    }
     try {
       await cancelMutation.mutateAsync({
         saleId: selectedSale.id,
-        input: { reason: reason.trim() || undefined },
+        input: { reason: reason.trim() },
       })
       setFeedback('La venta fue anulada y el inventario quedó restaurado.')
       setDraftMode(null)
       setReason('')
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        onCashSessionRequired?.()
+        return
+      }
       setFeedback(getErrorMessage(error, 'No pudimos anular la venta.'))
     }
   }
@@ -469,7 +484,7 @@ export function SalesHistoryDrawer({
               <div className={styles.formActions}>
                 <button
                   className={styles.secondaryButton}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || reason.trim().length < 3}
                   type="button"
                   onClick={resetDraft}
                 >

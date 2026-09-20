@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import { startTransition, useDeferredValue, useState } from 'react'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
+import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashRegisterFlowDrawer'
+import { isCashSessionRequiredError } from '@/modules/cash-register/utils/is-cash-session-required-error'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
 import { useProductsQuery } from '@/modules/products/hooks/use-products-query'
 import type { Product } from '@/modules/products/types/product'
@@ -83,6 +85,8 @@ function normalizeOptionalText(value: string) {
 
 function StandardSalesPage() {
   const [isHistoryOpen, setHistoryOpen] = useState(false)
+  const [isCashRegisterFlowOpen, setCashRegisterFlowOpen] = useState(false)
+  const [resumeHistoryAfterOpen, setResumeHistoryAfterOpen] = useState(false)
   const [searchValue, setSearchValue] = useState('')
   const [inventoryFilter, setInventoryFilter] = useState<InventoryFilter>('ALL')
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
@@ -180,6 +184,13 @@ function StandardSalesPage() {
       return
     }
 
+    const refreshedSession = await currentCashRegisterQuery.refetch()
+    if (!refreshedSession.data) {
+      markCheckoutError('Debes abrir caja para registrar la venta.')
+      setCashRegisterFlowOpen(true)
+      return
+    }
+
     try {
       const sale = await createSaleMutation.mutateAsync({
         items: cartItems.map((item) => ({
@@ -209,6 +220,13 @@ function StandardSalesPage() {
       completeSale(sale)
       resetCheckoutControls()
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        markCheckoutError(
+          'La caja se cerró antes de confirmar. Ábrela y confirma nuevamente.',
+        )
+        setCashRegisterFlowOpen(true)
+        return
+      }
       markCheckoutError(
         getErrorMessage(
           error,
@@ -359,9 +377,24 @@ function StandardSalesPage() {
         />
       </div>
       <SalesHistoryDrawer
-        isOpen={isHistoryOpen}
+        isOpen={isHistoryOpen && !isCashRegisterFlowOpen}
         sales={salesQuery.data ?? []}
         onClose={() => setHistoryOpen(false)}
+        onCashSessionRequired={() => {
+          setResumeHistoryAfterOpen(true)
+          setCashRegisterFlowOpen(true)
+        }}
+      />
+      <CashRegisterFlowDrawer
+        isOpen={isCashRegisterFlowOpen}
+        onClose={() => setCashRegisterFlowOpen(false)}
+        onOpened={() => {
+          setCashRegisterFlowOpen(false)
+          if (resumeHistoryAfterOpen) {
+            setResumeHistoryAfterOpen(false)
+            setHistoryOpen(true)
+          }
+        }}
       />
     </div>
   )

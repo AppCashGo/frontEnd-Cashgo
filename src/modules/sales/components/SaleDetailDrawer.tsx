@@ -20,6 +20,7 @@ import {
 } from '@/shared/payments/payment-methods'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { isCashSessionRequiredError } from '@/modules/cash-register/utils/is-cash-session-required-error'
 import { normalizeWhatsAppPhone } from '@/shared/utils/normalize-whatsapp-phone'
 import {
   downloadPdfBlob,
@@ -32,6 +33,7 @@ import styles from './SaleDetailDrawer.module.css'
 type SaleDetailDrawerProps = {
   saleId: string | null
   onClose: () => void
+  onCashSessionRequired?: () => void
 }
 
 function formatDateTime(value: string) {
@@ -50,7 +52,11 @@ function initials(value: string) {
     .join('')
 }
 
-export function SaleDetailDrawer({ saleId, onClose }: SaleDetailDrawerProps) {
+export function SaleDetailDrawer({
+  saleId,
+  onClose,
+  onCashSessionRequired,
+}: SaleDetailDrawerProps) {
   const queryClient = useQueryClient()
   const businessName = useAuthSessionStore(
     (state) => state.user?.businessName ?? 'CashGo',
@@ -104,6 +110,14 @@ export function SaleDetailDrawer({ saleId, onClose }: SaleDetailDrawerProps) {
         queryClient.invalidateQueries({ queryKey: ['customers'] }),
         queryClient.invalidateQueries({ queryKey: ['cash-register'] }),
       ])
+    },
+    onError: (error) => {
+      if (isCashSessionRequiredError(error)) {
+        setFeedback('Debes abrir caja para registrar el abono.')
+        onCashSessionRequired?.()
+        return
+      }
+      setFeedback(getErrorMessage(error, 'No pudimos registrar el abono.'))
     },
   })
 

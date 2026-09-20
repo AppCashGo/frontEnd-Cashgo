@@ -35,7 +35,7 @@ export type CreateSaleInput = {
 }
 
 export type CancelSaleInput = {
-  reason?: string
+  reason: string
 }
 
 export type SaleReturnInput = {

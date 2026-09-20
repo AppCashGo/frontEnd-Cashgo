@@ -39,6 +39,7 @@ type CashRegisterSessionDrawerProps = {
   isSubmitting: boolean;
   onClose: () => void;
   onOpenSession: (input: OpenCashRegisterInput) => Promise<void>;
+  onOpened?: () => void;
   onCloseSession: (
     input: CloseCashRegisterInput,
   ) => Promise<CashRegisterSession | void>;
@@ -216,6 +217,15 @@ function getPaymentMethodRows(
         value: paymentMethod?.expensesAmount ?? session.manualExpenseTotal,
         tone: "danger",
       },
+      ...((paymentMethod?.reversalsAmount ?? 0) > 0
+        ? ([
+            {
+              label: "Reversiones de venta",
+              value: paymentMethod?.reversalsAmount ?? 0,
+              tone: "danger",
+            },
+          ] satisfies SummaryRow[])
+        : []),
     ];
   }
 
@@ -230,6 +240,15 @@ function getPaymentMethodRows(
       value: paymentMethod?.expensesAmount ?? 0,
       tone: "danger",
     },
+    ...((paymentMethod?.reversalsAmount ?? 0) > 0
+      ? ([
+          {
+            label: "Reversiones de venta",
+            value: paymentMethod?.reversalsAmount ?? 0,
+            tone: "danger",
+          },
+        ] satisfies SummaryRow[])
+      : []),
   ];
 }
 
@@ -444,6 +463,7 @@ export function CashRegisterSessionDrawer({
   isSubmitting,
   onClose,
   onOpenSession,
+  onOpened,
   onCloseSession,
   onManualEntry,
   onTransfer,
@@ -564,6 +584,7 @@ export function CashRegisterSessionDrawer({
       });
       setOpeningBalances(createEmptyMethodAmounts());
       onClose();
+      onOpened?.();
     } catch (error) {
       setErrorMessage(
         error instanceof Error
@@ -904,6 +925,14 @@ export function CashRegisterSessionDrawer({
                 {getSignedCurrency(session.expensesTotal)}
               </strong>
             </div>
+            {session.reversalsTotal > 0 ? (
+              <div className={styles.shiftSummaryRow}>
+                <span>Reversiones de ventas</span>
+                <strong className={styles.negativeValue}>
+                  {getSignedCurrency(session.reversalsTotal)}
+                </strong>
+              </div>
+            ) : null}
             <div className={styles.shiftSummaryRow}>
               <span>Balance</span>
               <strong>

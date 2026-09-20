@@ -60,7 +60,7 @@ export function useCancelSaleMutation() {
       input,
     }: {
       saleId: string
-      input?: CancelSaleInput
+      input: CancelSaleInput
     }) => cancelSale(saleId, input),
     onSuccess: async () => {
       await invalidateSaleFlowQueries(queryClient)

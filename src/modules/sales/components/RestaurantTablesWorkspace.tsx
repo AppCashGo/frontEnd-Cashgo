@@ -2,6 +2,8 @@ import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
+import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashRegisterFlowDrawer'
+import { isCashSessionRequiredError } from '@/modules/cash-register/utils/is-cash-session-required-error'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
 import { useEmployeesQuery } from '@/modules/employees/hooks/use-employees-query'
 import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inventory-query'
@@ -160,6 +162,10 @@ export function RestaurantTablesWorkspace() {
   const [operationError, setOperationError] = useState<string | null>(null)
   const [isCounterSaleOpen, setIsCounterSaleOpen] = useState(false)
   const [isSalesHistoryOpen, setSalesHistoryOpen] = useState(false)
+  const [isCashRegisterFlowOpen, setCashRegisterFlowOpen] = useState(false)
+  const [pendingCashIntent, setPendingCashIntent] = useState<
+    'COUNTER_SALE' | 'FREE_SALE' | 'TABLE_CLOSE' | 'SALES_HISTORY' | null
+  >(null)
   const [counterSaleItems, setCounterSaleItems] = useState<CounterSaleItem[]>([])
   const [counterSaleSearchValue, setCounterSaleSearchValue] = useState('')
   const [counterSaleCategory, setCounterSaleCategory] = useState('ALL')
@@ -504,6 +510,12 @@ export function RestaurantTablesWorkspace() {
       return
     }
 
+    const refreshedSession = await currentCashRegisterQuery.refetch()
+    if (!refreshedSession.data) {
+      beginCashSessionFlow('COUNTER_SALE')
+      return
+    }
+
     try {
       const sale = await createSaleMutation.mutateAsync({
         items: counterSaleItems.map((item) => ({
@@ -531,6 +543,10 @@ export function RestaurantTablesWorkspace() {
       resetCounterSaleForm()
       setIsCounterSaleOpen(false)
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        beginCashSessionFlow('COUNTER_SALE')
+        return
+      }
       setOperationError(
         getErrorMessage(error, 'No se pudo registrar la venta con productos.'),
       )
@@ -540,6 +556,12 @@ export function RestaurantTablesWorkspace() {
   async function handleCreateFreeSale() {
     if (freeSaleAmount <= 0) {
       setOperationError('Ingresa un valor valido para la venta libre.')
+      return
+    }
+
+    const refreshedSession = await currentCashRegisterQuery.refetch()
+    if (!refreshedSession.data) {
+      beginCashSessionFlow('FREE_SALE')
       return
     }
 
@@ -568,6 +590,10 @@ export function RestaurantTablesWorkspace() {
       resetFreeSaleForm()
       setIsFreeSaleOpen(false)
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        beginCashSessionFlow('FREE_SALE')
+        return
+      }
       setOperationError(
         getErrorMessage(error, 'No se pudo registrar la venta libre.'),
       )
@@ -1106,6 +1132,12 @@ export function RestaurantTablesWorkspace() {
       return
     }
 
+    const refreshedSession = await currentCashRegisterQuery.refetch()
+    if (!refreshedSession.data) {
+      beginCashSessionFlow('TABLE_CLOSE')
+      return
+    }
+
     if (closeItems.length === 0) {
       setOperationError('Selecciona al menos un producto para cobrar.')
       return
@@ -1174,10 +1206,34 @@ export function RestaurantTablesWorkspace() {
       setSelectedCloseItemIds([])
       resetCloseForm()
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        beginCashSessionFlow('TABLE_CLOSE')
+        return
+      }
       setOperationError(
         getErrorMessage(error, 'No se pudo cerrar la mesa en este momento.'),
       )
     }
+  }
+
+  function beginCashSessionFlow(
+    intent: Exclude<typeof pendingCashIntent, null>,
+  ) {
+    setPendingCashIntent(intent)
+    setOperationError('Debes abrir caja para continuar con esta operación.')
+    setIsCounterSaleOpen(false)
+    setIsFreeSaleOpen(false)
+    setSalesHistoryOpen(false)
+    setCashRegisterFlowOpen(true)
+  }
+
+  function resumeCashSessionFlow() {
+    const intent = pendingCashIntent
+    setPendingCashIntent(null)
+    setCashRegisterFlowOpen(false)
+    if (intent === 'COUNTER_SALE') setIsCounterSaleOpen(true)
+    if (intent === 'FREE_SALE') setIsFreeSaleOpen(true)
+    if (intent === 'SALES_HISTORY') setSalesHistoryOpen(true)
   }
 
   function renderEmptyTablePanel() {
@@ -2526,6 +2582,13 @@ export function RestaurantTablesWorkspace() {
         isOpen={isSalesHistoryOpen}
         sales={salesQuery.data ?? []}
         onClose={() => setSalesHistoryOpen(false)}
+        onCashSessionRequired={() => beginCashSessionFlow('SALES_HISTORY')}
+      />
+
+      <CashRegisterFlowDrawer
+        isOpen={isCashRegisterFlowOpen}
+        onClose={() => setCashRegisterFlowOpen(false)}
+        onOpened={resumeCashSessionFlow}
       />
 
       {completedSale ? (

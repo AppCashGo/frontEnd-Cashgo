@@ -1,29 +1,16 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import type { ReactNode } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Banknote,
   CheckCircle,
   CheckCircle2,
   Crown,
 } from 'lucide-react'
-import {
-  CashRegisterSessionDrawer,
-  type CashRegisterDrawerMode,
-} from '@/modules/cash-register/components/CashRegisterSessionDrawer'
-import {
-  useCashRegisterAssigneesQuery,
-  useAdjustReserveBalanceMutation,
-  useCashRegisterHistoryQuery,
-  useCloseCashRegisterMutation,
-  useCreateCashRegisterManualEntryMutation,
-  useCreatePaymentMethodTransferMutation,
-  useCreateReserveTransferMutation,
-  useCurrentCashRegisterQuery,
-  useOpenCashRegisterMutation,
-  useReserveSummaryQuery,
-} from '@/modules/cash-register/hooks/use-cash-register-query'
+import type { CashRegisterDrawerMode } from '@/modules/cash-register/components/CashRegisterSessionDrawer'
+import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashRegisterFlowDrawer'
+import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { QuickCreateCustomerDrawer } from '@/modules/customers/components/QuickCreateCustomerDrawer'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
@@ -65,6 +52,7 @@ import {
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
+import { isCashSessionRequiredError } from '@/modules/cash-register/utils/is-cash-session-required-error'
 import {
   COLLECTED_PAYMENT_METHOD_OPTIONS,
   getSharedPaymentMethodLabel,
@@ -73,6 +61,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import styles from './RetailSalesWorkspace.module.css'
 
 type RetailStep = 'CATALOG' | 'PAYMENT'
+type PendingCashIntent =
+  | 'POS_ENTRY'
+  | 'CATALOG_CHECKOUT'
+  | 'QUICK_SALE'
+  | 'QUICK_EXPENSE'
+  | 'SALES_HISTORY'
+  | null
 type RetailSettlement = 'PAID' | 'CREDIT'
 type QuickCustomerTarget = 'CATALOG' | 'QUICK_SALE'
 type RetailPaymentOption =
@@ -947,6 +942,9 @@ export function RetailSalesWorkspace() {
   const [isCashRegisterMenuOpen, setCashRegisterMenuOpen] = useState(false)
   const [isSortDrawerOpen, setSortDrawerOpen] = useState(false)
   const [isChangeModalOpen, setChangeModalOpen] = useState(false)
+  const [pendingCashIntent, setPendingCashIntent] =
+    useState<PendingCashIntent>(null)
+  const cashEntryPromptedRef = useRef(false)
   const [sortOption, setSortOption] = useState<ProductSortOption>(defaultSortOption)
   const [paymentDetailsOpen, setPaymentDetailsOpen] = useState(false)
   const [amountTenderedInput, setAmountTenderedInput] = useState('')
@@ -963,17 +961,7 @@ export function RetailSalesWorkspace() {
 
   const productsQuery = useProductsQuery()
   const customersQuery = useCustomersQuery()
-  const cashRegisterAssigneesQuery = useCashRegisterAssigneesQuery()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
-  const cashRegisterHistoryQuery = useCashRegisterHistoryQuery()
-  const openCashRegisterMutation = useOpenCashRegisterMutation()
-  const closeCashRegisterMutation = useCloseCashRegisterMutation()
-  const createCashRegisterManualEntryMutation =
-    useCreateCashRegisterManualEntryMutation()
-  const paymentMethodTransferMutation = useCreatePaymentMethodTransferMutation()
-  const reserveTransferMutation = useCreateReserveTransferMutation()
-  const reserveAdjustmentMutation = useAdjustReserveBalanceMutation()
-  const reserveSummaryQuery = useReserveSummaryQuery()
   const createSaleMutation = useCreateSaleMutation()
   const salesQuery = useSalesQuery()
   const expenseCategoriesQuery = useExpenseCategoriesQuery()
@@ -988,13 +976,6 @@ export function RetailSalesWorkspace() {
   )
   const salesHistory = useMemo(() => salesQuery.data ?? [], [salesQuery.data])
   const currentCashRegister = currentCashRegisterQuery.data ?? null
-  const latestClosedCashRegister = useMemo(
-    () =>
-      (cashRegisterHistoryQuery.data ?? []).find(
-        (session) => session.status === 'CLOSED',
-      ) ?? null,
-    [cashRegisterHistoryQuery.data],
-  )
   const expenseCategories = useMemo(
     () => expenseCategoriesQuery.data ?? [],
     [expenseCategoriesQuery.data],
@@ -1007,23 +988,27 @@ export function RetailSalesWorkspace() {
   )
   const allowSaleWithoutStock =
     businessSettingsQuery.data?.allowSaleWithoutStock ?? false
-  const cashRegisterOpeningReminderEnabled =
-    businessSettingsQuery.data?.cashRegisterOpeningReminderEnabled ?? true
   const saleCompletionSoundEnabled =
     businessSettingsQuery.data?.saleCompletionSoundEnabled ?? true
-  const isCashRegisterSubmitting =
-    openCashRegisterMutation.isPending ||
-    closeCashRegisterMutation.isPending ||
-    createCashRegisterManualEntryMutation.isPending ||
-    paymentMethodTransferMutation.isPending ||
-    reserveTransferMutation.isPending ||
-    reserveAdjustmentMutation.isPending
 
   useEffect(() => {
     if (!currentCashRegister) {
       setCashRegisterMenuOpen(false)
     }
   }, [currentCashRegister])
+
+  useEffect(() => {
+    if (
+      currentCashRegisterQuery.isSuccess &&
+      !currentCashRegister &&
+      !cashEntryPromptedRef.current
+    ) {
+      cashEntryPromptedRef.current = true
+      setPendingCashIntent('POS_ENTRY')
+      setCashRegisterDrawerMode('manage')
+      setCashRegisterDrawerOpen(true)
+    }
+  }, [currentCashRegister, currentCashRegisterQuery.isSuccess])
 
   const {
     cartItems,
@@ -1540,8 +1525,14 @@ export function RetailSalesWorkspace() {
     }, 200)
   }
 
-  function handleCatalogSaleSubmit() {
+  async function handleCatalogSaleSubmit() {
     prepareCashRegisterSound()
+
+    const refreshedSession = await currentCashRegisterQuery.refetch()
+    if (!refreshedSession.data) {
+      beginCashSessionFlow('CATALOG_CHECKOUT')
+      return
+    }
 
     if (settlement === 'PAID' && hasCashCatalogPayment) {
       setAmountTenderedInput(formatEditableNumber(cashCatalogPaymentTotal))
@@ -1611,14 +1602,6 @@ export function RetailSalesWorkspace() {
       }
     }
 
-    if (cashRegisterOpeningReminderEnabled && !currentCashRegister) {
-      markCheckoutError(
-        'Abre la caja antes de registrar la primera venta del día.',
-      )
-      openCashRegisterDrawer('manage')
-      return
-    }
-
     try {
       const sale = await createSaleMutation.mutateAsync({
         items: cartItems.map((item) => ({
@@ -1644,6 +1627,13 @@ export function RetailSalesWorkspace() {
       resetPaymentStep()
       setSaleStep('CATALOG')
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        markCheckoutError(
+          'La caja se cerró antes de confirmar. Ábrela para continuar con esta venta.',
+        )
+        beginCashSessionFlow('CATALOG_CHECKOUT')
+        return
+      }
       markCheckoutError(
         getErrorMessage(
           error,
@@ -1666,12 +1656,9 @@ export function RetailSalesWorkspace() {
       return
     }
 
-    if (cashRegisterOpeningReminderEnabled && !currentCashRegister) {
-      markCheckoutError(
-        'Abre la caja antes de registrar la primera venta del día.',
-      )
-      setQuickSaleDrawerOpen(false)
-      openCashRegisterDrawer('manage')
+    const refreshedSession = await currentCashRegisterQuery.refetch()
+    if (!refreshedSession.data) {
+      beginCashSessionFlow('QUICK_SALE')
       return
     }
 
@@ -1707,6 +1694,13 @@ export function RetailSalesWorkspace() {
       setQuickSaleDrawerOpen(false)
       setQuickSaleForm(createDefaultQuickSaleState())
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        markCheckoutError(
+          'La caja se cerró antes de confirmar. Ábrela para continuar.',
+        )
+        beginCashSessionFlow('QUICK_SALE')
+        return
+      }
       markCheckoutError(
         getErrorMessage(
           error,
@@ -1722,6 +1716,14 @@ export function RetailSalesWorkspace() {
     if (quickExpenseAmount <= 0) {
       markCheckoutError('Ingresa un valor válido para el gasto.')
       return
+    }
+
+    if (quickExpenseForm.status === 'PAID') {
+      const refreshedSession = await currentCashRegisterQuery.refetch()
+      if (!refreshedSession.data) {
+        beginCashSessionFlow('QUICK_EXPENSE')
+        return
+      }
     }
 
     if (quickExpenseForm.categoryId.trim().length === 0) {
@@ -1760,6 +1762,13 @@ export function RetailSalesWorkspace() {
       setQuickExpenseDrawerOpen(false)
       setQuickExpenseForm(createDefaultQuickExpenseState())
     } catch (error) {
+      if (isCashSessionRequiredError(error)) {
+        markCheckoutError(
+          'La caja se cerró antes de confirmar. Ábrela para continuar.',
+        )
+        beginCashSessionFlow('QUICK_EXPENSE')
+        return
+      }
       markCheckoutError(
         getErrorMessage(
           error,
@@ -1770,9 +1779,53 @@ export function RetailSalesWorkspace() {
   }
 
   function openCashRegisterDrawer(mode: CashRegisterDrawerMode) {
+    setChangeModalOpen(false)
     setCashRegisterDrawerMode(mode)
     setCashRegisterDrawerOpen(true)
     setCashRegisterMenuOpen(false)
+  }
+
+  function beginCashSessionFlow(intent: Exclude<PendingCashIntent, null>) {
+    setPendingCashIntent(intent)
+    setChangeModalOpen(false)
+    setQuickSaleDrawerOpen(false)
+    setQuickExpenseDrawerOpen(false)
+    if (intent === 'SALES_HISTORY') {
+      setSalesHistoryOpen(false)
+    }
+    markCheckoutError(
+      intent === 'SALES_HISTORY'
+        ? 'Debes abrir caja para registrar la reversión.'
+        : 'Debes abrir caja para continuar con esta operación.',
+    )
+    openCashRegisterDrawer('manage')
+  }
+
+  function resumePendingCashIntent() {
+    const intent = pendingCashIntent
+    setPendingCashIntent(null)
+
+    if (intent === 'CATALOG_CHECKOUT') {
+      setSaleStep('PAYMENT')
+      if (settlement === 'PAID' && hasCashCatalogPayment) {
+        setChangeModalOpen(true)
+      }
+      return
+    }
+
+    if (intent === 'QUICK_SALE') {
+      setQuickSaleDrawerOpen(true)
+      return
+    }
+
+    if (intent === 'QUICK_EXPENSE') {
+      setQuickExpenseDrawerOpen(true)
+      return
+    }
+
+    if (intent === 'SALES_HISTORY') {
+      setSalesHistoryOpen(true)
+    }
   }
 
   return (
@@ -2479,6 +2532,7 @@ export function RetailSalesWorkspace() {
         isOpen={isSalesHistoryOpen}
         sales={salesHistory}
         onClose={() => setSalesHistoryOpen(false)}
+        onCashSessionRequired={() => beginCashSessionFlow('SALES_HISTORY')}
       />
 
       {isSortDrawerOpen ? (
@@ -2492,33 +2546,11 @@ export function RetailSalesWorkspace() {
         />
       ) : null}
 
-      <CashRegisterSessionDrawer
-        assignees={cashRegisterAssigneesQuery.data ?? []}
-        currentSession={currentCashRegister}
-        latestClosedSession={latestClosedCashRegister}
-        reserveSummary={reserveSummaryQuery.data ?? null}
-        initialMode={cashRegisterDrawerMode}
+      <CashRegisterFlowDrawer
+        mode={cashRegisterDrawerMode}
         isOpen={isCashRegisterDrawerOpen}
-        isSubmitting={isCashRegisterSubmitting}
         onClose={() => setCashRegisterDrawerOpen(false)}
-        onCloseSession={async (input) => {
-          return closeCashRegisterMutation.mutateAsync(input)
-        }}
-        onManualEntry={async (input) => {
-          await createCashRegisterManualEntryMutation.mutateAsync(input)
-        }}
-        onOpenSession={async (input) => {
-          await openCashRegisterMutation.mutateAsync(input)
-        }}
-        onTransfer={async (input) => {
-          await paymentMethodTransferMutation.mutateAsync(input)
-        }}
-        onReserveTransfer={async (input) => {
-          await reserveTransferMutation.mutateAsync(input)
-        }}
-        onReserveAdjust={async (input) => {
-          await reserveAdjustmentMutation.mutateAsync(input)
-        }}
+        onOpened={resumePendingCashIntent}
       />
 
       <QuickCreateCustomerDrawer

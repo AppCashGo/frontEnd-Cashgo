@@ -483,7 +483,7 @@ test("loads the operational sales summary and opens the existing POS", async ({
     page.getByRole("heading", { name: "Historial de ventas" }),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: /registrar venta/i }).click();
+  await page.getByRole("button", { name: /registrar venta/i }).click();
   await expect(page).toHaveURL(/\/sales\/new$/);
   await expect(
     page.getByRole("heading", { name: /nueva venta/i }),
@@ -597,8 +597,6 @@ test("opens a cash register from sales and rejects duplicate sessions", async ({
   await expect(
     page.getByRole("heading", { name: /nueva venta/i }),
   ).toBeVisible();
-
-  await page.getByRole("button", { name: /abrir caja/i }).click();
 
   const openDrawer = page.getByRole("dialog", { name: "Abrir caja" });
   await expect(openDrawer).toBeVisible();

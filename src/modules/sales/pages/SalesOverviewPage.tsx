@@ -7,6 +7,8 @@ import {
 } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { SaleDetailDrawer } from '@/modules/sales/components/SaleDetailDrawer'
+import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashRegisterFlowDrawer'
+import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { useSalesHistoryQuery } from '@/modules/sales/hooks/use-sales-history-query'
 import type {
   SalePaymentMethod,
@@ -80,6 +82,11 @@ export function SalesOverviewPage() {
   const [status, setStatus] = useState<'ALL' | SalesHistoryStatus>('ALL')
   const [paymentMethod, setPaymentMethod] = useState<SalePaymentMethod | ''>('')
   const [page, setPage] = useState(1)
+  const [isCashRegisterOpen, setCashRegisterOpen] = useState(false)
+  const [pendingNavigation, setPendingNavigation] = useState<
+    'NEW_SALE' | string | null
+  >(null)
+  const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const deferredSearch = useDeferredValue(search.trim())
   const historyQuery = useSalesHistoryQuery({
     from,
@@ -120,6 +127,27 @@ export function SalesOverviewPage() {
     },
   ]
 
+  async function handleRegisterSale() {
+    const session = await currentCashRegisterQuery.refetch()
+    if (session.data) {
+      navigate(routePaths.salesNew)
+      return
+    }
+
+    setPendingNavigation('NEW_SALE')
+    setCashRegisterOpen(true)
+  }
+
+  function resumePendingNavigation() {
+    const destination = pendingNavigation
+    setPendingNavigation(null)
+    if (destination === 'NEW_SALE') {
+      navigate(routePaths.salesNew)
+    } else if (destination) {
+      navigate(`${routePaths.sales}/${destination}`)
+    }
+  }
+
   return (
     <RetailPageLayout
       accent="success"
@@ -128,9 +156,13 @@ export function SalesOverviewPage() {
           <Link className={styles.statisticsLink} to={`${routePaths.reports}?tab=sales`}>
             <BarChart3 /> Ver estadísticas
           </Link>
-          <Link className={styles.primaryLink} to={routePaths.salesNew}>
+          <button
+            className={styles.primaryLink}
+            type="button"
+            onClick={() => void handleRegisterSale()}
+          >
             <Plus /> Registrar venta
-          </Link>
+          </button>
         </div>
       }
       bodyClassName={styles.body}
@@ -223,7 +255,21 @@ export function SalesOverviewPage() {
         ) : null}
       </section>
 
-      <SaleDetailDrawer saleId={saleId ?? null} onClose={() => navigate(routePaths.sales)} />
+      <SaleDetailDrawer
+        saleId={saleId ?? null}
+        onCashSessionRequired={() => {
+          if (!saleId) return
+          setPendingNavigation(saleId)
+          navigate(routePaths.sales)
+          setCashRegisterOpen(true)
+        }}
+        onClose={() => navigate(routePaths.sales)}
+      />
+      <CashRegisterFlowDrawer
+        isOpen={isCashRegisterOpen}
+        onClose={() => setCashRegisterOpen(false)}
+        onOpened={resumePendingNavigation}
+      />
     </RetailPageLayout>
   )
 }
