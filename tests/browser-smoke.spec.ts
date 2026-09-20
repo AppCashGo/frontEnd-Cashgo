@@ -476,11 +476,21 @@ test("loads the operational sales summary and opens the existing POS", async ({
     page.getByRole("heading", { name: "Ventas", exact: true }),
   ).toBeVisible();
   await expect(page.getByText("Ventas totales", { exact: true })).toBeVisible();
+  await expect(page.getByText("Ganancias totales", { exact: true })).toBeVisible();
   await expect(page.getByText("N.º de ventas", { exact: true })).toBeVisible();
   await expect(page.getByText("Cobrado", { exact: true })).toBeVisible();
   await expect(page.getByText("Por cobrar", { exact: true })).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Historial de ventas" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Todos los vendedores" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Todos los estados" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Todos los medios" }),
   ).toBeVisible();
 
   await page.getByRole("button", { name: /registrar venta/i }).click();

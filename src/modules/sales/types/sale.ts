@@ -181,6 +181,7 @@ export type SalesHistoryResponse = {
   summary: {
     salesTotal: number
     salesCount: number
+    grossProfit: number
     collectedTotal: number
     outstandingTotal: number
     paymentMethods: Array<{ method: SalePaymentMethod; amount: number }>

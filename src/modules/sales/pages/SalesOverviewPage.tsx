@@ -203,8 +203,9 @@ export function SalesOverviewPage() {
 
       <div className={styles.metricsGrid}>
         <MetricCard label="Ventas totales" value={formatCurrency(data?.summary.salesTotal ?? 0)} hint="Valor neto vendido en el período." tone="accent" />
+        <MetricCard label="Ganancias totales" value={formatCurrency(data?.summary.grossProfit ?? 0)} hint="Utilidad bruta de las ventas del período." tone="success" />
         <MetricCard label="N.º de ventas" value={(data?.summary.salesCount ?? 0).toString()} hint="Ventas activas registradas." />
-        <MetricCard label="Cobrado" value={formatCurrency(data?.summary.collectedTotal ?? 0)} hint="Pagado sobre las ventas del período." tone="success" />
+        <MetricCard label="Cobrado" value={formatCurrency(data?.summary.collectedTotal ?? 0)} hint="Pagado sobre las ventas del período." />
         <MetricCard label="Por cobrar" value={formatCurrency(data?.summary.outstandingTotal ?? 0)} hint="Saldo actual de esas ventas." tone={(data?.summary.outstandingTotal ?? 0) > 0 ? 'alert' : 'default'} />
       </div>
 
@@ -220,10 +221,22 @@ export function SalesOverviewPage() {
           <div><h2>Historial de ventas</h2><p>Busca, filtra y abre cualquier venta.</p></div>
         </div>
         <div className={styles.filters}>
-          <label className={styles.searchField}><Search /><input placeholder="Buscar venta, cliente o vendedor…" type="search" value={search} onChange={(event) => setSearch(event.target.value)} /></label>
-          <SearchableSelect value={sellerUserId} onChange={(event) => setSellerUserId(event.target.value)}><option value="">Todos los vendedores</option>{(data?.facets.sellers ?? []).map((seller) => <option key={seller.id} value={seller.id}>{seller.name}</option>)}</SearchableSelect>
-          <SearchableSelect value={status} onChange={(event) => setStatus(event.target.value as 'ALL' | SalesHistoryStatus)}><option value="ALL">Todos los estados</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SearchableSelect>
-          <SearchableSelect value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value as SalePaymentMethod | '')}><option value="">Todos los medios</option><option value="CREDIT">Crédito</option>{COLLECTED_PAYMENT_METHOD_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</SearchableSelect>
+          <label className={styles.filterField}>
+            <span className={styles.filterLabel}>Buscar</span>
+            <span className={styles.searchField}><Search /><input placeholder="Venta, cliente o vendedor…" type="search" value={search} onChange={(event) => setSearch(event.target.value)} /></span>
+          </label>
+          <label className={styles.filterField}>
+            <span className={styles.filterLabel}>Vendedor</span>
+            <SearchableSelect className={styles.filterSelect} value={sellerUserId} onChange={(event) => setSellerUserId(event.target.value)}><option value="">Todos los vendedores</option>{(data?.facets.sellers ?? []).map((seller) => <option key={seller.id} value={seller.id}>{seller.name}</option>)}</SearchableSelect>
+          </label>
+          <label className={styles.filterField}>
+            <span className={styles.filterLabel}>Estado</span>
+            <SearchableSelect className={styles.filterSelect} value={status} onChange={(event) => setStatus(event.target.value as 'ALL' | SalesHistoryStatus)}><option value="ALL">Todos los estados</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SearchableSelect>
+          </label>
+          <label className={styles.filterField}>
+            <span className={styles.filterLabel}>Medio de pago</span>
+            <SearchableSelect className={styles.filterSelect} value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value as SalePaymentMethod | '')}><option value="">Todos los medios</option><option value="CREDIT">Crédito</option>{COLLECTED_PAYMENT_METHOD_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</SearchableSelect>
+          </label>
         </div>
 
         {historyQuery.isError ? <div className={styles.error}><strong>No pudimos cargar las ventas.</strong><span>{getErrorMessage(historyQuery.error, 'Intenta nuevamente.')}</span><button type="button" onClick={() => void historyQuery.refetch()}>Reintentar</button></div> : null}

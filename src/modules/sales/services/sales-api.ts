@@ -106,6 +106,7 @@ type SalesHistoryApiResponse = Omit<SalesHistoryResponse, 'items' | 'facets'> & 
   summary: {
     salesTotal: number | string
     salesCount: number | string
+    grossProfit: number | string
     collectedTotal: number | string
     outstandingTotal: number | string
     paymentMethods: Array<{ method: SalesHistoryResponse['summary']['paymentMethods'][number]['method']; amount: number | string }>
@@ -143,6 +144,7 @@ export async function getSalesHistory(filters: SalesHistoryFilters) {
       ...response.summary,
       salesTotal: normalizeNumber(response.summary.salesTotal),
       salesCount: normalizeNumber(response.summary.salesCount),
+      grossProfit: normalizeNumber(response.summary.grossProfit),
       collectedTotal: normalizeNumber(response.summary.collectedTotal),
       outstandingTotal: normalizeNumber(response.summary.outstandingTotal),
       paymentMethods: response.summary.paymentMethods.map((item) => ({
