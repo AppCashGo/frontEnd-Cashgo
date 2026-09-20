@@ -148,15 +148,26 @@
   color: #64748b;
 }
 
+.hoursGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
 .hoursGrid span {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   min-height: 38px;
   border-radius: 8px;
   background: #f3f6fa;
   padding: 0.45rem 0.7rem;
   color: #475569;
+}
+
+.hoursGrid small {
+  font-size: 0.9rem;
+  white-space: nowrap;
 }
 
 .catalogShell {
@@ -362,6 +373,15 @@
   .logoBox {
     width: 58px;
     height: 58px;
+  }
+
+  .hoursGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .hoursGrid span {
+    min-height: 44px;
+    padding: 0.55rem 0.75rem;
   }
 
   .categoryFilters {

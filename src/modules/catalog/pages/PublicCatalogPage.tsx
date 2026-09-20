@@ -12,6 +12,10 @@ import {
 import { useMemo, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { resolveProductImageUrl } from "@/modules/products/utils/resolve-product-image-url";
+import {
+  catalogWeekdayIds,
+  type CatalogBusinessHour,
+} from "@/modules/settings/types/settings";
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { formatTime12Hour } from "@/shared/utils/time";
 import { usePublicCatalogQuery } from "../hooks/use-public-catalog-query";
@@ -62,14 +66,8 @@ export function PublicCatalogPage() {
       ),
     [catalog?.products, categories, selectedCategoryId, searchTerm],
   );
-  const enabledHours = useMemo(
-    () =>
-      catalog?.settings.businessHours
-        ?.filter((businessHour) => businessHour.enabled)
-        .map((businessHour) => ({
-          ...businessHour,
-          label: weekdayLabels[businessHour.day],
-        })) ?? [],
+  const groupedHours = useMemo(
+    () => groupBusinessHours(catalog?.settings.businessHours),
     [catalog?.settings.businessHours],
   );
 
@@ -165,13 +163,15 @@ export function PublicCatalogPage() {
             <Clock3 aria-hidden="true" />
             <h2>Horarios de atención</h2>
           </div>
-          {enabledHours.length > 0 ? (
+          {groupedHours.length > 0 ? (
             <div className={styles.hoursGrid}>
-              {enabledHours.map((businessHour) => (
-                <span key={businessHour.day}>
+              {groupedHours.map((businessHour) => (
+                <span key={`${businessHour.firstDay}-${businessHour.lastDay}`}>
                   <strong>{businessHour.label}</strong>
-                  {formatTime12Hour(businessHour.opensAt)} -{" "}
-                  {formatTime12Hour(businessHour.closesAt)}
+                  <small>
+                    {formatTime12Hour(businessHour.opensAt)} –{" "}
+                    {formatTime12Hour(businessHour.closesAt)}
+                  </small>
                 </span>
               ))}
             </div>
@@ -388,4 +388,57 @@ function normalizeSearchValue(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function groupBusinessHours(
+  businessHours: CatalogBusinessHour[] | null | undefined,
+) {
+  const businessHoursByDay = new Map(
+    (businessHours ?? []).map((businessHour) => [
+      businessHour.day,
+      businessHour,
+    ]),
+  );
+  const groups: Array<{
+    closesAt: string;
+    firstDay: CatalogBusinessHour["day"];
+    label: string;
+    lastDay: CatalogBusinessHour["day"];
+    opensAt: string;
+  }> = [];
+
+  catalogWeekdayIds.forEach((day, dayIndex) => {
+    const businessHour = businessHoursByDay.get(day);
+    if (!businessHour?.enabled) {
+      return;
+    }
+
+    const previousGroup = groups[groups.length - 1];
+    const previousDayIndex = previousGroup
+      ? catalogWeekdayIds.indexOf(previousGroup.lastDay)
+      : -1;
+    const canJoinPreviousGroup =
+      previousGroup &&
+      previousDayIndex === dayIndex - 1 &&
+      previousGroup.opensAt === businessHour.opensAt &&
+      previousGroup.closesAt === businessHour.closesAt;
+
+    if (canJoinPreviousGroup) {
+      previousGroup.lastDay = day;
+      previousGroup.label = `${weekdayLabels[previousGroup.firstDay]} a ${weekdayLabels[
+        day
+      ].toLocaleLowerCase("es")}`;
+      return;
+    }
+
+    groups.push({
+      closesAt: businessHour.closesAt,
+      firstDay: day,
+      label: weekdayLabels[day],
+      lastDay: day,
+      opensAt: businessHour.opensAt,
+    });
+  });
+
+  return groups;
 }
