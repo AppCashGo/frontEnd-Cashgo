@@ -171,6 +171,7 @@ export type CustomerPaymentInput = {
 }
 
 export type CustomerPaymentAllocation = {
+  paymentId: string
   receivableId: string
   saleId: string
   saleNumber: string

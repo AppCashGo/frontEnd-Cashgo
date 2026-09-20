@@ -651,6 +651,115 @@
   gap: 0.75rem;
 }
 
+.invoiceActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+}
+
+.invoiceActions button {
+  min-height: 2.55rem;
+  display: inline-flex;
+  flex: 1 1 9.5rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid #bfd0ed;
+  border-radius: 0.75rem;
+  background: #f7faff;
+  color: #2457b8;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.invoiceActions button:first-child:not(:only-child) {
+  border-color: #b7e4ca;
+  background: #effbf4;
+  color: #168653;
+}
+
+.invoiceActions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.invoiceActions svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.documentFeedback {
+  margin: 0;
+  border: 1px solid #bfdbfe;
+  border-radius: 0.8rem;
+  background: #eff6ff;
+  color: #34506f;
+  padding: 0.75rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.paymentHistory {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.85rem;
+}
+
+.paymentHistory > strong {
+  color: #1f2a37;
+  font-size: 0.82rem;
+}
+
+.paymentHistoryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-radius: 0.75rem;
+  background: #f6f8fb;
+  padding: 0.65rem 0.75rem;
+}
+
+.paymentHistoryItem span {
+  display: block;
+  margin-top: 0.15rem;
+  color: #66758c;
+  font-size: 0.72rem;
+}
+
+.paymentReceiptActions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.paymentReceiptActions button {
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid #bfd0ed;
+  border-radius: 0.6rem;
+  background: #ffffff;
+  color: #2457b8;
+  padding: 0.35rem 0.55rem;
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.paymentReceiptActions svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
 @media (min-width: 560px) {
   .twoColumns,
   .infoGrid,
@@ -692,5 +801,20 @@
 
   .termsActions {
     grid-template-columns: 1fr;
+  }
+
+  .invoiceActions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .paymentHistoryItem {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .paymentReceiptActions button {
+    flex: 1;
+    justify-content: center;
   }
 }

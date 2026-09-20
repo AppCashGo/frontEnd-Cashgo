@@ -635,7 +635,8 @@
 
 .modifierModal,
 .moveModal,
-.freeSaleModal {
+.freeSaleModal,
+.saleSuccessModal {
   display: grid;
   gap: 1rem;
   width: min(35rem, 100%);
@@ -648,7 +649,8 @@
 
 .modifierModal .panelHeader,
 .moveModal .panelHeader,
-.freeSaleModal .panelHeader {
+.freeSaleModal .panelHeader,
+.saleSuccessModal .panelHeader {
   padding-right: 2.75rem;
 }
 

@@ -64,6 +64,20 @@ export type SaleAccountReceivable = {
   balance: number
   dueDate: string | null
   status: string
+  payments: SaleReceivablePayment[]
+}
+
+export type SaleReceivablePayment = SalePayment & {
+  createdByUser?: {
+    id: string
+    name: string
+  } | null
+}
+
+export type SalePerson = {
+  id: string
+  name: string
+  avatarUrl: string | null
 }
 
 export type SaleReceipt = {
@@ -80,6 +94,19 @@ export type SaleReceipt = {
   customer: {
     id: string
     name: string
+    phone: string | null
+    email: string | null
+    documentType: string | null
+    documentNumber: string | null
+    address: string | null
+    avatarUrl: string | null
+  } | null
+  seller: (SalePerson & { role: string }) | null
+  invoice: {
+    id: string
+    documentNumber: string
+    type: string
+    status: string
   } | null
   items: Array<{
     id: string
@@ -110,6 +137,64 @@ export type SaleReceipt = {
       subtotal: number
     }>
   }>
+}
+
+export type SalesHistoryStatus =
+  | 'PAID'
+  | 'PARTIAL'
+  | 'PENDING'
+  | 'OVERDUE'
+  | 'CANCELLED'
+
+export type SalesHistoryItem = {
+  id: string
+  saleNumber: string
+  saleDate: string
+  total: number
+  collectedAmount: number
+  balance: number
+  status: SalesHistoryStatus
+  itemCount: number
+  paymentMethods: SalePaymentMethod[]
+  customer: SalePerson | null
+  seller: (SalePerson & { role: string }) | null
+  invoice: {
+    id: string
+    documentNumber: string
+    type: string
+    status: string
+  } | null
+}
+
+export type SalesHistoryFilters = {
+  from?: string
+  to?: string
+  search?: string
+  sellerUserId?: string
+  status?: 'ALL' | SalesHistoryStatus
+  paymentMethod?: SalePaymentMethod | ''
+  page?: number
+  pageSize?: number
+}
+
+export type SalesHistoryResponse = {
+  summary: {
+    salesTotal: number
+    salesCount: number
+    collectedTotal: number
+    outstandingTotal: number
+    paymentMethods: Array<{ method: SalePaymentMethod; amount: number }>
+  }
+  items: SalesHistoryItem[]
+  facets: {
+    sellers: Array<{ id: string; name: string }>
+  }
+  pagination: {
+    page: number
+    pageSize: number
+    totalItems: number
+    totalPages: number
+  }
 }
 
 export type SaleCartItem = {

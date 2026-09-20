@@ -56,6 +56,7 @@ type CustomerOldestPaymentResultApiRecord = Omit<
       'receivableId' | 'saleId' | 'amount' | 'remainingBalance'
     > & {
       receivableId: number | string
+      paymentId: number | string
       saleId: number | string
       amount: number | string
       remainingBalance: number | string
@@ -319,6 +320,7 @@ export async function registerCustomerOldestPayment(
     allocations: result.allocations.map((allocation) => ({
       ...allocation,
       receivableId: String(allocation.receivableId),
+      paymentId: String(allocation.paymentId),
       saleId: String(allocation.saleId),
       amount: normalizeNumber(allocation.amount),
       remainingBalance: normalizeNumber(allocation.remainingBalance),
@@ -369,4 +371,10 @@ export async function sendCustomerReminderEmail(
     { customerId: string; receivableIds: string[]; deliveryStatus: 'SENT' },
     CustomerReminderEmailInput
   >(`/accounts-receivable/customers/${customerId}/reminders/email`, input)
+}
+
+export function downloadCustomerPaymentReceipt(paymentId: string) {
+  return getBlob(`/accounts-receivable/payments/${paymentId}/receipt`, {
+    accept: 'application/pdf',
+  })
 }

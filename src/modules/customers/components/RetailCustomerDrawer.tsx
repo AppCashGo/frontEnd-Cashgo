@@ -10,14 +10,17 @@ import {
   Banknote,
   CalendarClock,
   CalendarDays,
+  Download,
   Handshake,
   Hash,
   Mail,
   MapPin,
   MessageCircle,
+  Printer,
   Phone,
   ReceiptText,
   Send,
+  Share2,
   TrendingUp,
 } from 'lucide-react'
 import type {
@@ -31,20 +34,26 @@ import type {
   CustomerReceivableTermsInput,
 } from '@/modules/customers/types/customer'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
+import { downloadCustomerPaymentReceipt } from '@/modules/customers/services/customers-api'
+import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { formatDateTime } from '@/shared/utils/format-date-time'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
-import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { AvatarUploadField } from '@/shared/components/ui/AvatarUploadField'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { useImageUploadPreview } from '@/shared/hooks/use-image-upload-preview'
-import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import {
+  downloadPdfBlob,
+  openWhatsApp,
+  printPdfBlob,
+  sharePdfFile,
+} from '@/shared/utils/pdf-document-actions'
+import { normalizeWhatsAppPhone } from '@/shared/utils/normalize-whatsapp-phone'
+import {
   COLLECTED_PAYMENT_METHOD_OPTIONS,
-  getSharedPaymentMethodLabel,
 } from '@/shared/payments/payment-methods'
 import styles from './RetailCustomerDrawer.module.css'
 
@@ -70,18 +79,12 @@ type PaymentFormState = {
 }
 
 type PaymentReceiptState = {
-  customerName: string
-  saleNumber: string
-  amount: number
-  method: CustomerPaymentMethod
-  reference: string | null
-  notes: string | null
-  createdAt: string
+  paymentIds: string[]
+  saleNumbers: string[]
 }
 
 type PaymentReceiptBrand = {
   businessName: string
-  businessLogoUrl: string | null
 }
 
 type ReceivableTermsFormState = {
@@ -115,7 +118,7 @@ type RetailCustomerDrawerProps = {
   onRegisterPayment: (
     receivableId: string,
     input: CustomerPaymentInput,
-  ) => Promise<void>
+  ) => Promise<CustomerReceivable>
   onRegisterOldestPayment: (
     customerId: string,
     input: CustomerPaymentInput,
@@ -156,10 +159,6 @@ const PAYMENT_METHOD_OPTIONS = COLLECTED_PAYMENT_METHOD_OPTIONS as Array<{
   value: CustomerPaymentMethod
   label: string
 }>
-
-function getPaymentMethodLabel(method: CustomerPaymentMethod) {
-  return getSharedPaymentMethodLabel(method)
-}
 
 function getStatusLabel(status: string) {
   if (status === 'PAID') {
@@ -233,16 +232,6 @@ function parseMoney(value: string) {
   return Number.isFinite(parsedValue) ? parsedValue : 0
 }
 
-function normalizeWhatsAppPhone(value: string) {
-  const digits = value.replace(/\D/g, '').replace(/^00/, '')
-
-  if (digits.length === 10 && digits.startsWith('3')) {
-    return `57${digits}`
-  }
-
-  return digits
-}
-
 function formatReminderDate(value: string) {
   return new Intl.DateTimeFormat('es-CO', {
     dateStyle: 'long',
@@ -282,95 +271,6 @@ function buildGeneralCollectionReminder(
     .join('\n')
 
   return `Hola ${customerName}, te recordamos que tienes un saldo total pendiente de ${formatCurrency(totalOutstanding)} en ${accountLabel}:\n\n${accountDetail}\n\nSi ya realizaste el pago, por favor ignora este mensaje. Gracias, ${businessName}.`
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;')
-}
-
-function buildReceiptHtml(
-  receipt: PaymentReceiptState,
-  brand: PaymentReceiptBrand,
-) {
-  const businessName = brand.businessName.trim() || 'Cashgo'
-  const brandMarkup = brand.businessLogoUrl
-    ? `<img class="brand-logo" src="${escapeHtml(brand.businessLogoUrl)}" alt="${escapeHtml(businessName)}" />`
-    : `<span class="brand-fallback">${escapeHtml(businessName.slice(0, 1).toUpperCase())}</span>`
-
-  return `<!doctype html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <title>Comprobante de pago</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 40px; color: #1f2a37; }
-    h1 { margin: 0 0 24px; font-size: 28px; }
-    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-    .brand-logo,
-    .brand-fallback { width: 52px; height: 52px; border: 1px solid #d8e0ea; border-radius: 12px; background: #fff; }
-    .brand-logo { object-fit: contain; }
-    .brand-fallback { display: inline-flex; align-items: center; justify-content: center; color: #fff; background: #172331; font-weight: 800; }
-    .brand-name { margin: -16px 0 24px; color: #607089; font-weight: 700; }
-    .row { display: flex; justify-content: space-between; gap: 24px; padding: 12px 0; border-bottom: 1px solid #dde5ef; }
-    .total { margin-top: 28px; font-size: 28px; font-weight: 800; text-align: right; }
-    .footer { margin-top: 48px; color: #66758c; font-size: 12px; }
-  </style>
-</head>
-<body>
-  <header class="brand">
-    ${brandMarkup}
-    <div>
-      <h1>Comprobante de pago</h1>
-      <p class="brand-name">${escapeHtml(businessName)}</p>
-    </div>
-  </header>
-  <div class="row"><strong>Cliente</strong><span>${escapeHtml(receipt.customerName)}</span></div>
-  <div class="row"><strong>Venta</strong><span>${escapeHtml(receipt.saleNumber)}</span></div>
-  <div class="row"><strong>Fecha y hora</strong><span>${escapeHtml(formatDateTime(receipt.createdAt))}</span></div>
-  <div class="row"><strong>Medio de pago</strong><span>${escapeHtml(getPaymentMethodLabel(receipt.method))}</span></div>
-  <div class="row"><strong>Referencia</strong><span>${escapeHtml(receipt.reference ?? 'Sin referencia')}</span></div>
-  <div class="row"><strong>Nota</strong><span>${escapeHtml(receipt.notes ?? 'Sin nota')}</span></div>
-  <p class="total">${escapeHtml(formatCurrency(receipt.amount))}</p>
-  <p class="footer">Este comprobante fue generado desde el modulo de clientes.</p>
-</body>
-</html>`
-}
-
-function openReceipt(
-  receipt: PaymentReceiptState,
-  action: 'download' | 'print',
-  brand: PaymentReceiptBrand,
-) {
-  const receiptHtml = buildReceiptHtml(receipt, brand)
-  const receiptBlob = new Blob([receiptHtml], { type: 'text/html' })
-
-  if (action === 'download') {
-    downloadBlobFile(
-      receiptBlob,
-      `comprobante-cliente-${receipt.saleNumber}.html`,
-    )
-    return
-  }
-
-  const receiptUrl = URL.createObjectURL(receiptBlob)
-  const printWindow = window.open(receiptUrl, '_blank', 'noopener,noreferrer')
-
-  if (!printWindow) {
-    URL.revokeObjectURL(receiptUrl)
-    return
-  }
-
-  printWindow.onload = () => {
-    printWindow.focus()
-    printWindow.print()
-  }
-
-  setTimeout(() => URL.revokeObjectURL(receiptUrl), 60000)
 }
 
 export function RetailCustomerDrawer({
@@ -414,6 +314,8 @@ export function RetailCustomerDrawer({
   const [isGeneralReminderOpen, setGeneralReminderOpen] = useState(false)
   const [reminderMessage, setReminderMessage] = useState('')
   const [reminderFeedback, setReminderFeedback] = useState<string | null>(null)
+  const [documentFeedback, setDocumentFeedback] = useState<string | null>(null)
+  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null)
   const [termsReceivableId, setTermsReceivableId] = useState<string | null>(
     null,
   )
@@ -489,12 +391,10 @@ export function RetailCustomerDrawer({
         businessSettingsQuery.data?.legalName ??
         businessSettingsQuery.data?.businessName ??
         'Cashgo',
-      businessLogoUrl: resolveApiAssetUrl(businessSettingsQuery.data?.logoUrl),
     }),
     [
       businessSettingsQuery.data?.businessName,
       businessSettingsQuery.data?.legalName,
-      businessSettingsQuery.data?.logoUrl,
     ],
   )
 
@@ -510,6 +410,8 @@ export function RetailCustomerDrawer({
     setGeneralReminderOpen(false)
     setReminderMessage('')
     setReminderFeedback(null)
+    setDocumentFeedback(null)
+    setActiveDocumentId(null)
     setTermsReceivableId(null)
     setTermsError(null)
     setPromiseReceivableId(null)
@@ -652,6 +554,178 @@ export function RetailCustomerDrawer({
     }
   }
 
+  function buildSaleReminder(receivable: CustomerReceivable) {
+    const dueDate = receivable.dueDate
+      ? ` con vencimiento el ${formatReminderDate(receivable.dueDate)}`
+      : ''
+
+    return `Hola ${customer?.name ?? ''}, te recordamos que la venta ${receivable.saleNumber} tiene un saldo pendiente de ${formatCurrency(receivable.balance)}${dueDate}. Hemos preparado la factura en PDF con el detalle de la compra. Si ya realizaste el pago, por favor ignora este mensaje. Gracias, ${receiptBrand.businessName}.`
+  }
+
+  async function getSalePdf(saleId: string) {
+    const result = await downloadSaleReceipt(saleId)
+    return {
+      blob: result.blob,
+      filename: result.filename ?? `factura-${saleId}.pdf`,
+    }
+  }
+
+  async function handleSaleDocument(
+    saleId: string,
+    saleNumber: string,
+    action: 'download' | 'print',
+  ) {
+    setActiveDocumentId(`${saleId}:${action}`)
+    setDocumentFeedback(null)
+
+    try {
+      const { blob, filename } = await getSalePdf(saleId)
+      if (action === 'print') {
+        printPdfBlob(blob)
+      } else {
+        downloadPdfBlob(blob, filename)
+      }
+      setDocumentFeedback(
+        action === 'print'
+          ? `La factura ${saleNumber} está lista para imprimir.`
+          : `La factura ${saleNumber} se descargó en PDF.`,
+      )
+    } catch (error) {
+      setDocumentFeedback(
+        getErrorMessage(error, `No pudimos generar la factura ${saleNumber}.`),
+      )
+    } finally {
+      setActiveDocumentId(null)
+    }
+  }
+
+  async function handleShareReceivable(receivable: CustomerReceivable) {
+    if (!customer?.phone) {
+      setDocumentFeedback(
+        'Este cliente no tiene un celular registrado para abrir WhatsApp.',
+      )
+      return
+    }
+
+    const phone = normalizeWhatsAppPhone(customer.phone)
+    if (!/^\d{10,15}$/.test(phone)) {
+      setDocumentFeedback(
+        'El celular no tiene un formato internacional válido. Corrígelo antes de abrir WhatsApp.',
+      )
+      return
+    }
+
+    const message = buildSaleReminder(receivable)
+    setActiveDocumentId(`${receivable.saleId}:share`)
+    setDocumentFeedback(null)
+
+    try {
+      const { blob, filename } = await getSalePdf(receivable.saleId)
+      const result = await sharePdfFile({
+        blob,
+        filename,
+        title: `Factura ${receivable.saleNumber}`,
+        text: message,
+      })
+
+      if (result === 'shared') {
+        await onCreateCollectionActivity(receivable.id, {
+          type: 'REMINDER',
+          channel: 'WHATSAPP',
+          notes: message,
+        })
+        setDocumentFeedback(
+          'Se abrió el selector para compartir el mensaje y el PDF. Elige WhatsApp y confirma el envío.',
+        )
+        return
+      }
+
+      openWhatsApp(phone, message)
+      await onCreateCollectionActivity(receivable.id, {
+        type: 'REMINDER',
+        channel: 'WHATSAPP',
+        notes: message,
+      })
+      setDocumentFeedback(
+        'La factura se descargó y WhatsApp se abrió con el mensaje. Adjunta manualmente el PDF descargado antes de enviarlo.',
+      )
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setDocumentFeedback('No se compartió la factura porque cancelaste la acción.')
+      } else {
+        setDocumentFeedback(
+          getErrorMessage(error, 'No pudimos preparar la factura para compartir.'),
+        )
+      }
+    } finally {
+      setActiveDocumentId(null)
+    }
+  }
+
+  async function handlePaymentReceipts(action: 'download' | 'print') {
+    if (!lastReceipt) return
+
+    setActiveDocumentId(`payment:${action}`)
+    setDocumentFeedback(null)
+
+    try {
+      for (const [index, paymentId] of lastReceipt.paymentIds.entries()) {
+        const result = await downloadCustomerPaymentReceipt(paymentId)
+        const filename =
+          result.filename ?? `comprobante-${lastReceipt.saleNumbers[index]}.pdf`
+
+        if (action === 'print' && index === 0) {
+          printPdfBlob(result.blob)
+        } else {
+          downloadPdfBlob(result.blob, filename)
+        }
+      }
+      setDocumentFeedback(
+        lastReceipt.paymentIds.length > 1
+          ? `Se prepararon ${lastReceipt.paymentIds.length} comprobantes, uno por cada factura abonada.`
+          : action === 'print'
+            ? 'El comprobante está listo para imprimir.'
+            : 'El comprobante se descargó en PDF.',
+      )
+    } catch (error) {
+      setDocumentFeedback(
+        getErrorMessage(error, 'No pudimos generar el comprobante de pago.'),
+      )
+    } finally {
+      setActiveDocumentId(null)
+    }
+  }
+
+  async function handleSavedPaymentReceipt(
+    paymentId: string,
+    saleNumber: string,
+    action: 'download' | 'print',
+  ) {
+    setActiveDocumentId(`saved-payment:${paymentId}:${action}`)
+    setDocumentFeedback(null)
+
+    try {
+      const result = await downloadCustomerPaymentReceipt(paymentId)
+      const filename = result.filename ?? `comprobante-${saleNumber}.pdf`
+      if (action === 'print') {
+        printPdfBlob(result.blob)
+      } else {
+        downloadPdfBlob(result.blob, filename)
+      }
+      setDocumentFeedback(
+        action === 'print'
+          ? 'El comprobante está listo para imprimir.'
+          : 'El comprobante se descargó en PDF.',
+      )
+    } catch (error) {
+      setDocumentFeedback(
+        getErrorMessage(error, 'No pudimos generar el comprobante de pago.'),
+      )
+    } finally {
+      setActiveDocumentId(null)
+    }
+  }
+
   useEffect(() => {
     if (!isOpen || mode !== 'detail') {
       return
@@ -762,17 +836,26 @@ export function RetailCustomerDrawer({
         : {}),
     }
 
-    let receiptSaleNumber: string
+    let paymentIds: string[]
+    let saleNumbers: string[]
 
     try {
       if (isOldestPayment) {
         const result = await onRegisterOldestPayment(customer.id, input)
-        receiptSaleNumber = result.allocations
-          .map((allocation) => allocation.saleNumber)
-          .join(', ')
+        paymentIds = result.allocations.map((allocation) => allocation.paymentId)
+        saleNumbers = result.allocations.map((allocation) => allocation.saleNumber)
       } else {
-        await onRegisterPayment(selectedReceivable!.id, input)
-        receiptSaleNumber = selectedReceivable!.saleNumber
+        const updatedReceivable = await onRegisterPayment(
+          selectedReceivable!.id,
+          input,
+        )
+        const createdPayment =
+          updatedReceivable.payments[updatedReceivable.payments.length - 1]
+        if (!createdPayment) {
+          throw new Error('El abono se guardó, pero no fue posible identificar su comprobante.')
+        }
+        paymentIds = [createdPayment.id]
+        saleNumbers = [selectedReceivable!.saleNumber]
       }
     } catch (error) {
       setPaymentError(
@@ -785,13 +868,8 @@ export function RetailCustomerDrawer({
     }
 
     setLastReceipt({
-      customerName: customer.name,
-      saleNumber: receiptSaleNumber,
-      amount,
-      method: paymentForm.method,
-      reference: normalizeOptionalText(paymentForm.reference),
-      notes: normalizeOptionalText(paymentForm.notes),
-      createdAt: new Date().toISOString(),
+      paymentIds,
+      saleNumbers,
     })
     setPaymentForm((currentForm) => ({
       ...currentForm,
@@ -1161,8 +1239,31 @@ export function RetailCustomerDrawer({
                 <ReceivableCard
                   key={receivable.id}
                   receivable={receivable}
+                  isDocumentBusy={activeDocumentId?.startsWith(`${receivable.saleId}:`) ?? false}
+                  onDownload={() =>
+                    void handleSaleDocument(
+                      receivable.saleId,
+                      receivable.saleNumber,
+                      'download',
+                    )
+                  }
                   onEditTerms={handleStartTermsEdit}
+                  onPrint={() =>
+                    void handleSaleDocument(
+                      receivable.saleId,
+                      receivable.saleNumber,
+                      'print',
+                    )
+                  }
                   onPromise={handleStartPromise}
+                  onPaymentReceipt={(paymentId, action) =>
+                    void handleSavedPaymentReceipt(
+                      paymentId,
+                      receivable.saleNumber,
+                      action,
+                    )
+                  }
+                  onShare={() => void handleShareReceivable(receivable)}
                 />
               ))}
             </div>
@@ -1171,6 +1272,12 @@ export function RetailCustomerDrawer({
               Este cliente aun no tiene cuentas por cobrar.
             </p>
           )}
+
+          {documentFeedback ? (
+            <p className={styles.documentFeedback} aria-live="polite">
+              {documentFeedback}
+            </p>
+          ) : null}
 
           {promiseReceivable ? (
             <form
@@ -1391,6 +1498,36 @@ export function RetailCustomerDrawer({
                       </div>
                     ))}
                   </div>
+                  <div className={styles.invoiceActions}>
+                    <button
+                      disabled={activeDocumentId?.startsWith(`${purchase.saleId}:`) ?? false}
+                      type="button"
+                      onClick={() =>
+                        void handleSaleDocument(
+                          purchase.saleId,
+                          purchase.saleNumber,
+                          'download',
+                        )
+                      }
+                    >
+                      <Download aria-hidden="true" />
+                      Descargar factura
+                    </button>
+                    <button
+                      disabled={activeDocumentId?.startsWith(`${purchase.saleId}:`) ?? false}
+                      type="button"
+                      onClick={() =>
+                        void handleSaleDocument(
+                          purchase.saleId,
+                          purchase.saleNumber,
+                          'print',
+                        )
+                      }
+                    >
+                      <Printer aria-hidden="true" />
+                      Imprimir factura
+                    </button>
+                  </div>
                 </article>
               ))}
             </div>
@@ -1542,7 +1679,7 @@ export function RetailCustomerDrawer({
               type="button"
               onClick={() => {
                 if (lastReceipt) {
-                  openReceipt(lastReceipt, 'print', receiptBrand)
+                  void handlePaymentReceipts('print')
                 }
               }}
             >
@@ -1554,7 +1691,7 @@ export function RetailCustomerDrawer({
               type="button"
               onClick={() => {
                 if (lastReceipt) {
-                  openReceipt(lastReceipt, 'download', receiptBrand)
+                  void handlePaymentReceipts('download')
                 }
               }}
             >
@@ -1639,12 +1776,25 @@ function MetricTile({
 
 function ReceivableCard({
   receivable,
+  isDocumentBusy,
+  onDownload,
   onEditTerms,
+  onPrint,
+  onPaymentReceipt,
   onPromise,
+  onShare,
 }: {
   receivable: CustomerReceivable
+  isDocumentBusy: boolean
+  onDownload: () => void
   onEditTerms: (receivable: CustomerReceivable) => void
+  onPrint: () => void
+  onPaymentReceipt: (
+    paymentId: string,
+    action: 'download' | 'print',
+  ) => void
   onPromise: (receivable: CustomerReceivable) => void
+  onShare: () => void
 }) {
   const isPaid = receivable.balance <= 0
 
@@ -1682,6 +1832,23 @@ function ReceivableCard({
         </p>
       ) : null}
 
+      <div className={styles.invoiceActions}>
+        {!isPaid ? (
+          <button disabled={isDocumentBusy} type="button" onClick={onShare}>
+            <Share2 aria-hidden="true" />
+            Compartir por WhatsApp
+          </button>
+        ) : null}
+        <button disabled={isDocumentBusy} type="button" onClick={onDownload}>
+          <Download aria-hidden="true" />
+          Descargar factura
+        </button>
+        <button disabled={isDocumentBusy} type="button" onClick={onPrint}>
+          <Printer aria-hidden="true" />
+          Imprimir factura
+        </button>
+      </div>
+
       {!isPaid ? (
         <div className={styles.receivableActions}>
           <button
@@ -1700,6 +1867,41 @@ function ReceivableCard({
             <Handshake aria-hidden="true" />
             Registrar compromiso
           </button>
+        </div>
+      ) : null}
+
+      {receivable.payments.length > 0 ? (
+        <div className={styles.paymentHistory}>
+          <strong>Abonos registrados</strong>
+          {receivable.payments.map((payment) => (
+            <div className={styles.paymentHistoryItem} key={payment.id}>
+              <div>
+                <strong>{formatCurrency(payment.amount)}</strong>
+                <span>
+                  {formatDateTime(payment.createdAt)} ·{' '}
+                  {COLLECTED_PAYMENT_METHOD_OPTIONS.find(
+                    (option) => option.value === payment.method,
+                  )?.label ?? payment.method}
+                </span>
+              </div>
+              <div className={styles.paymentReceiptActions}>
+                <button
+                  type="button"
+                  onClick={() => onPaymentReceipt(payment.id, 'print')}
+                >
+                  <Printer aria-hidden="true" />
+                  Imprimir
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onPaymentReceipt(payment.id, 'download')}
+                >
+                  <Download aria-hidden="true" />
+                  PDF
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       ) : null}
 

@@ -554,7 +554,7 @@ export function RetailInventoryWorkspace() {
   const rawTab = searchParams.get('tab')
   const productWorkspaceReturnPath =
     searchParams.get('returnTo') === routeSegments.sales
-      ? routePaths.sales
+      ? routePaths.salesNew
       : null
   const productWorkspaceTab: RetailProductCreateWorkspaceTab =
     rawTab === 'variants' || rawTab === 'measures' ? rawTab : 'basic'

@@ -8,6 +8,17 @@
   align-content: start;
 }
 
+.salesNavigationRow {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.salesNavigationRow a {
+  color: #176046;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 .headerTabs {
   display: flex;
   align-items: center;

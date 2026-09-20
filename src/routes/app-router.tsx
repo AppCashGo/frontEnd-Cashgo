@@ -17,7 +17,8 @@ const AuthPage = lazy(routePageLoaders.auth);
 const DashboardPage = lazy(routePageLoaders.dashboard);
 const ProductsPage = lazy(routePageLoaders.products);
 const InventoryPage = lazy(routePageLoaders.inventory);
-const SalesPage = lazy(routePageLoaders.sales);
+const SalesOverviewPage = lazy(routePageLoaders.salesOverview);
+const SalesPage = lazy(routePageLoaders.salesRegister);
 const DeliveriesPage = lazy(routePageLoaders.deliveries);
 const CashRegisterPage = lazy(routePageLoaders.movements);
 const BillingPage = lazy(routePageLoaders.billing);
@@ -138,9 +139,27 @@ export const appRouter = createBrowserRouter([
             path: routeSegments.sales,
             element: withModuleRouteSuspense(
               routeSegments.sales,
-              <SalesPage />,
+              <SalesOverviewPage />,
               "Cargando ventas",
+              "Preparando el resumen y el historial de ventas.",
+            ),
+          },
+          {
+            path: `${routeSegments.sales}/new`,
+            element: withModuleRouteSuspense(
+              routeSegments.sales,
+              <SalesPage />,
+              "Cargando nueva venta",
               "Preparando la caja rápida y el flujo del carrito.",
+            ),
+          },
+          {
+            path: `${routeSegments.sales}/:saleId`,
+            element: withModuleRouteSuspense(
+              routeSegments.sales,
+              <SalesOverviewPage />,
+              "Cargando detalle de venta",
+              "Preparando la venta, sus productos y pagos.",
             ),
           },
           {

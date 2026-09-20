@@ -406,7 +406,7 @@ export function CustomersPage() {
     receivableId: string,
     input: CustomerPaymentInput,
   ) {
-    await registerPaymentMutation.mutateAsync({
+    const result = await registerPaymentMutation.mutateAsync({
       receivableId,
       input,
     })
@@ -415,6 +415,8 @@ export function CustomersPage() {
       customersQuery.refetch(),
       customerDetailQuery.refetch(),
     ])
+
+    return result
   }
 
   async function handleRegisterCustomerOldestPayment(

@@ -282,8 +282,8 @@ const routeOverridesByPreset: Partial<
         shortLabel: "IN",
       },
       [routeSegments.sales]: {
-        label: "Vender",
-        description: "Ventas rápidas en caja para el mostrador del negocio.",
+        label: "Ventas",
+        description: "Resumen, historial y registro de ventas.",
         shortLabel: "VN",
       },
       [routeSegments.movements]: {

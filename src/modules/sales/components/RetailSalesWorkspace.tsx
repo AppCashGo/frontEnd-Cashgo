@@ -1,6 +1,5 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
-import { useMutation } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -8,8 +7,6 @@ import {
   CheckCircle,
   CheckCircle2,
   Crown,
-  Download,
-  Printer,
 } from 'lucide-react'
 import {
   CashRegisterSessionDrawer,
@@ -50,8 +47,8 @@ import {
 } from '@/modules/sales/hooks/use-create-sale-mutation'
 import { useSaleCart } from '@/modules/sales/hooks/use-sale-cart'
 import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
+import { SaleCompletionActions } from '@/modules/sales/components/SaleCompletionActions'
 import { SaleQuantityInput } from '@/modules/sales/components/SaleQuantityInput'
-import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
 import type { SalePaymentMethod, SaleReceipt } from '@/modules/sales/types/sale'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import { routePaths } from '@/routes/route-paths'
@@ -65,7 +62,6 @@ import {
   toDateOnlyRequestDate,
   toOperationDateTime,
 } from '@/shared/utils/date-input'
-import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
@@ -881,34 +877,6 @@ type SaleSuccessModalProps = {
 }
 
 function SaleSuccessModal({ sale, onClose }: SaleSuccessModalProps) {
-  const receiptMutation = useMutation({
-    mutationFn: async (mode: 'download' | 'print') => {
-      const { blob, filename } = await downloadSaleReceipt(sale.id)
-
-      if (mode === 'download') {
-        downloadBlobFile(blob, filename ?? `${sale.saleNumber}-receipt.html`)
-        return
-      }
-
-      const receiptUrl = URL.createObjectURL(blob)
-      const printWindow = window.open(receiptUrl, '_blank', 'noopener,noreferrer')
-
-      if (!printWindow) {
-        URL.revokeObjectURL(receiptUrl)
-        throw new Error('No pudimos abrir la ventana de impresión.')
-      }
-
-      printWindow.onload = () => {
-        printWindow.focus()
-        printWindow.print()
-        window.setTimeout(() => URL.revokeObjectURL(receiptUrl), 1000)
-      }
-    },
-  })
-  const receiptErrorMessage = receiptMutation.error
-    ? getErrorMessage(receiptMutation.error, 'No pudimos generar el comprobante.')
-    : null
-
   return (
     <ModalShell
       ariaLabel="Venta creada con éxito"
@@ -941,47 +909,9 @@ function SaleSuccessModal({ sale, onClose }: SaleSuccessModalProps) {
           </div>
         </div>
 
-        {receiptErrorMessage ? (
-          <p className={styles.saleSuccessError}>{receiptErrorMessage}</p>
-        ) : null}
-
-        <div className={styles.saleSuccessActionsRow}>
-          <button
-            className={styles.saleSuccessSecondaryButton}
-            disabled={receiptMutation.isPending}
-            type="button"
-            onClick={() => {
-              void receiptMutation.mutateAsync('print')
-            }}
-          >
-            <Printer size={18} aria-hidden="true" />
-            Imprimir comprobante
-          </button>
-          <button
-            className={styles.saleSuccessSecondaryButton}
-            disabled={receiptMutation.isPending}
-            type="button"
-            onClick={() => {
-              void receiptMutation.mutateAsync('download')
-            }}
-          >
-            <Download size={18} aria-hidden="true" />
-            Descargar comprobante
-          </button>
-        </div>
-
-        <button
-          className={styles.saleSuccessPrimaryButton}
-          type="button"
-          onClick={onClose}
-        >
-          Seguir vendiendo
-        </button>
+        <SaleCompletionActions sale={sale} onRegisterAnother={onClose} />
       </div>
 
-      <p className={styles.saleSuccessFooterNote}>
-        Un resumen ha sido enviado al correo del cliente vinculado.
-      </p>
     </ModalShell>
   )
 }

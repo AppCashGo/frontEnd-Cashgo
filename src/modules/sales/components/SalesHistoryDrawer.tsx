@@ -145,7 +145,7 @@ export function SalesHistoryDrawer({
   async function downloadReceipt(sale: SaleReceipt) {
     try {
       const { blob, filename } = await downloadSaleReceipt(sale.id)
-      downloadBlobFile(blob, filename ?? `${sale.saleNumber}.html`)
+      downloadBlobFile(blob, filename ?? `${sale.saleNumber}.pdf`)
     } catch (error) {
       setFeedback(
         getErrorMessage(error, 'No pudimos descargar el comprobante.'),

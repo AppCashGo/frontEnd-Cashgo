@@ -73,7 +73,7 @@ export function DashboardPage() {
           <button aria-label="Ayuda" className={styles.iconButton} type="button">
             <CircleHelp aria-hidden="true" />
           </button>
-          <Link className={styles.saleButton} to={routePaths.sales}>
+          <Link className={styles.saleButton} to={routePaths.salesNew}>
             <Plus aria-hidden="true" />
             Nueva Venta
           </Link>
@@ -108,7 +108,7 @@ export function DashboardPage() {
                   : 'Actualizar resumen'}
               </button>
 
-              <Link className={styles.secondaryAction} to={routePaths.sales}>
+              <Link className={styles.secondaryAction} to={routePaths.salesNew}>
                 Nueva venta
               </Link>
 
@@ -245,7 +245,7 @@ export function DashboardPage() {
         />
       </div>
 
-      <Link aria-label="Crear nueva venta" className={styles.floatingAction} to={routePaths.sales}>
+      <Link aria-label="Crear nueva venta" className={styles.floatingAction} to={routePaths.salesNew}>
         <Plus aria-hidden="true" />
       </Link>
     </div>

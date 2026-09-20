@@ -15,11 +15,12 @@ type SalePaymentApiRecord = Omit<SalePayment, 'amount'> & {
 
 type SaleAccountReceivableApiRecord = Omit<
   SaleAccountReceivable,
-  'amount' | 'paidAmount' | 'balance'
+  'amount' | 'paidAmount' | 'balance' | 'payments'
 > & {
   amount: number | string
   paidAmount: number | string
   balance: number | string
+  payments?: SalePaymentApiRecord[]
 }
 
 type SaleItemApiRecord = {
@@ -64,6 +65,9 @@ export type SaleApiRecord = Omit<
   | 'payments'
   | 'accountReceivable'
   | 'returns'
+  | 'customer'
+  | 'seller'
+  | 'invoice'
 > & {
   subtotal: number | string
   discountTotal: number | string
@@ -74,6 +78,28 @@ export type SaleApiRecord = Omit<
   payments: SalePaymentApiRecord[]
   accountReceivable: SaleAccountReceivableApiRecord | null
   returns?: SaleReturnApiRecord[]
+  customer: {
+    id: string
+    name: string
+    phone?: string | null
+    email?: string | null
+    documentType?: string | null
+    documentNumber?: string | null
+    address?: string | null
+    avatarUrl?: string | null
+  } | null
+  sellerUser?: {
+    id: string
+    name: string
+    avatarUrl?: string | null
+    role: string
+  } | null
+  invoice?: {
+    id: string
+    fullNumber?: string | null
+    type: string
+    status: string
+  } | null
 }
 
 function normalizeSalePayment(record: SalePaymentApiRecord): SalePayment {
@@ -97,6 +123,7 @@ function normalizeAccountReceivable(
     amount: normalizeNumber(record.amount),
     paidAmount: normalizeNumber(record.paidAmount),
     balance: normalizeNumber(record.balance),
+    payments: (record.payments ?? []).map(normalizeSalePayment),
   }
 }
 
@@ -123,8 +150,31 @@ export function normalizeSaleRecord(record: SaleApiRecord): SaleReceipt {
     saleDate: record.saleDate ?? record.createdAt,
     customer: record.customer
       ? {
-          id: record.customer.id,
+          id: String(record.customer.id),
           name: record.customer.name,
+          phone: record.customer.phone ?? null,
+          email: record.customer.email ?? null,
+          documentType: record.customer.documentType ?? null,
+          documentNumber: record.customer.documentNumber ?? null,
+          address: record.customer.address ?? null,
+          avatarUrl: record.customer.avatarUrl ?? null,
+        }
+      : null,
+    seller: record.sellerUser
+      ? {
+          id: String(record.sellerUser.id),
+          name: record.sellerUser.name,
+          avatarUrl: record.sellerUser.avatarUrl ?? null,
+          role: record.sellerUser.role,
+        }
+      : null,
+    invoice: record.invoice
+      ? {
+          id: String(record.invoice.id),
+          documentNumber:
+            record.invoice.fullNumber ?? `Factura #${record.invoice.id}`,
+          type: record.invoice.type,
+          status: record.invoice.status,
         }
       : null,
     items: record.items.map(normalizeSaleItem),

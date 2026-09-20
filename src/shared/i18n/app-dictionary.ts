@@ -1403,8 +1403,8 @@ export const appDictionary = {
           description: "Movimientos de stock, ajustes manuales y alertas.",
         },
         sales: {
-          label: "Vender",
-          description: "Caja rápida, historial de ventas y flujo comercial.",
+          label: "Ventas",
+          description: "Resumen, historial y registro de ventas.",
         },
         movements: {
           label: "Movimientos",

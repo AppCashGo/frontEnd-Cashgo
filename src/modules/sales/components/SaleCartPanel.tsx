@@ -9,6 +9,7 @@ import type {
 } from '@/modules/sales/types/sale'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { SaleQuantityInput } from '@/modules/sales/components/SaleQuantityInput'
+import { SaleCompletionActions } from '@/modules/sales/components/SaleCompletionActions'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import styles from './SaleCartPanel.module.css'
@@ -150,12 +151,16 @@ export function SaleCartPanel({
 
       {completedSale ? (
         <div className={styles.successBanner} role="status">
-          <p className={styles.successTitle}>Venta completada con éxito</p>
+          <p className={styles.successTitle}>Venta registrada correctamente</p>
           <p className={styles.successDescription}>
             {completedSale.saleNumber} se creó el{' '}
             {formatDate(completedSale.createdAt)} por{' '}
             {formatCurrency(completedSale.total)}.
           </p>
+          <SaleCompletionActions
+            sale={completedSale}
+            onRegisterAnother={onClearCart}
+          />
         </div>
       ) : null}
 

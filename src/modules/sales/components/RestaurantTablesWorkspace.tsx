@@ -36,11 +36,12 @@ import {
   touchTableOrder,
 } from '@/modules/restaurant/utils/restaurant-workspace'
 import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
+import { SaleCompletionActions } from '@/modules/sales/components/SaleCompletionActions'
 import {
   useCreateSaleMutation,
   useSalesQuery,
 } from '@/modules/sales/hooks/use-create-sale-mutation'
-import type { SalePaymentMethod } from '@/modules/sales/types/sale'
+import type { SalePaymentMethod, SaleReceipt } from '@/modules/sales/types/sale'
 import { routePaths } from '@/routes/route-paths'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
@@ -199,6 +200,7 @@ export function RestaurantTablesWorkspace() {
   const [newTableZoneId, setNewTableZoneId] = useState('')
   const [editingTableId, setEditingTableId] = useState<string | null>(null)
   const [editingTableName, setEditingTableName] = useState('')
+  const [completedSale, setCompletedSale] = useState<SaleReceipt | null>(null)
 
   const currentCashRegisterSession = currentCashRegisterQuery.data ?? null
   const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data])
@@ -524,7 +526,8 @@ export function RestaurantTablesWorkspace() {
             : [],
       })
 
-      setOperationError(`Venta ${sale.saleNumber} registrada desde mostrador.`)
+      setOperationError(null)
+      setCompletedSale(sale)
       resetCounterSaleForm()
       setIsCounterSaleOpen(false)
     } catch (error) {
@@ -560,7 +563,8 @@ export function RestaurantTablesWorkspace() {
             : [],
       })
 
-      setOperationError(`Venta libre ${sale.saleNumber} registrada.`)
+      setOperationError(null)
+      setCompletedSale(sale)
       resetFreeSaleForm()
       setIsFreeSaleOpen(false)
     } catch (error) {
@@ -1164,7 +1168,8 @@ export function RestaurantTablesWorkspace() {
           orders: nextOrders,
         }
       })
-      setOperationError(`Venta ${sale.saleNumber} registrada correctamente.`)
+      setOperationError(null)
+      setCompletedSale(sale)
       setPanelMode('ORDER')
       setSelectedCloseItemIds([])
       resetCloseForm()
@@ -2522,6 +2527,32 @@ export function RestaurantTablesWorkspace() {
         sales={salesQuery.data ?? []}
         onClose={() => setSalesHistoryOpen(false)}
       />
+
+      {completedSale ? (
+        <ModalShell
+          ariaLabel="Venta registrada correctamente"
+          className={styles.modalBackdrop}
+          closeButtonClassName={styles.iconButton}
+          closeContent="x"
+          closeLabel="Cerrar"
+          isOpen
+          panelClassName={styles.saleSuccessModal}
+          onClose={() => setCompletedSale(null)}
+        >
+          <div className={styles.panelHeader}>
+            <div>
+              <p className={styles.panelEyebrow}>Venta registrada correctamente</p>
+              <h3>{completedSale.saleNumber}</h3>
+            </div>
+            <strong>{formatCurrency(completedSale.total)}</strong>
+          </div>
+          <p>La venta y sus movimientos quedaron guardados.</p>
+          <SaleCompletionActions
+            sale={completedSale}
+            onRegisterAnother={() => setCompletedSale(null)}
+          />
+        </ModalShell>
+      ) : null}
     </div>
   )
 }

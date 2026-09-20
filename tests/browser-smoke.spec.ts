@@ -454,8 +454,37 @@ test("logs in with the development account and loads the sales workspace", async
 
   await loginWithDevelopmentAccount(page, request);
 
+  await page.goto("/sales/new");
+  await expect(page).toHaveURL(/\/sales\/new$/);
+  await expect(
+    page.getByRole("heading", { name: /nueva venta/i }),
+  ).toBeVisible();
+  expect(browserErrors).toEqual([]);
+});
+
+test("loads the operational sales summary and opens the existing POS", async ({
+  page,
+  request,
+}) => {
+  const browserErrors = collectBrowserErrors(page);
+
+  await loginWithDevelopmentAccount(page, request);
   await page.goto("/sales");
+
   await expect(page).toHaveURL(/\/sales$/);
+  await expect(
+    page.getByRole("heading", { name: "Ventas", exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Ventas totales", { exact: true })).toBeVisible();
+  await expect(page.getByText("N.º de ventas", { exact: true })).toBeVisible();
+  await expect(page.getByText("Cobrado", { exact: true })).toBeVisible();
+  await expect(page.getByText("Por cobrar", { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Historial de ventas" }),
+  ).toBeVisible();
+
+  await page.getByRole("link", { name: /registrar venta/i }).click();
+  await expect(page).toHaveURL(/\/sales\/new$/);
   await expect(
     page.getByRole("heading", { name: /nueva venta/i }),
   ).toBeVisible();
@@ -470,7 +499,7 @@ test("opens the responsive sales history and returns workspace", async ({
 
   await loginWithDevelopmentAccount(page, request);
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/sales");
+  await page.goto("/sales/new");
   await page.getByRole("button", { name: "Historial de ventas" }).click();
 
   const drawer = page.getByRole("dialog", { name: "Historial de ventas" });
@@ -493,8 +522,8 @@ test("closes the current cash register from the sales workspace", async ({
   const cashRegister = await ensureOpenCashRegister(request, session);
   const expectedCashAmount = toNumber(cashRegister.cashExpectedTotal);
 
-  await page.goto("/sales");
-  await expect(page).toHaveURL(/\/sales$/);
+  await page.goto("/sales/new");
+  await expect(page).toHaveURL(/\/sales\/new$/);
   await expect(
     page.getByRole("heading", { name: /nueva venta/i }),
   ).toBeVisible();
@@ -563,8 +592,8 @@ test("opens a cash register from sales and rejects duplicate sessions", async ({
 
   await closeCurrentCashRegisterIfAny(request, session);
 
-  await page.goto("/sales");
-  await expect(page).toHaveURL(/\/sales$/);
+  await page.goto("/sales/new");
+  await expect(page).toHaveURL(/\/sales\/new$/);
   await expect(
     page.getByRole("heading", { name: /nueva venta/i }),
   ).toBeVisible();
@@ -643,8 +672,8 @@ test("creates a POS cash sale, decrements stock and records the movement", async
   let createdSale: SmokeSaleRecord | null = null;
 
   try {
-    await page.goto("/sales");
-    await expect(page).toHaveURL(/\/sales$/);
+  await page.goto("/sales/new");
+  await expect(page).toHaveURL(/\/sales\/new$/);
     await expect(
       page.getByRole("heading", { name: /nueva venta/i }),
     ).toBeVisible();
@@ -784,8 +813,8 @@ test("creates a POS split-payment sale and records each payment method", async (
   let createdSale: SmokeSaleRecord | null = null;
 
   try {
-    await page.goto("/sales");
-    await expect(page).toHaveURL(/\/sales$/);
+  await page.goto("/sales/new");
+  await expect(page).toHaveURL(/\/sales\/new$/);
     await expect(
       page.getByRole("heading", { name: /nueva venta/i }),
     ).toBeVisible();
@@ -935,8 +964,8 @@ test("cancels a POS sale from movements and restores stock", async ({
   try {
     await ensureOpenCashRegister(request, session);
 
-    await page.goto("/sales");
-    await expect(page).toHaveURL(/\/sales$/);
+  await page.goto("/sales/new");
+  await expect(page).toHaveURL(/\/sales\/new$/);
     await expect(
       page.getByRole("heading", { name: /nueva venta/i }),
     ).toBeVisible();
@@ -1069,8 +1098,8 @@ test("creates a POS credit sale and records the customer receivable", async ({
   let createdSale: SmokeSaleRecord | null = null;
 
   try {
-    await page.goto("/sales");
-    await expect(page).toHaveURL(/\/sales$/);
+  await page.goto("/sales/new");
+  await expect(page).toHaveURL(/\/sales\/new$/);
     await expect(
       page.getByRole("heading", { name: /nueva venta/i }),
     ).toBeVisible();
@@ -1977,7 +2006,8 @@ test("renders core retail routes across desktop, tablet and mobile widths", asyn
     { width: 1366, height: 768 },
   ];
   const routes = [
-    { path: "/sales", heading: "Nueva venta" },
+    { path: "/sales", heading: "Ventas" },
+    { path: "/sales/new", heading: "Nueva venta" },
     { path: "/inventory", heading: "Inventario" },
     { path: "/billing", heading: "Facturación" },
     { path: "/customers", heading: "Clientes" },
@@ -2070,7 +2100,7 @@ test("preloads a module when the user shows navigation intent", async ({
   });
 
   await loginWithDevelopmentAccount(page, request);
-  await page.goto("/sales");
+  await page.goto("/sales/new");
   await expect(
     page.getByRole("heading", { name: /nueva venta/i }),
   ).toBeVisible();
@@ -2079,7 +2109,7 @@ test("preloads a module when the user shows navigation intent", async ({
   await page.getByRole("link", { name: /^productos/i }).hover();
 
   await expect.poll(() => productModuleRequests.length).toBeGreaterThan(0);
-  await expect(page).toHaveURL(/\/sales$/);
+  await expect(page).toHaveURL(/\/sales\/new$/);
   expect(browserErrors).toEqual([]);
 });
 
@@ -2091,7 +2121,7 @@ test("logs out from the sidebar and clears the persisted session", async ({
 
   await loginWithDevelopmentAccount(page, request);
 
-  await page.goto("/sales");
+  await page.goto("/sales/new");
   await expect(
     page.getByRole("heading", { name: /nueva venta/i }),
   ).toBeVisible();
@@ -2122,7 +2152,7 @@ test("redirects to auth when a protected request rejects the stored token", asyn
     accessToken: "expired-smoke-token",
   });
 
-  await page.goto("/sales");
+  await page.goto("/sales/new");
   await expect(page).toHaveURL(/\/auth$/);
   await expect(page.locator("body")).toContainText(/Cashgo/);
 

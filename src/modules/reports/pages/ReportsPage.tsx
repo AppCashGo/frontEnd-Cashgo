@@ -1,5 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { lazy, Suspense, useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 import { ReportsChartCard } from '@/modules/reports/components/ReportsChartCard'
 import { ReportsDateFilters } from '@/modules/reports/components/ReportsDateFilters'
 import { ReportsMetricCard } from '@/modules/reports/components/ReportsMetricCard'
@@ -20,6 +21,7 @@ import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { routePaths } from '@/routes/route-paths'
 import styles from './ReportsPage.module.css'
 import retailPageStyles from './ReportsRetailPage.module.css'
 
@@ -776,6 +778,9 @@ export function ReportsPage() {
 
         {retailTab === 'sales' ? (
           <>
+            <div className={retailPageStyles.salesNavigationRow}>
+              <Link to={routePaths.sales}>Ver historial de ventas →</Link>
+            </div>
             <div className={retailPageStyles.salesSummaryGrid}>
               <article className={retailPageStyles.salesSummaryCardFeatured}>
                 <p className={retailPageStyles.salesSummaryLabel}>
