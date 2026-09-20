@@ -2,6 +2,7 @@
   display: grid;
   gap: 0.7rem;
   min-height: 9.75rem;
+  min-width: 0;
   padding: 1.2rem;
   border-radius: 1.4rem;
   background:
@@ -12,6 +13,7 @@
     ),
     #ffffff;
   box-shadow: 0 1rem 2.2rem rgba(15, 23, 42, 0.06);
+  container-type: inline-size;
 }
 
 .cardAccent {
@@ -69,13 +71,19 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-accent-dark);
+  overflow-wrap: anywhere;
 }
 
 .value {
   margin: 0;
   font-size: clamp(1.65rem, 4vw, 2.3rem);
+  font-size: clamp(1.55rem, 12cqi, 2.3rem);
   font-weight: 800;
   line-height: 1.05;
+  min-width: 0;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
   color: var(--color-ink);
 }
 
@@ -83,4 +91,5 @@
   margin: 0;
   color: var(--color-muted);
   line-height: 1.6;
+  overflow-wrap: anywhere;
 }

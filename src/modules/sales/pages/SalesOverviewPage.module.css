@@ -3,7 +3,9 @@
 .headerActions button{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:0;border-radius:13px;font-weight:800;text-decoration:none}
 
 /* Operational sales summary and filters use the shared retail field language. */
+.body{container:sales-overview / inline-size}
 .metricsGrid{grid-template-columns:repeat(5,minmax(0,1fr))}
+.metricsGrid>*{min-width:0}
 .filters{align-items:end}
 .filterField{display:grid;min-width:0;gap:6px}
 .filterLabel{color:#566277;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
@@ -16,3 +18,25 @@
 @media(max-width:1050px){.metricsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:680px){.headerActions button{flex:1}}
 @media(max-width:430px){.metricsGrid{grid-template-columns:1fr}}
+
+@container sales-overview (max-width:82rem){
+  .metricsGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
+  .metricsGrid>*{grid-column:span 2}
+  .metricsGrid>*:nth-last-child(-n+2){grid-column:span 3}
+}
+
+@container sales-overview (max-width:68rem){
+  .paymentGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+@container sales-overview (max-width:54rem){
+  .metricsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .metricsGrid>*{grid-column:auto}
+  .metricsGrid>*:last-child:nth-child(odd){grid-column:1/-1}
+  .paymentGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+@container sales-overview (max-width:36rem){
+  .metricsGrid,.paymentGrid{grid-template-columns:1fr}
+  .metricsGrid>*{grid-column:auto}
+}
