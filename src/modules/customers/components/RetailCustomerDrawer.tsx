@@ -551,7 +551,9 @@ export function RetailCustomerDrawer({
 
     try {
       await onSendReminderEmail(customer.id, reminderMessage)
-      setReminderFeedback('Correo enviado y confirmado por el proveedor.')
+      setReminderFeedback(
+        'Correo y estado de cuenta PDF enviados y confirmados por el proveedor.',
+      )
     } catch (error) {
       setReminderFeedback(
         getErrorMessage(
@@ -1368,7 +1370,9 @@ export function RetailCustomerDrawer({
                   onClick={() => void handleSendReminderEmail()}
                 >
                   <Send aria-hidden="true" />
-                  {isEmailSubmitting ? 'Enviando…' : 'Enviar correo con CashGo'}
+                  {isEmailSubmitting
+                    ? 'Enviando correo y PDF…'
+                    : 'Enviar correo + PDF con CashGo'}
                 </button>
               ) : customer.email ? (
                 <p className={styles.deliveryNotice}>
