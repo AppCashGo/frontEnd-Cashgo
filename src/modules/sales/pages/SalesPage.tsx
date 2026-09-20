@@ -97,7 +97,8 @@ function StandardSalesPage() {
   const [taxInput, setTaxInput] = useState('0')
   const [paymentReference, setPaymentReference] = useState('')
   const [notes, setNotes] = useState('')
-  const [dueDate, setDueDate] = useState(getTodayDateInput)
+  const [saleDate, setSaleDate] = useState(getTodayDateInput)
+  const [dueDate, setDueDate] = useState('')
   const deferredSearchValue = useDeferredValue(searchValue.trim().toLowerCase())
 
   const productsQuery = useProductsQuery()
@@ -156,7 +157,8 @@ function StandardSalesPage() {
     setTaxInput('0')
     setPaymentReference('')
     setNotes('')
-    setDueDate(getTodayDateInput())
+    setSaleDate(getTodayDateInput())
+    setDueDate('')
   }
 
   async function handleFinalizeSale() {
@@ -202,9 +204,11 @@ function StandardSalesPage() {
         discountTotal,
         taxTotal,
         notes: normalizeOptionalText(notes),
-        saleDate: toOperationDateTime(dueDate),
+        saleDate: toOperationDateTime(saleDate),
         dueDate:
-          pendingBalance > 0 ? toDateOnlyRequestDate(dueDate) : undefined,
+          pendingBalance > 0 && dueDate
+            ? toDateOnlyRequestDate(dueDate)
+            : undefined,
         payments:
           paidAmount > 0
             ? [

@@ -98,6 +98,7 @@ type ProductSortOption =
 type QuickSaleFormState = {
   settlement: RetailSettlement
   saleDate: string
+  dueDate: string
   amountInput: string
   customerId: string
   paymentOption: RetailPaymentOption
@@ -201,6 +202,7 @@ function createDefaultQuickSaleState(): QuickSaleFormState {
   return {
     settlement: 'PAID',
     saleDate: getTodayDateInput(),
+    dueDate: '',
     amountInput: '',
     customerId: '',
     paymentOption: 'CASH',
@@ -924,6 +926,7 @@ export function RetailSalesWorkspace() {
   const [discountPercentInput, setDiscountPercentInput] = useState('0')
   const [discountAmountInput, setDiscountAmountInput] = useState('0')
   const [saleDate, setSaleDate] = useState(getTodayDateInput)
+  const [creditDueDate, setCreditDueDate] = useState('')
   const [paymentSplitCount, setPaymentSplitCount] =
     useState<PaymentSplitOption>('1')
   const [paymentOption, setPaymentOption] =
@@ -1213,6 +1216,7 @@ export function RetailSalesWorkspace() {
     setDiscountPercentInput('0')
     setDiscountAmountInput('0')
     setSaleDate(getTodayDateInput())
+    setCreditDueDate('')
     setPaymentSplitCount('1')
     setPaymentOption('CASH')
     setPaymentSplits(createCatalogPaymentSplits(1, 0))
@@ -1572,6 +1576,17 @@ export function RetailSalesWorkspace() {
       return
     }
 
+    if (
+      settlement === 'CREDIT' &&
+      creditDueDate &&
+      creditDueDate < saleDate
+    ) {
+      markCheckoutError(
+        'La fecha de vencimiento no puede ser anterior a la fecha de la venta.',
+      )
+      return
+    }
+
     const paidPayments = usesSplitPayments
       ? splitPaymentRows.map((paymentSplit) => ({
           method: mapRetailPaymentOptionToSaleMethod(paymentSplit.paymentOption),
@@ -1629,8 +1644,8 @@ export function RetailSalesWorkspace() {
         notes: normalizeOptionalText(receiptNote),
         saleDate: toOperationDateTime(saleDate),
         dueDate:
-          settlement === 'CREDIT'
-            ? toDateOnlyRequestDate(saleDate)
+          settlement === 'CREDIT' && creditDueDate
+            ? toDateOnlyRequestDate(creditDueDate)
             : undefined,
         payments: settlement === 'PAID' ? paidPayments : [],
       })
@@ -1671,6 +1686,17 @@ export function RetailSalesWorkspace() {
       return
     }
 
+    if (
+      quickSaleForm.settlement === 'CREDIT' &&
+      quickSaleForm.dueDate &&
+      quickSaleForm.dueDate < quickSaleForm.saleDate
+    ) {
+      markCheckoutError(
+        'La fecha de vencimiento no puede ser anterior a la fecha de la venta.',
+      )
+      return
+    }
+
     const refreshedSession = await currentCashRegisterQuery.refetch()
     if (!refreshedSession.data) {
       beginCashSessionFlow('QUICK_SALE')
@@ -1686,8 +1712,8 @@ export function RetailSalesWorkspace() {
         notes: normalizeOptionalText(quickSaleForm.note),
         saleDate: toOperationDateTime(quickSaleForm.saleDate),
         dueDate:
-          quickSaleForm.settlement === 'CREDIT'
-            ? toDateOnlyRequestDate(quickSaleForm.saleDate)
+          quickSaleForm.settlement === 'CREDIT' && quickSaleForm.dueDate
+            ? toDateOnlyRequestDate(quickSaleForm.dueDate)
             : undefined,
         payments:
           quickSaleForm.settlement === 'PAID'
@@ -2155,90 +2181,174 @@ export function RetailSalesWorkspace() {
                 <div className={styles.panelBody}>
                   <div className={styles.paymentHeader}>
                     <button
+                      aria-label="Volver al carrito"
                       className={styles.backButton}
                       type="button"
                       onClick={() => setSaleStep('CATALOG')}
                     >
                       ←
                     </button>
-                    <h2 className={styles.paymentTitle}>Pago</h2>
+                    <div>
+                      <h2 className={styles.paymentTitle}>Finalizar venta</h2>
+                      <p className={styles.paymentSubtitle}>
+                        Define cómo se pagará y revisa los datos antes de crearla.
+                      </p>
+                    </div>
                   </div>
 
-                  <div className={styles.segmentedControl}>
-                    <button
-                      className={
-                        settlement === 'PAID'
-                          ? styles.segmentButtonActiveSuccess
-                          : styles.segmentButton
-                      }
-                      type="button"
-                      onClick={() => setSettlement('PAID')}
-                    >
-                      Pagada
-                    </button>
-                    <button
-                      className={
-                        settlement === 'CREDIT'
-                          ? styles.segmentButtonActiveDanger
-                          : styles.segmentButton
-                      }
-                      type="button"
-                      onClick={() => setSettlement('CREDIT')}
-                    >
-                      A crédito
-                    </button>
-                  </div>
+                  <section className={styles.paymentSection}>
+                    <div className={styles.paymentSectionHeader}>
+                      <span className={styles.paymentStepBadge}>1</span>
+                      <div>
+                        <h3>Condición de pago</h3>
+                        <p>Indica si el cliente paga ahora o queda debiendo.</p>
+                      </div>
+                    </div>
 
-                  <label className={styles.field}>
-                    <span className={styles.fieldLabel}>Fecha de la venta *</span>
-                    <input
-                      className={styles.input}
-                      type="date"
-                      value={saleDate}
-                      onChange={(event) => setSaleDate(event.target.value)}
-                    />
-                  </label>
-
-                  <label className={styles.field}>
-                    <span className={styles.fieldLabel}>
-                      Cliente{settlement === 'CREDIT' ? ' *' : ''}
-                    </span>
-                    <div className={styles.customerSelectRow}>
-                      <SearchableSelect
-                        className={styles.select}
-                        value={selectedCustomerId}
-                        onChange={(event) => {
-                          if (event.target.value === createCustomerSelectValue) {
-                            handleOpenQuickCustomerDrawer('CATALOG')
-                            return
-                          }
-
-                          setSelectedCustomerId(event.target.value)
-                        }}
-                      >
-                        <option value="">Selecciona un cliente</option>
-                        <option value={createCustomerSelectValue}>
-                          ＋ Crear cliente nuevo
-                        </option>
-                        {customers.map((customer) => (
-                          <option key={customer.id} value={customer.id}>
-                            {customer.name}
-                          </option>
-                        ))}
-                      </SearchableSelect>
+                    <div className={styles.segmentedControl}>
                       <button
-                        aria-label="Crear cliente sin salir de la venta"
-                        className={styles.addCustomerButton}
-                        title="Crear cliente"
+                        className={
+                          settlement === 'PAID'
+                            ? styles.segmentButtonActiveSuccess
+                            : styles.segmentButton
+                        }
                         type="button"
-                        onClick={() => handleOpenQuickCustomerDrawer('CATALOG')}
+                        onClick={() => setSettlement('PAID')}
                       >
-                        +
+                        Pagada ahora
+                      </button>
+                      <button
+                        className={
+                          settlement === 'CREDIT'
+                            ? styles.segmentButtonActiveDanger
+                            : styles.segmentButton
+                        }
+                        type="button"
+                        onClick={() => setSettlement('CREDIT')}
+                      >
+                        Venta a crédito
                       </button>
                     </div>
-                  </label>
+                  </section>
 
-                  <div className={styles.divider} />
+                  <section className={styles.paymentSection}>
+                    <div className={styles.paymentSectionHeader}>
+                      <span className={styles.paymentStepBadge}>2</span>
+                      <div>
+                        <h3>Datos de la venta</h3>
+                        <p>Registra la fecha y el cliente relacionado.</p>
+                      </div>
+                    </div>
+
+                    <div className={styles.paymentFieldsGrid}>
+                      <label className={styles.field}>
+                        <span className={styles.fieldLabel}>Fecha de la venta *</span>
+                        <input
+                          className={styles.input}
+                          type="date"
+                          value={saleDate}
+                          onChange={(event) => setSaleDate(event.target.value)}
+                        />
+                      </label>
+
+                      <label className={styles.field}>
+                        <span className={styles.fieldLabel}>
+                          Cliente{settlement === 'CREDIT' ? ' *' : ''}
+                        </span>
+                        <div className={styles.customerSelectRow}>
+                          <SearchableSelect
+                            className={styles.select}
+                            value={selectedCustomerId}
+                            onChange={(event) => {
+                              if (
+                                event.target.value === createCustomerSelectValue
+                              ) {
+                                handleOpenQuickCustomerDrawer('CATALOG')
+                                return
+                              }
+
+                              setSelectedCustomerId(event.target.value)
+                            }}
+                          >
+                            <option value="">Selecciona un cliente</option>
+                            <option value={createCustomerSelectValue}>
+                              ＋ Crear cliente nuevo
+                            </option>
+                            {customers.map((customer) => (
+                              <option key={customer.id} value={customer.id}>
+                                {customer.name}
+                              </option>
+                            ))}
+                          </SearchableSelect>
+                          <button
+                            aria-label="Crear cliente sin salir de la venta"
+                            className={styles.addCustomerButton}
+                            title="Crear cliente"
+                            type="button"
+                            onClick={() =>
+                              handleOpenQuickCustomerDrawer('CATALOG')
+                            }
+                          >
+                            +
+                          </button>
+                        </div>
+                      </label>
+                    </div>
+
+                    {settlement === 'CREDIT' ? (
+                      <div className={styles.creditTermsCard}>
+                        <div className={styles.creditTermsSummary}>
+                          <div>
+                            <strong>Condiciones del crédito</strong>
+                            <p>
+                              El vencimiento es opcional. Sin fecha, la cuenta
+                              seguirá pendiente y no se marcará como vencida.
+                            </p>
+                          </div>
+                          <span>{formatCurrency(totalAmount)}</span>
+                        </div>
+                        <label className={styles.field}>
+                          <span className={styles.fieldLabel}>
+                            Fecha acordada de pago <em>Opcional</em>
+                          </span>
+                          <input
+                            aria-describedby="credit-due-date-help"
+                            className={styles.input}
+                            min={saleDate}
+                            type="date"
+                            value={creditDueDate}
+                            onChange={(event) =>
+                              setCreditDueDate(event.target.value)
+                            }
+                          />
+                          <span
+                            className={styles.fieldHint}
+                            id="credit-due-date-help"
+                          >
+                            Selecciona únicamente una fecha realmente acordada con
+                            el cliente.
+                          </span>
+                        </label>
+                      </div>
+                    ) : null}
+                  </section>
+
+                  <section className={styles.paymentSection}>
+                    <div className={styles.paymentSectionHeader}>
+                      <span className={styles.paymentStepBadge}>3</span>
+                      <div>
+                        <h3>
+                          {settlement === 'PAID'
+                            ? 'Cobro y comprobante'
+                            : 'Ajustes y comprobante'}
+                        </h3>
+                        <p>
+                          {settlement === 'PAID'
+                            ? 'Configura los medios de pago y los datos adicionales.'
+                            : 'Agrega descuentos o notas antes de guardar.'}
+                        </p>
+                      </div>
+                    </div>
 
                   {!discountOpen ? (
                     <button
@@ -2289,8 +2399,6 @@ export function RetailSalesWorkspace() {
 
                   {settlement === 'PAID' ? (
                     <>
-                      <div className={styles.divider} />
-
                       <div className={styles.fieldGroup}>
                         <p className={styles.helperTitle}>
                           Selecciona el número de pagos que realizarás y el método de
@@ -2403,8 +2511,6 @@ export function RetailSalesWorkspace() {
                     </>
                   ) : null}
 
-                  <div className={styles.divider} />
-
                   <label className={styles.field}>
                     <span className={styles.fieldLabel}>Nota del comprobante</span>
                     <textarea
@@ -2415,6 +2521,7 @@ export function RetailSalesWorkspace() {
                       onChange={(event) => setReceiptNote(event.target.value)}
                     />
                   </label>
+                  </section>
                 </div>
 
                 <div className={styles.panelFooter}>
@@ -2610,6 +2717,38 @@ export function RetailSalesWorkspace() {
                 }
               />
             </label>
+
+            {quickSaleForm.settlement === 'CREDIT' ? (
+              <div className={styles.creditTermsCard}>
+                <div className={styles.creditTermsSummary}>
+                  <div>
+                    <strong>Condiciones del crédito</strong>
+                    <p>
+                      Si no hay una fecha acordada, puedes dejar el vencimiento
+                      vacío.
+                    </p>
+                  </div>
+                  <span>{formatCurrency(quickSaleAmount)}</span>
+                </div>
+                <label className={styles.field}>
+                  <span className={styles.fieldLabel}>
+                    Fecha acordada de pago <em>Opcional</em>
+                  </span>
+                  <input
+                    className={styles.input}
+                    min={quickSaleForm.saleDate}
+                    type="date"
+                    value={quickSaleForm.dueDate}
+                    onChange={(event) =>
+                      setQuickSaleForm((currentState) => ({
+                        ...currentState,
+                        dueDate: event.target.value,
+                      }))
+                    }
+                  />
+                </label>
+              </div>
+            ) : null}
 
             <label className={styles.field}>
               <span className={styles.fieldLabel}>Valor *</span>

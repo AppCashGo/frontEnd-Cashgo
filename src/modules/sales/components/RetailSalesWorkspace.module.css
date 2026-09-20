@@ -634,6 +634,122 @@
   font-weight: 900;
 }
 
+.paymentSubtitle {
+  margin: 0.2rem 0 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.paymentSection {
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  border-radius: 1rem;
+  background: #ffffff;
+}
+
+.paymentSectionHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+}
+
+.paymentSectionHeader h3,
+.paymentSectionHeader p {
+  margin: 0;
+}
+
+.paymentSectionHeader h3 {
+  color: #1f2a37;
+  font-size: 0.96rem;
+  font-weight: 900;
+}
+
+.paymentSectionHeader p {
+  margin-top: 0.18rem;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.paymentStepBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: #e8efff;
+  color: #2755cf;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.paymentFieldsGrid {
+  display: grid;
+  grid-template-columns: minmax(9.5rem, 0.72fr) minmax(0, 1.28fr);
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.creditTermsCard {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.95rem;
+  border: 1px solid #f2c8c2;
+  border-radius: 0.95rem;
+  background: linear-gradient(145deg, #fff8f7, #ffffff);
+}
+
+.creditTermsSummary {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.creditTermsSummary strong {
+  color: #7f2f28;
+  font-size: 0.92rem;
+}
+
+.creditTermsSummary p {
+  max-width: 24rem;
+  margin: 0.25rem 0 0;
+  color: #765c59;
+  font-size: 0.79rem;
+  line-height: 1.45;
+}
+
+.creditTermsSummary > span {
+  flex: 0 0 auto;
+  color: #b33c31;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.fieldLabel em {
+  display: inline-flex;
+  margin-left: 0.35rem;
+  padding: 0.12rem 0.42rem;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #64748b;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 800;
+  vertical-align: middle;
+}
+
+.fieldHint {
+  color: #6b7280;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
 .segmentedControl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2079,6 +2195,12 @@
 }
 
 @media (min-width: 1380px) {
+  .workspace {
+    grid-template-columns: minmax(0, 1fr) minmax(27rem, 34rem);
+  }
+}
+
+@media (min-width: 1380px) {
   .paymentMethodsGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -2809,5 +2931,13 @@
 
   .paymentPanel .panelBody {
     padding: 0.9rem;
+  }
+
+  .paymentFieldsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .creditTermsSummary {
+    display: grid;
   }
 }

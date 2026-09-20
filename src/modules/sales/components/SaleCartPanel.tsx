@@ -386,7 +386,7 @@ export function SaleCartPanel({
               <div className={styles.inlineFields}>
                 <div className={styles.field}>
                   <label className={styles.label} htmlFor="sale-due-date">
-                    Fecha de vencimiento
+                    Fecha acordada de pago (opcional)
                   </label>
                   <input
                     className={styles.input}
@@ -395,6 +395,10 @@ export function SaleCartPanel({
                     value={dueDate}
                     onChange={(event) => onDueDateChange(event.target.value)}
                   />
+                  <span className={styles.helperText}>
+                    Si la dejas vacía, la cuenta seguirá pendiente sin marcarse
+                    como vencida.
+                  </span>
                 </div>
 
                 <div className={styles.field}>

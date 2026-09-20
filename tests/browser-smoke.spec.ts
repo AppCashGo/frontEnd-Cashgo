@@ -726,7 +726,9 @@ test("creates a POS cash sale, decrements stock and records the movement", async
     ).toBeEnabled();
     await page.getByRole("button", { name: /continuar/i }).click();
 
-    await expect(page.getByRole("heading", { name: /^pago$/i })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: /finalizar venta/i }),
+    ).toBeVisible();
 
     const saleResponsePromise = page.waitForResponse((response) => {
       const requestInfo = response.request();
@@ -867,7 +869,7 @@ test("creates a POS split-payment sale and records each payment method", async (
 
     const paymentPanel = page.locator("aside").filter({ hasText: "Pago" });
     await expect(
-      paymentPanel.getByRole("heading", { name: /^pago$/i }),
+      paymentPanel.getByRole("heading", { name: /finalizar venta/i }),
     ).toBeVisible();
 
     await paymentPanel.getByRole("button", { exact: true, name: "2" }).click();
@@ -1018,7 +1020,7 @@ test("cancels a POS sale from movements and restores stock", async ({
 
     const paymentPanel = page.locator("aside").filter({ hasText: "Pago" });
     await expect(
-      paymentPanel.getByRole("heading", { name: /^pago$/i }),
+      paymentPanel.getByRole("heading", { name: /finalizar venta/i }),
     ).toBeVisible();
     await paymentPanel.getByRole("button", { name: "Tarjeta" }).click();
 
@@ -1154,9 +1156,16 @@ test("creates a POS credit sale and records the customer receivable", async ({
 
     const paymentPanel = page.locator("aside").filter({ hasText: "Pago" });
     await expect(
-      paymentPanel.getByRole("heading", { name: /^pago$/i }),
+      paymentPanel.getByRole("heading", { name: /finalizar venta/i }),
     ).toBeVisible();
-    await paymentPanel.getByRole("button", { name: "A crédito" }).click();
+    await paymentPanel
+      .getByRole("button", { name: /venta a crédito/i })
+      .click();
+    const optionalDueDate = paymentPanel.getByLabel(
+      /fecha acordada de pago/i,
+    );
+    await expect(optionalDueDate).toBeVisible();
+    await expect(optionalDueDate).toHaveValue("");
     await paymentPanel.locator("select").selectOption({ label: customer.name });
 
     const saleResponsePromise = page.waitForResponse((response) => {
@@ -1185,6 +1194,8 @@ test("creates a POS credit sale and records the customer receivable", async ({
     expect(createdSale.status).toBe("PENDING_PAYMENT");
     expect(createdSale.payments ?? []).toHaveLength(0);
     expect(createdSale.accountReceivable).toBeTruthy();
+    expect(createdSale.accountReceivable?.dueDate ?? null).toBeNull();
+    expect(createdSale.accountReceivable?.status).toBe("PENDING");
     expect(toNumber(createdSale.accountReceivable?.amount)).toBe(
       toNumber(product.price),
     );
