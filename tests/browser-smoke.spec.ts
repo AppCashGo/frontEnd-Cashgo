@@ -459,6 +459,11 @@ test("logs in with the development account and loads the sales workspace", async
   await expect(
     page.getByRole("heading", { name: /nueva venta/i }),
   ).toBeVisible();
+  const categoryFilter = page.getByRole("group", {
+    name: "Filtrar productos por categoría",
+  });
+  await expect(categoryFilter).toBeVisible();
+  expect(await categoryFilter.getByRole("button").count()).toBeLessThanOrEqual(7);
   expect(browserErrors).toEqual([]);
 });
 
@@ -525,6 +530,9 @@ test("opens the responsive sales history and returns workspace", async ({
   await loginWithDevelopmentAccount(page, request);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/sales/new");
+  await expect(
+    page.getByRole("button", { name: "Filtrar por categoría" }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Historial de ventas" }).click();
 
   const drawer = page.getByRole("dialog", { name: "Historial de ventas" });

@@ -191,30 +191,6 @@
   cursor: pointer;
 }
 
-.filtersRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.65rem;
-}
-
-.filterChip,
-.filterChipActive {
-  min-height: 2.1rem;
-  padding: 0.45rem 0.8rem;
-  border-radius: 0.7rem;
-  border: 1px solid #d6dfeb;
-  background: #ffffff;
-  color: #526278;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.filterChipActive {
-  border-color: #ffd22f;
-  background: #fff1ab;
-  color: #1f2a37;
-}
-
 .productsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
@@ -2337,32 +2313,6 @@
 .iconButton:hover,
 .iconButton:focus-visible {
   background: var(--sales-primary, #2563eb);
-}
-
-.filtersRow {
-  gap: 0.65rem;
-}
-
-.filterChip {
-  min-height: 2.35rem;
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 0.7rem;
-  background: rgba(255, 255, 255, 0.9);
-  color: #475569;
-  font-weight: 800;
-  box-shadow: 0 0.55rem 1.1rem rgba(15, 23, 42, 0.03);
-}
-
-.filterChip:hover {
-  border-color: rgba(37, 99, 235, 0.45);
-  color: var(--sales-primary, #2563eb);
-}
-
-.filterChipActive {
-  border-color: rgba(37, 99, 235, 0.42);
-  background: #eef5ff;
-  color: var(--sales-primary, #2563eb);
-  box-shadow: inset 3px 0 0 var(--sales-primary, #2563eb), 0 0.65rem 1.2rem rgba(37, 99, 235, 0.08);
 }
 
 .productsGrid {

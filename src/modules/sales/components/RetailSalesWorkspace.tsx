@@ -36,6 +36,7 @@ import { useSaleCart } from '@/modules/sales/hooks/use-sale-cart'
 import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
 import { SaleCompletionActions } from '@/modules/sales/components/SaleCompletionActions'
 import { SaleQuantityInput } from '@/modules/sales/components/SaleQuantityInput'
+import { ProductCategoryFilter } from '@/modules/sales/components/ProductCategoryFilter'
 import type { SalePaymentMethod, SaleReceipt } from '@/modules/sales/types/sale'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import { routePaths } from '@/routes/route-paths'
@@ -1030,11 +1031,25 @@ export function RetailSalesWorkspace() {
   })
 
   const visibleCategories = useMemo(() => {
-    const usedCategoryIds = new Set(
-      products.map((product) => product.categoryId).filter(Boolean),
+    const productCountByCategoryId = products.reduce<Map<string, number>>(
+      (counts, product) => {
+        if (!product.isActive || !product.categoryId) {
+          return counts
+        }
+
+        counts.set(product.categoryId, (counts.get(product.categoryId) ?? 0) + 1)
+        return counts
+      },
+      new Map(),
     )
 
-    return inventoryCategories.filter((category) => usedCategoryIds.has(category.id))
+    return inventoryCategories
+      .filter((category) => (productCountByCategoryId.get(category.id) ?? 0) > 0)
+      .map((category) => ({
+        id: category.id,
+        name: category.name,
+        productCount: productCountByCategoryId.get(category.id) ?? 0,
+      }))
   }, [inventoryCategories, products])
 
   const filteredProducts = useMemo(() => {
@@ -1937,33 +1952,11 @@ export function RetailSalesWorkspace() {
               </label>
             </div>
 
-            <div className={styles.filtersRow}>
-              <button
-                className={
-                  activeCategoryId === null
-                    ? styles.filterChipActive
-                    : styles.filterChip
-                }
-                type="button"
-                onClick={() => setActiveCategoryId(null)}
-              >
-                Todos
-              </button>
-              {visibleCategories.map((category) => (
-                <button
-                  key={category.id}
-                  className={
-                    activeCategoryId === category.id
-                      ? styles.filterChipActive
-                      : styles.filterChip
-                  }
-                  type="button"
-                  onClick={() => setActiveCategoryId(category.id)}
-                >
-                  {category.name}
-                </button>
-              ))}
-            </div>
+            <ProductCategoryFilter
+              activeCategoryId={activeCategoryId}
+              categories={visibleCategories}
+              onChange={setActiveCategoryId}
+            />
 
             <div className={styles.productsGrid}>
               <button
