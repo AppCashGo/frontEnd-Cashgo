@@ -480,6 +480,21 @@ test("loads the operational sales summary and opens the existing POS", async ({
   await expect(page.getByText("N.º de ventas", { exact: true })).toBeVisible();
   await expect(page.getByText("Cobrado", { exact: true })).toBeVisible();
   await expect(page.getByText("Por cobrar", { exact: true })).toBeVisible();
+
+  const metricLabels = [
+    "Ventas totales",
+    "Ganancias totales",
+    "N.º de ventas",
+    "Cobrado",
+    "Por cobrar",
+  ];
+  for (const label of metricLabels) {
+    const metricCard = page.getByText(label, { exact: true }).locator("..");
+    const box = await metricCard.boundingBox();
+    expect(box?.width ?? 0).toBeGreaterThan(200);
+    expect(box?.height ?? Number.POSITIVE_INFINITY).toBeLessThan(320);
+  }
+
   await expect(
     page.getByRole("heading", { name: "Historial de ventas" }),
   ).toBeVisible();

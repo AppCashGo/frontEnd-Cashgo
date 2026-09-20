@@ -20,9 +20,7 @@
 @media(max-width:430px){.metricsGrid{grid-template-columns:1fr}}
 
 @container sales-overview (max-width:82rem){
-  .metricsGrid{grid-template-columns:repeat(6,minmax(0,1fr))}
-  .metricsGrid>*{grid-column:span 2}
-  .metricsGrid>*:nth-last-child(-n+2){grid-column:span 3}
+  .metricsGrid{grid-template-columns:repeat(3,minmax(0,1fr))}
 }
 
 @container sales-overview (max-width:68rem){
@@ -31,7 +29,6 @@
 
 @container sales-overview (max-width:54rem){
   .metricsGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .metricsGrid>*{grid-column:auto}
   .metricsGrid>*:last-child:nth-child(odd){grid-column:1/-1}
   .paymentGrid{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
