@@ -1,3 +1,7 @@
+.drawerPanel {
+  width: min(100vw, 62rem);
+}
+
 .drawerBody {
   padding-bottom: 1.25rem;
 }

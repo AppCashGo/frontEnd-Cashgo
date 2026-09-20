@@ -743,7 +743,7 @@ function ChangeCalculatorModal({
               type="button"
               onClick={() => handleQuickAmount(amount)}
             >
-              {formatCurrency(amount).replace(/,00$/, '')}
+              {formatCurrency(amount)}
             </button>
           ))}
         </div>

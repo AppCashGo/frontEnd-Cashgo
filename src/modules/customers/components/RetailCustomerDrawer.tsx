@@ -1738,6 +1738,7 @@ export function RetailCustomerDrawer({
         ) : null
       }
       isOpen={isOpen && !isSuspended}
+      panelClassName={styles.drawerPanel}
       title={drawerTitle}
       onClose={onClose}
     >

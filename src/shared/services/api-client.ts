@@ -579,12 +579,35 @@ export async function getBlob(
     const contentDisposition = response.headers["content-disposition"];
     const filename = getFilenameFromContentDisposition(contentDisposition);
 
+    if (options?.accept === "application/pdf") {
+      await assertPdfBlob(response.data);
+    }
+
     return {
       blob: response.data,
       filename,
     };
   } catch (error) {
     throw await toApiError(error);
+  }
+}
+
+async function assertPdfBlob(blob: Blob) {
+  const signature = new TextDecoder("ascii").decode(
+    await blob.slice(0, 5).arrayBuffer(),
+  );
+
+  if (signature !== "%PDF-") {
+    throw new ApiError(
+      "El servidor no entregó un PDF válido. Intenta nuevamente después de actualizar el servicio.",
+      502,
+      { contentType: blob.type, signature },
+      {
+        kind: "server",
+        userMessage:
+          "El servidor no entregó un PDF válido. Intenta nuevamente después de actualizar el servicio.",
+      },
+    );
   }
 }
 

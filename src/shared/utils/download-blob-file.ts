@@ -9,5 +9,5 @@ export function downloadBlobFile(blob: Blob, filename: string) {
   linkElement.click()
   linkElement.remove()
 
-  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000)
 }

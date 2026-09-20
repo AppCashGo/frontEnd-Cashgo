@@ -690,7 +690,7 @@
 
 .paymentFieldsGrid {
   display: grid;
-  grid-template-columns: minmax(9.5rem, 0.72fr) minmax(0, 1.28fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.8rem;
   align-items: start;
 }
