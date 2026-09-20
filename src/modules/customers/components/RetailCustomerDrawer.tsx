@@ -34,7 +34,10 @@ import type {
   CustomerReceivableTermsInput,
 } from '@/modules/customers/types/customer'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
-import { downloadCustomerPaymentReceipt } from '@/modules/customers/services/customers-api'
+import {
+  downloadCustomerPaymentReceipt,
+  downloadCustomerReceivableStatement,
+} from '@/modules/customers/services/customers-api'
 import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -572,6 +575,109 @@ export function RetailCustomerDrawer({
     return {
       blob: result.blob,
       filename: result.filename ?? `factura-${saleId}.pdf`,
+    }
+  }
+
+  async function getCustomerStatementPdf(customerId: string) {
+    const result = await downloadCustomerReceivableStatement(customerId)
+    return {
+      blob: result.blob,
+      filename: result.filename ?? `estado-de-cuenta-${customerId}.pdf`,
+    }
+  }
+
+  async function handleCustomerStatement(action: 'download' | 'print') {
+    if (!customer || pendingReceivables.length === 0) {
+      return
+    }
+
+    setActiveDocumentId(`statement:${action}`)
+    setDocumentFeedback(null)
+
+    try {
+      const { blob, filename } = await getCustomerStatementPdf(customer.id)
+      if (action === 'print') {
+        printPdfBlob(blob)
+      } else {
+        downloadPdfBlob(blob, filename)
+      }
+      setDocumentFeedback(
+        action === 'print'
+          ? 'El estado de cuenta consolidado está listo para imprimir.'
+          : 'El estado de cuenta consolidado se descargó en PDF.',
+      )
+    } catch (error) {
+      setDocumentFeedback(
+        getErrorMessage(
+          error,
+          'No pudimos generar el estado de cuenta consolidado.',
+        ),
+      )
+    } finally {
+      setActiveDocumentId(null)
+    }
+  }
+
+  async function handleShareCustomerStatement() {
+    if (!customer || pendingReceivables.length === 0) {
+      return
+    }
+
+    if (!customer.phone) {
+      setDocumentFeedback(
+        'Este cliente no tiene un celular registrado para abrir WhatsApp.',
+      )
+      return
+    }
+
+    const phone = normalizeWhatsAppPhone(customer.phone)
+    if (!/^\d{10,15}$/.test(phone)) {
+      setDocumentFeedback(
+        'El celular no tiene un formato internacional válido. Corrígelo antes de abrir WhatsApp.',
+      )
+      return
+    }
+
+    setActiveDocumentId('statement:share')
+    setDocumentFeedback(null)
+
+    try {
+      const { blob, filename } = await getCustomerStatementPdf(customer.id)
+      const result = await sharePdfFile({
+        blob,
+        filename,
+        title: `Estado de cuenta de ${customer.name}`,
+        text: reminderMessage,
+      })
+
+      if (result === 'shared') {
+        await handleRecordReminder('WHATSAPP')
+        setDocumentFeedback(
+          'Se abrió el selector para compartir el mensaje y el estado de cuenta. Elige WhatsApp y confirma el envío.',
+        )
+        return
+      }
+
+      openWhatsApp(phone, reminderMessage)
+      await handleRecordReminder('WHATSAPP')
+      setDocumentFeedback(
+        'El estado de cuenta se descargó y WhatsApp se abrió con el mensaje. Adjunta manualmente el PDF descargado antes de enviarlo.',
+      )
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setDocumentFeedback(
+          'No se compartió el estado de cuenta porque cancelaste la acción.',
+        )
+      } else {
+        setDocumentFeedback(
+          getErrorMessage(
+            error,
+            'No pudimos preparar el estado de cuenta para compartir.',
+          ),
+        )
+      }
+    } finally {
+      setActiveDocumentId(null)
     }
   }
 
@@ -1166,6 +1272,49 @@ export function RetailCustomerDrawer({
                   }}
                 />
               </label>
+
+              <div className={styles.statementPanel}>
+                <div>
+                  <strong>Estado de cuenta consolidado</strong>
+                  <p>
+                    Incluye cada venta pendiente, sus productos, abonos y saldo,
+                    sin mezclar sus números de factura.
+                  </p>
+                </div>
+                <div className={styles.statementActions}>
+                  <button
+                    className={styles.shareStatementButton}
+                    disabled={Boolean(activeDocumentId)}
+                    type="button"
+                    onClick={() => void handleShareCustomerStatement()}
+                  >
+                    <Share2 aria-hidden="true" />
+                    {activeDocumentId === 'statement:share'
+                      ? 'Preparando…'
+                      : 'Compartir PDF'}
+                  </button>
+                  <button
+                    disabled={Boolean(activeDocumentId)}
+                    type="button"
+                    onClick={() => void handleCustomerStatement('download')}
+                  >
+                    <Download aria-hidden="true" />
+                    {activeDocumentId === 'statement:download'
+                      ? 'Generando…'
+                      : 'Descargar PDF'}
+                  </button>
+                  <button
+                    disabled={Boolean(activeDocumentId)}
+                    type="button"
+                    onClick={() => void handleCustomerStatement('print')}
+                  >
+                    <Printer aria-hidden="true" />
+                    {activeDocumentId === 'statement:print'
+                      ? 'Generando…'
+                      : 'Imprimir'}
+                  </button>
+                </div>
+              </div>
 
               <div className={styles.reminderActions}>
                 {customer.phone ? (

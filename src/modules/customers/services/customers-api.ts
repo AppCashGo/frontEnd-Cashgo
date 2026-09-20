@@ -378,3 +378,9 @@ export function downloadCustomerPaymentReceipt(paymentId: string) {
     accept: 'application/pdf',
   })
 }
+
+export function downloadCustomerReceivableStatement(customerId: string) {
+  return getBlob(`/accounts-receivable/customers/${customerId}/statement`, {
+    accept: 'application/pdf',
+  })
+}

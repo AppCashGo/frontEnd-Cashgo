@@ -335,6 +335,7 @@
 .termsButton svg,
 .promiseButton svg,
 .reminderActions svg,
+.statementActions svg,
 .sendEmailButton svg {
   width: 1rem;
   height: 1rem;
@@ -450,6 +451,67 @@
   color: #41516a;
   font-size: 1.3rem;
   cursor: pointer;
+}
+
+.statementPanel {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0.85rem;
+  border: 1px solid #cfe2d7;
+  border-radius: 0.9rem;
+  background: #f1fbf5;
+}
+
+.statementPanel strong,
+.statementPanel p {
+  margin: 0;
+}
+
+.statementPanel strong {
+  color: #174c35;
+  font-size: 0.9rem;
+}
+
+.statementPanel p {
+  margin-top: 0.2rem;
+  color: #526b5e;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.statementActions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.statementActions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.65rem;
+  padding: 0 0.75rem;
+  border: 1px solid #a9c9b6;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  color: #176b46;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.statementActions .shareStatementButton {
+  grid-column: 1 / -1;
+  border-color: #168c58;
+  background: #168c58;
+  color: #ffffff;
+}
+
+.statementActions button:disabled {
+  opacity: 0.62;
+  cursor: wait;
 }
 
 .reminderActions {
@@ -774,6 +836,16 @@
 
   .reminderActions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 720px) {
+  .statementActions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .statementActions .shareStatementButton {
+    grid-column: auto;
   }
 }
 
