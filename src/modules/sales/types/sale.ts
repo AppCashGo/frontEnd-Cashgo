@@ -11,6 +11,7 @@ export type SaleStatus =
 
 export type CreateSaleInput = {
   idempotencyKey?: string
+  heldSaleId?: string
   items?: Array<{
     productId: string
     quantity: number
@@ -201,5 +202,6 @@ export type SalesHistoryResponse = {
 export type SaleCartItem = {
   product: Product
   quantity: number
+  unitPrice: number
   lineTotal: number
 }

@@ -5,6 +5,7 @@ import type { SaleCartItem, SaleReceipt } from '@/modules/sales/types/sale'
 type CartEntry = {
   productId: string
   quantity: number
+  unitPrice: number
 }
 
 type UseSaleCartOptions = {
@@ -37,7 +38,8 @@ export function useSaleCart(
       {
         product,
         quantity: entry.quantity,
-        lineTotal: product.price * entry.quantity,
+        unitPrice: entry.unitPrice,
+        lineTotal: entry.unitPrice * entry.quantity,
       },
     ]
   })
@@ -67,6 +69,7 @@ export function useSaleCart(
           {
             productId: product.id,
             quantity: 1,
+            unitPrice: product.price,
           },
         ]
       }
@@ -177,6 +180,24 @@ export function useSaleCart(
     setCartEntries([])
   }
 
+  function loadCart(
+    entries: Array<{ productId: string; quantity: number; unitPrice: number }>,
+  ) {
+    clearCheckoutFeedback()
+    setCartEntries(
+      entries
+        .filter(
+          (entry) =>
+            productsById.has(entry.productId) &&
+            Number.isInteger(entry.quantity) &&
+            entry.quantity > 0 &&
+            Number.isFinite(entry.unitPrice) &&
+            entry.unitPrice >= 0,
+        )
+        .map((entry) => ({ ...entry })),
+    )
+  }
+
   function markCheckoutError(message: string) {
     setCompletedSale(null)
     setCheckoutErrorMessage(message)
@@ -201,6 +222,7 @@ export function useSaleCart(
     completeSale,
     decreaseProductQuantity,
     increaseProductQuantity,
+    loadCart,
     markCheckoutError,
     removeProduct,
     setProductQuantity,

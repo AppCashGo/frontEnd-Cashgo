@@ -2381,6 +2381,41 @@
   background: #b91c1c;
 }
 
+.heldSalesButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-width: 12rem;
+  min-height: 3rem;
+  padding: 0 1rem;
+  border: 1px solid rgba(37, 99, 235, 0.32);
+  border-radius: 0.82rem;
+  background: #ffffff;
+  color: #1e4fa3;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.heldSalesButton span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: #e7efff;
+  color: #1d4ed8;
+  font-size: 0.78rem;
+}
+
+.heldSalesButton:hover {
+  border-color: #2563eb;
+  background: #f5f8ff;
+}
+
 .feedbackBanner {
   border: 1px solid rgba(79, 70, 229, 0.22);
   border-radius: 1.15rem;
@@ -2579,6 +2614,13 @@
   font-size: 1.12rem;
 }
 
+.activeHoldLabel {
+  margin: 0.3rem 0 0;
+  color: #247553;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .inlineAction {
   color: var(--sales-tertiary, #0f172a);
   font-weight: 900;
@@ -2668,6 +2710,33 @@
   border-top: 1px solid rgba(148, 163, 184, 0.2);
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 251, 255, 0.98));
   box-shadow: 0 -1rem 2rem rgba(15, 23, 42, 0.05);
+}
+
+.catalogPanelFooter {
+  display: grid;
+  grid-template-columns: minmax(9.5rem, auto) minmax(0, 1fr);
+  gap: 0.75rem;
+}
+
+.holdButton {
+  min-height: 3.35rem;
+  padding: 0 1rem;
+  border: 1px solid rgba(37, 117, 83, 0.42);
+  border-radius: 0.95rem;
+  background: #effbf4;
+  color: #177044;
+  font: inherit;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.holdButton:hover:not(:disabled) {
+  background: #def7e8;
+}
+
+.holdButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .continueButton,
@@ -2902,12 +2971,19 @@
     min-width: 0;
   }
 
+  .heldSalesButton {
+    min-width: 0;
+  }
+
   .checkoutPanel {
     border: 1px solid rgba(148, 163, 184, 0.28);
   }
 }
 
 @media (max-width: 720px) {
+  .catalogPanelFooter {
+    grid-template-columns: 1fr;
+  }
   .workspace {
     background: transparent;
   }

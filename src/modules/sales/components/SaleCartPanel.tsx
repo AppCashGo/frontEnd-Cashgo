@@ -199,7 +199,7 @@ export function SaleCartPanel({
                     </div>
 
                     <p className={styles.cartItemMeta}>
-                      {formatCurrency(item.product.price)} c/u
+                      {formatCurrency(item.unitPrice)} c/u
                     </p>
                   </div>
 

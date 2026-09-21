@@ -37,6 +37,17 @@ import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawe
 import { SaleCompletionActions } from '@/modules/sales/components/SaleCompletionActions'
 import { SaleQuantityInput } from '@/modules/sales/components/SaleQuantityInput'
 import { ProductCategoryFilter } from '@/modules/sales/components/ProductCategoryFilter'
+import {
+  HeldSalesDrawer,
+  HoldSaleModal,
+} from '@/modules/sales/components/HeldSalesDrawer'
+import {
+  useCancelHeldSaleMutation,
+  useCreateHeldSaleMutation,
+  useHeldSalesQuery,
+  useUpdateHeldSaleMutation,
+} from '@/modules/sales/hooks/use-held-sales-query'
+import type { HeldSale } from '@/modules/sales/types/held-sale'
 import type { SalePaymentMethod, SaleReceipt } from '@/modules/sales/types/sale'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import { routePaths } from '@/routes/route-paths'
@@ -499,6 +510,7 @@ function calculateCartFinancials(
   cartItems: Array<{
     product: Product
     quantity: number
+    unitPrice: number
   }>,
   discountTotal: number,
 ): SaleCartFinancials {
@@ -508,7 +520,7 @@ function calculateCartFinancials(
   let totalTaxes = 0
 
   for (const item of cartItems) {
-    const grossLineTotal = item.product.price * item.quantity
+    const grossLineTotal = item.unitPrice * item.quantity
     const taxRate = Math.max(item.product.taxRate ?? 0, 0)
     const divisor = 1 + taxRate / 100
     const baseAmount =
@@ -939,6 +951,9 @@ export function RetailSalesWorkspace() {
   const [quickCustomerTarget, setQuickCustomerTarget] =
     useState<QuickCustomerTarget | null>(null)
   const [isSalesHistoryOpen, setSalesHistoryOpen] = useState(false)
+  const [isHeldSalesOpen, setHeldSalesOpen] = useState(false)
+  const [isHoldSaleModalOpen, setHoldSaleModalOpen] = useState(false)
+  const [activeHeldSaleId, setActiveHeldSaleId] = useState<string | null>(null)
   const [isQuickExpenseDrawerOpen, setQuickExpenseDrawerOpen] = useState(false)
   const [isCashRegisterDrawerOpen, setCashRegisterDrawerOpen] = useState(false)
   const [cashRegisterDrawerMode, setCashRegisterDrawerMode] =
@@ -964,6 +979,10 @@ export function RetailSalesWorkspace() {
   )
 
   const productsQuery = useProductsQuery()
+  const heldSalesQuery = useHeldSalesQuery()
+  const createHeldSaleMutation = useCreateHeldSaleMutation()
+  const updateHeldSaleMutation = useUpdateHeldSaleMutation()
+  const cancelHeldSaleMutation = useCancelHeldSaleMutation()
   const customersQuery = useCustomersQuery()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const createSaleMutation = useCreateSaleMutation()
@@ -972,8 +991,40 @@ export function RetailSalesWorkspace() {
   const createExpenseMutation = useCreateExpenseMutation()
   const inventoryCategoriesQuery = useInventoryCategoriesQuery()
   const businessSettingsQuery = useBusinessSettingsQuery()
+  const allowSaleWithoutStock =
+    businessSettingsQuery.data?.allowSaleWithoutStock ?? false
+  const saleCompletionSoundEnabled =
+    businessSettingsQuery.data?.saleCompletionSoundEnabled ?? true
 
-  const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data])
+  const rawProducts = useMemo(() => productsQuery.data ?? [], [productsQuery.data])
+  const heldSales = useMemo(() => heldSalesQuery.data ?? [], [heldSalesQuery.data])
+  const activeHeldSale = useMemo(
+    () => heldSales.find((heldSale) => heldSale.id === activeHeldSaleId) ?? null,
+    [activeHeldSaleId, heldSales],
+  )
+  const reservedQuantities = useMemo(() => {
+    const quantities = new Map<string, number>()
+    for (const heldSale of heldSales) {
+      if (heldSale.id === activeHeldSaleId) continue
+      for (const item of heldSale.items) {
+        quantities.set(
+          item.productId,
+          (quantities.get(item.productId) ?? 0) + item.quantity,
+        )
+      }
+    }
+    return quantities
+  }, [activeHeldSaleId, heldSales])
+  const products = useMemo(
+    () =>
+      rawProducts.map((product) => ({
+        ...product,
+        stock: allowSaleWithoutStock
+          ? product.stock
+          : Math.max(product.stock - (reservedQuantities.get(product.id) ?? 0), 0),
+      })),
+    [allowSaleWithoutStock, rawProducts, reservedQuantities],
+  )
   const customers = useMemo(
     () => customersQuery.data ?? [],
     [customersQuery.data],
@@ -990,10 +1041,6 @@ export function RetailSalesWorkspace() {
     () => inventoryCategoriesQuery.data ?? [],
     [inventoryCategoriesQuery.data],
   )
-  const allowSaleWithoutStock =
-    businessSettingsQuery.data?.allowSaleWithoutStock ?? false
-  const saleCompletionSoundEnabled =
-    businessSettingsQuery.data?.saleCompletionSoundEnabled ?? true
 
   useEffect(() => {
     if (!currentCashRegister) {
@@ -1026,6 +1073,7 @@ export function RetailSalesWorkspace() {
     completeSale,
     decreaseProductQuantity,
     increaseProductQuantity,
+    loadCart,
     markCheckoutError,
     removeProduct,
     setProductQuantity,
@@ -1332,6 +1380,74 @@ export function RetailSalesWorkspace() {
     navigate(`${routePaths.inventory}?create=manual&returnTo=sales`)
   }
 
+  function handleClearCatalogCart() {
+    clearCart()
+    setActiveHeldSaleId(null)
+    resetPaymentStep()
+    setSaleStep('CATALOG')
+  }
+
+  async function handleSaveHeldSale(values: {
+    label: string
+    customerId: string
+    notes: string
+  }) {
+    const input = {
+      label: values.label,
+      customerId: normalizeOptionalText(values.customerId),
+      notes: normalizeOptionalText(values.notes),
+      discountTotal,
+      items: cartItems.map((item) => ({
+        productId: item.product.id,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+      ...(activeHeldSale ? { version: activeHeldSale.version } : {}),
+    }
+
+    if (activeHeldSale) {
+      await updateHeldSaleMutation.mutateAsync({
+        id: activeHeldSale.id,
+        input,
+      })
+    } else {
+      await createHeldSaleMutation.mutateAsync(input)
+    }
+
+    clearCart()
+    resetPaymentStep()
+    setActiveHeldSaleId(null)
+    setSaleStep('CATALOG')
+    setHoldSaleModalOpen(false)
+  }
+
+  function handleResumeHeldSale(heldSale: HeldSale) {
+    loadCart(
+      heldSale.items.map((item) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        unitPrice: item.unitPrice,
+      })),
+    )
+    setSelectedCustomerId(heldSale.customer?.id ?? '')
+    setReceiptNote(heldSale.notes ?? '')
+    setDiscountOpen(heldSale.discountTotal > 0)
+    setDiscountAmountInput(formatEditableNumber(heldSale.discountTotal))
+    setActiveHeldSaleId(heldSale.id)
+    setSaleStep('CATALOG')
+    setHeldSalesOpen(false)
+  }
+
+  async function handleCancelHeldSale(heldSale: HeldSale) {
+    await cancelHeldSaleMutation.mutateAsync(heldSale.id)
+    if (activeHeldSaleId === heldSale.id) {
+      clearCart()
+      resetPaymentStep()
+      setActiveHeldSaleId(null)
+      setSaleStep('CATALOG')
+    }
+  }
+
   function handlePrintCurrentOrder() {
     if (cartItems.length === 0 || totalAmount <= 0) {
       markCheckoutError('Agrega productos antes de imprimir la prefactura.')
@@ -1380,13 +1496,13 @@ export function RetailSalesWorkspace() {
           : `<p>${escapeReceiptHtml(getPaymentOptionLabel(paymentOption))}: ${escapeReceiptHtml(formatCurrency(totalAmount))}</p>`
     const itemRows = cartItems
       .map((item) => {
-        const lineTotal = item.product.price * item.quantity
+        const lineTotal = item.unitPrice * item.quantity
 
         return `
           <tr>
             <td>
               <strong>${escapeReceiptHtml(item.product.name)}</strong>
-              <span>${escapeReceiptHtml(item.quantity)} x ${escapeReceiptHtml(formatCurrency(item.product.price))}</span>
+              <span>${escapeReceiptHtml(item.quantity)} x ${escapeReceiptHtml(formatCurrency(item.unitPrice))}</span>
             </td>
             <td>${escapeReceiptHtml(formatCurrency(lineTotal))}</td>
           </tr>
@@ -1634,9 +1750,11 @@ export function RetailSalesWorkspace() {
 
     try {
       const sale = await createSaleMutation.mutateAsync({
+        heldSaleId: activeHeldSaleId ?? undefined,
         items: cartItems.map((item) => ({
           productId: item.product.id,
           quantity: item.quantity,
+          unitPriceOverride: item.unitPrice,
         })),
         customerId: normalizeOptionalText(selectedCustomerId),
         cashRegisterId: currentCashRegister?.id,
@@ -1651,6 +1769,7 @@ export function RetailSalesWorkspace() {
       })
 
       completeSale(sale)
+      setActiveHeldSaleId(null)
       if (saleCompletionSoundEnabled) {
         playCashRegisterSound()
       }
@@ -1926,6 +2045,14 @@ export function RetailSalesWorkspace() {
             )}
             <span className={styles.headerActionDivider} aria-hidden="true" />
             <button
+              className={styles.heldSalesButton}
+              type="button"
+              onClick={() => setHeldSalesOpen(true)}
+            >
+              Cuentas en espera
+              <span>{heldSales.length}</span>
+            </button>
+            <button
               className={styles.quickSaleButton}
               type="button"
               onClick={() => setSalesHistoryOpen(true)}
@@ -2052,12 +2179,19 @@ export function RetailSalesWorkspace() {
             {saleStep === 'CATALOG' ? (
               <section className={styles.checkoutPanel}>
                 <div className={styles.panelHeader}>
-                  <p className={styles.panelTitle}>Productos</p>
+                  <div>
+                    <p className={styles.panelTitle}>Productos</p>
+                    {activeHeldSale ? (
+                      <p className={styles.activeHoldLabel}>
+                        Editando {activeHeldSale.code} · {activeHeldSale.label}
+                      </p>
+                    ) : null}
+                  </div>
                   <button
                     className={styles.inlineAction}
                     disabled={cartItems.length === 0}
                     type="button"
-                    onClick={clearCart}
+                    onClick={handleClearCatalogCart}
                   >
                     Vaciar canasta
                   </button>
@@ -2163,7 +2297,19 @@ export function RetailSalesWorkspace() {
                   )}
                 </div>
 
-                <div className={styles.panelFooter}>
+                <div className={`${styles.panelFooter} ${styles.catalogPanelFooter}`}>
+                  <button
+                    className={styles.holdButton}
+                    disabled={
+                      cartItems.length === 0 ||
+                      createHeldSaleMutation.isPending ||
+                      updateHeldSaleMutation.isPending
+                    }
+                    type="button"
+                    onClick={() => setHoldSaleModalOpen(true)}
+                  >
+                    {activeHeldSale ? 'Actualizar espera' : 'Dejar en espera'}
+                  </button>
                   <button
                     className={styles.continueButton}
                     disabled={cartItems.length === 0}
@@ -2633,6 +2779,38 @@ export function RetailSalesWorkspace() {
         sales={salesHistory}
         onClose={() => setSalesHistoryOpen(false)}
         onCashSessionRequired={() => beginCashSessionFlow('SALES_HISTORY')}
+      />
+
+      <HeldSalesDrawer
+        cancellingId={
+          cancelHeldSaleMutation.isPending
+            ? (cancelHeldSaleMutation.variables ?? null)
+            : null
+        }
+        heldSales={heldSales}
+        isLoading={heldSalesQuery.isLoading}
+        isOpen={isHeldSalesOpen}
+        onCancel={handleCancelHeldSale}
+        onClose={() => setHeldSalesOpen(false)}
+        onResume={handleResumeHeldSale}
+      />
+
+      <HoldSaleModal
+        customers={customers}
+        defaultCustomerId={activeHeldSale?.customer?.id ?? selectedCustomerId}
+        defaultLabel={
+          activeHeldSale?.label ??
+          customers.find((customer) => customer.id === selectedCustomerId)?.name ??
+          ''
+        }
+        defaultNotes={activeHeldSale?.notes ?? receiptNote}
+        isEditing={activeHeldSale !== null}
+        isOpen={isHoldSaleModalOpen}
+        isSaving={
+          createHeldSaleMutation.isPending || updateHeldSaleMutation.isPending
+        }
+        onClose={() => setHoldSaleModalOpen(false)}
+        onSave={handleSaveHeldSale}
       />
 
       {isSortDrawerOpen ? (

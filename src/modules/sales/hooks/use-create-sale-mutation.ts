@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { invalidateCashRegisterQueries } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { productsQueryKey } from '@/modules/products/hooks/use-products-query'
 import { customersQueryKey } from '@/modules/customers/hooks/use-customers-query'
+import { heldSalesQueryKey } from '@/modules/sales/hooks/use-held-sales-query'
 import {
   cancelSale,
   createSale,
@@ -29,6 +30,9 @@ function invalidateSaleFlowQueries(
     }),
     queryClient.invalidateQueries({
       queryKey: customersQueryKey,
+    }),
+    queryClient.invalidateQueries({
+      queryKey: heldSalesQueryKey,
     }),
   ])
 }

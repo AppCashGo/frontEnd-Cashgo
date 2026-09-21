@@ -1,0 +1,28 @@
+.drawer { width: min(620px, 100vw); }
+.drawerBody { background: #f6f8fb; }
+.list { display: grid; gap: 16px; }
+.card { border: 1px solid #d8e1ed; border-radius: 20px; padding: 20px; background: #fff; box-shadow: 0 12px 30px rgba(21, 34, 51, .06); }
+.cardHeader { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.cardHeader h4 { margin: 5px 0 0; color: #1b2738; font-size: 20px; }
+.code, .eyebrow { color: #247553; font-size: 12px; font-weight: 800; letter-spacing: .12em; }
+.total { color: #172334; font-size: 22px; white-space: nowrap; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; color: #61718a; font-size: 14px; }
+.notes { margin: 14px 0 0; padding: 10px 12px; border-radius: 12px; background: #f4f7fa; color: #4c5d74; }
+.items { display: grid; gap: 6px; margin-top: 14px; color: #34445a; font-size: 14px; }
+.cardActions, .modalActions { display: flex; gap: 10px; margin-top: 18px; }
+.primaryButton, .secondaryButton, .dangerButton { min-height: 46px; border-radius: 12px; padding: 0 18px; font: inherit; font-weight: 800; cursor: pointer; }
+.primaryButton { flex: 1; border: 1px solid #172334; background: #172334; color: #fff; }
+.secondaryButton { border: 1px solid #ccd7e5; background: #fff; color: #243248; }
+.dangerButton { border: 1px solid #f0caca; background: #fff7f7; color: #b52f2f; }
+.primaryButton:disabled, .secondaryButton:disabled, .dangerButton:disabled { cursor: not-allowed; opacity: .55; }
+.empty, .emptyCard { color: #64748b; text-align: center; }
+.emptyCard { padding: 48px 24px; border: 1px dashed #cbd6e3; border-radius: 18px; background: #fff; }
+.emptyCard strong { color: #1f2c3e; font-size: 18px; }
+.modal { width: min(560px, calc(100vw - 24px)); padding: 0; overflow: hidden; }
+.form { display: grid; gap: 18px; padding: 30px; }
+.form h3 { margin: 6px 0; color: #172334; font-size: 25px; }
+.help { margin: 0; color: #687991; line-height: 1.45; }
+.field { display: grid; gap: 8px; color: #223047; font-weight: 750; }
+.field input, .field textarea { width: 100%; box-sizing: border-box; border: 1px solid #ccd7e5; border-radius: 12px; padding: 13px 14px; color: #172334; background: #fff; font: inherit; resize: vertical; }
+.error { margin: 0; padding: 11px 13px; border-radius: 10px; background: #fff0f0; color: #b42318; font-weight: 700; }
+@media (max-width: 600px) { .cardActions, .modalActions { flex-direction: column; } .cardHeader { flex-direction: column; } .form { padding: 24px 18px; } }
