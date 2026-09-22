@@ -16,6 +16,7 @@ import {
   Mail,
   MapPin,
   MessageCircle,
+  Pencil,
   Printer,
   Phone,
   ReceiptText,
@@ -29,6 +30,7 @@ import type {
   CustomerMutationInput,
   CustomerOldestPaymentResult,
   CustomerPaymentInput,
+  CustomerPaymentMethodCorrectionInput,
   CustomerPaymentMethod,
   CustomerReceivable,
   CustomerReceivableTermsInput,
@@ -113,6 +115,7 @@ type RetailCustomerDrawerProps = {
   isActivitySubmitting: boolean
   isEmailSubmitting: boolean
   isPaymentSubmitting: boolean
+  isPaymentCorrectionSubmitting: boolean
   isTermsSubmitting: boolean
   isSubmitting: boolean
   mode: RetailCustomerDrawerMode
@@ -128,6 +131,10 @@ type RetailCustomerDrawerProps = {
     customerId: string,
     input: CustomerPaymentInput,
   ) => Promise<CustomerOldestPaymentResult>
+  onUpdatePaymentMethod: (
+    paymentId: string,
+    input: CustomerPaymentMethodCorrectionInput,
+  ) => Promise<CustomerReceivable>
   onCreateCollectionActivity: (
     receivableId: string,
     input: CustomerCollectionActivityInput,
@@ -290,6 +297,7 @@ export function RetailCustomerDrawer({
   isActivitySubmitting,
   isEmailSubmitting,
   isPaymentSubmitting,
+  isPaymentCorrectionSubmitting,
   isTermsSubmitting,
   isSubmitting,
   mode,
@@ -299,6 +307,7 @@ export function RetailCustomerDrawer({
   onRefresh,
   onRegisterPayment,
   onRegisterOldestPayment,
+  onUpdatePaymentMethod,
   onCreateCollectionActivity,
   onCreateGeneralReminder,
   onSendReminderEmail,
@@ -997,6 +1006,7 @@ export function RetailCustomerDrawer({
     }))
   }
 
+
   function renderForm() {
     return (
       <form className={styles.form} onSubmit={handleSubmitCustomer}>
@@ -1403,6 +1413,9 @@ export function RetailCustomerDrawer({
                   key={receivable.id}
                   receivable={receivable}
                   isDocumentBusy={activeDocumentId?.startsWith(`${receivable.saleId}:`) ?? false}
+                  isPaymentCorrectionSubmitting={
+                    isPaymentCorrectionSubmitting
+                  }
                   onDownload={() =>
                     void handleSaleDocument(
                       receivable.saleId,
@@ -1426,6 +1439,7 @@ export function RetailCustomerDrawer({
                       action,
                     )
                   }
+                  onUpdatePaymentMethod={onUpdatePaymentMethod}
                   onShare={() => void handleShareReceivable(receivable)}
                 />
               ))}
@@ -1941,15 +1955,18 @@ function MetricTile({
 function ReceivableCard({
   receivable,
   isDocumentBusy,
+  isPaymentCorrectionSubmitting,
   onDownload,
   onEditTerms,
   onPrint,
   onPaymentReceipt,
   onPromise,
   onShare,
+  onUpdatePaymentMethod,
 }: {
   receivable: CustomerReceivable
   isDocumentBusy: boolean
+  isPaymentCorrectionSubmitting: boolean
   onDownload: () => void
   onEditTerms: (receivable: CustomerReceivable) => void
   onPrint: () => void
@@ -1959,8 +1976,71 @@ function ReceivableCard({
   ) => void
   onPromise: (receivable: CustomerReceivable) => void
   onShare: () => void
+  onUpdatePaymentMethod: (
+    paymentId: string,
+    input: CustomerPaymentMethodCorrectionInput,
+  ) => Promise<CustomerReceivable>
 }) {
   const isPaid = receivable.balance <= 0
+  const [correctionPaymentId, setCorrectionPaymentId] = useState<string | null>(
+    null,
+  )
+  const [correctionMethod, setCorrectionMethod] =
+    useState<CustomerPaymentMethod>('CASH')
+  const [correctionReason, setCorrectionReason] = useState('')
+  const [correctionError, setCorrectionError] = useState<string | null>(null)
+
+  function startPaymentMethodCorrection(
+    paymentId: string,
+    currentMethod: CustomerPaymentMethod,
+  ) {
+    setCorrectionPaymentId(paymentId)
+    setCorrectionMethod(currentMethod)
+    setCorrectionReason('')
+    setCorrectionError(null)
+  }
+
+  function closePaymentMethodCorrection() {
+    setCorrectionPaymentId(null)
+    setCorrectionReason('')
+    setCorrectionError(null)
+  }
+
+  async function handlePaymentMethodCorrection(
+    event: FormEvent<HTMLFormElement>,
+    currentMethod: CustomerPaymentMethod,
+  ) {
+    event.preventDefault()
+
+    if (!correctionPaymentId) return
+
+    if (correctionMethod === currentMethod) {
+      setCorrectionError('Selecciona un medio de pago diferente.')
+      return
+    }
+
+    if (correctionReason.trim().length < 3) {
+      setCorrectionError('Escribe el motivo de la corrección.')
+      return
+    }
+
+    setCorrectionError(null)
+
+    try {
+      await onUpdatePaymentMethod(correctionPaymentId, {
+        method: correctionMethod,
+        reason: correctionReason.trim(),
+      })
+      closePaymentMethodCorrection()
+    } catch (error) {
+      setCorrectionError(
+        getErrorMessage(
+          error,
+          'No pudimos corregir el medio de pago. Intenta otra vez.',
+        ),
+      )
+    }
+  }
 
   return (
     <article
@@ -2051,6 +2131,15 @@ function ReceivableCard({
               <div className={styles.paymentReceiptActions}>
                 <button
                   type="button"
+                  onClick={() =>
+                    startPaymentMethodCorrection(payment.id, payment.method)
+                  }
+                >
+                  <Pencil aria-hidden="true" />
+                  Corregir
+                </button>
+                <button
+                  type="button"
                   onClick={() => onPaymentReceipt(payment.id, 'print')}
                 >
                   <Printer aria-hidden="true" />
@@ -2064,6 +2153,73 @@ function ReceivableCard({
                   PDF
                 </button>
               </div>
+              {correctionPaymentId === payment.id ? (
+                <form
+                  className={styles.paymentCorrectionForm}
+                  onSubmit={(event) =>
+                    void handlePaymentMethodCorrection(event, payment.method)
+                  }
+                >
+                  <strong>Corregir medio de pago</strong>
+                  <label className={styles.field}>
+                    <span>Medio correcto</span>
+                    <SearchableSelect
+                      disabled={isPaymentCorrectionSubmitting}
+                      value={correctionMethod}
+                      onChange={(event) =>
+                        setCorrectionMethod(
+                          event.target.value as CustomerPaymentMethod,
+                        )
+                      }
+                    >
+                      {PAYMENT_METHOD_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </SearchableSelect>
+                  </label>
+                  <label className={styles.field}>
+                    <span>Motivo de la corrección *</span>
+                    <input
+                      className={styles.input}
+                      disabled={isPaymentCorrectionSubmitting}
+                      maxLength={255}
+                      placeholder="Ej. El cliente pagó por Nequi"
+                      value={correctionReason}
+                      onChange={(event) =>
+                        setCorrectionReason(event.target.value)
+                      }
+                    />
+                  </label>
+                  {correctionError ? (
+                    <p className={styles.paymentCorrectionError}>
+                      {correctionError}
+                    </p>
+                  ) : null}
+                  <p className={styles.paymentCorrectionNotice}>
+                    Solo se puede corregir mientras la caja donde se registró
+                    el abono continúe abierta.
+                  </p>
+                  <div className={styles.paymentCorrectionActions}>
+                    <button
+                      disabled={isPaymentCorrectionSubmitting}
+                      type="button"
+                      onClick={closePaymentMethodCorrection}
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      disabled={isPaymentCorrectionSubmitting}
+                      type="submit"
+                    >
+                      {isPaymentCorrectionSubmitting
+                        ? 'Guardando…'
+                        : 'Guardar corrección'}
+                    </button>
+                  </div>
+                </form>
+              ) : null}
             </div>
           ))}
         </div>

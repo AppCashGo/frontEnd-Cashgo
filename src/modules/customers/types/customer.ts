@@ -170,6 +170,11 @@ export type CustomerPaymentInput = {
   notes?: string
 }
 
+export type CustomerPaymentMethodCorrectionInput = {
+  method: CustomerPaymentMethod
+  reason: string
+}
+
 export type CustomerPaymentAllocation = {
   paymentId: string
   receivableId: string

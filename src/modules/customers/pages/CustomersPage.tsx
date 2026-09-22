@@ -30,6 +30,7 @@ import {
   useDeleteCustomerMutation,
   useRegisterCustomerOldestPaymentMutation,
   useRegisterCustomerPaymentMutation,
+  useUpdateCustomerPaymentMethodMutation,
   useSendCustomerReminderEmailMutation,
   useUpdateCustomerMutation,
   useUpdateCustomerReceivableTermsMutation,
@@ -39,6 +40,7 @@ import type {
   CustomerMutationInput,
   CustomerCollectionActivityInput,
   CustomerPaymentInput,
+  CustomerPaymentMethodCorrectionInput,
   CustomerReceivableTermsInput,
   CustomerSummary,
 } from '@/modules/customers/types/customer'
@@ -182,6 +184,8 @@ export function CustomersPage() {
   const updateCustomerMutation = useUpdateCustomerMutation()
   const uploadCustomerAvatarMutation = useUploadCustomerAvatarMutation()
   const registerPaymentMutation = useRegisterCustomerPaymentMutation()
+  const updatePaymentMethodMutation =
+    useUpdateCustomerPaymentMethodMutation()
   const registerOldestPaymentMutation =
     useRegisterCustomerOldestPaymentMutation()
   const sendReminderEmailMutation = useSendCustomerReminderEmailMutation()
@@ -433,6 +437,24 @@ export function CustomersPage() {
     await Promise.allSettled([
       customersQuery.refetch(),
       customerDetailQuery.refetch(),
+    ])
+
+    return result
+  }
+
+  async function handleUpdateCustomerPaymentMethod(
+    paymentId: string,
+    input: CustomerPaymentMethodCorrectionInput,
+  ) {
+    const result = await updatePaymentMethodMutation.mutateAsync({
+      paymentId,
+      input,
+    })
+
+    await Promise.allSettled([
+      customersQuery.refetch(),
+      customerDetailQuery.refetch(),
+      currentCashRegisterQuery.refetch(),
     ])
 
     return result
@@ -1049,6 +1071,9 @@ export function CustomersPage() {
             registerPaymentMutation.isPending ||
             registerOldestPaymentMutation.isPending
           }
+          isPaymentCorrectionSubmitting={
+            updatePaymentMethodMutation.isPending
+          }
           isActivitySubmitting={
             createCollectionActivityMutation.isPending ||
             createGeneralReminderMutation.isPending
@@ -1070,6 +1095,7 @@ export function CustomersPage() {
             uploadCustomerAvatarMutation.error ??
             registerPaymentMutation.error ??
             registerOldestPaymentMutation.error ??
+            updatePaymentMethodMutation.error ??
             updateReceivableTermsMutation.error
           }
           onClose={closeRetailCustomerDrawer}
@@ -1079,6 +1105,7 @@ export function CustomersPage() {
           }}
           onRegisterPayment={handleRegisterCustomerPayment}
           onRegisterOldestPayment={handleRegisterCustomerOldestPayment}
+          onUpdatePaymentMethod={handleUpdateCustomerPaymentMethod}
           onCreateCollectionActivity={handleCreateCollectionActivity}
           onCreateGeneralReminder={handleCreateGeneralReminder}
           onSendReminderEmail={handleSendReminderEmail}

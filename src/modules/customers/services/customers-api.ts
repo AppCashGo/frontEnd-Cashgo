@@ -10,6 +10,7 @@ import type {
   CustomerDetail,
   CustomerMutationInput,
   CustomerPaymentInput,
+  CustomerPaymentMethodCorrectionInput,
   CustomerOldestPaymentResult,
   CustomerReceivable,
   CustomerReceivableCollectionActivity,
@@ -301,6 +302,18 @@ export async function registerCustomerPayment(
     CustomerReceivableApiRecord,
     CustomerPaymentInput
   >(`/accounts-receivable/${receivableId}/payments`, input)
+
+  return normalizeCustomerReceivable(receivable)
+}
+
+export async function updateCustomerPaymentMethod(
+  paymentId: string,
+  input: CustomerPaymentMethodCorrectionInput,
+) {
+  const receivable = await patchJson<
+    CustomerReceivableApiRecord,
+    CustomerPaymentMethodCorrectionInput
+  >(`/accounts-receivable/payments/${paymentId}/method`, input)
 
   return normalizeCustomerReceivable(receivable)
 }

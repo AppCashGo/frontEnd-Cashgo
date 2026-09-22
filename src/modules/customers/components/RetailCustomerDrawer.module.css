@@ -785,12 +785,76 @@
 
 .paymentHistoryItem {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
   border-radius: 0.75rem;
   background: #f6f8fb;
   padding: 0.65rem 0.75rem;
+}
+
+.paymentCorrectionForm {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  width: 100%;
+  margin-top: 0.15rem;
+  border-top: 1px solid #dbe3ee;
+  padding-top: 0.75rem;
+}
+
+.paymentCorrectionForm > strong,
+.paymentCorrectionError,
+.paymentCorrectionNotice,
+.paymentCorrectionActions {
+  grid-column: 1 / -1;
+}
+
+.paymentCorrectionError,
+.paymentCorrectionNotice {
+  margin: 0;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.paymentCorrectionError {
+  color: #b42318;
+  font-weight: 800;
+}
+
+.paymentCorrectionNotice {
+  color: #66758c;
+}
+
+.paymentCorrectionActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.paymentCorrectionActions button {
+  min-height: 2.35rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  padding: 0.45rem 0.75rem;
+  color: #334155;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.paymentCorrectionActions button:last-child {
+  border-color: #1f5fc4;
+  background: #1f5fc4;
+  color: #ffffff;
+}
+
+.paymentCorrectionActions button:disabled {
+  cursor: wait;
+  opacity: 0.65;
 }
 
 .paymentHistoryItem span {
@@ -887,6 +951,10 @@
   .paymentHistoryItem {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .paymentCorrectionForm {
+    grid-template-columns: 1fr;
   }
 
   .paymentReceiptActions button {

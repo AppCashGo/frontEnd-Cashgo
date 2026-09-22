@@ -13,12 +13,14 @@ import {
   uploadCustomerAvatar,
   updateCustomer,
   updateCustomerReceivableTerms,
+  updateCustomerPaymentMethod,
 } from '@/modules/customers/services/customers-api'
 import type {
   CustomerDetail,
   CustomerCollectionActivityInput,
   CustomerMutationInput,
   CustomerPaymentInput,
+  CustomerPaymentMethodCorrectionInput,
   CustomerReceivableTermsInput,
   CustomerReminderEmailInput,
   CustomerSummary,
@@ -231,6 +233,27 @@ export function useRegisterCustomerPaymentMutation() {
         queryClient.invalidateQueries({
           queryKey: customerCollectionAgendaQueryKey,
         }),
+      ])
+    },
+  })
+}
+
+export function useUpdateCustomerPaymentMethodMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      paymentId,
+      input,
+    }: {
+      paymentId: string
+      input: CustomerPaymentMethodCorrectionInput
+    }) => updateCustomerPaymentMethod(paymentId, input),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({ queryKey: cashRegisterCurrentQueryKey }),
+        queryClient.invalidateQueries({ queryKey: movementsOverviewQueryKey }),
       ])
     },
   })
