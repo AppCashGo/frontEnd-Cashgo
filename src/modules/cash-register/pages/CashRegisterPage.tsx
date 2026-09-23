@@ -1108,6 +1108,14 @@ export function CashRegisterPage() {
                     className={styles.cashRegisterMenuItem}
                     role="menuitem"
                     type="button"
+                    onClick={() => openSessionDrawer("manage")}
+                  >
+                    Gestionar caja
+                  </button>
+                  <button
+                    className={styles.cashRegisterMenuItem}
+                    role="menuitem"
+                    type="button"
                     onClick={() => openSessionDrawer("close")}
                   >
                     Cerrar caja

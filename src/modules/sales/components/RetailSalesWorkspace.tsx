@@ -2018,6 +2018,14 @@ export function RetailSalesWorkspace() {
                       className={styles.cashRegisterMenuItem}
                       role="menuitem"
                       type="button"
+                      onClick={() => openCashRegisterDrawer('manage')}
+                    >
+                      Gestionar caja
+                    </button>
+                    <button
+                      className={styles.cashRegisterMenuItem}
+                      role="menuitem"
+                      type="button"
                       onClick={() => openCashRegisterDrawer('close')}
                     >
                       Cerrar caja
