@@ -397,3 +397,9 @@ export function downloadCustomerReceivableStatement(customerId: string) {
     accept: 'application/pdf',
   })
 }
+
+export function downloadCustomerPurchaseHistory(customerId: string) {
+  return getBlob(`/customers/${customerId}/purchase-history/pdf`, {
+    accept: 'application/pdf',
+  })
+}

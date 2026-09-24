@@ -4,17 +4,21 @@ import styles from './RetailUI.module.css'
 type RetailTableShellProps = {
   action?: ReactNode
   children: ReactNode
+  footer?: ReactNode
   isRefreshing?: boolean
   refreshingLabel?: string
   title?: ReactNode
+  toolbar?: ReactNode
 }
 
 export function RetailTableShell({
   action,
   children,
+  footer,
   isRefreshing = false,
   refreshingLabel = 'Actualizando...',
   title,
+  toolbar,
 }: RetailTableShellProps) {
   const hasHeader = title || action || isRefreshing
 
@@ -34,7 +38,9 @@ export function RetailTableShell({
         </div>
       ) : null}
 
+      {toolbar ? <div className={styles.tableToolbar}>{toolbar}</div> : null}
       <div className={styles.tableScroller}>{children}</div>
+      {footer ? <div className={styles.tableFooter}>{footer}</div> : null}
     </section>
   )
 }

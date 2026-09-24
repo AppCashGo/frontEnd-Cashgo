@@ -278,6 +278,11 @@
   height: 1rem;
 }
 
+.generalReminderButton:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
 .receivableList,
 .historyList {
   display: grid;

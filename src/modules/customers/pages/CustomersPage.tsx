@@ -2,6 +2,8 @@ import { useDeferredValue, useEffect, useState } from 'react'
 import {
   BellRing,
   CalendarCheck,
+  ChevronLeft,
+  ChevronRight,
   CircleAlert,
   CircleCheckBig,
   Crown,
@@ -75,6 +77,8 @@ type CustomerPortfolioFilter =
   | 'UNDATED'
 
 type CollectionAgendaFilter = 'UPCOMING' | 'BROKEN' | 'FULFILLED' | 'REMINDERS'
+
+const CUSTOMER_PAGE_SIZE = 10
 
 const CUSTOMER_PORTFOLIO_FILTERS: Array<{
   value: CustomerPortfolioFilter
@@ -166,6 +170,7 @@ export function CustomersPage() {
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false)
   const [portfolioFilter, setPortfolioFilter] =
     useState<CustomerPortfolioFilter>('ALL')
+  const [customerPage, setCustomerPage] = useState(1)
   const [isExporting, setIsExporting] = useState(false)
   const [agendaFilter, setAgendaFilter] =
     useState<CollectionAgendaFilter>('UPCOMING')
@@ -221,6 +226,23 @@ export function CustomersPage() {
 
     return true
   })
+  const customerPageCount = Math.max(
+    1,
+    Math.ceil(visibleCustomers.length / CUSTOMER_PAGE_SIZE),
+  )
+  const resolvedCustomerPage = Math.min(customerPage, customerPageCount)
+  const paginatedCustomers = visibleCustomers.slice(
+    (resolvedCustomerPage - 1) * CUSTOMER_PAGE_SIZE,
+    resolvedCustomerPage * CUSTOMER_PAGE_SIZE,
+  )
+  const firstVisibleCustomer =
+    visibleCustomers.length === 0
+      ? 0
+      : (resolvedCustomerPage - 1) * CUSTOMER_PAGE_SIZE + 1
+  const lastVisibleCustomer = Math.min(
+    resolvedCustomerPage * CUSTOMER_PAGE_SIZE,
+    visibleCustomers.length,
+  )
   const selectedCustomerSummary =
     customers.find((customer) => customer.id === selectedCustomerId) ?? null
   const customerDetailQuery = useCustomerDetailQuery(selectedCustomerId)
@@ -298,6 +320,16 @@ export function CustomersPage() {
       setSelectedCustomerId(availableCustomers[0]?.id ?? null)
     }
   }, [customerRecords, selectedCustomerId])
+
+  useEffect(() => {
+    setCustomerPage(1)
+  }, [searchValue, portfolioFilter])
+
+  useEffect(() => {
+    setCustomerPage((currentPage) =>
+      Math.min(currentPage, customerPageCount),
+    )
+  }, [customerPageCount])
 
   function openCreateCustomer() {
     setSelectedCustomerId(null)
@@ -554,40 +586,6 @@ export function CustomersPage() {
               </div>
               <span>Ver beneficios</span>
             </button>
-
-            <div className={styles.retailSearchRow}>
-              <label
-                className={`${retailStyles.searchField} ${listPageStyles.searchField}`}
-              >
-                <input
-                  className={retailStyles.input}
-                  placeholder="Buscar cliente"
-                  type="search"
-                  value={searchValue}
-                  onChange={(event) => setSearchValue(event.target.value)}
-                />
-              </label>
-              <div
-                className={styles.portfolioFilters}
-                aria-label="Filtrar cartera"
-              >
-                {CUSTOMER_PORTFOLIO_FILTERS.map((filter) => (
-                  <button
-                    aria-pressed={portfolioFilter === filter.value}
-                    className={
-                      portfolioFilter === filter.value
-                        ? styles.portfolioFilterActive
-                        : styles.portfolioFilter
-                    }
-                    key={filter.value}
-                    type="button"
-                    onClick={() => setPortfolioFilter(filter.value)}
-                  >
-                    {filter.label}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className={styles.retailMetricsGrid}>
               <RetailStatCard
@@ -873,10 +871,86 @@ export function CustomersPage() {
             ) : null}
 
             <RetailTableShell
+              footer={
+                !customersQuery.isLoading && !customersQuery.isError ? (
+                  <div className={styles.customersPagination}>
+                    <span>
+                      Mostrando {firstVisibleCustomer}–{lastVisibleCustomer} de{' '}
+                      {visibleCustomers.length.toLocaleString('es-CO')}{' '}
+                      clientes
+                    </span>
+                    <div>
+                      <button
+                        aria-label="Página anterior"
+                        disabled={resolvedCustomerPage <= 1}
+                        type="button"
+                        onClick={() =>
+                          setCustomerPage((currentPage) =>
+                            Math.max(1, currentPage - 1),
+                          )
+                        }
+                      >
+                        <ChevronLeft aria-hidden="true" />
+                      </button>
+                      <span>
+                        Página {resolvedCustomerPage} de {customerPageCount}
+                      </span>
+                      <button
+                        aria-label="Página siguiente"
+                        disabled={resolvedCustomerPage >= customerPageCount}
+                        type="button"
+                        onClick={() =>
+                          setCustomerPage((currentPage) =>
+                            Math.min(customerPageCount, currentPage + 1),
+                          )
+                        }
+                      >
+                        <ChevronRight aria-hidden="true" />
+                      </button>
+                    </div>
+                  </div>
+                ) : null
+              }
               isRefreshing={
                 customersQuery.isFetching && !customersQuery.isLoading
               }
-              title="Clientes registrados"
+              title={`Clientes registrados · ${visibleCustomers.length.toLocaleString('es-CO')}`}
+              toolbar={
+                <div className={styles.retailSearchRow}>
+                  <label
+                    className={`${retailStyles.searchField} ${listPageStyles.searchField}`}
+                  >
+                    <input
+                      aria-label="Buscar cliente"
+                      className={retailStyles.input}
+                      placeholder="Buscar cliente"
+                      type="search"
+                      value={searchValue}
+                      onChange={(event) => setSearchValue(event.target.value)}
+                    />
+                  </label>
+                  <div
+                    className={styles.portfolioFilters}
+                    aria-label="Filtrar cartera"
+                  >
+                    {CUSTOMER_PORTFOLIO_FILTERS.map((filter) => (
+                      <button
+                        aria-pressed={portfolioFilter === filter.value}
+                        className={
+                          portfolioFilter === filter.value
+                            ? styles.portfolioFilterActive
+                            : styles.portfolioFilter
+                        }
+                        key={filter.value}
+                        type="button"
+                        onClick={() => setPortfolioFilter(filter.value)}
+                      >
+                        {filter.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              }
             >
               <table
                 className={`${retailStyles.table} ${styles.customersTable}`}
@@ -925,7 +999,7 @@ export function CustomersPage() {
                   {!customersQuery.isLoading &&
                   !customersQuery.isError &&
                   visibleCustomers.length > 0
-                    ? visibleCustomers.map((customer) => {
+                    ? paginatedCustomers.map((customer) => {
                         const avatarUrl = resolveApiAssetUrl(customer.avatarUrl)
                         const cannotDelete = customer.openReceivablesCount > 0
                         const deleteTooltip = cannotDelete

@@ -38,6 +38,7 @@ import type {
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import {
   downloadCustomerPaymentReceipt,
+  downloadCustomerPurchaseHistory,
   downloadCustomerReceivableStatement,
 } from '@/modules/customers/services/customers-api'
 import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
@@ -594,6 +595,48 @@ export function RetailCustomerDrawer({
     return {
       blob: result.blob,
       filename: result.filename ?? `estado-de-cuenta-${customerId}.pdf`,
+    }
+  }
+
+  async function getCustomerPurchaseHistoryPdf(customerId: string) {
+    const result = await downloadCustomerPurchaseHistory(customerId)
+    return {
+      blob: result.blob,
+      filename: result.filename ?? `historial-de-compras-${customerId}.pdf`,
+    }
+  }
+
+  async function handleCustomerPurchaseHistory(action: 'download' | 'print') {
+    if (!customer || customer.purchaseHistory.length === 0) {
+      return
+    }
+
+    setActiveDocumentId(`purchase-history:${action}`)
+    setDocumentFeedback(null)
+
+    try {
+      const { blob, filename } = await getCustomerPurchaseHistoryPdf(
+        customer.id,
+      )
+      if (action === 'print') {
+        printPdfBlob(blob)
+      } else {
+        downloadPdfBlob(blob, filename)
+      }
+      setDocumentFeedback(
+        action === 'print'
+          ? 'El historial completo de compras está listo para imprimir.'
+          : 'El historial completo de compras se descargó en PDF.',
+      )
+    } catch (error) {
+      setDocumentFeedback(
+        getErrorMessage(
+          error,
+          'No pudimos generar el historial completo de compras.',
+        ),
+      )
+    } finally {
+      setActiveDocumentId(null)
     }
   }
 
@@ -1639,7 +1682,37 @@ export function RetailCustomerDrawer({
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h4>Historial de compras</h4>
-            <span>{customer.purchaseHistory.length.toString()} ventas</span>
+            <div className={styles.sectionHeaderActions}>
+              <span>{customer.purchaseHistory.length.toString()} ventas</span>
+              {customer.purchaseHistory.length > 0 ? (
+                <>
+                  <button
+                    className={styles.generalReminderButton}
+                    disabled={Boolean(activeDocumentId)}
+                    type="button"
+                    onClick={() =>
+                      void handleCustomerPurchaseHistory('download')
+                    }
+                  >
+                    <Download aria-hidden="true" />
+                    {activeDocumentId === 'purchase-history:download'
+                      ? 'Generando…'
+                      : 'Descargar historial'}
+                  </button>
+                  <button
+                    className={styles.generalReminderButton}
+                    disabled={Boolean(activeDocumentId)}
+                    type="button"
+                    onClick={() => void handleCustomerPurchaseHistory('print')}
+                  >
+                    <Printer aria-hidden="true" />
+                    {activeDocumentId === 'purchase-history:print'
+                      ? 'Generando…'
+                      : 'Imprimir historial'}
+                  </button>
+                </>
+              ) : null}
+            </div>
           </div>
 
           {customer.purchaseHistory.length > 0 ? (

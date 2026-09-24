@@ -250,6 +250,17 @@
   overflow-x: auto;
 }
 
+.tableToolbar {
+  padding: 0.9rem 1rem;
+  border-top: 1px solid #e3e8ef;
+  border-bottom: 1px solid #e3e8ef;
+  background: #fbfcfe;
+}
+
+.tableFooter {
+  border-top: 1px solid #e3e8ef;
+}
+
 .table {
   width: 100%;
   min-width: 42rem;
