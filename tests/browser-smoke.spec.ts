@@ -1269,6 +1269,10 @@ test("creates a POS credit sale and records the customer receivable", async ({
     });
     await expect(customerDrawer).toBeVisible();
     await expect(
+      customerDrawer.getByRole("tab", { name: "Resumen" }),
+    ).toHaveAttribute("aria-selected", "true");
+    await customerDrawer.getByRole("tab", { name: /Por cobrar/ }).click();
+    await expect(
       customerDrawer.getByRole("heading", { name: "Registrar abono" }),
     ).toBeVisible();
 
@@ -1402,6 +1406,9 @@ test("creates a POS credit sale and records the customer receivable", async ({
       .click();
     await paymentResponsePromise;
 
+    await expect(
+      customerDrawer.getByText("Abono guardado correctamente"),
+    ).toBeVisible();
     await expect(
       customerDrawer.getByText("El comprobante del ultimo abono esta listo."),
     ).toBeVisible();

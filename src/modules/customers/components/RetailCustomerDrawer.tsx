@@ -10,6 +10,7 @@ import {
   Banknote,
   CalendarClock,
   CalendarDays,
+  CheckCircle2,
   Download,
   Handshake,
   Hash,
@@ -88,7 +89,10 @@ type PaymentFormState = {
 type PaymentReceiptState = {
   paymentIds: string[]
   saleNumbers: string[]
+  amount: number
 }
+
+type CustomerDetailTab = 'summary' | 'receivables' | 'history'
 
 type PaymentReceiptBrand = {
   businessName: string
@@ -329,6 +333,7 @@ export function RetailCustomerDrawer({
   const [lastReceipt, setLastReceipt] = useState<PaymentReceiptState | null>(
     null,
   )
+  const [detailTab, setDetailTab] = useState<CustomerDetailTab>('summary')
   const [isGeneralReminderOpen, setGeneralReminderOpen] = useState(false)
   const [reminderMessage, setReminderMessage] = useState('')
   const [reminderFeedback, setReminderFeedback] = useState<string | null>(null)
@@ -360,6 +365,13 @@ export function RetailCustomerDrawer({
       ),
     [customer?.receivables],
   )
+  const settledReceivables = useMemo(
+    () =>
+      (customer?.receivables ?? []).filter(
+        (receivable) => receivable.balance <= 0,
+      ),
+    [customer?.receivables],
+  )
   const isOldestPayment = paymentForm.receivableId === OLDEST_RECEIVABLE_OPTION
   const selectedReceivable =
     pendingReceivables.find(
@@ -386,7 +398,7 @@ export function RetailCustomerDrawer({
     customer && customer.purchaseCount > 0
       ? totalPurchased / customer.purchaseCount
       : 0
-  const paidReceivables =
+  const totalPaymentsRecorded =
     customer?.receivables.reduce(
       (sum, receivable) => sum + receivable.paidAmount,
       0,
@@ -424,7 +436,6 @@ export function RetailCustomerDrawer({
     setForm(toFormState(mode === 'create' ? null : customer))
     setFormError(null)
     setPaymentError(null)
-    setLastReceipt(null)
     setGeneralReminderOpen(false)
     setReminderMessage('')
     setReminderFeedback(null)
@@ -435,6 +446,37 @@ export function RetailCustomerDrawer({
     setPromiseReceivableId(null)
     setPromiseError(null)
   }, [customer, isOpen, mode])
+
+  useEffect(() => {
+    if (!isOpen) {
+      return
+    }
+
+    setLastReceipt(null)
+    setDetailTab('summary')
+  }, [customer?.id, isOpen, mode])
+
+  function handlePayAll() {
+    if (totalOutstanding <= 0) {
+      return
+    }
+
+    setDetailTab('receivables')
+    setPaymentError(null)
+    setLastReceipt(null)
+    setPaymentForm((currentForm) => ({
+      ...currentForm,
+      receivableId: OLDEST_RECEIVABLE_OPTION,
+      amount: String(totalOutstanding),
+    }))
+
+    window.setTimeout(() => {
+      document.getElementById('customer-payment-form')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      })
+    }, 0)
+  }
 
   function handleStartGeneralReminder() {
     if (!customer) {
@@ -1040,6 +1082,7 @@ export function RetailCustomerDrawer({
     setLastReceipt({
       paymentIds,
       saleNumbers,
+      amount,
     })
     setPaymentForm((currentForm) => ({
       ...currentForm,
@@ -1227,69 +1270,157 @@ export function RetailCustomerDrawer({
           </div>
         </section>
 
-        <section
-          className={styles.infoGrid}
-          aria-label="Informacion de contacto"
+        <nav
+          className={styles.detailTabs}
+          aria-label="Secciones del cliente"
+          role="tablist"
         >
-          <InfoItem icon={<Phone />} label="Celular" value={customer.phone} />
-          <InfoItem icon={<Mail />} label="Correo" value={customer.email} />
-          <InfoItem
-            icon={<Hash />}
-            label="Documento"
-            value={
-              customer.documentNumber
-                ? `${customer.documentType ?? 'Documento'} ${customer.documentNumber}`
-                : null
+          <button
+            aria-selected={detailTab === 'summary'}
+            className={
+              detailTab === 'summary' ? styles.detailTabActive : undefined
             }
-          />
-          <InfoItem
-            icon={<MapPin />}
-            label="Direccion"
-            value={customer.address}
-          />
-        </section>
-
-        <section className={styles.behaviorGrid} aria-label="Comportamiento">
-          <MetricTile
-            icon={<TrendingUp />}
-            label="Compras"
-            value={customer.purchaseCount.toString()}
-          />
-          <MetricTile
-            icon={<ReceiptText />}
-            label="Ticket promedio"
-            value={formatCurrency(averageTicket)}
-          />
-          <MetricTile
-            icon={<Banknote />}
-            label="Abonos registrados"
-            value={formatCurrency(paidReceivables)}
-          />
-          <MetricTile
-            icon={<CalendarClock />}
-            label="Ultima compra"
-            value={
-              customer.lastPurchaseAt
-                ? formatDate(customer.lastPurchaseAt)
-                : 'Sin compras'
+            role="tab"
+            type="button"
+            onClick={() => setDetailTab('summary')}
+          >
+            Resumen
+          </button>
+          <button
+            aria-selected={detailTab === 'receivables'}
+            className={
+              detailTab === 'receivables' ? styles.detailTabActive : undefined
             }
-          />
-        </section>
+            role="tab"
+            type="button"
+            onClick={() => setDetailTab('receivables')}
+          >
+            Por cobrar
+            <span>{pendingReceivables.length}</span>
+          </button>
+          <button
+            aria-selected={detailTab === 'history'}
+            className={
+              detailTab === 'history' ? styles.detailTabActive : undefined
+            }
+            role="tab"
+            type="button"
+            onClick={() => setDetailTab('history')}
+          >
+            Historial
+            <span>{customer.purchaseHistory.length}</span>
+          </button>
+        </nav>
 
+        {detailTab === 'summary' ? (
+          <>
+            <section
+              className={styles.infoGrid}
+              aria-label="Informacion de contacto"
+            >
+              <InfoItem icon={<Phone />} label="Celular" value={customer.phone} />
+              <InfoItem icon={<Mail />} label="Correo" value={customer.email} />
+              <InfoItem
+                icon={<Hash />}
+                label="Documento"
+                value={
+                  customer.documentNumber
+                    ? `${customer.documentType ?? 'Documento'} ${customer.documentNumber}`
+                    : null
+                }
+              />
+              <InfoItem
+                icon={<MapPin />}
+                label="Direccion"
+                value={customer.address}
+              />
+            </section>
+
+            <section className={styles.behaviorGrid} aria-label="Comportamiento">
+              <MetricTile
+                icon={<TrendingUp />}
+                label="Compras"
+                value={customer.purchaseCount.toString()}
+              />
+              <MetricTile
+                icon={<ReceiptText />}
+                label="Ticket promedio"
+                value={formatCurrency(averageTicket)}
+              />
+              <MetricTile
+                icon={<Banknote />}
+                label="Abonos registrados"
+                value={formatCurrency(totalPaymentsRecorded)}
+              />
+              <MetricTile
+                icon={<CalendarClock />}
+                label="Ultima compra"
+                value={
+                  customer.lastPurchaseAt
+                    ? formatDate(customer.lastPurchaseAt)
+                    : 'Sin compras'
+                }
+              />
+            </section>
+
+            <section className={styles.accountSummary}>
+              <div>
+                <span>Saldo pendiente</span>
+                <strong>{formatCurrency(totalOutstanding)}</strong>
+                <small>
+                  {pendingReceivables.length}{' '}
+                  {pendingReceivables.length === 1
+                    ? 'factura pendiente'
+                    : 'facturas pendientes'}
+                </small>
+              </div>
+              <div className={styles.accountSummaryActions}>
+                {pendingReceivables.length > 0 ? (
+                  <button
+                    className={styles.payAllButton}
+                    type="button"
+                    onClick={handlePayAll}
+                  >
+                    <Banknote aria-hidden="true" />
+                    Pagar todo
+                  </button>
+                ) : null}
+                <button type="button" onClick={() => setDetailTab('receivables')}>
+                  Ver cuentas
+                </button>
+                <button type="button" onClick={() => setDetailTab('history')}>
+                  Ver historial
+                </button>
+              </div>
+            </section>
+          </>
+        ) : null}
+
+        {detailTab === 'receivables' ? (
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h4>Cuentas por cobrar</h4>
             <div className={styles.sectionHeaderActions}>
               <span>{pendingReceivables.length.toString()} pendientes</span>
               {pendingReceivables.length > 0 ? (
-                <button
-                  className={styles.generalReminderButton}
-                  type="button"
-                  onClick={handleStartGeneralReminder}
-                >
-                  <MessageCircle aria-hidden="true" />
-                  Recordatorio general
-                </button>
+                <>
+                  <button
+                    className={styles.payAllButton}
+                    type="button"
+                    onClick={handlePayAll}
+                  >
+                    <Banknote aria-hidden="true" />
+                    Pagar todo · {formatCurrency(totalOutstanding)}
+                  </button>
+                  <button
+                    className={styles.generalReminderButton}
+                    type="button"
+                    onClick={handleStartGeneralReminder}
+                  >
+                    <MessageCircle aria-hidden="true" />
+                    Recordatorio general
+                  </button>
+                </>
               ) : null}
             </div>
           </div>
@@ -1449,9 +1580,9 @@ export function RetailCustomerDrawer({
             </div>
           ) : null}
 
-          {customer.receivables.length > 0 ? (
+          {pendingReceivables.length > 0 ? (
             <div className={styles.receivableList}>
-              {customer.receivables.map((receivable) => (
+              {pendingReceivables.map((receivable) => (
                 <ReceivableCard
                   key={receivable.id}
                   receivable={receivable}
@@ -1489,9 +1620,52 @@ export function RetailCustomerDrawer({
             </div>
           ) : (
             <p className={styles.emptyText}>
-              Este cliente aun no tiene cuentas por cobrar.
+              Este cliente no tiene cuentas pendientes por pagar.
             </p>
           )}
+
+          {settledReceivables.length > 0 ? (
+            <details className={styles.settledAccounts}>
+              <summary>
+                Ver cuentas pagadas ({settledReceivables.length})
+              </summary>
+              <div className={styles.receivableList}>
+                {settledReceivables.map((receivable) => (
+                  <ReceivableCard
+                    key={receivable.id}
+                    receivable={receivable}
+                    isDocumentBusy={activeDocumentId?.startsWith(`${receivable.saleId}:`) ?? false}
+                    isPaymentCorrectionSubmitting={isPaymentCorrectionSubmitting}
+                    onDownload={() =>
+                      void handleSaleDocument(
+                        receivable.saleId,
+                        receivable.saleNumber,
+                        'download',
+                      )
+                    }
+                    onEditTerms={handleStartTermsEdit}
+                    onPrint={() =>
+                      void handleSaleDocument(
+                        receivable.saleId,
+                        receivable.saleNumber,
+                        'print',
+                      )
+                    }
+                    onPromise={handleStartPromise}
+                    onPaymentReceipt={(paymentId, action) =>
+                      void handleSavedPaymentReceipt(
+                        paymentId,
+                        receivable.saleNumber,
+                        action,
+                      )
+                    }
+                    onUpdatePaymentMethod={onUpdatePaymentMethod}
+                    onShare={() => void handleShareReceivable(receivable)}
+                  />
+                ))}
+              </div>
+            </details>
+          ) : null}
 
           {documentFeedback ? (
             <p className={styles.documentFeedback} aria-live="polite">
@@ -1678,7 +1852,9 @@ export function RetailCustomerDrawer({
             </form>
           ) : null}
         </section>
+        ) : null}
 
+        {detailTab === 'history' ? (
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h4>Historial de compras</h4>
@@ -1717,7 +1893,7 @@ export function RetailCustomerDrawer({
 
           {customer.purchaseHistory.length > 0 ? (
             <div className={styles.historyList}>
-              {customer.purchaseHistory.slice(0, 6).map((purchase) => (
+              {customer.purchaseHistory.map((purchase) => (
                 <article key={purchase.saleId} className={styles.historyItem}>
                   <div className={styles.historyHeader}>
                     <div>
@@ -1787,11 +1963,23 @@ export function RetailCustomerDrawer({
             </p>
           )}
         </section>
+        ) : null}
 
-        {pendingReceivables.length > 0 ? (
-          <form className={styles.paymentForm} onSubmit={handleRegisterPayment}>
+        {detailTab === 'receivables' && pendingReceivables.length > 0 ? (
+          <form
+            className={styles.paymentForm}
+            id="customer-payment-form"
+            onSubmit={handleRegisterPayment}
+          >
             <div className={styles.sectionHeader}>
-              <h4>Registrar abono</h4>
+              <div>
+                <h4>{isOldestPayment ? 'Pagar saldo pendiente' : 'Registrar abono'}</h4>
+                <p className={styles.sectionDescription}>
+                  {isOldestPayment
+                    ? 'El pago se distribuirá entre las facturas más antiguas.'
+                    : 'Registra un pago parcial o total de una factura.'}
+                </p>
+              </div>
               <span>Genera comprobante al guardar</span>
             </div>
 
@@ -1819,7 +2007,7 @@ export function RetailCustomerDrawer({
                   </option>
                 ))}
                 <option value={OLDEST_RECEIVABLE_OPTION}>
-                  Otro valor · aplicar a las ventas más antiguas
+                  Distribuir pago entre las facturas más antiguas
                 </option>
               </SearchableSelect>
             </label>
@@ -1912,7 +2100,24 @@ export function RetailCustomerDrawer({
           </form>
         ) : null}
 
+        {detailTab === 'receivables' ? (
         <section className={styles.receiptPanel}>
+          {lastReceipt ? (
+            <div className={styles.paymentSuccess} role="status">
+              <CheckCircle2 aria-hidden="true" />
+              <div>
+                <strong>Abono guardado correctamente</strong>
+                <span>
+                  {formatCurrency(lastReceipt.amount)} aplicado a{' '}
+                  {lastReceipt.saleNumbers.length}{' '}
+                  {lastReceipt.saleNumbers.length === 1
+                    ? 'factura'
+                    : 'facturas'}
+                  .
+                </span>
+              </div>
+            </div>
+          ) : null}
           <div>
             <h4>Comprobantes de pago</h4>
             <p>
@@ -1949,6 +2154,7 @@ export function RetailCustomerDrawer({
             </button>
           </div>
         </section>
+        ) : null}
       </div>
     )
   }
