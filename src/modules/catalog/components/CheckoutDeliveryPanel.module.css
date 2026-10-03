@@ -1,0 +1,268 @@
+.panel {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.backButton {
+  justify-self: start;
+  border: 0;
+  background: transparent;
+  color: #3157dc;
+  padding: 0;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.sectionHeading {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.sectionHeading strong {
+  color: #172332;
+}
+
+.sectionHeading span {
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
+.methodGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.methodButton,
+.activeMethod {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 70px;
+  border: 1.5px solid #cbd6e3;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #35445a;
+  padding: 0.7rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.activeMethod {
+  border-color: #3157dc;
+  background: #eef2ff;
+  box-shadow: 0 0 0 2px rgba(49, 87, 220, 0.1);
+}
+
+.methodButton > svg,
+.activeMethod > svg {
+  width: 22px;
+  height: 22px;
+}
+
+.methodButton > span,
+.activeMethod > span {
+  display: grid;
+  min-width: 0;
+}
+
+.methodButton strong,
+.activeMethod strong {
+  font-size: 0.82rem;
+}
+
+.methodButton small,
+.activeMethod small {
+  overflow: hidden;
+  color: #6b7b90;
+  font-size: 0.69rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.9rem;
+}
+
+.fields label {
+  display: grid;
+  gap: 0.35rem;
+  min-width: 0;
+  color: #52647a;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.fields label > input,
+.iconInput {
+  min-height: 44px;
+  border: 1px solid #cbd6e3;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.fields label > input {
+  min-width: 0;
+  padding: 0 0.75rem;
+  color: #172332;
+  font: inherit;
+}
+
+.iconInput {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  padding: 0 0.7rem;
+}
+
+.iconInput svg {
+  width: 17px;
+  height: 17px;
+  color: #7b899c;
+}
+
+.iconInput input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding-left: 0.5rem;
+  color: #172332;
+  font: inherit;
+}
+
+.fullField {
+  grid-column: 1 / -1;
+}
+
+.savedAddresses {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.savedAddresses > div {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.savedAddresses button {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 170px;
+  border: 1px solid #d2dbe7;
+  border-radius: 8px;
+  background: #fff;
+  color: #35445a;
+  padding: 0.55rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.savedAddresses button[aria-pressed="true"] {
+  border-color: #16a05d;
+  background: #e7f8ef;
+}
+
+.savedAddresses button > svg { width: 18px; flex: 0 0 auto; }
+.savedAddresses button span { display: grid; }
+.savedAddresses button small { overflow: hidden; max-width: 130px; text-overflow: ellipsis; white-space: nowrap; }
+
+.saveAddress {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.saveAddress > input[type="checkbox"] { width: 18px; height: 18px; }
+.saveAddress > input:not([type="checkbox"]) { min-width: 0; flex: 1; }
+
+.fullField small {
+  color: #8794a6;
+  font-weight: 700;
+}
+
+.totals {
+  display: grid;
+  gap: 0.4rem;
+  border-top: 1px solid #dce4ed;
+  padding-top: 0.8rem;
+}
+
+.totals span {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.totals strong {
+  color: #172332;
+}
+
+.totals .totalRow {
+  color: #172332;
+  font-size: 1rem;
+}
+
+.totalRow strong {
+  font-size: 1.25rem;
+}
+
+.continueButton {
+  min-height: 50px;
+  border: 0;
+  border-radius: 9px;
+  background: #172332;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.continueButton:disabled {
+  background: #d8dee7;
+  color: #738198;
+  cursor: not-allowed;
+}
+
+.notice,
+.unavailableMessage {
+  margin: 0;
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
+.notice {
+  background: #fff8d9;
+  color: #6d5800;
+}
+
+.unavailableMessage {
+  background: #fff0f0;
+  color: #a61b1b;
+}
+
+@media (max-width: 390px) {
+  .methodGrid,
+  .fields {
+    grid-template-columns: 1fr;
+  }
+
+  .fullField {
+    grid-column: auto;
+  }
+}

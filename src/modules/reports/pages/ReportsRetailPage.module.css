@@ -344,3 +344,27 @@
     width: 100%;
   }
 }
+
+@media (max-width: 380px) {
+  .page {
+    padding: 0 0.75rem 1rem;
+  }
+
+  .headerTabs {
+    gap: 0.55rem;
+    min-width: 0;
+  }
+
+  .headerTab,
+  .headerTabActive {
+    min-width: 0;
+    padding-inline: 0;
+    font-size: 0.9rem;
+  }
+
+  .salesSummaryCard,
+  .salesSummaryCardFeatured,
+  .chartCard {
+    padding: 1rem;
+  }
+}

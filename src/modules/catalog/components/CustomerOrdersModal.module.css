@@ -1,0 +1,73 @@
+.layer { position: fixed; inset: 0; z-index: 1100; }
+.backdrop { position: absolute; inset: 0; width: 100%; border: 0; background: rgba(15, 23, 42, .62); }
+.modal { position: absolute; inset: 4vh max(1rem, calc((100vw - 920px) / 2)); display: grid; grid-template-rows: auto minmax(0, 1fr); overflow: hidden; border-radius: 10px; background: #f6f8fb; box-shadow: 0 24px 70px rgba(15, 23, 42, .3); }
+.modal > header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #dce4ed; background: #fff; padding: 1rem 1.25rem; }
+.modal header p, .modal header h2 { margin: 0; }
+.modal header p { color: #64748b; font-size: .75rem; font-weight: 900; text-transform: uppercase; }
+.modal header h2 { margin-top: .1rem; }
+.headerActions { display: flex; gap: .45rem; }
+.headerActions button { display: grid; place-items: center; width: 42px; height: 42px; border: 0; border-radius: 8px; background: #edf2f7; color: #35445a; cursor: pointer; }
+.headerActions svg { width: 20px; }
+.content { overflow-y: auto; padding: 1rem; }
+.successBanner { display: flex; align-items: center; gap: .75rem; margin-bottom: 1rem; border: 1px solid #9addbc; border-radius: 8px; background: #e7f8ef; color: #0f7145; padding: .8rem 1rem; }
+.successBanner svg { width: 24px; flex: 0 0 auto; }
+.successBanner span { display: grid; }
+.orderList { display: grid; gap: 1rem; }
+.orderCard { display: grid; gap: 1rem; border: 1px solid #d8e1ec; border-radius: 9px; background: #fff; padding: 1.1rem; }
+.orderHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.orderHeading span, .orderHeading small { color: #64748b; font-size: .78rem; font-weight: 700; }
+.orderHeading h3 { margin: .12rem 0; font-size: 1.15rem; }
+.status { border-radius: 999px; background: #fff3bd; color: #705700; padding: .42rem .7rem; font-size: .76rem; text-align: center; }
+.status.cancelled { background: #fee2e2; color: #a61b1b; }
+.progress { display: grid; grid-template-columns: repeat(4, 1fr); gap: .35rem; }
+.progress > span { position: relative; display: grid; justify-items: center; gap: .3rem; color: #a5b1c0; text-align: center; }
+.progress > span::before { content: ""; position: absolute; top: 17px; right: 50%; left: -50%; height: 3px; background: #dce3eb; }
+.progress > span:first-child::before { display: none; }
+.progress svg { position: relative; z-index: 1; width: 35px; height: 35px; border-radius: 50%; background: #edf1f5; padding: 8px; }
+.progress small { font-size: .7rem; font-weight: 800; }
+.progress .activeStep { color: #0f7145; }
+.progress .activeStep::before, .progress .activeStep svg { background: #bdebd2; }
+.items { display: grid; gap: .5rem; border-top: 1px solid #e4eaf2; border-bottom: 1px solid #e4eaf2; padding: .8rem 0; }
+.items > div { display: flex; align-items: center; gap: .65rem; }
+.itemImage { display: grid; place-items: center; width: 40px; height: 40px; overflow: hidden; border-radius: 7px; background: #edf2f7; color: #718096; }
+.itemImage img { width: 100%; height: 100%; object-fit: cover; }
+.itemImage svg { width: 18px; }
+.items > div > span:last-child { display: flex; flex: 1; align-items: center; justify-content: space-between; gap: .5rem; }
+.items small { color: #64748b; font-weight: 800; }
+.orderFooter { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; color: #52647a; font-size: .82rem; font-weight: 750; }
+.orderFooter span { display: inline-flex; align-items: center; gap: .35rem; }
+.orderFooter svg { width: 16px; }
+.orderFooter strong { margin-left: auto; color: #172332; font-size: 1.05rem; }
+.empty { display: grid; place-items: center; min-height: 320px; color: #64748b; text-align: center; }
+.empty svg { width: 46px; height: 46px; }
+.empty h3, .empty p { margin: .3rem 0 0; }
+.error { border-radius: 8px; background: #fee2e2; color: #a61b1b; padding: .75rem; font-weight: 800; }
+.paymentUnavailable { margin: 0 0 1rem; border-radius: 8px; background: #fff8d9; color: #6d5800; padding: .7rem .8rem; font-size: .8rem; font-weight: 800; }
+.paymentRow { display: flex; align-items: center; justify-content: space-between; gap: .75rem; border-top: 1px solid #e4eaf2; padding-top: .8rem; }
+.paymentRow > span { border-radius: 999px; padding: .35rem .6rem; font-size: .72rem; font-weight: 900; }
+.paymentPENDING { background: #fff3bd; color: #705700; }
+.paymentPAID { background: #d8f6e8; color: #106c45; }
+.paymentFAILED { background: #fee2e2; color: #a61b1b; }
+.paymentREFUNDED { background: #e8eaf0; color: #4b5563; }
+.paymentRow button { min-height: 40px; border: 0; border-radius: 8px; background: #172332; color: #fff; padding: 0 .85rem; font: inherit; font-size: .82rem; font-weight: 900; cursor: pointer; }
+.paymentRow button:disabled { opacity: .6; cursor: wait; }
+.notifications { display: grid; gap: .5rem; margin-bottom: 1rem; border: 1px solid #d8e1ec; border-radius: 9px; background: #fff; padding: .8rem; }
+.notifications > div { display: flex; align-items: center; gap: .45rem; }
+.notifications > div svg { width: 18px; color: #64748b; }
+.notifications article { display: grid; gap: .15rem; border-radius: 7px; background: #f4f6f9; padding: .6rem .7rem; }
+.notifications article span { color: #64748b; font-size: .78rem; }
+.notifications .unreadNotification { border-left: 4px solid #ffd43d; background: #fff9dc; }
+.reorderButton { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 42px; border: 1px solid #cbd6e3; border-radius: 8px; background: #fff; color: #35445a; font: inherit; font-weight: 900; cursor: pointer; }
+.reorderButton svg { width: 18px; }
+@media (max-width: 640px) {
+  .modal { inset: 0; border-radius: 0; }
+  .content { padding: .75rem; }
+  .orderCard { padding: .85rem; }
+  .orderHeading { display: grid; }
+  .status { justify-self: start; }
+  .progress small { font-size: .62rem; }
+  .items > div > span:last-child { display: grid; }
+  .orderFooter { display: grid; }
+  .orderFooter strong { margin-left: 0; }
+  .paymentRow { align-items: stretch; flex-direction: column; }
+}

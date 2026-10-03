@@ -83,6 +83,7 @@
     align-items: stretch;
     flex-direction: column;
     min-height: auto;
+    padding: 1.15rem 1rem;
   }
 
   .actions {
@@ -95,6 +96,24 @@
 
   .bodyFlush {
     padding: 1rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .meta {
+    font-size: 0.94rem;
+  }
+
+  .body {
+    padding: 1rem;
+  }
+
+  .bodyFlush {
+    padding: 0.75rem;
   }
 }
 

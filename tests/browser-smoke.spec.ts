@@ -473,7 +473,8 @@ test("loads the operational sales summary and opens the existing POS", async ({
 }) => {
   const browserErrors = collectBrowserErrors(page);
 
-  await loginWithDevelopmentAccount(page, request);
+  const session = await loginWithDevelopmentAccount(page, request);
+  await ensureOpenCashRegister(request, session);
   await page.goto("/sales");
 
   await expect(page).toHaveURL(/\/sales$/);
@@ -504,13 +505,13 @@ test("loads the operational sales summary and opens the existing POS", async ({
     page.getByRole("heading", { name: "Historial de ventas" }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Todos los vendedores" }),
+    page.locator("label").filter({ hasText: /^Vendedor/ }).first(),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Todos los estados" }),
+    page.locator("label").filter({ hasText: /^Estado/ }).first(),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Todos los medios" }),
+    page.locator("label").filter({ hasText: /^Medio de pago/ }).first(),
   ).toBeVisible();
 
   await page.getByRole("button", { name: /registrar venta/i }).click();
@@ -567,7 +568,9 @@ test("closes the current cash register from the sales workspace", async ({
   const closeDrawer = page.getByRole("dialog", { name: "Cerrar caja" });
   await expect(closeDrawer).toBeVisible();
   await closeDrawer
-    .getByLabel("¿Cuánto dinero tienes en efectivo? *")
+    .locator("label")
+    .filter({ hasText: /^Efectivo/ })
+    .locator('input[inputmode="decimal"]')
     .fill(expectedCashAmount.toFixed(2));
   await closeDrawer.getByRole("button", { name: "Continuar" }).click();
 
@@ -575,7 +578,7 @@ test("closes the current cash register from the sales workspace", async ({
     name: "Registros realizados",
   });
   await expect(reviewDrawer).toBeVisible();
-  await expect(reviewDrawer.getByText("Caja completa")).toBeVisible();
+  await expect(reviewDrawer.getByText("Conteo por medio de pago")).toBeVisible();
   await expect(reviewDrawer.getByText("Resumen del turno")).toBeVisible();
 
   const closeResponsePromise = page.waitForResponse((response) => {
@@ -634,7 +637,9 @@ test("opens a cash register from sales and rejects duplicate sessions", async ({
   const openDrawer = page.getByRole("dialog", { name: "Abrir caja" });
   await expect(openDrawer).toBeVisible();
   await openDrawer
-    .getByLabel("¿Con cuánto dinero empiezas el turno? *")
+    .locator("label")
+    .filter({ hasText: /^Efectivo/ })
+    .locator('input[inputmode="decimal"]')
     .fill("25000");
 
   const openResponsePromise = page.waitForResponse((response) => {

@@ -4,6 +4,7 @@ import {
   ChevronUp,
   Clock3,
   Link2,
+  ShoppingCart,
   Store,
   Tag,
   Truck,
@@ -34,7 +35,7 @@ type VirtualCatalogSettingsPanelProps = {
   onSubmit: (input: BusinessVirtualCatalogSettingsInput) => Promise<void>;
 };
 
-type SectionKey = "hours" | "stock" | "delivery" | "url";
+type SectionKey = "shopping" | "hours" | "stock" | "delivery" | "url";
 
 type FeedbackMessage = {
   tone: "success" | "error";
@@ -108,6 +109,7 @@ export function VirtualCatalogSettingsPanel({
   );
   const [isOpen, setIsOpen] = useState(false);
   const [openSections, setOpenSections] = useState<Record<SectionKey, boolean>>({
+    shopping: false,
     hours: false,
     stock: false,
     delivery: false,
@@ -122,8 +124,10 @@ export function VirtualCatalogSettingsPanel({
   });
   const [outOfStockBehavior, setOutOfStockBehavior] =
     useState<CatalogOutOfStockBehavior>("SHOW_NORMALLY");
+  const [shoppingEnabled, setShoppingEnabled] = useState(false);
   const [pickupEnabled, setPickupEnabled] = useState(false);
   const [deliveryEnabled, setDeliveryEnabled] = useState(false);
+  const [deliveryFee, setDeliveryFee] = useState(0);
   const [catalogUrl, setCatalogUrl] = useState(buildCatalogUrl(defaultSlug));
   const [savingSection, setSavingSection] = useState<SectionKey | null>(null);
   const [feedbackMessage, setFeedbackMessage] =
@@ -157,8 +161,10 @@ export function VirtualCatalogSettingsPanel({
     setOutOfStockBehavior(
       businessSettings?.catalogOutOfStockBehavior ?? "SHOW_NORMALLY",
     );
+    setShoppingEnabled(businessSettings?.catalogShoppingEnabled ?? false);
     setPickupEnabled(businessSettings?.catalogPickupEnabled ?? false);
     setDeliveryEnabled(businessSettings?.catalogDeliveryEnabled ?? false);
+    setDeliveryFee(businessSettings?.catalogDeliveryFee ?? 0);
     setCatalogUrl(
       buildCatalogUrl(businessSettings?.catalogSlug ?? defaultSlug),
     );
@@ -276,6 +282,23 @@ export function VirtualCatalogSettingsPanel({
     }
   }
 
+  async function handleShoppingToggle(nextValue: boolean) {
+    const previousValue = shoppingEnabled;
+    setShoppingEnabled(nextValue);
+
+    const wasSaved = await saveSettings(
+      "shopping",
+      { catalogShoppingEnabled: nextValue },
+      nextValue
+        ? "Carrito de compras activado."
+        : "Carrito de compras desactivado.",
+    );
+
+    if (!wasSaved) {
+      setShoppingEnabled(previousValue);
+    }
+  }
+
   async function handleDeliveryToggle(
     field: "pickup" | "delivery",
     nextValue: boolean,
@@ -294,6 +317,7 @@ export function VirtualCatalogSettingsPanel({
       {
         catalogPickupEnabled: nextPickupEnabled,
         catalogDeliveryEnabled: nextDeliveryEnabled,
+        catalogDeliveryFee: deliveryFee,
       },
       "Métodos de entrega actualizados.",
     );
@@ -302,6 +326,14 @@ export function VirtualCatalogSettingsPanel({
       setPickupEnabled(previousPickupEnabled);
       setDeliveryEnabled(previousDeliveryEnabled);
     }
+  }
+
+  async function handleSaveDeliveryFee() {
+    await saveSettings(
+      "delivery",
+      { catalogDeliveryFee: deliveryFee },
+      "Tarifa de domicilio actualizada.",
+    );
   }
 
   async function handleSaveCatalogUrl() {
@@ -352,6 +384,37 @@ export function VirtualCatalogSettingsPanel({
               Completa primero los datos del negocio para activar el catálogo.
             </p>
           ) : null}
+
+          <section
+            className={`${styles.shoppingToggleCard} ${
+              shoppingEnabled ? styles.shoppingToggleCardActive : ""
+            }`}
+          >
+            <span className={styles.shoppingToggleIcon}>
+              <ShoppingCart aria-hidden="true" />
+            </span>
+            <span className={styles.shoppingToggleCopy}>
+              <strong>Carrito de compras</strong>
+              <small>
+                {shoppingEnabled
+                  ? "Tus clientes pueden agregar productos y crear pedidos desde el catálogo."
+                  : "El catálogo funciona como vitrina: muestra productos y precios, sin permitir compras."}
+              </small>
+            </span>
+            <label className={styles.shoppingToggleControl}>
+              <span>{shoppingEnabled ? "Activado" : "Desactivado"}</span>
+              <input
+                aria-label="Activar carrito de compras"
+                checked={shoppingEnabled}
+                className={styles.toggleInput}
+                disabled={isDisabled || savingSection === "shopping"}
+                type="checkbox"
+                onChange={(event) => {
+                  void handleShoppingToggle(event.target.checked);
+                }}
+              />
+            </label>
+          </section>
 
           <div className={styles.innerAccordion}>
             <button
@@ -689,6 +752,47 @@ export function VirtualCatalogSettingsPanel({
                     }}
                   />
                 </label>
+
+                {deliveryEnabled ? (
+                  <div className={styles.deliveryFeeCard}>
+                    <div>
+                      <strong>Recargo por domicilio</strong>
+                      <p>
+                        Se sumará automáticamente al total del cliente cuando
+                        elija entrega a domicilio.
+                      </p>
+                    </div>
+                    <label className={styles.deliveryFeeField}>
+                      <span>Valor en {businessSettings?.currency ?? "COP"}</span>
+                      <span className={styles.moneyInput}>
+                        <span>$</span>
+                        <input
+                          aria-label="Recargo por domicilio"
+                          disabled={isDisabled || savingSection === "delivery"}
+                          min="0"
+                          onChange={(event) =>
+                            setDeliveryFee(
+                              Math.max(Number(event.target.value) || 0, 0),
+                            )
+                          }
+                          step="100"
+                          type="number"
+                          value={deliveryFee}
+                        />
+                      </span>
+                    </label>
+                    <button
+                      className={styles.saveDeliveryFeeButton}
+                      disabled={isDisabled || savingSection === "delivery"}
+                      onClick={() => void handleSaveDeliveryFee()}
+                      type="button"
+                    >
+                      {savingSection === "delivery"
+                        ? "Guardando..."
+                        : "Guardar tarifa"}
+                    </button>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </div>

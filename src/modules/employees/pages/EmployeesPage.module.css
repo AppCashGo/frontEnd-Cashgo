@@ -285,4 +285,65 @@
   .retailEmployeesWorkspace {
     padding-inline: 0;
   }
+
+  .retailEmployeesWorkspace table,
+  .retailEmployeesWorkspace tbody,
+  .retailEmployeesWorkspace tr,
+  .retailEmployeesWorkspace td {
+    width: 100%;
+  }
+
+  .retailEmployeesWorkspace table {
+    display: block;
+    min-width: 0;
+    padding: 0.75rem;
+  }
+
+  .retailEmployeesWorkspace thead {
+    display: none;
+  }
+
+  .retailEmployeesWorkspace tbody {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .retailEmployeesWorkspace tr {
+    display: grid;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 0.9rem;
+    background: #ffffff;
+  }
+
+  .retailEmployeesWorkspace td {
+    display: grid;
+    grid-template-columns: minmax(5.25rem, 0.75fr) minmax(0, 1.25fr);
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0;
+    border: 0;
+  }
+
+  .retailEmployeesWorkspace td::before {
+    color: #748195;
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+  }
+
+  .retailEmployeesWorkspace td:first-child {
+    grid-template-columns: 1fr;
+  }
+
+  .retailEmployeesWorkspace td:first-child::before {
+    display: none;
+  }
+
+  .retailEditButton {
+    min-height: 2.75rem;
+  }
 }

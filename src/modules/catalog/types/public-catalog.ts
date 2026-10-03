@@ -39,8 +39,10 @@ export type PublicCatalogDetail = {
   settings: {
     businessHours: CatalogBusinessHour[] | null;
     outOfStockBehavior: CatalogOutOfStockBehavior;
+    shoppingEnabled: boolean;
     pickupEnabled: boolean;
     deliveryEnabled: boolean;
+    deliveryFee: number;
   };
   categories: PublicCatalogCategory[];
   products: PublicCatalogProduct[];

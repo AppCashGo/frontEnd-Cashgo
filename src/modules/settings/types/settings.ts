@@ -61,8 +61,10 @@ export type BusinessSettings = {
   printFooterMessage: string;
   catalogBusinessHours: CatalogBusinessHour[] | null;
   catalogOutOfStockBehavior: CatalogOutOfStockBehavior;
+  catalogShoppingEnabled: boolean;
   catalogPickupEnabled: boolean;
   catalogDeliveryEnabled: boolean;
+  catalogDeliveryFee: number;
   catalogSlug: string | null;
   createdAt: string;
   updatedAt: string;
@@ -95,8 +97,10 @@ export type BusinessOperationalSettingsInput = {
 export type BusinessVirtualCatalogSettingsInput = {
   catalogBusinessHours?: CatalogBusinessHour[];
   catalogOutOfStockBehavior?: CatalogOutOfStockBehavior;
+  catalogShoppingEnabled?: boolean;
   catalogPickupEnabled?: boolean;
   catalogDeliveryEnabled?: boolean;
+  catalogDeliveryFee?: number;
   catalogSlug?: string | null;
 };
 

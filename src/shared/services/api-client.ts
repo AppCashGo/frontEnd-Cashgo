@@ -138,7 +138,7 @@ async function parseBlobErrorPayload(payload: unknown) {
   return text;
 }
 
-async function toApiError(error: unknown) {
+async function toApiError(error: unknown, handleGlobalAuthFailure = true) {
   if (error instanceof ApiError) {
     return error;
   }
@@ -152,7 +152,7 @@ async function toApiError(error: unknown) {
   const payload = await parseBlobErrorPayload(axiosError.response?.data);
   const kind = getApiErrorKindFromStatus(status, !axiosError.response);
 
-  if (status === 401) {
+  if (status === 401 && handleGlobalAuthFailure) {
     clearAuthSession();
     notifyAuthSessionExpired();
   }
@@ -161,7 +161,10 @@ async function toApiError(error: unknown) {
     extractErrorMessage(payload) ??
     axiosError.response?.statusText ??
     axiosError.message;
-  const userMessage = getApiErrorUserMessage(kind, rawMessage);
+  const userMessage =
+    status === 401 && !handleGlobalAuthFailure && rawMessage
+      ? rawMessage
+      : getApiErrorUserMessage(kind, rawMessage);
 
   return new ApiError(userMessage, status, payload, {
     code: extractErrorCode(payload),
@@ -427,6 +430,7 @@ export function unwrapApiSuccess<TData>(payload: ApiSuccess<TData>) {
 type JsonRequestOptions = {
   accessToken?: string;
   businessId?: string;
+  handleGlobalAuthFailure?: boolean;
 };
 
 type BlobRequestOptions = JsonRequestOptions & {
@@ -480,7 +484,10 @@ async function requestJson<TResponse, TBody = undefined>(
 
     return response.data;
   } catch (error) {
-    const apiError = await toApiError(error);
+    const apiError = await toApiError(
+      error,
+      options?.handleGlobalAuthFailure !== false,
+    );
 
     if (method !== "GET") {
       notifyApiWriteError(apiError);
@@ -506,7 +513,10 @@ async function requestFormData<TResponse>(
 
     return response.data;
   } catch (error) {
-    const apiError = await toApiError(error);
+    const apiError = await toApiError(
+      error,
+      options?.handleGlobalAuthFailure !== false,
+    );
     notifyApiWriteError(apiError);
     throw apiError;
   }

@@ -31,6 +31,7 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './DeliveriesPage.module.css'
+import { CatalogWebOrdersPanel } from '../components/CatalogWebOrdersPanel'
 
 type DeliveryCreationStep = 'catalog' | 'customer' | 'payment'
 
@@ -938,6 +939,8 @@ export function DeliveriesPage() {
           {feedbackMessage}
         </div>
       ) : null}
+
+      <CatalogWebOrdersPanel />
 
       <main className={styles.board}>
         {boardColumns.map((column) => {

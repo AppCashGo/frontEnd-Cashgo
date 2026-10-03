@@ -247,7 +247,10 @@
 }
 
 .tableScroller {
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .tableToolbar {

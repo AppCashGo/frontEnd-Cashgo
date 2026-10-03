@@ -47,5 +47,9 @@ function normalizePublicCatalog(
       price: normalizeNumber(product.price),
       stock: normalizeNumber(product.stock),
     })),
+    settings: {
+      ...catalog.settings,
+      deliveryFee: normalizeNumber(catalog.settings.deliveryFee),
+    },
   };
 }

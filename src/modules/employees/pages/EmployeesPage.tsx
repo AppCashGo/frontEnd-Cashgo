@@ -309,7 +309,7 @@ export function EmployeesPage() {
 
                         return (
                           <tr key={employee.id}>
-                            <td>
+                            <td data-label="Nombre">
                               <span className={styles.retailEmployeeIdentity}>
                                 <span
                                   className={styles.retailEmployeeAvatar}
@@ -331,8 +331,10 @@ export function EmployeesPage() {
                                 </strong>
                               </span>
                             </td>
-                            <td>{employee.phone ?? 'Sin celular'}</td>
-                            <td>
+                            <td data-label="Celular">
+                              {employee.phone ?? 'Sin celular'}
+                            </td>
+                            <td data-label="Rol">
                               <span
                                 className={joinClassNames(
                                   styles.retailRolePill,
@@ -342,7 +344,7 @@ export function EmployeesPage() {
                                 {getRetailEmployeeRoleLabel(employee)}
                               </span>
                             </td>
-                            <td>
+                            <td data-label="Estado">
                               <span
                                 className={
                                   employee.activationStatus === 'ACTIVE'
@@ -356,7 +358,7 @@ export function EmployeesPage() {
                                   : 'Pendiente'}
                               </span>
                             </td>
-                            <td>
+                            <td data-label="Acciones">
                               {canEditEmployee ? (
                                 <button
                                   className={styles.retailEditButton}

@@ -1,0 +1,247 @@
+.layer {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  border: 0;
+  background: rgba(15, 23, 42, 0.68);
+  backdrop-filter: blur(3px);
+}
+
+.modal {
+  position: relative;
+  z-index: 1;
+  width: min(460px, 100%);
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  border-radius: 18px;
+  background: #ffffff;
+  padding: 1.5rem;
+  color: #172332;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.32);
+}
+
+.closeButton {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 10px;
+  background: #f1f4f8;
+  color: #475569;
+  cursor: pointer;
+}
+
+.closeButton svg {
+  width: 21px;
+  height: 21px;
+}
+
+.heading {
+  display: grid;
+  justify-items: center;
+  padding: 0.25rem 2.5rem 1.2rem;
+  text-align: center;
+}
+
+.heading > span {
+  display: grid;
+  place-items: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: #fff4bd;
+  color: #172332;
+}
+
+.heading > span svg {
+  width: 27px;
+  height: 27px;
+}
+
+.heading p {
+  margin: 0.75rem 0 0;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.heading h2 {
+  margin: 0.2rem 0 0;
+  font-size: 1.55rem;
+}
+
+.heading small {
+  margin-top: 0.35rem;
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.25rem;
+  border-radius: 10px;
+  background: #f1f4f8;
+  padding: 0.25rem;
+}
+
+.tabs button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.tabs button.activeTab {
+  background: #ffffff;
+  color: #172332;
+  box-shadow: 0 3px 10px rgba(15, 23, 42, 0.09);
+}
+
+.form {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1.15rem;
+}
+
+.form label {
+  display: grid;
+  gap: 0.4rem;
+  color: #35445a;
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.inputShell {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 50px;
+  border: 1.5px solid #cbd6e3;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0 0.85rem;
+}
+
+.inputShell:focus-within {
+  border-color: #3157dc;
+  box-shadow: 0 0 0 3px rgba(49, 87, 220, 0.12);
+}
+
+.inputShell > svg {
+  width: 19px;
+  height: 19px;
+  color: #7b899c;
+}
+
+.inputShell input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding: 0 0.65rem;
+  color: #172332;
+  font: inherit;
+}
+
+.inputShell button {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.inputShell button svg {
+  width: 18px;
+  height: 18px;
+}
+
+.error {
+  margin: 0;
+  border-radius: 8px;
+  background: #fff0f0;
+  color: #a61b1b;
+  padding: 0.7rem 0.8rem;
+  font-size: 0.84rem;
+  font-weight: 800;
+  line-height: 1.45;
+}
+
+.submitButton {
+  min-height: 52px;
+  border: 0;
+  border-radius: 10px;
+  background: #172332;
+  color: #ffffff;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.16);
+}
+
+.submitButton:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.securityNote {
+  margin: 1rem 0 0;
+  color: #7b899c;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+@media (max-width: 520px) {
+  .layer {
+    align-items: end;
+    padding: 0;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: 94dvh;
+    border-radius: 18px 18px 0 0;
+    padding: 1.1rem 1rem max(1.1rem, env(safe-area-inset-bottom));
+  }
+
+  .heading {
+    padding-right: 2.25rem;
+    padding-bottom: 1rem;
+    padding-left: 2.25rem;
+  }
+
+  .heading > span {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+  }
+
+  .heading h2 {
+    font-size: 1.35rem;
+  }
+}

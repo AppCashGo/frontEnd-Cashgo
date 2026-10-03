@@ -54,6 +54,74 @@
   padding: 0 1.1rem 1.2rem;
 }
 
+.shoppingToggleCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1rem;
+  min-height: 5.5rem;
+  border: 1px solid #cbd6e3;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  padding: 1rem;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.shoppingToggleCardActive {
+  border-color: #8bd5ae;
+  background: #f0fbf5;
+  box-shadow: 0 0.45rem 1.2rem rgba(22, 160, 93, 0.08);
+}
+
+.shoppingToggleIcon {
+  display: grid;
+  width: 2.8rem;
+  height: 2.8rem;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: #e8edf4;
+  color: #35445a;
+}
+
+.shoppingToggleCardActive .shoppingToggleIcon {
+  background: #d8f6e8;
+  color: #0f7145;
+}
+
+.shoppingToggleIcon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.shoppingToggleCopy {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.shoppingToggleCopy strong {
+  color: #1f2a37;
+  font-size: 0.95rem;
+}
+
+.shoppingToggleCopy small {
+  max-width: 42rem;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.shoppingToggleControl {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  color: #52647a;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
 .innerAccordion {
   overflow: hidden;
   border: 1px solid rgba(192, 204, 218, 0.96);
@@ -428,6 +496,82 @@
   gap: 0.85rem;
 }
 
+.deliveryFeeCard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(10rem, 0.45fr) auto;
+  align-items: end;
+  gap: 1rem;
+  border: 1px solid #cfdaf0;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #f7f9ff 0%, #f5fbf7 100%);
+  padding: 1rem;
+}
+
+.deliveryFeeCard strong {
+  color: #172033;
+}
+
+.deliveryFeeCard p {
+  margin: 0.3rem 0 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.deliveryFeeField {
+  display: grid;
+  gap: 0.4rem;
+  color: #607084;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.moneyInput {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  min-height: 2.9rem;
+  border: 1px solid #c3cfde;
+  border-radius: 0.65rem;
+  background: #ffffff;
+  padding: 0 0.75rem;
+}
+
+.moneyInput > span {
+  color: #52647a;
+  font-weight: 900;
+}
+
+.moneyInput input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  padding-left: 0.45rem;
+  color: #172033;
+  font: inherit;
+  font-weight: 900;
+}
+
+.saveDeliveryFeeButton {
+  min-height: 2.9rem;
+  border: 0;
+  border-radius: 0.65rem;
+  background: #243246;
+  color: #ffffff;
+  padding: 0 1rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.saveDeliveryFeeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .toggleInput {
   position: relative;
   width: 2.65rem;
@@ -571,11 +715,32 @@
   .applyScheduleButton {
     grid-column: 1 / -1;
   }
+
+  .deliveryFeeCard {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .deliveryFeeCard > div {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 480px) {
   .accordionBody {
     padding-inline: 0.65rem;
+  }
+
+  .shoppingToggleCard {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.75rem;
+    padding: 0.85rem;
+  }
+
+  .shoppingToggleControl {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    width: 100%;
+    padding-top: 0.25rem;
   }
 
   .innerSummary {
@@ -612,6 +777,14 @@
   }
 
   .applyScheduleButton {
+    grid-column: auto;
+  }
+
+  .deliveryFeeCard {
+    grid-template-columns: 1fr;
+  }
+
+  .deliveryFeeCard > div {
     grid-column: auto;
   }
 }
