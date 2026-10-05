@@ -14,6 +14,10 @@ type CustomerSessionState = {
   sessions: Record<string, CatalogCustomerSession>;
   clearSession: (catalogSlug: string) => void;
   setSession: (catalogSlug: string, response: CustomerAuthResponse) => void;
+  updateCustomer: (
+    catalogSlug: string,
+    customer: Partial<CatalogCustomer>,
+  ) => void;
 };
 
 export const useCustomerSessionStore = create<CustomerSessionState>()(
@@ -36,6 +40,20 @@ export const useCustomerSessionStore = create<CustomerSessionState>()(
             },
           },
         })),
+      updateCustomer: (catalogSlug, customer) =>
+        set((state) => {
+          const session = state.sessions[catalogSlug];
+          if (!session) return state;
+          return {
+            sessions: {
+              ...state.sessions,
+              [catalogSlug]: {
+                ...session,
+                customer: { ...session.customer, ...customer },
+              },
+            },
+          };
+        }),
     }),
     {
       name: "cashgo-customer-sessions",

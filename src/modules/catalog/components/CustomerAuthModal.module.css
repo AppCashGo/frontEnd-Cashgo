@@ -214,6 +214,93 @@
   font-size: 0.76rem;
   line-height: 1.45;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.securityNote svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+
+.passwordRules {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-top: -0.35rem;
+}
+
+.passwordRules span {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #7b899c;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.passwordRules svg {
+  width: 14px;
+  height: 14px;
+}
+.passwordRules .ruleValid {
+  color: #0f7145;
+}
+
+.verificationPanel {
+  display: grid;
+  justify-items: center;
+  gap: 0.8rem;
+  padding: 2rem 0.5rem 0.5rem;
+  text-align: center;
+}
+
+.verificationPanel > span {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  background: #e7f8ef;
+  color: #0f7145;
+}
+
+.verificationPanel > span svg {
+  width: 30px;
+  height: 30px;
+}
+.verificationPanel p,
+.verificationPanel h2 {
+  margin: 0;
+}
+.verificationPanel > p {
+  color: #0f7145;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+.verificationPanel small {
+  max-width: 360px;
+  color: #64748b;
+  line-height: 1.5;
+}
+.verificationPanel .submitButton,
+.secondaryButton {
+  width: 100%;
+}
+
+.secondaryButton {
+  min-height: 46px;
+  border: 1px solid #cbd6e3;
+  border-radius: 10px;
+  background: #fff;
+  color: #35445a;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
 }
 
 @media (max-width: 520px) {

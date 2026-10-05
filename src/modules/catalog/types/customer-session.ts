@@ -5,6 +5,9 @@ export type CatalogCustomer = {
   catalogSlug: string;
   name: string;
   email: string;
+  phone: string | null;
+  avatarUrl: string | null;
+  emailVerifiedAt: string;
 };
 
 export type CustomerAuthResponse = {
@@ -21,4 +24,11 @@ export type CustomerLoginPayload = {
 
 export type CustomerRegisterPayload = CustomerLoginPayload & {
   name: string;
+};
+
+export type CustomerRegistrationResponse = {
+  requiresVerification: true;
+  email: string;
+  expiresInMinutes: number;
+  developmentVerificationToken?: string;
 };

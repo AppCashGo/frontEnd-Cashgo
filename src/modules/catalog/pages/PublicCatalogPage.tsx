@@ -2,7 +2,7 @@ import {
   ChevronRight,
   CircleCheck,
   Clock3,
-  LogOut,
+  Heart,
   Mail,
   MapPin,
   Minus,
@@ -30,6 +30,7 @@ import { formatTime12Hour } from "@/shared/utils/time";
 import { CustomerAuthModal } from "../components/CustomerAuthModal";
 import { CheckoutDeliveryPanel } from "../components/CheckoutDeliveryPanel";
 import { CustomerOrdersModal } from "../components/CustomerOrdersModal";
+import { CustomerAccountModal } from "../components/CustomerAccountModal";
 import {
   emptyCatalogCheckout,
   useCatalogCheckoutStore,
@@ -44,10 +45,17 @@ import { createCatalogOrder } from "../services/catalog-orders-api";
 import {
   getCatalogSavedAddresses,
   saveCatalogAddress,
+  addCatalogCustomerFavorite,
+  getCatalogCustomerFavorites,
+  removeCatalogCustomerFavorite,
 } from "../services/catalog-customer-api";
 import type { CatalogOrder } from "../types/catalog-order";
 import type { CatalogSavedAddress } from "../types/catalog-customer";
-import { getApiErrorMessage } from "@/shared/services/api-client";
+import {
+  getApiErrorMessage,
+  resolveApiAssetUrl,
+} from "@/shared/services/api-client";
+import { verifyCatalogCustomerEmail } from "../services/customer-auth-api";
 import type {
   PublicCatalogCategory,
   PublicCatalogProduct,
@@ -56,6 +64,12 @@ import styles from "./PublicCatalogPage.module.css";
 
 const allCategoriesId = "all";
 const emptyCartItems: PublicCartItem[] = [];
+
+const currencyFormatter = new Intl.NumberFormat("es-CO", {
+  currency: "COP",
+  maximumFractionDigits: 0,
+  style: "currency",
+});
 
 const weekdayLabels = {
   monday: "Lunes",
@@ -67,12 +81,6 @@ const weekdayLabels = {
   sunday: "Domingo",
 } as const;
 
-const currencyFormatter = new Intl.NumberFormat("es-CO", {
-  currency: "COP",
-  maximumFractionDigits: 0,
-  style: "currency",
-});
-
 export function PublicCatalogPage() {
   const { slug } = useParams<{ slug: string }>();
   const normalizedSlug = slug?.trim() ?? null;
@@ -83,16 +91,26 @@ export function PublicCatalogPage() {
   const [isCustomerAuthOpen, setIsCustomerAuthOpen] = useState(false);
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
   const [isFulfillmentOpen, setIsFulfillmentOpen] = useState(false);
-  const [fulfillmentNotice, setFulfillmentNotice] = useState<string | null>(null);
+  const [fulfillmentNotice, setFulfillmentNotice] = useState<string | null>(
+    null,
+  );
   const [isCreatingOrder, setIsCreatingOrder] = useState(false);
   const [isOrdersOpen, setIsOrdersOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [favoriteIds, setFavoriteIds] = useState<Set<number>>(new Set());
+  const [pageNotice, setPageNotice] = useState<string | null>(null);
   const [createdOrder, setCreatedOrder] = useState<CatalogOrder | null>(null);
-  const [savedAddresses, setSavedAddresses] = useState<CatalogSavedAddress[]>([]);
+  const [savedAddresses, setSavedAddresses] = useState<CatalogSavedAddress[]>(
+    [],
+  );
 
   const catalog = catalogQuery.data;
   const categories = useMemo(
     () =>
-      buildVisibleCategories(catalog?.categories ?? [], catalog?.products ?? []),
+      buildVisibleCategories(
+        catalog?.categories ?? [],
+        catalog?.products ?? [],
+      ),
     [catalog?.categories, catalog?.products],
   );
   const filteredProducts = useMemo(
@@ -118,7 +136,9 @@ export function PublicCatalogPage() {
   const setQuantity = usePublicCartStore((state) => state.setQuantity);
   const removeItem = usePublicCartStore((state) => state.removeItem);
   const clearCart = usePublicCartStore((state) => state.clearCart);
-  const replaceFromOrder = usePublicCartStore((state) => state.replaceFromOrder);
+  const replaceFromOrder = usePublicCartStore(
+    (state) => state.replaceFromOrder,
+  );
   const customerSession = useCustomerSessionStore(
     (state) => state.sessions[catalogKey],
   );
@@ -127,6 +147,9 @@ export function PublicCatalogPage() {
   );
   const clearCustomerSession = useCustomerSessionStore(
     (state) => state.clearSession,
+  );
+  const updateCustomerSession = useCustomerSessionStore(
+    (state) => state.updateCustomer,
   );
   const checkout = useCatalogCheckoutStore(
     (state) => state.checkouts[catalogKey] ?? emptyCatalogCheckout,
@@ -158,18 +181,24 @@ export function PublicCatalogPage() {
     setIsCreatingOrder(true);
     setFulfillmentNotice(null);
     try {
-      const order = await createCatalogOrder(catalogKey, customerSession.accessToken, {
-        fulfillmentMethod: checkout.method === "delivery" ? "DELIVERY" : "PICKUP",
-        contactName: checkout.contactName,
-        email: checkout.email || customerSession.customer.email,
-        phone: checkout.phone,
-        address: checkout.method === "delivery" ? checkout.address : undefined,
-        instructions: checkout.instructions || undefined,
-        items: cartItems.map((item) => ({
-          productId: Number(item.productId),
-          quantity: item.quantity,
-        })),
-      });
+      const order = await createCatalogOrder(
+        catalogKey,
+        customerSession.accessToken,
+        {
+          fulfillmentMethod:
+            checkout.method === "delivery" ? "DELIVERY" : "PICKUP",
+          contactName: checkout.contactName,
+          email: checkout.email || customerSession.customer.email,
+          phone: checkout.phone,
+          address:
+            checkout.method === "delivery" ? checkout.address : undefined,
+          instructions: checkout.instructions || undefined,
+          items: cartItems.map((item) => ({
+            productId: Number(item.productId),
+            quantity: item.quantity,
+          })),
+        },
+      );
       if (
         checkout.method === "delivery" &&
         checkout.saveAddress &&
@@ -179,12 +208,14 @@ export function PublicCatalogPage() {
           label: checkout.addressLabel,
           address: checkout.address,
           instructions: checkout.instructions || undefined,
-        }).then((savedAddress) =>
-          setSavedAddresses((current) => [
-            savedAddress,
-            ...current.filter((address) => address.id !== savedAddress.id),
-          ]),
-        ).catch(() => undefined);
+        })
+          .then((savedAddress) =>
+            setSavedAddresses((current) => [
+              savedAddress,
+              ...current.filter((address) => address.id !== savedAddress.id),
+            ]),
+          )
+          .catch(() => undefined);
       }
       clearCart(catalogKey);
       setCreatedOrder(order);
@@ -193,7 +224,10 @@ export function PublicCatalogPage() {
       setIsOrdersOpen(true);
     } catch (error) {
       setFulfillmentNotice(
-        getApiErrorMessage(error, "No pudimos crear el pedido. Intenta nuevamente."),
+        getApiErrorMessage(
+          error,
+          "No pudimos crear el pedido. Intenta nuevamente.",
+        ),
       );
     } finally {
       setIsCreatingOrder(false);
@@ -241,6 +275,46 @@ export function PublicCatalogPage() {
   }, [catalogKey, customerSession, updateCheckout]);
 
   useEffect(() => {
+    if (!customerSession || !catalogKey) {
+      setFavoriteIds(new Set());
+      return;
+    }
+    void getCatalogCustomerFavorites(catalogKey, customerSession.accessToken)
+      .then((items) =>
+        setFavoriteIds(new Set(items.map((item) => item.product.id))),
+      )
+      .catch(() => setFavoriteIds(new Set()));
+  }, [catalogKey, customerSession]);
+
+  useEffect(() => {
+    if (!catalogKey || customerSession) return;
+    const parameters = new URLSearchParams(window.location.search);
+    const token = parameters.get("verificar-correo");
+    if (!token) return;
+    setPageNotice("Estamos verificando tu correo…");
+    void verifyCatalogCustomerEmail(catalogKey, token)
+      .then((response) => {
+        setCustomerSession(catalogKey, response);
+        setPageNotice("Correo verificado. Tu cuenta ya está activa.");
+        parameters.delete("verificar-correo");
+        window.history.replaceState(
+          {},
+          "",
+          `${window.location.pathname}${parameters.size ? `?${parameters}` : ""}`,
+        );
+        setIsAccountOpen(true);
+      })
+      .catch((error) =>
+        setPageNotice(
+          getApiErrorMessage(
+            error,
+            "El enlace de verificación no es válido o venció.",
+          ),
+        ),
+      );
+  }, [catalogKey, customerSession, setCustomerSession]);
+
+  useEffect(() => {
     if (!isCartOpen) {
       return;
     }
@@ -286,7 +360,9 @@ export function PublicCatalogPage() {
         <section className={styles.statePanel}>
           <PackageSearch aria-hidden="true" />
           <h1>Catálogo no disponible</h1>
-          <p>El enlace no existe o el negocio todavía no tiene catálogo activo.</p>
+          <p>
+            El enlace no existe o el negocio todavía no tiene catálogo activo.
+          </p>
         </section>
       </main>
     );
@@ -294,66 +370,86 @@ export function PublicCatalogPage() {
 
   return (
     <main className={styles.page}>
-      <section className={styles.hero}>
-        {catalog.settings.shoppingEnabled ? (
-          <div className={styles.heroActions}>
-          {customerSession ? (
-            <>
-              <button
-                className={styles.ordersButton}
-                onClick={() => {
-                  setCreatedOrder(null);
-                  setIsOrdersOpen(true);
-                }}
-                type="button"
-              >
-                <PackageSearch aria-hidden="true" />
-                Mis pedidos
-              </button>
-              <div className={styles.customerSession}>
-                <UserRound aria-hidden="true" />
-                <span>
-                  <small>Hola,</small>
-                  {customerSession.customer.name.split(" ")[0]}
-                </span>
-                <button
-                  aria-label="Cerrar sesión de cliente"
-                  onClick={() => clearCustomerSession(catalogKey)}
-                  type="button"
-                >
-                  <LogOut aria-hidden="true" />
-                </button>
-              </div>
-            </>
-          ) : (
-            <button
-              className={styles.customerAccessButton}
-              onClick={() => setIsCustomerAuthOpen(true)}
-              type="button"
-            >
-              <UserRound aria-hidden="true" />
-              Ingresar
-            </button>
-          )}
+      {catalog.settings.shoppingEnabled ? (
+        <header className={styles.stickyCommerceBar}>
           <button
-            aria-label={`Abrir carrito con ${cartItemCount} productos`}
-            className={styles.cartButton}
-            onClick={() => setIsCartOpen(true)}
+            className={styles.stickyBrand}
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             type="button"
           >
-            <ShoppingCart aria-hidden="true" />
-            <span>Mi carrito</span>
-            {cartItemCount > 0 ? (
-              <strong aria-hidden="true">{cartItemCount}</strong>
-            ) : null}
+            <span>
+              {catalog.business.logoUrl ? (
+                <img alt="" src={catalog.business.logoUrl} />
+              ) : (
+                <Store aria-hidden="true" />
+              )}
+            </span>
+            <strong>{catalog.business.businessName}</strong>
           </button>
+          <div className={styles.stickyActions}>
+            {customerSession ? (
+              <button
+                className={styles.accountButton}
+                onClick={() => setIsAccountOpen(true)}
+                type="button"
+              >
+                <span>
+                  {customerSession.customer.avatarUrl ? (
+                    <img
+                      alt=""
+                      src={
+                        resolveApiAssetUrl(
+                          customerSession.customer.avatarUrl,
+                        ) ?? undefined
+                      }
+                    />
+                  ) : (
+                    <UserRound aria-hidden="true" />
+                  )}
+                </span>
+                <span>
+                  <small>Mi cuenta</small>
+                  {customerSession.customer.name.split(" ")[0]}
+                </span>
+              </button>
+            ) : (
+              <button
+                className={styles.customerAccessButton}
+                onClick={() => setIsCustomerAuthOpen(true)}
+                type="button"
+              >
+                <UserRound aria-hidden="true" /> Ingresar
+              </button>
+            )}
+            <button
+              aria-label={`Abrir carrito con ${cartItemCount} productos`}
+              className={styles.cartButton}
+              onClick={() => setIsCartOpen(true)}
+              type="button"
+            >
+              <ShoppingCart aria-hidden="true" />
+              <span>Mi carrito</span>
+              {cartItemCount > 0 ? <strong>{cartItemCount}</strong> : null}
+            </button>
           </div>
-        ) : null}
+        </header>
+      ) : null}
+      {pageNotice ? (
+        <div className={styles.pageNotice} role="status">
+          {pageNotice}
+          <button
+            aria-label="Cerrar aviso"
+            onClick={() => setPageNotice(null)}
+            type="button"
+          >
+            <X />
+          </button>
+        </div>
+      ) : null}
+      <section className={styles.hero}>
         <div
           className={`${styles.businessBlock} ${
-            catalog.settings.shoppingEnabled
-              ? ""
-              : styles.businessBlockReadOnly
+            catalog.settings.shoppingEnabled ? "" : styles.businessBlockReadOnly
           }`}
         >
           <div className={styles.logoBox}>
@@ -454,7 +550,9 @@ export function PublicCatalogPage() {
           <div className={styles.categoryFilters}>
             <button
               className={
-                selectedCategoryId === allCategoriesId ? styles.activeFilter : ""
+                selectedCategoryId === allCategoriesId
+                  ? styles.activeFilter
+                  : ""
               }
               onClick={() => setSelectedCategoryId(allCategoriesId)}
               type="button"
@@ -500,6 +598,7 @@ export function PublicCatalogPage() {
                 cartItem={cartItems.find(
                   (item) => item.productId === product.id,
                 )}
+                isFavorite={favoriteIds.has(Number(product.id))}
                 key={product.id}
                 onAdd={() =>
                   addItem(
@@ -511,6 +610,34 @@ export function PublicCatalogPage() {
                 onQuantityChange={(quantity) =>
                   setQuantity(catalogKey, product.id, quantity)
                 }
+                onToggleFavorite={() => {
+                  if (!customerSession) {
+                    setIsCustomerAuthOpen(true);
+                    return;
+                  }
+                  const productId = Number(product.id);
+                  const wasFavorite = favoriteIds.has(productId);
+                  setFavoriteIds((current) => {
+                    const next = new Set(current);
+                    wasFavorite ? next.delete(productId) : next.add(productId);
+                    return next;
+                  });
+                  void (
+                    wasFavorite
+                      ? removeCatalogCustomerFavorite
+                      : addCatalogCustomerFavorite
+                  )(catalogKey, customerSession.accessToken, productId).catch(
+                    () => {
+                      setFavoriteIds((current) => {
+                        const next = new Set(current);
+                        wasFavorite
+                          ? next.add(productId)
+                          : next.delete(productId);
+                        return next;
+                      });
+                    },
+                  );
+                }}
                 product={product}
                 shoppingEnabled={catalog.settings.shoppingEnabled}
               />
@@ -629,6 +756,31 @@ export function PublicCatalogPage() {
           }}
         />
       ) : null}
+
+      {catalog.settings.shoppingEnabled && isAccountOpen && customerSession ? (
+        <CustomerAccountModal
+          accessToken={customerSession.accessToken}
+          catalogSlug={catalogKey}
+          customer={customerSession.customer}
+          onClose={() => setIsAccountOpen(false)}
+          onLogout={() => {
+            clearCustomerSession(catalogKey);
+            setIsAccountOpen(false);
+          }}
+          onOpenOrders={() => {
+            setIsAccountOpen(false);
+            setCreatedOrder(null);
+            setIsOrdersOpen(true);
+          }}
+          onProfileUpdated={(patch) => updateCustomerSession(catalogKey, patch)}
+          onShop={() => {
+            setIsAccountOpen(false);
+            document
+              .querySelector(`.${styles.toolbar}`)
+              ?.scrollIntoView({ behavior: "smooth" });
+          }}
+        />
+      ) : null}
     </main>
   );
 }
@@ -677,14 +829,18 @@ function ServicePill({
 
 function ProductCard({
   cartItem,
+  isFavorite,
   onAdd,
   onQuantityChange,
+  onToggleFavorite,
   product,
   shoppingEnabled,
 }: {
   cartItem?: PublicCartItem;
+  isFavorite: boolean;
   onAdd: () => void;
   onQuantityChange: (quantity: number) => void;
+  onToggleFavorite: () => void;
   product: PublicCatalogProduct;
   shoppingEnabled: boolean;
 }) {
@@ -696,6 +852,22 @@ function ProductCard({
         product.isAvailable ? "" : styles.unavailableCard
       }`}
     >
+      {shoppingEnabled ? (
+        <button
+          aria-label={
+            isFavorite
+              ? `Quitar ${product.name} de favoritos`
+              : `Guardar ${product.name} en favoritos`
+          }
+          className={`${styles.favoriteButton} ${
+            isFavorite ? styles.favoriteActive : ""
+          }`}
+          onClick={onToggleFavorite}
+          type="button"
+        >
+          <Heart aria-hidden="true" />
+        </button>
+      ) : null}
       <div className={styles.productImage}>
         {imageUrl ? (
           <img
@@ -822,9 +994,7 @@ function CartDrawer({
   onBackToCart: () => void;
   onQuantityChange: (productId: string, quantity: number) => void;
   onRemove: (productId: string) => void;
-  onUpdateCheckout: (
-    patch: Partial<typeof emptyCatalogCheckout>,
-  ) => void;
+  onUpdateCheckout: (patch: Partial<typeof emptyCatalogCheckout>) => void;
   pickupEnabled: boolean;
   savedAddresses: CatalogSavedAddress[];
   subtotal: number;
@@ -894,7 +1064,11 @@ function CartDrawer({
                 </article>
               ))}
             </div>
-            <button className={styles.clearButton} onClick={onClear} type="button">
+            <button
+              className={styles.clearButton}
+              onClick={onClear}
+              type="button"
+            >
               Vaciar carrito
             </button>
           </>

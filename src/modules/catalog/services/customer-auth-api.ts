@@ -4,6 +4,7 @@ import type {
   CustomerAuthResponse,
   CustomerLoginPayload,
   CustomerRegisterPayload,
+  CustomerRegistrationResponse,
 } from "../types/customer-session";
 
 const publicOptions = {
@@ -27,9 +28,25 @@ export function registerCatalogCustomer(
   slug: string,
   payload: CustomerRegisterPayload,
 ) {
-  return postJson<CustomerAuthResponse, CustomerRegisterPayload>(
+  return postJson<CustomerRegistrationResponse, CustomerRegisterPayload>(
     `/customer-auth/${encodeURIComponent(slug)}/register`,
     payload,
+    publicOptions,
+  );
+}
+
+export function verifyCatalogCustomerEmail(slug: string, token: string) {
+  return postJson<CustomerAuthResponse, { token: string }>(
+    `/customer-auth/${encodeURIComponent(slug)}/verify-email`,
+    { token },
+    publicOptions,
+  );
+}
+
+export function resendCatalogCustomerVerification(slug: string, email: string) {
+  return postJson<CustomerRegistrationResponse, { email: string }>(
+    `/customer-auth/${encodeURIComponent(slug)}/resend-verification`,
+    { email },
     publicOptions,
   );
 }
