@@ -194,10 +194,10 @@ export function SupplierSupplyHistoryPanel({
               : 0
             const draftedMethodBalance = isPaymentOpen
               ? paymentDraft?.fundSource === 'RESERVE'
-                ? (reserveSummaryQuery.data?.balances.find(
+                ? (reserveSummaryQuery.data?.balances?.find(
                     (balance) => balance.method === paymentDraft.method,
                   )?.amount ?? 0)
-                : (currentCashRegisterQuery.data?.paymentMethods.find(
+                : (currentCashRegisterQuery.data?.paymentMethods?.find(
                     (paymentMethod) =>
                       paymentMethod.method === paymentDraft?.method,
                   )?.expectedAmount ?? 0)

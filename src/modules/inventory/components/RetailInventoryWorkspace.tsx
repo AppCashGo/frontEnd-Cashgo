@@ -596,10 +596,10 @@ export function RetailInventoryWorkspace() {
         : 0
   const purchaseMethodBalance =
     purchaseFormState.fundSource === 'RESERVE'
-      ? (reserveSummaryQuery.data?.balances.find(
+      ? (reserveSummaryQuery.data?.balances?.find(
           (balance) => balance.method === purchaseFormState.paymentMethod,
         )?.amount ?? 0)
-      : (currentCashRegisterQuery.data?.paymentMethods.find(
+      : (currentCashRegisterQuery.data?.paymentMethods?.find(
           (paymentMethod) =>
             paymentMethod.method === purchaseFormState.paymentMethod,
         )?.expectedAmount ?? 0)

@@ -1224,7 +1224,7 @@ export function CashRegisterSessionDrawer({
             <div className={styles.reserveBalances}>
               {paymentMethodsOrder.map(({ method, label }) => {
                 const amount =
-                  reserveSummary?.balances.find(
+                  reserveSummary?.balances?.find(
                     (balance) => balance.method === method,
                   )?.amount ?? 0;
 

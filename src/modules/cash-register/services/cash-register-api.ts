@@ -14,6 +14,36 @@ import type {
   ReserveTransferInput,
 } from "@/modules/cash-register/types/cash-register";
 
+function normalizeRequiredCashRegisterSession(
+  session: CashRegisterSession,
+): CashRegisterSession {
+  return {
+    ...session,
+    paymentMethods: Array.isArray(session.paymentMethods)
+      ? session.paymentMethods
+      : [],
+    entries: Array.isArray(session.entries) ? session.entries : [],
+    transactions: Array.isArray(session.transactions)
+      ? session.transactions
+      : [],
+    transfers: Array.isArray(session.transfers) ? session.transfers : [],
+  };
+}
+
+function normalizeCashRegisterSession(
+  session: CashRegisterSession | null,
+): CashRegisterSession | null {
+  return session ? normalizeRequiredCashRegisterSession(session) : null;
+}
+
+function normalizeReserveSummary(summary: ReserveSummary): ReserveSummary {
+  return {
+    ...summary,
+    balances: Array.isArray(summary.balances) ? summary.balances : [],
+    movements: Array.isArray(summary.movements) ? summary.movements : [],
+  };
+}
+
 export function getCashRegisterAssignees() {
   return getJson<CashRegisterAssignee[]>("/cash-register/assignees", {
     accessToken: getAuthAccessToken(),
@@ -21,15 +51,23 @@ export function getCashRegisterAssignees() {
 }
 
 export function getCurrentCashRegisterSession() {
-  return getJson<CashRegisterSession | null>("/cash-register/current", {
-    accessToken: getAuthAccessToken(),
-  });
+  return getJson<CashRegisterSession | null>(
+    "/cash-register/current",
+    {
+      accessToken: getAuthAccessToken(),
+    },
+  ).then(normalizeCashRegisterSession);
 }
 
 export function getCashRegisterHistory() {
-  return getJson<CashRegisterSession[]>("/cash-register/history", {
-    accessToken: getAuthAccessToken(),
-  });
+  return getJson<CashRegisterSession[]>(
+    "/cash-register/history",
+    {
+      accessToken: getAuthAccessToken(),
+    },
+  ).then((sessions) =>
+    Array.isArray(sessions) ? sessions.map(normalizeRequiredCashRegisterSession) : [],
+  );
 }
 
 export function getMovementsOverview(input: {
@@ -107,9 +145,12 @@ export function createPaymentMethodTransfer(input: PaymentMethodTransferInput) {
 }
 
 export function getReserveSummary() {
-  return getJson<ReserveSummary>("/cash-register/reserve", {
-    accessToken: getAuthAccessToken(),
-  });
+  return getJson<ReserveSummary>(
+    "/cash-register/reserve",
+    {
+      accessToken: getAuthAccessToken(),
+    },
+  ).then(normalizeReserveSummary);
 }
 
 export function createReserveTransfer(input: ReserveTransferInput) {
