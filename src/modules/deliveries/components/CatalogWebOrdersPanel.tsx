@@ -1,7 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { PackageSearch, RefreshCw, Store, Truck } from "lucide-react";
+import {
+  Check,
+  MessageSquareText,
+  PackageSearch,
+  RefreshCw,
+  Star,
+  Store,
+  Truck,
+  X,
+} from "lucide-react";
 import {
   getBusinessCatalogOrders,
+  getBusinessCatalogReviews,
+  reviewBusinessCatalogManualPayment,
   updateBusinessCatalogOrderStatus,
 } from "@/modules/catalog/services/catalog-admin-orders-api";
 import type {
@@ -10,9 +21,11 @@ import type {
 } from "@/modules/catalog/types/catalog-order";
 import { formatCurrency } from "@/shared/utils/format-currency";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
+import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import styles from "./CatalogWebOrdersPanel.module.css";
 
 const queryKey = ["catalog-orders", "business"] as const;
+const reviewsQueryKey = ["catalog-orders", "business", "reviews"] as const;
 const labels: Record<CatalogOrderStatus, string> = {
   PENDING_CONFIRMATION: "Nuevo",
   CONFIRMED: "Confirmado",
@@ -30,9 +43,19 @@ export function CatalogWebOrdersPanel() {
     queryFn: getBusinessCatalogOrders,
     refetchInterval: 30_000,
   });
+  const reviewsQuery = useQuery({
+    queryKey: reviewsQueryKey,
+    queryFn: getBusinessCatalogReviews,
+    refetchInterval: 60_000,
+  });
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: CatalogOrderStatus }) =>
       updateBusinessCatalogOrderStatus(id, status),
+    onSuccess: async () => queryClient.invalidateQueries({ queryKey }),
+  });
+  const paymentMutation = useMutation({
+    mutationFn: ({ id, approved }: { id: number; approved: boolean }) =>
+      reviewBusinessCatalogManualPayment(id, approved),
     onSuccess: async () => queryClient.invalidateQueries({ queryKey }),
   });
   const activeOrders = (ordersQuery.data ?? []).filter(
@@ -71,8 +94,12 @@ export function CatalogWebOrdersPanel() {
           {activeOrders.map((order) => (
             <WebOrderCard
               isUpdating={statusMutation.isPending}
+              isReviewingPayment={paymentMutation.isPending}
               key={order.id}
               onStatus={(status) => statusMutation.mutate({ id: order.id, status })}
+              onReviewPayment={(approved) =>
+                paymentMutation.mutate({ id: order.id, approved })
+              }
               order={order}
             />
           ))}
@@ -81,16 +108,76 @@ export function CatalogWebOrdersPanel() {
       {statusMutation.isError ? (
         <p className={styles.error}>{getErrorMessage(statusMutation.error, "No se pudo actualizar el pedido.")}</p>
       ) : null}
+      {paymentMutation.isError ? (
+        <p className={styles.error}>{getErrorMessage(paymentMutation.error, "No se pudo revisar el comprobante.")}</p>
+      ) : null}
+
+      {(reviewsQuery.data?.length ?? 0) > 0 ? (
+        <section className={styles.reviewsSection}>
+          <div className={styles.reviewsHeading}>
+            <MessageSquareText aria-hidden="true" />
+            <div>
+              <span>Opiniones verificadas</span>
+              <strong>Lo que dicen tus clientes</strong>
+            </div>
+          </div>
+          <div className={styles.reviewList}>
+            {reviewsQuery.data?.slice(0, 8).map((review) => (
+              <article key={review.id}>
+                <div className={styles.reviewHead}>
+                  <span>
+                    <strong>{review.customer.name}</strong>
+                    <small>{review.order.orderNumber}</small>
+                  </span>
+                  <StarDisplay rating={review.rating} />
+                </div>
+                {review.comment ? <p>{review.comment}</p> : null}
+                {review.order.productReviews.length > 0 ? (
+                  <div className={styles.productReviewList}>
+                    {review.order.productReviews.map((productReview) => (
+                      <span key={productReview.id}>
+                        <strong>{productReview.product.name}</strong>
+                        <StarDisplay rating={productReview.rating} />
+                        {productReview.comment ? (
+                          <small>{productReview.comment}</small>
+                        ) : null}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </section>
+  );
+}
+
+function StarDisplay({ rating }: { rating: number }) {
+  return (
+    <span aria-label={`${rating} de 5 estrellas`} className={styles.stars}>
+      {[1, 2, 3, 4, 5].map((value) => (
+        <Star
+          aria-hidden="true"
+          className={value <= rating ? styles.starFilled : ""}
+          key={value}
+        />
+      ))}
+    </span>
   );
 }
 
 function WebOrderCard({
   isUpdating,
+  isReviewingPayment,
+  onReviewPayment,
   onStatus,
   order,
 }: {
   isUpdating: boolean;
+  isReviewingPayment: boolean;
+  onReviewPayment: (approved: boolean) => void;
   onStatus: (status: CatalogOrderStatus) => void;
   order: CatalogOrder;
 }) {
@@ -111,12 +198,66 @@ function WebOrderCard({
           <li key={item.id}>{item.quantity} × {item.productName}</li>
         ))}
       </ul>
+      <div className={styles.paymentStatus}>
+        <span>{paymentMethodLabel(order)}</span>
+        <strong data-status={order.paymentStatus}>
+          {paymentStatusLabel(order.paymentStatus)}
+        </strong>
+      </div>
+      {order.paymentStatus === "REPORTED" && order.manualPaymentProofUrl ? (
+        <section className={styles.proofReview}>
+          <a
+            href={resolveApiAssetUrl(order.manualPaymentProofUrl) ?? undefined}
+            rel="noreferrer"
+            target="_blank"
+          >
+            <img
+              alt={`Comprobante del pedido ${order.orderNumber}`}
+              src={resolveApiAssetUrl(order.manualPaymentProofUrl) ?? undefined}
+            />
+            <span>Ver comprobante completo</span>
+          </a>
+          <div>
+            <button
+              disabled={isReviewingPayment}
+              type="button"
+              onClick={() => onReviewPayment(true)}
+            >
+              <Check aria-hidden="true" /> Aprobar pago
+            </button>
+            <button
+              className={styles.rejectPayment}
+              disabled={isReviewingPayment}
+              type="button"
+              onClick={() => onReviewPayment(false)}
+            >
+              <X aria-hidden="true" /> Rechazar
+            </button>
+          </div>
+        </section>
+      ) : null}
       <div className={styles.actions}>
         {next ? <button disabled={isUpdating} onClick={() => onStatus(next.value)} type="button">{next.label}</button> : null}
         <button className={styles.cancel} disabled={isUpdating} onClick={() => onStatus("CANCELLED")} type="button">Cancelar</button>
       </div>
     </article>
   );
+}
+
+function paymentStatusLabel(status: CatalogOrder["paymentStatus"]) {
+  if (status === "REPORTED") return "Por verificar";
+  if (status === "PAID") return "Aprobado";
+  if (status === "FAILED") return "Rechazado";
+  if (status === "REFUNDED") return "Reembolsado";
+  return "Pendiente";
+}
+
+function paymentMethodLabel(order: CatalogOrder) {
+  if (order.paymentMethod === "MANUAL_TRANSFER") return "Transferencia / QR";
+  if (order.paymentMethod === "ONLINE_GATEWAY") return "Pasarela en línea";
+  return order.fulfillmentMethod === "DELIVERY"
+    ? "Efectivo contra entrega"
+    : "Efectivo al recoger";
 }
 
 function getNextStatus(order: CatalogOrder): { value: CatalogOrderStatus; label: string } | null {
@@ -128,7 +269,13 @@ function getNextStatus(order: CatalogOrder): { value: CatalogOrderStatus; label:
       : { value: "READY_FOR_PICKUP", label: "Listo para retirar" };
   }
   if (order.status === "OUT_FOR_DELIVERY" || order.status === "READY_FOR_PICKUP") {
-    return { value: "DELIVERED", label: "Marcar entregado" };
+    return {
+      value: "DELIVERED",
+      label:
+        order.paymentMethod === "PAY_ON_FULFILLMENT"
+          ? "Confirmar cobro y entregar"
+          : "Marcar entregado",
+    };
   }
   return null;
 }

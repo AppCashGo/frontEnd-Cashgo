@@ -65,6 +65,10 @@ export type BusinessSettings = {
   catalogPickupEnabled: boolean;
   catalogDeliveryEnabled: boolean;
   catalogDeliveryFee: number;
+  catalogManualPaymentEnabled: boolean;
+  catalogManualPaymentHolder: string | null;
+  catalogManualPaymentKey: string | null;
+  catalogManualPaymentQrUrl: string | null;
   catalogSlug: string | null;
   createdAt: string;
   updatedAt: string;
@@ -101,6 +105,9 @@ export type BusinessVirtualCatalogSettingsInput = {
   catalogPickupEnabled?: boolean;
   catalogDeliveryEnabled?: boolean;
   catalogDeliveryFee?: number;
+  catalogManualPaymentEnabled?: boolean;
+  catalogManualPaymentHolder?: string | null;
+  catalogManualPaymentKey?: string | null;
   catalogSlug?: string | null;
 };
 

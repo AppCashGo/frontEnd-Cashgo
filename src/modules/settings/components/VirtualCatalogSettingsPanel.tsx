@@ -3,7 +3,9 @@ import {
   ChevronDown,
   ChevronUp,
   Clock3,
+  CreditCard,
   Link2,
+  QrCode,
   ShoppingCart,
   Store,
   Tag,
@@ -12,6 +14,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { TimePicker12Hour } from "@/shared/components/ui";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
+import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import type {
   BusinessSettings,
   BusinessVirtualCatalogSettingsInput,
@@ -31,11 +34,13 @@ type VirtualCatalogSettingsPanelProps = {
   errorMessage: string | null;
   isLoading: boolean;
   isSubmitting: boolean;
+  isPaymentQrUploading: boolean;
+  onPaymentQrUpload: (file: File) => Promise<void>;
   onRetry: () => void;
   onSubmit: (input: BusinessVirtualCatalogSettingsInput) => Promise<void>;
 };
 
-type SectionKey = "shopping" | "hours" | "stock" | "delivery" | "url";
+type SectionKey = "shopping" | "hours" | "stock" | "delivery" | "payment" | "url";
 
 type FeedbackMessage = {
   tone: "success" | "error";
@@ -96,6 +101,8 @@ export function VirtualCatalogSettingsPanel({
   errorMessage,
   isLoading,
   isSubmitting,
+  isPaymentQrUploading,
+  onPaymentQrUpload,
   onRetry,
   onSubmit,
 }: VirtualCatalogSettingsPanelProps) {
@@ -113,6 +120,7 @@ export function VirtualCatalogSettingsPanel({
     hours: false,
     stock: false,
     delivery: false,
+    payment: false,
     url: false,
   });
   const [businessHours, setBusinessHours] = useState<CatalogBusinessHour[]>(
@@ -128,6 +136,9 @@ export function VirtualCatalogSettingsPanel({
   const [pickupEnabled, setPickupEnabled] = useState(false);
   const [deliveryEnabled, setDeliveryEnabled] = useState(false);
   const [deliveryFee, setDeliveryFee] = useState(0);
+  const [manualPaymentEnabled, setManualPaymentEnabled] = useState(false);
+  const [manualPaymentHolder, setManualPaymentHolder] = useState("");
+  const [manualPaymentKey, setManualPaymentKey] = useState("");
   const [catalogUrl, setCatalogUrl] = useState(buildCatalogUrl(defaultSlug));
   const [savingSection, setSavingSection] = useState<SectionKey | null>(null);
   const [feedbackMessage, setFeedbackMessage] =
@@ -165,6 +176,13 @@ export function VirtualCatalogSettingsPanel({
     setPickupEnabled(businessSettings?.catalogPickupEnabled ?? false);
     setDeliveryEnabled(businessSettings?.catalogDeliveryEnabled ?? false);
     setDeliveryFee(businessSettings?.catalogDeliveryFee ?? 0);
+    setManualPaymentEnabled(
+      businessSettings?.catalogManualPaymentEnabled ?? false,
+    );
+    setManualPaymentHolder(
+      businessSettings?.catalogManualPaymentHolder ?? "",
+    );
+    setManualPaymentKey(businessSettings?.catalogManualPaymentKey ?? "");
     setCatalogUrl(
       buildCatalogUrl(businessSettings?.catalogSlug ?? defaultSlug),
     );
@@ -354,6 +372,42 @@ export function VirtualCatalogSettingsPanel({
       { catalogSlug },
       "URL del catálogo actualizada.",
     );
+  }
+
+  async function handleSaveManualPayment() {
+    if (manualPaymentEnabled && !businessSettings?.catalogManualPaymentQrUrl) {
+      setFeedbackMessage({
+        tone: "error",
+        text: "Sube primero la imagen del QR para activar este medio de pago.",
+      });
+      return;
+    }
+
+    await saveSettings(
+      "payment",
+      {
+        catalogManualPaymentEnabled: manualPaymentEnabled,
+        catalogManualPaymentHolder: manualPaymentHolder.trim() || null,
+        catalogManualPaymentKey: manualPaymentKey.trim() || null,
+      },
+      manualPaymentEnabled
+        ? "Pago manual con QR activado."
+        : "Pago manual con QR desactivado.",
+    );
+  }
+
+  async function handlePaymentQrUpload(file: File | undefined) {
+    if (!file) return;
+    setFeedbackMessage(null);
+    try {
+      await onPaymentQrUpload(file);
+      setFeedbackMessage({ tone: "success", text: "Código QR actualizado." });
+    } catch (error) {
+      setFeedbackMessage({
+        tone: "error",
+        text: getErrorMessage(error, "No fue posible subir el código QR."),
+      });
+    }
   }
 
   return (
@@ -793,6 +847,121 @@ export function VirtualCatalogSettingsPanel({
                     </button>
                   </div>
                 ) : null}
+              </div>
+            ) : null}
+          </div>
+
+          <div className={styles.innerAccordion}>
+            <button
+              aria-expanded={openSections.payment}
+              className={styles.innerSummary}
+              type="button"
+              onClick={() => toggleSection("payment")}
+            >
+              <span className={styles.summaryContent}>
+                <CreditCard />
+                <span>Pago manual con QR</span>
+              </span>
+              {openSections.payment ? <ChevronUp /> : <ChevronDown />}
+            </button>
+
+            {openSections.payment ? (
+              <div className={styles.paymentSection}>
+                <div className={styles.paymentIntro}>
+                  <div>
+                    <strong>Recibe pagos en tu DaviPlata</strong>
+                    <p>
+                      El cliente escanea el QR, adjunta su comprobante y tú
+                      apruebas el pago antes de preparar el pedido.
+                    </p>
+                  </div>
+                  <label className={styles.shoppingToggleControl}>
+                    <span>{manualPaymentEnabled ? "Activado" : "Desactivado"}</span>
+                    <input
+                      checked={manualPaymentEnabled}
+                      className={styles.toggleInput}
+                      disabled={isDisabled || savingSection === "payment"}
+                      type="checkbox"
+                      onChange={(event) =>
+                        setManualPaymentEnabled(event.target.checked)
+                      }
+                    />
+                  </label>
+                </div>
+
+                <div className={styles.paymentGrid}>
+                  <div className={styles.qrCard}>
+                    {businessSettings?.catalogManualPaymentQrUrl ? (
+                      <img
+                        alt="Código QR configurado para pagos"
+                        src={
+                          resolveApiAssetUrl(
+                            businessSettings.catalogManualPaymentQrUrl,
+                          ) ?? undefined
+                        }
+                      />
+                    ) : (
+                      <span className={styles.qrPlaceholder}>
+                        <QrCode aria-hidden="true" />
+                        Aún no has subido el QR
+                      </span>
+                    )}
+                    <label className={styles.uploadQrButton}>
+                      {isPaymentQrUploading ? "Subiendo…" : "Subir o cambiar QR"}
+                      <input
+                        accept="image/jpeg,image/png,image/webp"
+                        disabled={isDisabled || isPaymentQrUploading}
+                        type="file"
+                        onChange={(event) => {
+                          void handlePaymentQrUpload(event.target.files?.[0]);
+                          event.currentTarget.value = "";
+                        }}
+                      />
+                    </label>
+                    <small>PNG, JPG o WebP. No subas claves ni contraseñas.</small>
+                  </div>
+
+                  <div className={styles.paymentFields}>
+                    <label>
+                      <span>Nombre del titular</span>
+                      <input
+                        disabled={isDisabled || savingSection === "payment"}
+                        maxLength={160}
+                        placeholder="Nombre que verá el cliente"
+                        value={manualPaymentHolder}
+                        onChange={(event) =>
+                          setManualPaymentHolder(event.target.value)
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>Llave Bre-B o identificador de pago</span>
+                      <input
+                        disabled={isDisabled || savingSection === "payment"}
+                        maxLength={120}
+                        placeholder="Ejemplo: @PLATA..."
+                        value={manualPaymentKey}
+                        onChange={(event) =>
+                          setManualPaymentKey(event.target.value)
+                        }
+                      />
+                    </label>
+                    <p className={styles.privacyNote}>
+                      En el catálogo aparecerá enmascarada y el cliente podrá
+                      revelarla solo si necesita copiarla.
+                    </p>
+                    <button
+                      className={styles.primaryButton}
+                      disabled={isDisabled || savingSection === "payment"}
+                      type="button"
+                      onClick={() => void handleSaveManualPayment()}
+                    >
+                      {savingSection === "payment"
+                        ? "Guardando…"
+                        : "Guardar medio de pago"}
+                    </button>
+                  </div>
+                </div>
               </div>
             ) : null}
           </div>

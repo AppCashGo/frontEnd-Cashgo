@@ -14,6 +14,7 @@ import {
   useBusinessSettingsQuery,
   useCreateBusinessSettingsMutation,
   useDeleteBusinessSettingsMutation,
+  useUploadBusinessManualPaymentQrMutation,
   useUploadBusinessLogoMutation,
   useUpdateBusinessSettingsMutation,
 } from "@/modules/settings/hooks/use-settings-query";
@@ -65,6 +66,8 @@ export function SettingsPage() {
   const updateAdditionalSettingsMutation = useUpdateBusinessSettingsMutation();
   const updatePrintSettingsMutation = useUpdateBusinessSettingsMutation();
   const uploadBusinessLogoMutation = useUploadBusinessLogoMutation();
+  const uploadBusinessManualPaymentQrMutation =
+    useUploadBusinessManualPaymentQrMutation();
   const deleteBusinessSettingsMutation = useDeleteBusinessSettingsMutation();
 
   if (!currentUser || !isAdmin) {
@@ -239,6 +242,10 @@ export function SettingsPage() {
               errorMessage={businessSettingsError}
               isLoading={businessSettingsQuery.isLoading}
               isSubmitting={updateVirtualCatalogSettingsMutation.isPending}
+              isPaymentQrUploading={uploadBusinessManualPaymentQrMutation.isPending}
+              onPaymentQrUpload={async (file) => {
+                await uploadBusinessManualPaymentQrMutation.mutateAsync(file);
+              }}
               onRetry={() => {
                 void businessSettingsQuery.refetch();
               }}

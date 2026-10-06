@@ -13,6 +13,7 @@ import {
   ShoppingBag,
   ShoppingCart,
   Store,
+  Star,
   Trash2,
   Truck,
   UserRound,
@@ -151,8 +152,12 @@ export function PublicCatalogPage() {
   const updateCustomerSession = useCustomerSessionStore(
     (state) => state.updateCustomer,
   );
-  const checkout = useCatalogCheckoutStore(
-    (state) => state.checkouts[catalogKey] ?? emptyCatalogCheckout,
+  const storedCheckout = useCatalogCheckoutStore(
+    (state) => state.checkouts[catalogKey],
+  );
+  const checkout = useMemo(
+    () => ({ ...emptyCatalogCheckout, ...(storedCheckout ?? {}) }),
+    [storedCheckout],
   );
   const initializeCheckoutContact = useCatalogCheckoutStore(
     (state) => state.initializeContact,
@@ -187,6 +192,7 @@ export function PublicCatalogPage() {
         {
           fulfillmentMethod:
             checkout.method === "delivery" ? "DELIVERY" : "PICKUP",
+          paymentMethod: checkout.paymentMethod,
           contactName: checkout.contactName,
           email: checkout.email || customerSession.customer.email,
           phone: checkout.phone,
@@ -470,6 +476,20 @@ export function PublicCatalogPage() {
                 {catalog.business.businessCategory}
               </p>
             ) : null}
+            {catalog.business.serviceRatingAverage !== null ? (
+              <p className={styles.serviceRating}>
+                <Star aria-hidden="true" />
+                <strong>
+                  {catalog.business.serviceRatingAverage.toFixed(1)}
+                </strong>
+                <span>
+                  ({catalog.business.serviceRatingCount}{" "}
+                  {catalog.business.serviceRatingCount === 1
+                    ? "opinión"
+                    : "opiniones"})
+                </span>
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -679,6 +699,7 @@ export function PublicCatalogPage() {
           fulfillmentNotice={fulfillmentNotice}
           isCreatingOrder={isCreatingOrder}
           isFulfillmentOpen={isFulfillmentOpen}
+          manualPaymentEnabled={catalog.settings.manualPayment.enabled}
           onClear={() => clearCart(catalogKey)}
           onClose={() => setIsCartOpen(false)}
           onQuantityChange={(productId, quantity) =>
@@ -730,6 +751,7 @@ export function PublicCatalogPage() {
           accessToken={customerSession.accessToken}
           catalogSlug={catalogKey}
           initialOrder={createdOrder}
+          manualPayment={catalog.settings.manualPayment}
           onReorder={(order) => {
             const availableCount = order.items.filter((item) =>
               catalog.products.some(
@@ -883,6 +905,13 @@ function ProductCard({
       <div className={styles.productInfo}>
         <h3>{product.name}</h3>
         {product.description ? <p>{product.description}</p> : null}
+        {product.ratingAverage !== null ? (
+          <span className={styles.productRating}>
+            <Star aria-hidden="true" />
+            <strong>{product.ratingAverage.toFixed(1)}</strong>
+            <small>({product.ratingCount})</small>
+          </span>
+        ) : null}
       </div>
       <div className={styles.productFooter}>
         <strong>{currencyFormatter.format(product.price)}</strong>
@@ -964,6 +993,7 @@ function CartDrawer({
   isFulfillmentOpen,
   itemCount,
   items,
+  manualPaymentEnabled,
   onClear,
   onClose,
   onContinue,
@@ -987,6 +1017,7 @@ function CartDrawer({
   isFulfillmentOpen: boolean;
   itemCount: number;
   items: PublicCartItem[];
+  manualPaymentEnabled: boolean;
   onClear: () => void;
   onClose: () => void;
   onContinue: () => void;
@@ -1100,6 +1131,7 @@ function CartDrawer({
                 deliveryEnabled={deliveryEnabled}
                 deliveryFee={deliveryFee}
                 isSubmitting={isCreatingOrder}
+                manualPaymentEnabled={manualPaymentEnabled}
                 notice={fulfillmentNotice}
                 onBack={onBackToCart}
                 onContinue={onContinueOrder}

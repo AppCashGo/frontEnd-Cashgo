@@ -47,6 +47,7 @@
 .paymentRow > span { border-radius: 999px; padding: .35rem .6rem; font-size: .72rem; font-weight: 900; }
 .paymentPENDING { background: #fff3bd; color: #705700; }
 .paymentPAID { background: #d8f6e8; color: #106c45; }
+.paymentREPORTED { background: #dbeafe; color: #1d4f91; }
 .paymentFAILED { background: #fee2e2; color: #a61b1b; }
 .paymentREFUNDED { background: #e8eaf0; color: #4b5563; }
 .paymentRow button { min-height: 40px; border: 0; border-radius: 8px; background: #172332; color: #fff; padding: 0 .85rem; font: inherit; font-size: .82rem; font-weight: 900; cursor: pointer; }
@@ -59,6 +60,48 @@
 .notifications .unreadNotification { border-left: 4px solid #ffd43d; background: #fff9dc; }
 .reorderButton { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 42px; border: 1px solid #cbd6e3; border-radius: 8px; background: #fff; color: #35445a; font: inherit; font-weight: 900; cursor: pointer; }
 .reorderButton svg { width: 18px; }
+.manualPayment { display: grid; gap: .85rem; border: 1px solid #cbd9ea; border-radius: 9px; background: linear-gradient(145deg, #f7faff, #f4fbf7); padding: 1rem; }
+.manualPaymentHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; }
+.manualPaymentHeading > div { display: grid; gap: .2rem; }
+.manualPaymentHeading span, .manualPaymentHeading small { color: #64748b; font-size: .75rem; font-weight: 800; }
+.manualPaymentHeading strong { color: #172332; }
+.manualPaymentBody { display: grid; grid-template-columns: minmax(150px, 210px) minmax(0, 1fr); align-items: start; gap: 1rem; }
+.paymentQr { width: 100%; aspect-ratio: 1; border: 1px solid #d8e1ec; border-radius: 8px; background: #fff; object-fit: contain; }
+.manualPaymentSteps { display: grid; gap: .75rem; }
+.manualPaymentSteps ol { display: grid; gap: .3rem; margin: 0; padding-left: 1.25rem; color: #52647a; font-size: .8rem; }
+.paymentKey { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: .45rem; border: 1px solid #d7e0eb; border-radius: 8px; background: #fff; padding: .6rem .7rem; }
+.paymentKey > span { color: #718096; font-size: .72rem; font-weight: 900; text-transform: uppercase; }
+.paymentKey > strong { overflow: hidden; color: #172332; font-size: .85rem; text-overflow: ellipsis; white-space: nowrap; }
+.paymentKey button { display: grid; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 7px; background: #edf2f7; color: #35445a; cursor: pointer; }
+.paymentKey button svg { width: 16px; }
+.paymentKey small { grid-column: 1 / -1; color: #0f7145; font-size: .7rem; font-weight: 900; text-align: right; }
+.proofInput { display: flex; align-items: center; gap: .55rem; min-height: 44px; overflow: hidden; border: 1px dashed #9eacc0; border-radius: 8px; background: #fff; padding: 0 .75rem; color: #52647a; cursor: pointer; font-size: .8rem; font-weight: 850; }
+.proofInput svg { width: 18px; flex: 0 0 auto; }
+.proofInput span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proofInput input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.reportPaymentButton { min-height: 44px; border: 0; border-radius: 8px; background: #172332; color: #fff; font: inherit; font-size: .84rem; font-weight: 900; cursor: pointer; }
+.reportPaymentButton:disabled { background: #cbd5e1; cursor: not-allowed; }
+.reportedPayment { display: flex; align-items: center; gap: .65rem; border: 1px solid #bfdbfe; border-radius: 8px; background: #eff6ff; color: #1e4f8f; padding: .75rem; }
+.reportedPayment svg { width: 21px; flex: 0 0 auto; }
+.reportedPayment span { display: grid; gap: .12rem; font-size: .78rem; }
+.orderReview { display: grid; gap: .8rem; border: 1px solid #e3d59d; border-radius: 9px; background: #fffdf4; padding: .85rem; }
+.reviewSummary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .65rem; }
+.reviewSummary > svg { width: 22px; color: #946d00; }
+.reviewSummary > span { display: grid; gap: .12rem; }
+.reviewSummary small { color: #718096; font-size: .75rem; }
+.reviewSummary > button { min-height: 36px; border: 1px solid #dec66c; border-radius: 7px; background: #fff; color: #765900; padding: 0 .7rem; font: inherit; font-size: .76rem; font-weight: 900; cursor: pointer; }
+.reviewForm { display: grid; gap: .75rem; border-top: 1px solid #eadfae; padding-top: .8rem; }
+.serviceReviewField, .productReviewField { display: grid; grid-template-columns: minmax(10rem, .7fr) auto minmax(12rem, 1fr); align-items: center; gap: .75rem; border-radius: 8px; background: #fff; padding: .75rem; }
+.serviceReviewField > span, .productReviewField > span { display: grid; gap: .12rem; }
+.serviceReviewField small, .productReviewField small { color: #718096; font-size: .72rem; }
+.serviceReviewField textarea, .productReviewField textarea { min-height: 64px; resize: vertical; border: 1px solid #d8e1ec; border-radius: 7px; padding: .55rem .65rem; color: #263548; font: inherit; font-size: .78rem; }
+.starRating { display: inline-flex; gap: .15rem; }
+.starRating button { display: grid; width: 30px; height: 34px; place-items: center; border: 0; background: transparent; color: #c6ced9; cursor: pointer; padding: 0; }
+.starRating button svg { width: 22px; }
+.starRating .starActive { color: #d69e00; }
+.starRating .starActive svg { fill: #ffd43d; }
+.saveReviewButton { min-height: 42px; border: 0; border-radius: 8px; background: #172332; color: #fff; font: inherit; font-size: .82rem; font-weight: 900; cursor: pointer; }
+.saveReviewButton:disabled { background: #cbd5e1; cursor: not-allowed; }
 @media (max-width: 640px) {
   .modal { inset: 0; border-radius: 0; }
   .content { padding: .75rem; }
@@ -70,4 +113,11 @@
   .orderFooter { display: grid; }
   .orderFooter strong { margin-left: 0; }
   .paymentRow { align-items: stretch; flex-direction: column; }
+  .manualPaymentHeading { display: grid; }
+  .manualPaymentBody { grid-template-columns: 1fr; }
+  .paymentQr { width: min(100%, 260px); justify-self: center; }
+  .paymentKey { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+  .reviewSummary { grid-template-columns: auto minmax(0, 1fr); }
+  .reviewSummary > button { grid-column: 1 / -1; width: 100%; }
+  .serviceReviewField, .productReviewField { grid-template-columns: 1fr; }
 }

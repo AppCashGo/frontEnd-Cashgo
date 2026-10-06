@@ -1,9 +1,11 @@
 import {
+  Banknote,
   MapPin,
   MessageSquareText,
   Phone,
   ShoppingBag,
   Truck,
+  QrCode,
 } from "lucide-react";
 import type { ReactNode } from "react";
 import type {
@@ -25,6 +27,7 @@ export function CheckoutDeliveryPanel({
   deliveryFee,
   notice,
   isSubmitting,
+  manualPaymentEnabled,
   onBack,
   onContinue,
   onUpdate,
@@ -38,6 +41,7 @@ export function CheckoutDeliveryPanel({
   deliveryFee: number;
   notice: string | null;
   isSubmitting: boolean;
+  manualPaymentEnabled: boolean;
   onBack: () => void;
   onContinue: () => void;
   onUpdate: (patch: Partial<CatalogCheckoutDetails>) => void;
@@ -52,7 +56,10 @@ export function CheckoutDeliveryPanel({
   const isAddressComplete =
     checkout.method !== "delivery" || checkout.address.trim().length >= 5;
   const canContinue =
-    Boolean(checkout.method) && isContactComplete && isAddressComplete;
+    Boolean(checkout.method) &&
+    isContactComplete &&
+    isAddressComplete &&
+    (checkout.paymentMethod !== "MANUAL_TRANSFER" || manualPaymentEnabled);
 
   return (
     <div className={styles.panel}>
@@ -193,6 +200,45 @@ export function CheckoutDeliveryPanel({
             </span>
           </label>
         </div>
+      ) : null}
+
+      {checkout.method ? (
+        <section className={styles.paymentSection}>
+          <div className={styles.sectionHeading}>
+            <strong>¿Cómo deseas pagar?</strong>
+            <span>El pedido conservará este método hasta completar la venta.</span>
+          </div>
+          <div className={styles.methodGrid}>
+            {manualPaymentEnabled ? (
+              <MethodButton
+                active={checkout.paymentMethod === "MANUAL_TRANSFER"}
+                description="Escanea el QR y envía el comprobante"
+                icon={<QrCode aria-hidden="true" />}
+                label="Transferencia / DaviPlata"
+                onClick={() =>
+                  onUpdate({ paymentMethod: "MANUAL_TRANSFER" })
+                }
+              />
+            ) : null}
+            <MethodButton
+              active={checkout.paymentMethod === "PAY_ON_FULFILLMENT"}
+              description={
+                checkout.method === "delivery"
+                  ? "Paga en efectivo al recibir"
+                  : "Paga en efectivo al recoger"
+              }
+              icon={<Banknote aria-hidden="true" />}
+              label={
+                checkout.method === "delivery"
+                  ? "Pago contra entrega"
+                  : "Pago al recoger"
+              }
+              onClick={() =>
+                onUpdate({ paymentMethod: "PAY_ON_FULFILLMENT" })
+              }
+            />
+          </div>
+        </section>
       ) : null}
 
       <div className={styles.totals}>

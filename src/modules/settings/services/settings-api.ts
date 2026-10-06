@@ -59,6 +59,16 @@ export function uploadBusinessLogo(file: File) {
   })
 }
 
+export function uploadBusinessManualPaymentQr(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return patchFormData<BusinessSettings>(
+    '/settings/business/manual-payment-qr',
+    formData,
+    { accessToken: getAuthAccessToken() },
+  )
+}
+
 export function deleteBusinessSettings() {
   return deleteJson<void>('/settings/business', {
     accessToken: getAuthAccessToken(),

@@ -189,6 +189,7 @@ const visibleSegmentsByRole: Record<AppUserRole, string[]> = {
   SELLER: [
     routeSegments.dashboard,
     routeSegments.sales,
+    routeSegments.deliveries,
     routeSegments.billing,
     routeSegments.quotes,
     routeSegments.inventory,

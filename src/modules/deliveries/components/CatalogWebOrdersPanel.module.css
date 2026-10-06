@@ -14,6 +14,18 @@
 .method svg { width: 17px; }
 .method strong { margin-left: auto; color: #172033; font-size: .95rem; }
 .card ul { display: grid; gap: .15rem; margin: 0; padding: .55rem 0 .55rem 1.1rem; border-top: 1px solid #edf0f4; border-bottom: 1px solid #edf0f4; color: #536278; font-size: .78rem; }
+.paymentStatus { display: flex; align-items: center; justify-content: space-between; gap: .5rem; color: #667085; font-size: .75rem; font-weight: 800; }
+.paymentStatus strong { border-radius: 999px; background: #fff3bd; color: #705700; padding: .3rem .55rem; font-size: .7rem; }
+.paymentStatus strong[data-status="REPORTED"] { background: #dbeafe; color: #1d4f91; }
+.paymentStatus strong[data-status="PAID"] { background: #d8f6e8; color: #106c45; }
+.paymentStatus strong[data-status="FAILED"] { background: #fee2e2; color: #a61b1b; }
+.proofReview { display: grid; gap: .55rem; padding: .65rem; border: 1px solid #bfdbfe; border-radius: 8px; background: #eff6ff; }
+.proofReview > a { display: grid; gap: .35rem; color: #1d4f91; font-size: .72rem; font-weight: 900; text-align: center; text-decoration: none; }
+.proofReview img { width: 100%; max-height: 145px; border-radius: 6px; background: #fff; object-fit: contain; }
+.proofReview > div { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.proofReview button { display: inline-flex; align-items: center; justify-content: center; gap: .3rem; min-height: 36px; border: 0; border-radius: 7px; background: #147548; color: #fff; font: inherit; font-size: .72rem; font-weight: 900; cursor: pointer; }
+.proofReview button svg { width: 15px; }
+.proofReview .rejectPayment { border: 1px solid #e5bcbc; background: #fff; color: #a42b2b; }
 .actions { display: flex; gap: .45rem; }
 .actions button { min-height: 36px; border: 0; border-radius: 7px; background: #172536; color: #fff; padding: 0 .65rem; font-weight: 850; cursor: pointer; }
 .actions .cancel { border: 1px solid #e5bcbc; background: #fff; color: #a42b2b; }
@@ -21,6 +33,25 @@
 .empty, .state { display: flex; align-items: center; gap: .55rem; min-height: 58px; margin: 0; color: #667085; }
 .empty svg { width: 23px; }
 .error { margin: 0; border-radius: 7px; background: #fee2e2; color: #a61b1b; padding: .65rem; font-weight: 800; }
+.reviewsSection { display: grid; gap: .7rem; margin-top: .25rem; border-top: 1px solid #e5eaf0; padding-top: .85rem; }
+.reviewsHeading { display: flex; align-items: center; gap: .55rem; }
+.reviewsHeading > svg { width: 22px; color: #7a5b00; }
+.reviewsHeading > div { display: grid; gap: .05rem; }
+.reviewsHeading span { color: #667085; font-size: .68rem; font-weight: 850; text-transform: uppercase; }
+.reviewsHeading strong { color: #172033; font-size: .9rem; }
+.reviewList { display: grid; grid-auto-columns: minmax(250px, 310px); grid-auto-flow: column; gap: .65rem; overflow-x: auto; padding-bottom: .25rem; }
+.reviewList > article { display: grid; gap: .55rem; align-content: start; border: 1px solid #e3d59d; border-radius: 8px; background: #fffdf4; padding: .75rem; }
+.reviewHead { display: flex; align-items: flex-start; justify-content: space-between; gap: .4rem; }
+.reviewHead > span { display: grid; gap: .1rem; }
+.reviewHead small { color: #718096; font-size: .68rem; }
+.reviewList p { margin: 0; color: #435269; font-size: .76rem; line-height: 1.45; }
+.stars { display: inline-flex; gap: .05rem; color: #c6ced9; }
+.stars svg { width: 14px; height: 14px; }
+.stars .starFilled { fill: #ffd43d; color: #b98600; }
+.productReviewList { display: grid; gap: .35rem; border-top: 1px solid #eadfae; padding-top: .5rem; }
+.productReviewList > span { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .2rem .45rem; font-size: .72rem; }
+.productReviewList > span > strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.productReviewList > span > small { grid-column: 1 / -1; color: #667085; line-height: 1.35; }
 @media (max-width: 560px) {
   .panel { margin-inline: .75rem; padding: .8rem; }
   .heading { align-items: stretch; flex-direction: column; }

@@ -12,6 +12,8 @@ export type PublicCatalogBusiness = {
   address: string | null;
   phone: string | null;
   email: string | null;
+  serviceRatingAverage: number | null;
+  serviceRatingCount: number;
 };
 
 export type PublicCatalogCategory = {
@@ -31,6 +33,8 @@ export type PublicCatalogProduct = {
   unit: string;
   imageUrls: string[];
   isAvailable: boolean;
+  ratingAverage: number | null;
+  ratingCount: number;
 };
 
 export type PublicCatalogDetail = {
@@ -43,6 +47,13 @@ export type PublicCatalogDetail = {
     pickupEnabled: boolean;
     deliveryEnabled: boolean;
     deliveryFee: number;
+    manualPayment: {
+      enabled: boolean;
+      holder: string | null;
+      keyMasked: string | null;
+      key: string | null;
+      qrUrl: string | null;
+    };
   };
   categories: PublicCatalogCategory[];
   products: PublicCatalogProduct[];

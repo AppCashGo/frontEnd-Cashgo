@@ -4,6 +4,7 @@ import {
   createManagedBusiness,
   deleteBusinessSettings,
   getBusinessSettings,
+  uploadBusinessManualPaymentQr,
   uploadBusinessLogo,
   updateBusinessSettings,
 } from '@/modules/settings/services/settings-api'
@@ -83,6 +84,24 @@ export function useUploadBusinessLogoMutation() {
 
   return useMutation({
     mutationFn: (file: File) => uploadBusinessLogo(file),
+    onSuccess: async (settings) => {
+      queryClient.setQueryData<BusinessSettings>(
+        settingsBusinessQueryKey,
+        settings,
+      )
+
+      await queryClient.invalidateQueries({
+        queryKey: settingsBusinessQueryKey,
+      })
+    },
+  })
+}
+
+export function useUploadBusinessManualPaymentQrMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (file: File) => uploadBusinessManualPaymentQr(file),
     onSuccess: async (settings) => {
       queryClient.setQueryData<BusinessSettings>(
         settingsBusinessQueryKey,

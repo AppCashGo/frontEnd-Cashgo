@@ -91,6 +91,13 @@
   padding-top: 0.9rem;
 }
 
+.paymentSection {
+  display: grid;
+  gap: 0.65rem;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 0.9rem;
+}
+
 .fields label {
   display: grid;
   gap: 0.35rem;

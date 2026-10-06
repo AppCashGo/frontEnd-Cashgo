@@ -529,6 +529,38 @@
   fill: currentColor;
 }
 
+.serviceRating,
+.productRating {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: #7a5b00;
+}
+
+.serviceRating {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+}
+
+.serviceRating svg,
+.productRating svg {
+  width: 1rem;
+  height: 1rem;
+  fill: #ffd43d;
+  color: #b98600;
+}
+
+.serviceRating span,
+.productRating small {
+  color: #718096;
+  font-weight: 750;
+}
+
+.productRating {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+}
+
 .productCard:hover {
   transform: translateY(-2px);
   border-color: #c3cfde;

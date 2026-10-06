@@ -2,9 +2,13 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type FulfillmentMethod = "pickup" | "delivery";
+export type CatalogCheckoutPaymentMethod =
+  | "MANUAL_TRANSFER"
+  | "PAY_ON_FULFILLMENT";
 
 export type CatalogCheckoutDetails = {
   method: FulfillmentMethod | null;
+  paymentMethod: CatalogCheckoutPaymentMethod;
   contactName: string;
   email: string;
   phone: string;
@@ -22,6 +26,7 @@ const emptyCheckout: CatalogCheckoutDetails = {
   saveAddress: false,
   addressLabel: "Casa",
   method: null,
+  paymentMethod: "PAY_ON_FULFILLMENT",
   phone: "",
 };
 
