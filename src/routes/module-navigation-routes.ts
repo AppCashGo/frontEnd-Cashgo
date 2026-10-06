@@ -114,6 +114,7 @@ const visibleSegmentsByPreset: Record<BusinessNavigationPreset, string[]> = {
   generic: [
     routeSegments.dashboard,
     routeSegments.sales,
+    routeSegments.deliveries,
     routeSegments.movements,
     routeSegments.reports,
     routeSegments.inventory,
@@ -142,6 +143,7 @@ const visibleSegmentsByPreset: Record<BusinessNavigationPreset, string[]> = {
   retail: [
     routeSegments.dashboard,
     routeSegments.sales,
+    routeSegments.deliveries,
     routeSegments.movements,
     routeSegments.billing,
     routeSegments.reports,
