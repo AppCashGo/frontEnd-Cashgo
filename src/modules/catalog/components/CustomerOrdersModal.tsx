@@ -16,6 +16,7 @@ import {
   Upload,
   Star,
   MessageSquareText,
+  Maximize2,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { getApiErrorMessage } from "@/shared/services/api-client";
@@ -588,6 +589,18 @@ function ManualPaymentForm({
   const [proof, setProof] = useState<File | null>(null);
   const [isKeyVisible, setIsKeyVisible] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isQrExpanded, setIsQrExpanded] = useState(false);
+  const qrUrl = resolveApiAssetUrl(manualPayment.qrUrl);
+
+  useEffect(() => {
+    if (!isQrExpanded) return undefined;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsQrExpanded(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [isQrExpanded]);
 
   async function copyKey() {
     if (!manualPayment.key) return;
@@ -606,12 +619,22 @@ function ManualPaymentForm({
         {manualPayment.holder ? <small>Titular: {manualPayment.holder}</small> : null}
       </div>
       <div className={styles.manualPaymentBody}>
-        {manualPayment.qrUrl ? (
-          <img
-            alt="Código QR para realizar el pago"
-            className={styles.paymentQr}
-            src={resolveApiAssetUrl(manualPayment.qrUrl) ?? undefined}
-          />
+        {qrUrl ? (
+          <button
+            aria-label="Ampliar código QR para escanear"
+            className={styles.qrPreview}
+            type="button"
+            onClick={() => setIsQrExpanded(true)}
+          >
+            <img
+              alt="Código QR para realizar el pago"
+              className={styles.paymentQr}
+              src={qrUrl}
+            />
+            <span>
+              <Maximize2 aria-hidden="true" /> Ampliar QR
+            </span>
+          </button>
         ) : null}
         <div className={styles.manualPaymentSteps}>
           <ol>
@@ -657,6 +680,37 @@ function ManualPaymentForm({
           </button>
         </div>
       </div>
+      {isQrExpanded && qrUrl ? (
+        <div
+          aria-label="Código QR ampliado"
+          aria-modal="true"
+          className={styles.qrLightbox}
+          role="dialog"
+        >
+          <button
+            aria-label="Cerrar código QR ampliado"
+            className={styles.qrLightboxBackdrop}
+            type="button"
+            onClick={() => setIsQrExpanded(false)}
+          />
+          <div className={styles.qrZoomCard}>
+            <button
+              aria-label="Cerrar"
+              className={styles.qrZoomClose}
+              type="button"
+              onClick={() => setIsQrExpanded(false)}
+            >
+              <X aria-hidden="true" />
+            </button>
+            <strong>Escanea el QR para pagar</strong>
+            <small>Acerca la cámara y mantén el dispositivo estable.</small>
+            <img alt="Código QR ampliado para realizar el pago" src={qrUrl} />
+            <a href={qrUrl} rel="noreferrer" target="_blank">
+              Abrir imagen en tamaño original
+            </a>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }
