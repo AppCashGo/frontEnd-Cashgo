@@ -15,6 +15,10 @@ import { getModuleLandingPath } from "@/routes/module-navigation-routes";
 import { BrandLogo } from "@/shared/components/brand/BrandLogo";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
+import {
+  getGoogleClientId,
+  loadGoogleIdentityScript,
+} from "@/shared/services/google-identity";
 import styles from "./LoginForm.module.css";
 
 type LoginFormProps = {
@@ -28,41 +32,6 @@ type PhoneLoginRequestState = PhoneLoginStartResponse & {
   phone: string;
 };
 
-type GoogleCredentialResponse = {
-  credential?: string;
-};
-
-type GoogleAccountsId = {
-  initialize: (options: {
-    client_id: string;
-    callback: (response: GoogleCredentialResponse) => void;
-  }) => void;
-  renderButton: (
-    parent: HTMLElement,
-    options: {
-      shape: "pill";
-      size: "large";
-      text: "signin_with";
-      theme: "outline";
-      width: number;
-    },
-  ) => void;
-};
-
-declare global {
-  interface Window {
-    google?: {
-      accounts?: {
-        id?: GoogleAccountsId;
-      };
-    };
-  }
-}
-
-const GOOGLE_IDENTITY_SCRIPT_ID = "google-identity-services";
-const GOOGLE_IDENTITY_SCRIPT_URL = "https://accounts.google.com/gsi/client";
-const DEFAULT_GOOGLE_CLIENT_ID =
-  "38168674827-pag1muis5p4iilp4b8ru3jb4aohfulgb.apps.googleusercontent.com";
 const PHONE_LOGIN_COUNTRY_CODE = "CO";
 
 function isEmailIdentifier(identifier: string) {
@@ -81,40 +50,6 @@ function normalizePhoneInput(phone: string) {
 
 function normalizeVerificationCode(value: string) {
   return value.replace(/[^\d]/g, "").slice(0, 6);
-}
-
-function loadGoogleIdentityScript(): Promise<void> {
-  if (window.google?.accounts?.id) {
-    return Promise.resolve();
-  }
-
-  const existingScript = document.getElementById(GOOGLE_IDENTITY_SCRIPT_ID);
-
-  if (existingScript) {
-    return new Promise((resolve, reject) => {
-      existingScript.addEventListener("load", () => resolve(), { once: true });
-      existingScript.addEventListener(
-        "error",
-        () => reject(new Error("Google Identity Services failed to load.")),
-        { once: true },
-      );
-    });
-  }
-
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.id = GOOGLE_IDENTITY_SCRIPT_ID;
-    script.src = GOOGLE_IDENTITY_SCRIPT_URL;
-    script.async = true;
-    script.defer = true;
-    script.addEventListener("load", () => resolve(), { once: true });
-    script.addEventListener(
-      "error",
-      () => reject(new Error("Google Identity Services failed to load.")),
-      { once: true },
-    );
-    document.head.appendChild(script);
-  });
 }
 
 function GoogleIcon() {
@@ -138,16 +73,6 @@ function GoogleIcon() {
       />
     </svg>
   );
-}
-
-function getGoogleClientId() {
-  const configuredClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID?.trim();
-
-  if (configuredClientId) {
-    return configuredClientId;
-  }
-
-  return DEFAULT_GOOGLE_CLIENT_ID;
 }
 
 export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {

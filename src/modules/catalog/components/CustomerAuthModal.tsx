@@ -9,9 +9,14 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import {
+  getGoogleClientId,
+  loadGoogleIdentityScript,
+} from "@/shared/services/google-identity";
+import {
+  authenticateCatalogCustomerWithGoogle,
   loginCatalogCustomer,
   registerCatalogCustomer,
   resendCatalogCustomerVerification,
@@ -45,6 +50,8 @@ export function CustomerAuthModal({
     null,
   );
   const [developmentToken, setDevelopmentToken] = useState<string | null>(null);
+  const googleButtonRef = useRef<HTMLDivElement | null>(null);
+  const googleClientId = getGoogleClientId();
 
   const passwordRules = [
     { label: "10 caracteres", valid: password.length >= 10 },
@@ -146,6 +153,69 @@ export function CustomerAuthModal({
     }
   };
 
+  useEffect(() => {
+    if (verificationSentTo || !googleButtonRef.current) return undefined;
+
+    let isMounted = true;
+    const googleButtonElement = googleButtonRef.current;
+
+    loadGoogleIdentityScript()
+      .then(() => {
+        if (!isMounted || !window.google?.accounts?.id) return;
+
+        googleButtonElement.replaceChildren();
+        window.google.accounts.id.initialize({
+          client_id: googleClientId,
+          callback: async (response) => {
+            if (!response.credential) {
+              setErrorMessage(
+                "Google no devolvió una credencial válida. Intenta nuevamente.",
+              );
+              return;
+            }
+
+            setIsSubmitting(true);
+            setErrorMessage(null);
+            try {
+              onAuthenticated(
+                await authenticateCatalogCustomerWithGoogle(
+                  catalogSlug,
+                  response.credential,
+                ),
+              );
+            } catch (error) {
+              setErrorMessage(
+                getErrorMessage(
+                  error,
+                  "No pudimos continuar con Google. Intenta nuevamente.",
+                ),
+              );
+            } finally {
+              if (isMounted) setIsSubmitting(false);
+            }
+          },
+        });
+        window.google.accounts.id.renderButton(googleButtonElement, {
+          shape: "pill",
+          size: "large",
+          text: "continue_with",
+          theme: "outline",
+          width: Math.min(360, googleButtonElement.clientWidth || 360),
+        });
+      })
+      .catch(() => {
+        if (isMounted) {
+          setErrorMessage(
+            "No pudimos cargar Google. Puedes continuar con tu correo y contraseña.",
+          );
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [catalogSlug, googleClientId, onAuthenticated, verificationSentTo]);
+
   return (
     <div className={styles.layer}>
       <button
@@ -238,6 +308,17 @@ export function CustomerAuthModal({
               >
                 Crear cuenta
               </button>
+            </div>
+
+            <div className={styles.googleAccess}>
+              <div
+                aria-label="Continuar con Google"
+                className={styles.googleButtonHost}
+                ref={googleButtonRef}
+              />
+              <div className={styles.authDivider}>
+                <span>o continúa con tu correo</span>
+              </div>
             </div>
 
             <form className={styles.form} onSubmit={handleSubmit}>

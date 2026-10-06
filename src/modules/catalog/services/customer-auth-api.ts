@@ -24,6 +24,17 @@ export function loginCatalogCustomer(
   );
 }
 
+export function authenticateCatalogCustomerWithGoogle(
+  slug: string,
+  credential: string,
+) {
+  return postJson<CustomerAuthResponse, { credential: string }>(
+    `/customer-auth/${encodeURIComponent(slug)}/google`,
+    { credential },
+    publicOptions,
+  );
+}
+
 export function registerCatalogCustomer(
   slug: string,
   payload: CustomerRegisterPayload,
