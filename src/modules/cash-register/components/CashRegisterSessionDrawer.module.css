@@ -127,6 +127,52 @@
   background: #eef2ff;
 }
 
+.historyButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid #cfdaea;
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #223247;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.historyButton:hover {
+  border-color: #4c68d9;
+  background: #f5f7ff;
+  transform: translateY(-1px);
+}
+
+.historyButton > span:first-child {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.historyButton strong {
+  font-size: 0.95rem;
+}
+
+.historyButton small {
+  color: #6b7d95;
+  line-height: 1.4;
+}
+
+.historyButton > span:last-child {
+  color: #4c68d9;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
 .reserveCardHeader {
   display: flex;
   align-items: flex-start;

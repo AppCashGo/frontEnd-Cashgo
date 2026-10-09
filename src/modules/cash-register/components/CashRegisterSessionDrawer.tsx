@@ -47,6 +47,7 @@ type CashRegisterSessionDrawerProps = {
   onTransfer: (input: PaymentMethodTransferInput) => Promise<void>;
   onReserveTransfer: (input: ReserveTransferInput) => Promise<void>;
   onReserveAdjust: (input: ReserveBalanceAdjustmentInput) => Promise<void>;
+  onViewTransferHistory?: () => void;
 };
 
 type PaymentMethodSummary = {
@@ -469,6 +470,7 @@ export function CashRegisterSessionDrawer({
   onTransfer,
   onReserveTransfer,
   onReserveAdjust,
+  onViewTransferHistory,
 }: CashRegisterSessionDrawerProps) {
   const [assigneeId, setAssigneeId] = useState(
     getInitialAssigneeId(assignees, currentSession),
@@ -1237,6 +1239,22 @@ export function CashRegisterSessionDrawer({
               })}
             </div>
           </section>
+
+          {onViewTransferHistory ? (
+            <button
+              className={styles.historyButton}
+              type="button"
+              onClick={onViewTransferHistory}
+            >
+              <span>
+                <strong>Historial de transferencias</strong>
+                <small>
+                  Consulta movimientos entre medios y caja ↔ reserva.
+                </small>
+              </span>
+              <span aria-hidden="true">→</span>
+            </button>
+          ) : null}
 
           <form
             className={styles.form}

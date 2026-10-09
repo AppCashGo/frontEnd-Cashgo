@@ -24,6 +24,10 @@ import { CashRegisterHistoryList } from "@/modules/cash-register/components/Cash
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
 import { CashRegisterRetailTransactionsTable } from "@/modules/cash-register/components/CashRegisterRetailTransactionsTable";
 import {
+  CashRegisterTransferHistoryTable,
+  type CashRegisterTransferHistoryItem,
+} from "@/modules/cash-register/components/CashRegisterTransferHistoryTable";
+import {
   MovementCreateDrawer,
   type MovementCreateInput,
 } from "@/modules/cash-register/components/MovementCreateDrawer";
@@ -57,6 +61,7 @@ import type {
 import {
   formatCashRegisterCurrency,
   formatCashRegisterDate,
+  getPaymentMethodLabel,
 } from "@/modules/cash-register/utils/format-cash-register";
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
 import { useEmployeesQuery } from "@/modules/employees/hooks/use-employees-query";
@@ -91,7 +96,12 @@ import { routePaths } from "@/routes/route-paths";
 import styles from "./CashRegisterRetailPage.module.css";
 
 type CashRegisterTab = "transactions" | "closures";
-type LedgerTab = "income" | "expenses" | "receivables" | "payables";
+type LedgerTab =
+  | "income"
+  | "expenses"
+  | "receivables"
+  | "payables"
+  | "transfers";
 type PeriodOption = "daily" | "weekly" | "monthly";
 type SelectionDrawerType = "employees" | "customers" | "suppliers";
 type ReportStep = "menu" | "balance" | "debts";
@@ -130,6 +140,7 @@ const ledgerTabs: Array<{ id: LedgerTab; label: string }> = [
   { id: "expenses", label: "Egresos" },
   { id: "receivables", label: "Por cobrar" },
   { id: "payables", label: "Por pagar" },
+  { id: "transfers", label: "Transferencias" },
 ];
 
 function addDays(date: Date, days: number) {
@@ -223,6 +234,10 @@ function matchesLedgerTab(transaction: MovementLedgerItem, activeLedgerTab: Ledg
       transaction.status === "PENDING_PAYMENT" ||
       transaction.status === "PARTIALLY_PAID"
     );
+  }
+
+  if (activeLedgerTab === "transfers") {
+    return false;
   }
 
   return (
@@ -780,6 +795,95 @@ export function CashRegisterPage() {
     () => (history ?? []).find((session) => session.status === "CLOSED") ?? null,
     [history],
   );
+  const transferHistoryItems = useMemo<CashRegisterTransferHistoryItem[]>(() => {
+    const sessionsById = new Map(
+      (history ?? []).map((session) => [session.id, session]),
+    );
+
+    if (currentSession) {
+      sessionsById.set(currentSession.id, currentSession);
+    }
+
+    const items: CashRegisterTransferHistoryItem[] = [];
+
+    for (const session of sessionsById.values()) {
+      for (const transfer of session.transfers) {
+        items.push({
+          id: `payment-method-${session.id}-${transfer.id}`,
+          kind: "PAYMENT_METHOD",
+          movement: `${getPaymentMethodLabel(transfer.fromMethod)} → ${getPaymentMethodLabel(transfer.toMethod)}`,
+          amount: Math.abs(transfer.amount),
+          responsible:
+            session.responsibleUserName ?? "Responsable no asignado",
+          notes: transfer.notes,
+          createdAt: transfer.createdAt,
+        });
+      }
+    }
+
+    for (const movement of reserveSummaryQuery.data?.movements ?? []) {
+      const paymentMethod = getPaymentMethodLabel(movement.method);
+      const session = movement.cashRegisterId
+        ? sessionsById.get(movement.cashRegisterId)
+        : null;
+      let description = `Ajuste de reserva (${paymentMethod})`;
+
+      if (movement.kind === "TRANSFER_FROM_REGISTER") {
+        description = `${paymentMethod} de caja → Reserva`;
+      } else if (movement.kind === "TRANSFER_TO_REGISTER") {
+        description = `Reserva → ${paymentMethod} de caja`;
+      } else if (movement.kind === "SUPPLIER_PAYMENT") {
+        description = `Reserva (${paymentMethod}) → Pago a proveedor`;
+      } else if (movement.kind === "SUPPLIER_REFUND") {
+        description = `Reintegro de proveedor → Reserva (${paymentMethod})`;
+      } else if (movement.amount >= 0) {
+        description = `Ingreso por conciliación → Reserva (${paymentMethod})`;
+      } else {
+        description = `Salida por conciliación de reserva (${paymentMethod})`;
+      }
+
+      items.push({
+        id: `reserve-${movement.id}`,
+        kind: "RESERVE",
+        movement: description,
+        amount: Math.abs(movement.amount),
+        responsible:
+          session?.responsibleUserName ?? "Movimiento general del negocio",
+        notes: movement.notes,
+        createdAt: movement.createdAt,
+      });
+    }
+
+    return items
+      .filter((item) => {
+        const movementDate = toDateInputValue(new Date(item.createdAt));
+
+        if (movementDate < dateRange.from || movementDate > dateRange.to) {
+          return false;
+        }
+
+        if (!deferredSearchValue) {
+          return true;
+        }
+
+        return [item.movement, item.responsible, item.notes ?? ""]
+          .join(" ")
+          .toLowerCase()
+          .includes(deferredSearchValue);
+      })
+      .sort(
+        (first, second) =>
+          new Date(second.createdAt).getTime() -
+          new Date(first.createdAt).getTime(),
+      );
+  }, [
+    currentSession,
+    dateRange.from,
+    dateRange.to,
+    deferredSearchValue,
+    history,
+    reserveSummaryQuery.data?.movements,
+  ]);
   const activeFiltersCount =
     selectedPaymentFilters.length +
     selectedSaleOrigins.length +
@@ -979,6 +1083,7 @@ export function CashRegisterPage() {
       historyQuery.refetch(),
       assigneesQuery.refetch(),
       movementsOverviewQuery.refetch(),
+      reserveSummaryQuery.refetch(),
     ]);
   }
 
@@ -1198,7 +1303,7 @@ export function CashRegisterPage() {
             activeTab === "closures" && styles.filtersBarClosures,
           )}
         >
-          {activeTab === "transactions" ? (
+          {activeTab === "transactions" && activeLedgerTab !== "transfers" ? (
             <button
               className={styles.filterButton}
               type="button"
@@ -1263,7 +1368,37 @@ export function CashRegisterPage() {
               ))}
             </div>
 
-            {hasError ? (
+            {activeLedgerTab === "transfers" ? (
+              historyQuery.isError || reserveSummaryQuery.isError ? (
+                <div className={styles.feedbackPanel}>
+                  <RetailEmptyState
+                    title="No pudimos cargar las transferencias"
+                    description={getErrorMessage(
+                      historyQuery.error ?? reserveSummaryQuery.error,
+                      "Intenta actualizar la pantalla o revisar que el backend siga respondiendo.",
+                    )}
+                  />
+                  <button
+                    className={styles.drawerPrimaryButton}
+                    type="button"
+                    onClick={() => void handleRefresh()}
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              ) : historyQuery.isLoading || reserveSummaryQuery.isLoading ? (
+                <div className={styles.feedbackPanel}>
+                  <RetailEmptyState
+                    title="Preparando transferencias..."
+                    description="Estamos consultando los movimientos entre medios y la reserva del negocio."
+                  />
+                </div>
+              ) : (
+                <CashRegisterTransferHistoryTable
+                  items={transferHistoryItems}
+                />
+              )
+            ) : hasError ? (
               <div className={styles.feedbackPanel}>
                 <RetailEmptyState
                   title="No pudimos cargar los movimientos"
@@ -1383,6 +1518,11 @@ export function CashRegisterPage() {
         onReserveAdjust={async (input) => {
           await reserveAdjustmentMutation.mutateAsync(input);
         }}
+        onViewTransferHistory={() => {
+          setActiveTab("transactions");
+          setActiveLedgerTab("transfers");
+          setSessionDrawerOpen(false);
+        }}
       />
 
       <MovementCreateDrawer
@@ -1390,7 +1530,7 @@ export function CashRegisterPage() {
         customers={customersQuery.data ?? []}
         isOpen={isMovementCreateDrawerOpen}
         isSubmitting={isCreatingMovement}
-        kind={activeLedgerTab}
+        kind={activeLedgerTab === "transfers" ? "income" : activeLedgerTab}
         movementDate={selectedDate}
         suppliers={suppliersQuery.data ?? []}
         onClose={() => setMovementCreateDrawerOpen(false)}
