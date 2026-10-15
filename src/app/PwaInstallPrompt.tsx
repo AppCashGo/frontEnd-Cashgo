@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Download, Share2, Smartphone, X } from 'lucide-react'
+import { Download, Smartphone, X } from 'lucide-react'
 import styles from './PwaInstallPrompt.module.css'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -109,8 +109,8 @@ export function PwaInstallPrompt() {
         <strong>Instala CashGo en tu celular</strong>
         {isIos && !installEvent ? (
           <p>
-            En Safari toca <Share2 aria-hidden="true" size={16} /> Compartir y
-            luego “Agregar a inicio”.
+            En Safari usa el menú <span className={styles.menuHint}>•••</span> de
+            abajo a la derecha, toca “Compartir” y luego “Agregar a inicio”.
           </p>
         ) : (
           <p>Ábrelo como una app y accede más rápido, sin ocupar casi espacio.</p>
