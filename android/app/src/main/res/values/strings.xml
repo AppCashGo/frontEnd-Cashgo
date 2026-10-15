@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='utf-8'?>
-<resources>
-    <string name="app_name">CashGo</string>
-    <string name="title_activity_main">CashGo</string>
-    <string name="package_name">co.com.cashgoapp.mobile</string>
-    <string name="custom_url_scheme">co.com.cashgoapp.mobile</string>
-</resources>
