@@ -1,0 +1,94 @@
+.prompt {
+  position: fixed;
+  right: max(1rem, var(--safe-area-right));
+  bottom: max(1rem, var(--safe-area-bottom));
+  z-index: 10050;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  width: min(calc(100vw - 2rem), 35rem);
+  padding: 1rem 3rem 1rem 1rem;
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 1.25rem 3.5rem rgba(15, 23, 42, 0.2);
+  color: #172033;
+}
+
+.close {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  display: grid;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: #eef2f7;
+  color: #475569;
+  cursor: pointer;
+}
+
+.icon {
+  display: grid;
+  width: 3.1rem;
+  height: 3.1rem;
+  place-items: center;
+  border-radius: 1rem;
+  background: #e8f0ff;
+  color: #1458d4;
+}
+
+.content {
+  min-width: 0;
+}
+
+.content strong {
+  display: block;
+  font-size: 1rem;
+  line-height: 1.25;
+}
+
+.content p {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0.25rem 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+  line-height: 1.35;
+}
+
+.install {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.7rem;
+  padding: 0.7rem 1rem;
+  border: 0;
+  border-radius: 0.8rem;
+  background: #1458d4;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+@media (max-width: 560px) {
+  .prompt {
+    left: max(0.75rem, var(--safe-area-left));
+    right: max(0.75rem, var(--safe-area-right));
+    bottom: max(0.75rem, var(--safe-area-bottom));
+    grid-template-columns: auto minmax(0, 1fr);
+    width: auto;
+    padding: 0.9rem 2.75rem 0.9rem 0.9rem;
+  }
+
+  .install {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
