@@ -54,6 +54,7 @@ export type CustomerPaymentMethod =
 
 export type CustomerReceivablePayment = {
   id: string
+  paymentBatchId: string | null
   amount: number
   method: CustomerPaymentMethod
   reference: string | null

@@ -130,6 +130,31 @@ type CustomerPaymentHistoryEntry = {
   balanceAfterPayment: number
 }
 
+type CustomerPaymentMovement = {
+  id: string
+  entries: CustomerPaymentHistoryEntry[]
+  amount: number
+  createdAt: string
+  method: CustomerPaymentMethod
+  reference: string | null
+  notes: string | null
+}
+
+function legacyPaymentMovementKey(entry: CustomerPaymentHistoryEntry) {
+  const payment = entry.payment
+  const tenSecondWindow = Math.floor(
+    new Date(payment.createdAt).getTime() / 10_000,
+  )
+
+  return [
+    'legacy',
+    tenSecondWindow,
+    payment.method,
+    payment.reference ?? '',
+    payment.notes ?? '',
+  ].join(':')
+}
+
 function allocatePaymentAcrossProducts(
   purchase: CustomerPurchaseHistoryItem | null,
   invoiceAmount: number,
@@ -530,6 +555,37 @@ export function RetailCustomerDrawer({
         new Date(first.payment.createdAt).getTime(),
     )
   }, [customer?.receivables, purchasesBySaleId])
+  const paymentMovements = useMemo<CustomerPaymentMovement[]>(() => {
+    const movements = new Map<string, CustomerPaymentMovement>()
+
+    for (const entry of paymentHistory) {
+      const movementId =
+        entry.payment.paymentBatchId ?? legacyPaymentMovementKey(entry)
+      const movement = movements.get(movementId)
+
+      if (movement) {
+        movement.entries.push(entry)
+        movement.amount += entry.payment.amount
+        continue
+      }
+
+      movements.set(movementId, {
+        id: movementId,
+        entries: [entry],
+        amount: entry.payment.amount,
+        createdAt: entry.payment.createdAt,
+        method: entry.payment.method,
+        reference: entry.payment.reference,
+        notes: entry.payment.notes,
+      })
+    }
+
+    return [...movements.values()].sort(
+      (first, second) =>
+        new Date(second.createdAt).getTime() -
+        new Date(first.createdAt).getTime(),
+    )
+  }, [paymentHistory])
   const pendingPaymentReports = useMemo(
     () =>
       (customer?.receivables ?? []).flatMap((receivable) =>
@@ -1597,7 +1653,7 @@ export function RetailCustomerDrawer({
             onClick={() => setDetailTab('payments')}
           >
             Abonos
-            <span>{paymentHistory.length + pendingPaymentReports.length}</span>
+            <span>{paymentMovements.length + pendingPaymentReports.length}</span>
           </button>
           <button
             aria-selected={detailTab === 'history'}
@@ -2213,24 +2269,52 @@ export function RetailCustomerDrawer({
               </div>
               <div className={styles.sectionHeaderActions}>
                 <span>
-                  {paymentHistory.length}{' '}
-                  {paymentHistory.length === 1 ? 'abono' : 'abonos'} ·{' '}
+                  {paymentMovements.length}{' '}
+                  {paymentMovements.length === 1 ? 'movimiento' : 'movimientos'} ·{' '}
                   {formatCurrency(totalPaymentsRecorded)}
                 </span>
               </div>
             </div>
 
-            {paymentHistory.length > 0 ? (
+            {paymentMovements.length > 0 ? (
               <div className={styles.customerPaymentList}>
-                {paymentHistory.map(
-                  ({
-                    payment,
-                    receivable,
-                    purchase,
-                    productAllocations,
-                    unassignedAmount,
-                    balanceAfterPayment,
-                  }) => {
+                {paymentMovements.map((movement, movementIndex) => {
+                  const movementMethodLabel =
+                    COLLECTED_PAYMENT_METHOD_OPTIONS.find(
+                      (option) => option.value === movement.method,
+                    )?.label ?? movement.method
+
+                  return (
+                    <article className={styles.paymentMovementCard} key={movement.id}>
+                      <div className={styles.paymentMovementHeader}>
+                        <div>
+                          <span>Movimiento de abono #{paymentMovements.length - movementIndex}</span>
+                          <strong>{formatCurrency(movement.amount)}</strong>
+                        </div>
+                        <div>
+                          <span>{formatDateTime(movement.createdAt)}</span>
+                          <strong>{movementMethodLabel}</strong>
+                          <small>
+                            Cubrió {movement.entries.length}{' '}
+                            {movement.entries.length === 1 ? 'factura' : 'facturas'}
+                          </small>
+                        </div>
+                      </div>
+                      {movement.reference || movement.notes ? (
+                        <div className={styles.paymentMovementNotes}>
+                          {movement.reference ? <span>Referencia: {movement.reference}</span> : null}
+                          {movement.notes ? <span>Nota: {movement.notes}</span> : null}
+                        </div>
+                      ) : null}
+                      <div className={styles.paymentMovementInvoices}>
+                        {movement.entries.map(({
+                          payment,
+                          receivable,
+                          purchase,
+                          productAllocations,
+                          unassignedAmount,
+                          balanceAfterPayment,
+                        }) => {
                     const isReceiptBusy =
                       activeDocumentId?.startsWith(
                         `saved-payment:${payment.id}:`,
@@ -2241,13 +2325,13 @@ export function RetailCustomerDrawer({
                       )?.label ?? payment.method
 
                     return (
-                      <article
+                      <section
                         className={styles.customerPaymentCard}
                         key={payment.id}
                       >
                         <div className={styles.customerPaymentHeader}>
                           <div>
-                            <span>Abono a {receivable.saleNumber}</span>
+                            <span>Aplicado a {receivable.saleNumber}</span>
                             <strong>{formatCurrency(payment.amount)}</strong>
                           </div>
                           <span className={styles.paymentStatusPill}>
@@ -2440,10 +2524,13 @@ export function RetailCustomerDrawer({
                             {isReceiptBusy ? 'Preparando…' : 'Descargar PDF'}
                           </button>
                         </div>
-                      </article>
+                      </section>
                     )
-                  },
-                )}
+                        })}
+                      </div>
+                    </article>
+                  )
+                })}
               </div>
             ) : (
               <p className={styles.emptyText}>

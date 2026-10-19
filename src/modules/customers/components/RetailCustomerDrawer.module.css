@@ -951,12 +951,67 @@
   gap: 0.85rem;
 }
 
+.paymentMovementCard {
+  display: grid;
+  gap: 0.85rem;
+  border: 2px solid #b9c9df;
+  border-radius: 1.15rem;
+  background: #eef4fb;
+  padding: 0.9rem;
+}
+
+.paymentMovementHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-radius: 0.85rem;
+  background: #1f2c3c;
+  color: #fff;
+  padding: 0.85rem 1rem;
+}
+
+.paymentMovementHeader > div {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.paymentMovementHeader > div:last-child {
+  text-align: right;
+}
+
+.paymentMovementHeader span,
+.paymentMovementHeader small {
+  color: #cbd5e1;
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.paymentMovementHeader > div:first-child strong {
+  font-size: 1.45rem;
+  font-weight: 950;
+}
+
+.paymentMovementNotes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  color: #526175;
+  font-size: 0.77rem;
+  font-weight: 750;
+}
+
+.paymentMovementInvoices {
+  display: grid;
+  gap: 0.75rem;
+}
+
 .customerPaymentCard {
   display: grid;
   gap: 0.85rem;
   border: 1px solid #d7e1ee;
   border-radius: 1rem;
-  background: #f8fafc;
+  background: #ffffff;
   padding: 1rem;
 }
 
@@ -1458,6 +1513,14 @@
 }
 
 @media (max-width: 559px) {
+  .paymentMovementHeader {
+    flex-direction: column;
+  }
+
+  .paymentMovementHeader > div:last-child {
+    text-align: left;
+  }
+
   .sectionHeader {
     align-items: flex-start;
   }
