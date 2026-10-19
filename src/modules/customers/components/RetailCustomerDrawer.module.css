@@ -796,6 +796,112 @@
   color: #1f2a37;
 }
 
+.receivableProducts {
+  border: 1px solid #dbe4ef;
+  border-radius: 0.8rem;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.receivableProducts summary,
+.receivableProduct {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.receivableProducts summary {
+  align-items: center;
+  min-height: 3rem;
+  padding: 0.7rem 0.85rem;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.receivableProducts summary::-webkit-details-marker {
+  display: none;
+}
+
+.receivableProducts summary:hover {
+  background: #f7faff;
+}
+
+.receivableProducts summary:focus-visible {
+  outline: 3px solid rgba(36, 87, 184, 0.22);
+  outline-offset: -3px;
+}
+
+.receivableProductsTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #1f2a37;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.receivableProductsTitle svg,
+.receivableProducts summary > svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.receivableProductsTitle svg {
+  color: #2457b8;
+}
+
+.receivableProducts summary > span:nth-child(2) {
+  margin-left: auto;
+  color: #66758c;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.receivableProducts summary > svg {
+  flex: 0 0 auto;
+  color: #66758c;
+  transition: transform 160ms ease;
+}
+
+.receivableProducts[open] summary {
+  border-bottom: 1px solid #e5ebf2;
+  background: #f7faff;
+}
+
+.receivableProducts[open] summary > svg {
+  transform: rotate(180deg);
+}
+
+.receivableProductList {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.receivableProduct {
+  color: #1f2a37;
+  font-size: 0.84rem;
+}
+
+.receivableProduct + .receivableProduct {
+  border-top: 1px solid #e5ebf2;
+  padding-top: 0.5rem;
+}
+
+.receivableProduct span {
+  display: block;
+  margin-top: 0.15rem;
+  color: #66758c;
+  font-size: 0.74rem;
+}
+
+.receivableProduct > strong {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .historyItem {
   display: grid;
   gap: 0.75rem;
@@ -893,6 +999,18 @@
 .receiptActions {
   display: grid;
   gap: 0.75rem;
+}
+
+.receiptActions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+}
+
+.receiptActions svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 .invoiceActions {
@@ -1071,9 +1189,12 @@
 @media (min-width: 560px) {
   .twoColumns,
   .infoGrid,
-  .behaviorGrid,
-  .receiptActions {
+  .behaviorGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .receiptActions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .reminderActions {
@@ -1157,5 +1278,9 @@
   .paymentReceiptActions button {
     flex: 1;
     justify-content: center;
+  }
+
+  .receivableProduct {
+    gap: 0.65rem;
   }
 }

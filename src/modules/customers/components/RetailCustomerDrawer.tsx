@@ -11,6 +11,7 @@ import {
   CalendarClock,
   CalendarDays,
   CheckCircle2,
+  ChevronDown,
   Download,
   Handshake,
   Hash,
@@ -33,6 +34,7 @@ import type {
   CustomerPaymentInput,
   CustomerPaymentMethodCorrectionInput,
   CustomerPaymentMethod,
+  CustomerPurchaseHistoryItem,
   CustomerReceivable,
   CustomerReceivableTermsInput,
 } from '@/modules/customers/types/customer'
@@ -371,6 +373,16 @@ export function RetailCustomerDrawer({
         (receivable) => receivable.balance <= 0,
       ),
     [customer?.receivables],
+  )
+  const purchasesBySaleId = useMemo(
+    () =>
+      new Map(
+        (customer?.purchaseHistory ?? []).map((purchase) => [
+          purchase.saleId,
+          purchase,
+        ]),
+      ),
+    [customer?.purchaseHistory],
   )
   const isOldestPayment = paymentForm.receivableId === OLDEST_RECEIVABLE_OPTION
   const selectedReceivable =
@@ -903,15 +915,100 @@ export function RetailCustomerDrawer({
     }
   }
 
+  async function sharePaymentReceipt(
+    paymentId: string,
+    saleNumber: string,
+  ) {
+    if (!customer) return
+
+    const phone = normalizeWhatsAppPhone(customer.phone ?? '')
+    const message = `Hola ${customer.name}, te enviamos el comprobante del abono realizado a la factura ${saleNumber}. El PDF muestra el valor pagado, los productos de la compra y el saldo que quedó pendiente.`
+    const result = await downloadCustomerPaymentReceipt(paymentId)
+    const filename = result.filename ?? `comprobante-${saleNumber}.pdf`
+    const shareResult = await sharePdfFile({
+      blob: result.blob,
+      filename,
+      title: `Comprobante de abono ${saleNumber}`,
+      text: message,
+    })
+
+    if (shareResult === 'shared') {
+      setDocumentFeedback(
+        'Se abrió el selector para compartir el comprobante. Elige WhatsApp y confirma el envío.',
+      )
+      return
+    }
+
+    if (/^\d{10,15}$/.test(phone)) {
+      openWhatsApp(phone, message)
+      setDocumentFeedback(
+        'El comprobante se descargó y WhatsApp se abrió con el mensaje. Adjunta el PDF descargado antes de enviarlo.',
+      )
+      return
+    }
+
+    setDocumentFeedback(
+      'El comprobante se descargó. El cliente no tiene un celular válido; envía el PDF por el medio que prefieras.',
+    )
+  }
+
+  async function handleShareLatestPaymentReceipt() {
+    if (!lastReceipt) return
+
+    setActiveDocumentId('payment:share')
+    setDocumentFeedback(null)
+
+    try {
+      if (lastReceipt.paymentIds.length === 1) {
+        await sharePaymentReceipt(
+          lastReceipt.paymentIds[0],
+          lastReceipt.saleNumbers[0],
+        )
+        return
+      }
+
+      for (const [index, paymentId] of lastReceipt.paymentIds.entries()) {
+        const result = await downloadCustomerPaymentReceipt(paymentId)
+        downloadPdfBlob(
+          result.blob,
+          result.filename ??
+            `comprobante-${lastReceipt.saleNumbers[index]}.pdf`,
+        )
+      }
+      const phone = normalizeWhatsAppPhone(customer?.phone ?? '')
+      const message = `Hola ${customer?.name ?? ''}, te enviamos los comprobantes del abono de ${formatCurrency(lastReceipt.amount)}, aplicado a ${lastReceipt.saleNumbers.length} facturas. Cada PDF muestra lo pagado y el saldo restante de su factura.`
+      if (/^\d{10,15}$/.test(phone)) {
+        openWhatsApp(phone, message)
+      }
+      setDocumentFeedback(
+        `Se descargaron ${lastReceipt.paymentIds.length} comprobantes. Adjunta los PDF al mensaje antes de enviarlo.`,
+      )
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        setDocumentFeedback('No se compartió el comprobante porque cancelaste la acción.')
+      } else {
+        setDocumentFeedback(
+          getErrorMessage(error, 'No pudimos preparar el comprobante para compartir.'),
+        )
+      }
+    } finally {
+      setActiveDocumentId(null)
+    }
+  }
+
   async function handleSavedPaymentReceipt(
     paymentId: string,
     saleNumber: string,
-    action: 'download' | 'print',
+    action: 'download' | 'print' | 'share',
   ) {
     setActiveDocumentId(`saved-payment:${paymentId}:${action}`)
     setDocumentFeedback(null)
 
     try {
+      if (action === 'share') {
+        await sharePaymentReceipt(paymentId, saleNumber)
+        return
+      }
       const result = await downloadCustomerPaymentReceipt(paymentId)
       const filename = result.filename ?? `comprobante-${saleNumber}.pdf`
       if (action === 'print') {
@@ -1586,6 +1683,7 @@ export function RetailCustomerDrawer({
                 <ReceivableCard
                   key={receivable.id}
                   receivable={receivable}
+                  purchase={purchasesBySaleId.get(receivable.saleId) ?? null}
                   isDocumentBusy={activeDocumentId?.startsWith(`${receivable.saleId}:`) ?? false}
                   isPaymentCorrectionSubmitting={
                     isPaymentCorrectionSubmitting
@@ -1634,6 +1732,7 @@ export function RetailCustomerDrawer({
                   <ReceivableCard
                     key={receivable.id}
                     receivable={receivable}
+                    purchase={purchasesBySaleId.get(receivable.saleId) ?? null}
                     isDocumentBusy={activeDocumentId?.startsWith(`${receivable.saleId}:`) ?? false}
                     isPaymentCorrectionSubmitting={isPaymentCorrectionSubmitting}
                     onDownload={() =>
@@ -2130,6 +2229,17 @@ export function RetailCustomerDrawer({
           <div className={styles.receiptActions}>
             <button
               className={styles.secondaryButton}
+              disabled={!lastReceipt || activeDocumentId === 'payment:share'}
+              type="button"
+              onClick={() => void handleShareLatestPaymentReceipt()}
+            >
+              <Share2 aria-hidden="true" />
+              {activeDocumentId === 'payment:share'
+                ? 'Preparando...'
+                : 'Compartir con el cliente'}
+            </button>
+            <button
+              className={styles.secondaryButton}
               disabled={!lastReceipt}
               type="button"
               onClick={() => {
@@ -2233,6 +2343,7 @@ function MetricTile({
 
 function ReceivableCard({
   receivable,
+  purchase,
   isDocumentBusy,
   isPaymentCorrectionSubmitting,
   onDownload,
@@ -2244,6 +2355,7 @@ function ReceivableCard({
   onUpdatePaymentMethod,
 }: {
   receivable: CustomerReceivable
+  purchase: CustomerPurchaseHistoryItem | null
   isDocumentBusy: boolean
   isPaymentCorrectionSubmitting: boolean
   onDownload: () => void
@@ -2251,7 +2363,7 @@ function ReceivableCard({
   onPrint: () => void
   onPaymentReceipt: (
     paymentId: string,
-    action: 'download' | 'print',
+    action: 'download' | 'print' | 'share',
   ) => void
   onPromise: (receivable: CustomerReceivable) => void
   onShare: () => void
@@ -2349,6 +2461,43 @@ function ReceivableCard({
         <strong>Saldo {formatCurrency(receivable.balance)}</strong>
       </div>
 
+      {purchase && purchase.products.length > 0 ? (
+        <details
+          className={styles.receivableProducts}
+        >
+          <summary>
+            <span className={styles.receivableProductsTitle}>
+              <ReceiptText aria-hidden="true" />
+              Productos y valores
+            </span>
+            <span>
+              {purchase.itemCount}{' '}
+              {purchase.itemCount === 1 ? 'producto' : 'productos'}
+            </span>
+            <ChevronDown aria-hidden="true" />
+          </summary>
+          <div className={styles.receivableProductList}>
+            {purchase.products.map((product) => (
+              <div
+                className={styles.receivableProduct}
+                key={`${purchase.saleId}:${product.productId}`}
+              >
+                <div>
+                  <strong>
+                    {product.quantity} × {product.name}
+                  </strong>
+                  <span>
+                    {formatCurrency(product.unitPrice)} c/u
+                    {product.sku ? ` · SKU ${product.sku}` : ''}
+                  </span>
+                </div>
+                <strong>{formatCurrency(product.subtotal)}</strong>
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
+
       {receivable.dueDate ? (
         <p className={styles.receivableDue}>
           Vence el {formatReceivableDueDate(receivable.dueDate)}
@@ -2408,6 +2557,13 @@ function ReceivableCard({
                 </span>
               </div>
               <div className={styles.paymentReceiptActions}>
+                <button
+                  type="button"
+                  onClick={() => onPaymentReceipt(payment.id, 'share')}
+                >
+                  <Share2 aria-hidden="true" />
+                  Compartir
+                </button>
                 <button
                   type="button"
                   onClick={() =>
