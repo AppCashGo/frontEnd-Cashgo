@@ -61,6 +61,18 @@ export type CustomerReceivablePayment = {
   createdAt: string
 }
 
+export type CustomerReceivablePaymentReport = {
+  id: string
+  amount: number
+  method: CustomerPaymentMethod
+  reference: string | null
+  notes: string | null
+  proofUrl: string
+  status: 'PENDING' | 'REVIEWING' | 'APPROVED' | 'REJECTED'
+  reviewNote: string | null
+  createdAt: string
+}
+
 export type CustomerReceivableCollectionActivity = {
   id: string
   type: 'REMINDER' | 'PAYMENT_PROMISE' | 'NOTE'
@@ -143,7 +155,14 @@ export type CustomerReceivable = {
   notes: string | null
   createdAt: string
   payments: CustomerReceivablePayment[]
+  paymentReports: CustomerReceivablePaymentReport[]
   collectionActivities: CustomerReceivableCollectionActivity[]
+}
+
+export type CustomerPaymentReportReviewInput = {
+  approved: boolean
+  cashRegisterId?: string
+  note?: string
 }
 
 export type CustomerDetail = CustomerSummary & {

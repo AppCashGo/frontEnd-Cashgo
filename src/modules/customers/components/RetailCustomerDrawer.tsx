@@ -24,6 +24,7 @@ import {
   ReceiptText,
   Send,
   Share2,
+  ShieldCheck,
   TrendingUp,
 } from 'lucide-react'
 import type {
@@ -35,6 +36,7 @@ import type {
   CustomerPaymentMethodCorrectionInput,
   CustomerPaymentMethod,
   CustomerPurchaseHistoryItem,
+  CustomerPurchaseHistoryProduct,
   CustomerReceivable,
   CustomerReceivableTermsInput,
 } from '@/modules/customers/types/customer'
@@ -43,6 +45,7 @@ import {
   downloadCustomerPaymentReceipt,
   downloadCustomerPurchaseHistory,
   downloadCustomerReceivableStatement,
+  reviewCustomerPaymentReport,
 } from '@/modules/customers/services/customers-api'
 import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
@@ -55,6 +58,7 @@ import { AvatarUploadField } from '@/shared/components/ui/AvatarUploadField'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { useImageUploadPreview } from '@/shared/hooks/use-image-upload-preview'
 import { joinClassNames } from '@/shared/utils/join-class-names'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import {
   downloadPdfBlob,
   openWhatsApp,
@@ -109,6 +113,104 @@ type PaymentPromiseFormState = {
   promisedDate: string
   promisedAmount: string
   notes: string
+}
+
+type PaymentProductAllocation = {
+  product: CustomerPurchaseHistoryProduct
+  appliedAmount: number
+  remainingAfterPayment: number
+}
+
+type CustomerPaymentHistoryEntry = {
+  payment: CustomerReceivable['payments'][number]
+  receivable: CustomerReceivable
+  purchase: CustomerPurchaseHistoryItem | null
+  productAllocations: PaymentProductAllocation[]
+  unassignedAmount: number
+  balanceAfterPayment: number
+}
+
+function allocatePaymentAcrossProducts(
+  purchase: CustomerPurchaseHistoryItem | null,
+  invoiceAmount: number,
+  amountPaidBefore: number,
+  paymentAmount: number,
+) {
+  if (!purchase || purchase.products.length === 0) {
+    return {
+      allocations: [] as PaymentProductAllocation[],
+      unassignedAmount: paymentAmount,
+    }
+  }
+
+  const grossProductTotal = purchase.products.reduce(
+    (total, product) => total + product.subtotal,
+    0,
+  )
+
+  if (grossProductTotal <= 0) {
+    return {
+      allocations: [] as PaymentProductAllocation[],
+      unassignedAmount: paymentAmount,
+    }
+  }
+
+  // Cuando existe un descuento general, distribuimos el valor neto de la
+  // factura proporcionalmente entre los productos antes de aplicar abonos.
+  const allocatableProductTotal = Math.min(invoiceAmount, grossProductTotal)
+  const allocationFactor = allocatableProductTotal / grossProductTotal
+  let distributedProductTotal = 0
+  const effectiveProductTotals = purchase.products.map((product, index) => {
+    const isLastProduct = index === purchase.products.length - 1
+    const effectiveTotal = isLastProduct
+      ? allocatableProductTotal - distributedProductTotal
+      : Math.floor(product.subtotal * allocationFactor)
+
+    distributedProductTotal += effectiveTotal
+    return Math.max(effectiveTotal, 0)
+  })
+
+  let previousPaymentsRemaining = Math.min(
+    amountPaidBefore,
+    allocatableProductTotal,
+  )
+  let currentPaymentRemaining = paymentAmount
+  const allocations: PaymentProductAllocation[] = []
+
+  purchase.products.forEach((product, index) => {
+    const productTotal = effectiveProductTotals[index]
+    const previouslyApplied = Math.min(
+      previousPaymentsRemaining,
+      productTotal,
+    )
+    previousPaymentsRemaining -= previouslyApplied
+
+    const pendingBeforePayment = Math.max(
+      productTotal - previouslyApplied,
+      0,
+    )
+    const appliedAmount = Math.min(
+      currentPaymentRemaining,
+      pendingBeforePayment,
+    )
+    currentPaymentRemaining -= appliedAmount
+
+    if (appliedAmount > 0) {
+      allocations.push({
+        product,
+        appliedAmount,
+        remainingAfterPayment: Math.max(
+          pendingBeforePayment - appliedAmount,
+          0,
+        ),
+      })
+    }
+  })
+
+  return {
+    allocations,
+    unassignedAmount: Math.max(currentPaymentRemaining, 0),
+  }
 }
 
 type RetailCustomerDrawerProps = {
@@ -341,6 +443,7 @@ export function RetailCustomerDrawer({
   const [reminderFeedback, setReminderFeedback] = useState<string | null>(null)
   const [documentFeedback, setDocumentFeedback] = useState<string | null>(null)
   const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null)
+  const [reviewingReportId, setReviewingReportId] = useState<string | null>(null)
   const [termsReceivableId, setTermsReceivableId] = useState<string | null>(
     null,
   )
@@ -384,30 +487,42 @@ export function RetailCustomerDrawer({
       ),
     [customer?.purchaseHistory],
   )
-  const paymentHistory = useMemo(() => {
-    const entries = (customer?.receivables ?? []).flatMap((receivable) => {
-      let accumulatedPayments = 0
+  const paymentHistory = useMemo<CustomerPaymentHistoryEntry[]>(() => {
+    const entries: CustomerPaymentHistoryEntry[] = []
 
-      return [...receivable.payments]
+    for (const receivable of customer?.receivables ?? []) {
+      let accumulatedPayments = 0
+      const purchase = purchasesBySaleId.get(receivable.saleId) ?? null
+
+      const orderedPayments = [...receivable.payments]
         .sort(
           (first, second) =>
             new Date(first.createdAt).getTime() -
             new Date(second.createdAt).getTime(),
         )
-        .map((payment) => {
-          accumulatedPayments += payment.amount
 
-          return {
-            payment,
-            receivable,
-            purchase: purchasesBySaleId.get(receivable.saleId) ?? null,
-            balanceAfterPayment: Math.max(
-              receivable.amount - accumulatedPayments,
-              0,
-            ),
-          }
+      for (const payment of orderedPayments) {
+        const productApplication = allocatePaymentAcrossProducts(
+          purchase,
+          receivable.amount,
+          accumulatedPayments,
+          payment.amount,
+        )
+        accumulatedPayments += payment.amount
+
+        entries.push({
+          payment,
+          receivable,
+          purchase,
+          productAllocations: productApplication.allocations,
+          unassignedAmount: productApplication.unassignedAmount,
+          balanceAfterPayment: Math.max(
+            receivable.amount - accumulatedPayments,
+            0,
+          ),
         })
-    })
+      }
+    }
 
     return entries.sort(
       (first, second) =>
@@ -415,6 +530,52 @@ export function RetailCustomerDrawer({
         new Date(first.payment.createdAt).getTime(),
     )
   }, [customer?.receivables, purchasesBySaleId])
+  const pendingPaymentReports = useMemo(
+    () =>
+      (customer?.receivables ?? []).flatMap((receivable) =>
+        receivable.paymentReports
+          .filter(
+            (report) =>
+              report.status === 'PENDING' || report.status === 'REVIEWING',
+          )
+          .map((report) => ({ report, receivable })),
+      ),
+    [customer?.receivables],
+  )
+
+  async function handleReviewPaymentReport(
+    reportId: string,
+    approved: boolean,
+  ) {
+    if (approved && !currentCashRegisterId) {
+      setDocumentFeedback(
+        'Abre una caja antes de aprobar el abono. Así el movimiento queda dentro del turno correcto.',
+      )
+      return
+    }
+    setReviewingReportId(reportId)
+    setDocumentFeedback(null)
+    try {
+      await reviewCustomerPaymentReport(reportId, {
+        approved,
+        ...(approved && currentCashRegisterId
+          ? { cashRegisterId: currentCashRegisterId }
+          : {}),
+      })
+      setDocumentFeedback(
+        approved
+          ? 'Abono confirmado. La deuda y el historial del cliente fueron actualizados.'
+          : 'Comprobante rechazado. La deuda no fue modificada.',
+      )
+      onRefresh()
+    } catch (error) {
+      setDocumentFeedback(
+        getErrorMessage(error, 'No pudimos revisar este comprobante.'),
+      )
+    } finally {
+      setReviewingReportId(null)
+    }
+  }
   const isOldestPayment = paymentForm.receivableId === OLDEST_RECEIVABLE_OPTION
   const selectedReceivable =
     pendingReceivables.find(
@@ -1436,7 +1597,7 @@ export function RetailCustomerDrawer({
             onClick={() => setDetailTab('payments')}
           >
             Abonos
-            <span>{paymentHistory.length}</span>
+            <span>{paymentHistory.length + pendingPaymentReports.length}</span>
           </button>
           <button
             aria-selected={detailTab === 'history'}
@@ -2001,6 +2162,47 @@ export function RetailCustomerDrawer({
 
         {detailTab === 'payments' ? (
           <section className={styles.section}>
+            {pendingPaymentReports.length > 0 ? (
+              <div className={styles.paymentReportQueue}>
+                <div>
+                  <h4>Comprobantes por revisar</h4>
+                  <p>
+                    Confirma que el dinero sí llegó antes de aprobar. La deuda
+                    todavía no se ha modificado.
+                  </p>
+                </div>
+                {pendingPaymentReports.map(({ report, receivable }) => (
+                  <article key={report.id}>
+                    <div>
+                      <span>{receivable.saleNumber}</span>
+                      <strong>{formatCurrency(report.amount)}</strong>
+                      <small>{formatDateTime(report.createdAt)} · Nequi / Daviplata</small>
+                    </div>
+                    <a
+                      href={resolveApiAssetUrl(report.proofUrl) ?? undefined}
+                      rel="noreferrer"
+                      target="_blank"
+                    >
+                      <ReceiptText /> Ver comprobante
+                    </a>
+                    <button
+                      disabled={reviewingReportId === report.id}
+                      onClick={() => void handleReviewPaymentReport(report.id, false)}
+                      type="button"
+                    >
+                      Rechazar
+                    </button>
+                    <button
+                      disabled={reviewingReportId === report.id}
+                      onClick={() => void handleReviewPaymentReport(report.id, true)}
+                      type="button"
+                    >
+                      <ShieldCheck /> Confirmar abono
+                    </button>
+                  </article>
+                ))}
+              </div>
+            ) : null}
             <div className={styles.sectionHeader}>
               <div>
                 <h4>Historial de abonos</h4>
@@ -2025,6 +2227,8 @@ export function RetailCustomerDrawer({
                     payment,
                     receivable,
                     purchase,
+                    productAllocations,
+                    unassignedAmount,
                     balanceAfterPayment,
                   }) => {
                     const isReceiptBusy =
@@ -2085,6 +2289,71 @@ export function RetailCustomerDrawer({
                                 <strong>Nota:</strong> {payment.notes}
                               </p>
                             ) : null}
+                          </div>
+                        ) : null}
+
+                        {productAllocations.length > 0 ? (
+                          <div className={styles.paymentApplication}>
+                            <div className={styles.paymentApplicationHeader}>
+                              <div>
+                                <strong>Qué cubrió este abono</strong>
+                                <span>
+                                  Distribución automática siguiendo el orden de
+                                  los productos de la factura.
+                                </span>
+                              </div>
+                              <strong>{formatCurrency(payment.amount)}</strong>
+                            </div>
+                            <div className={styles.paymentApplicationList}>
+                              {productAllocations.map((allocation) => (
+                                <div
+                                  className={styles.paymentApplicationItem}
+                                  key={`${payment.id}:allocation:${allocation.product.productId}`}
+                                >
+                                  <div>
+                                    <strong>{allocation.product.name}</strong>
+                                    <span>
+                                      {allocation.product.quantity} ×{' '}
+                                      {formatCurrency(
+                                        allocation.product.unitPrice,
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <strong>
+                                      {formatCurrency(allocation.appliedAmount)}
+                                    </strong>
+                                    <span
+                                      className={
+                                        allocation.remainingAfterPayment > 0
+                                          ? styles.paymentCoveragePartial
+                                          : styles.paymentCoverageComplete
+                                      }
+                                    >
+                                      {allocation.remainingAfterPayment > 0
+                                        ? `Parcial · faltan ${formatCurrency(allocation.remainingAfterPayment)}`
+                                        : 'Cubierto completamente'}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))}
+                              {unassignedAmount > 0 ? (
+                                <div className={styles.paymentApplicationItem}>
+                                  <div>
+                                    <strong>Otros cargos de la factura</strong>
+                                    <span>
+                                      Impuestos, domicilio u otros conceptos.
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <strong>
+                                      {formatCurrency(unassignedAmount)}
+                                    </strong>
+                                    <span>Cubierto con este abono</span>
+                                  </div>
+                                </div>
+                              ) : null}
+                            </div>
                           </div>
                         ) : null}
 

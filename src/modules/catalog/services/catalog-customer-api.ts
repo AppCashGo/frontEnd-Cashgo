@@ -10,6 +10,8 @@ import type {
   CatalogSavedAddress,
   CatalogCustomerFavorite,
   CatalogCustomerProfile,
+  CatalogCustomerReceivables,
+  CatalogReceivablePaymentReport,
 } from "../types/catalog-customer";
 
 const options = (accessToken: string) => ({
@@ -128,6 +130,41 @@ export function markCatalogNotificationsRead(
   return postJson<{ updated: true }, Record<string, never>>(
     `/catalog-customer/${encodeURIComponent(slug)}/notifications/read`,
     {},
+    options(accessToken),
+  );
+}
+
+export function getCatalogCustomerReceivables(
+  slug: string,
+  accessToken: string,
+) {
+  return getJson<CatalogCustomerReceivables>(
+    `/catalog-customer/${encodeURIComponent(slug)}/receivables`,
+    options(accessToken),
+  );
+}
+
+export function reportCatalogReceivablePayment(
+  slug: string,
+  accessToken: string,
+  receivableId: number,
+  input: {
+    amount: number;
+    method: "DIGITAL_WALLET" | "TRANSFER" | "BANK_DEPOSIT";
+    reference?: string;
+    notes?: string;
+    file: File;
+  },
+) {
+  const body = new FormData();
+  body.append("amount", String(input.amount));
+  body.append("method", input.method);
+  if (input.reference) body.append("reference", input.reference);
+  if (input.notes) body.append("notes", input.notes);
+  body.append("file", input.file);
+  return postFormData<CatalogReceivablePaymentReport>(
+    `/catalog-customer/${encodeURIComponent(slug)}/receivables/${receivableId}/payment-reports`,
+    body,
     options(accessToken),
   );
 }

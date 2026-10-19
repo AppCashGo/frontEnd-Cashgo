@@ -20,6 +20,8 @@ import type {
   CustomerReceivableTermsInput,
   CustomerReminderEmailInput,
   CustomerPurchaseHistoryItem,
+  CustomerPaymentReportReviewInput,
+  CustomerReceivablePaymentReport,
   CustomerSummary,
 } from '@/modules/customers/types/customer'
 import { normalizeNumber } from '@/shared/utils/normalize-number'
@@ -82,6 +84,7 @@ type CustomerReceivableApiRecord = Omit<
   | 'balance'
   | 'payments'
   | 'collectionActivities'
+  | 'paymentReports'
 > & {
   id: number | string
   saleId: number | string
@@ -90,6 +93,12 @@ type CustomerReceivableApiRecord = Omit<
   balance: number | string
   payments: CustomerReceivablePaymentApiRecord[]
   collectionActivities: CustomerReceivableCollectionActivityApiRecord[]
+  paymentReports: Array<
+    Omit<CustomerReceivablePaymentReport, 'id' | 'amount'> & {
+      id: number | string
+      amount: number | string
+    }
+  >
 }
 
 type CustomerReceivableCollectionActivityApiRecord = Omit<
@@ -143,6 +152,11 @@ function normalizeCustomerReceivable(
     paidAmount: normalizeNumber(receivable.paidAmount),
     balance: normalizeNumber(receivable.balance),
     payments: receivable.payments.map(normalizeCustomerReceivablePayment),
+    paymentReports: (receivable.paymentReports ?? []).map((report) => ({
+      ...report,
+      id: String(report.id),
+      amount: normalizeNumber(report.amount),
+    })),
     collectionActivities: (receivable.collectionActivities ?? []).map(
       (activity) => ({
         ...activity,
@@ -304,6 +318,16 @@ export async function registerCustomerPayment(
   >(`/accounts-receivable/${receivableId}/payments`, input)
 
   return normalizeCustomerReceivable(receivable)
+}
+
+export function reviewCustomerPaymentReport(
+  reportId: string,
+  input: CustomerPaymentReportReviewInput,
+) {
+  return patchJson<unknown, CustomerPaymentReportReviewInput>(
+    `/accounts-receivable/payment-reports/${reportId}/review`,
+    input,
+  )
 }
 
 export async function updateCustomerPaymentMethod(

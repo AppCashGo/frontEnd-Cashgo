@@ -1030,6 +1030,79 @@
   margin-top: 0.25rem;
 }
 
+.paymentApplication {
+  overflow: hidden;
+  border: 1px solid #b8ddc8;
+  border-radius: 0.85rem;
+  background: #f2fbf6;
+}
+
+.paymentApplicationHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #cfe9da;
+  padding: 0.75rem 0.85rem;
+}
+
+.paymentApplicationHeader strong {
+  color: #176b46;
+  font-size: 0.84rem;
+}
+
+.paymentApplicationHeader > strong {
+  flex: 0 0 auto;
+  font-size: 0.95rem;
+}
+
+.paymentApplicationHeader span,
+.paymentApplicationItem span {
+  display: block;
+  margin-top: 0.15rem;
+  color: #587265;
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.paymentApplicationList {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.75rem 0.85rem;
+}
+
+.paymentApplicationItem {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.paymentApplicationItem + .paymentApplicationItem {
+  border-top: 1px solid #d7ebdf;
+  padding-top: 0.55rem;
+}
+
+.paymentApplicationItem > div:last-child {
+  flex: 0 0 auto;
+  text-align: right;
+}
+
+.paymentApplicationItem strong {
+  color: #1f2a37;
+  font-size: 0.8rem;
+}
+
+.paymentApplicationItem .paymentCoverageComplete {
+  color: #17744b;
+  font-weight: 800;
+}
+
+.paymentApplicationItem .paymentCoveragePartial {
+  color: #9a6b12;
+  font-weight: 800;
+}
+
 .customerPaymentActions {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1188,6 +1261,50 @@
   font-weight: 800;
   line-height: 1.45;
 }
+.paymentReportQueue {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #f3cf69;
+  border-radius: 0.9rem;
+  background: #fffbeb;
+  padding: 0.9rem;
+}
+.paymentReportQueue h4,
+.paymentReportQueue p { margin: 0; }
+.paymentReportQueue p { margin-top: 0.2rem; color: #6b5a24; font-size: 0.8rem; }
+.paymentReportQueue article {
+  display: grid;
+  grid-template-columns: minmax(170px, 1fr) auto auto auto;
+  gap: 0.55rem;
+  align-items: center;
+  border-radius: 0.75rem;
+  background: #fff;
+  padding: 0.75rem;
+}
+.paymentReportQueue article > div { display: grid; gap: 0.1rem; }
+.paymentReportQueue article small { color: #64748b; }
+.paymentReportQueue a,
+.paymentReportQueue button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 38px;
+  border: 1px solid #cbd6e3;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #24364e;
+  padding: 0 0.7rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+}
+.paymentReportQueue button:last-child { border-color: #158653; background: #158653; color: #fff; }
+.paymentReportQueue svg { width: 1rem; height: 1rem; }
+.paymentReportQueue button:disabled { opacity: 0.55; cursor: wait; }
 
 .paymentHistory {
   display: grid;
@@ -1407,6 +1524,11 @@
   .customerPaymentDetails,
   .customerPaymentActions {
     grid-template-columns: 1fr;
+  }
+
+  .paymentApplicationHeader,
+  .paymentApplicationItem {
+    gap: 0.65rem;
   }
 
   .receivableProduct {

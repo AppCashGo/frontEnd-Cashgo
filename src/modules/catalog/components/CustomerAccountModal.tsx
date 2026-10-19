@@ -5,6 +5,9 @@ import {
   Home,
   LogOut,
   MapPin,
+  ReceiptText,
+  Upload,
+  WalletCards,
   PackageSearch,
   Plus,
   Save,
@@ -28,6 +31,8 @@ import {
   getCatalogCustomerFavorites,
   getCatalogCustomerProfile,
   getCatalogSavedAddresses,
+  getCatalogCustomerReceivables,
+  reportCatalogReceivablePayment,
   removeCatalogCustomerFavorite,
   saveCatalogAddress,
   updateCatalogCustomerProfile,
@@ -37,11 +42,12 @@ import type {
   CatalogCustomerFavorite,
   CatalogCustomerProfile,
   CatalogSavedAddress,
+  CatalogCustomerReceivables,
 } from "../types/catalog-customer";
 import type { CatalogCustomer } from "../types/customer-session";
 import styles from "./CustomerAccountModal.module.css";
 
-type Section = "home" | "favorites" | "addresses" | "profile";
+type Section = "home" | "receivables" | "favorites" | "addresses" | "profile";
 
 export function CustomerAccountModal({
   accessToken,
@@ -68,6 +74,8 @@ export function CustomerAccountModal({
   const [profile, setProfile] = useState<CatalogCustomerProfile | null>(null);
   const [favorites, setFavorites] = useState<CatalogCustomerFavorite[]>([]);
   const [addresses, setAddresses] = useState<CatalogSavedAddress[]>([]);
+  const [receivables, setReceivables] =
+    useState<CatalogCustomerReceivables | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [addressForm, setAddressForm] = useState({
@@ -81,11 +89,13 @@ export function CustomerAccountModal({
       getCatalogCustomerProfile(catalogSlug, accessToken),
       getCatalogCustomerFavorites(catalogSlug, accessToken),
       getCatalogSavedAddresses(catalogSlug, accessToken),
+      getCatalogCustomerReceivables(catalogSlug, accessToken),
     ])
-      .then(([nextProfile, nextFavorites, nextAddresses]) => {
+      .then(([nextProfile, nextFavorites, nextAddresses, nextReceivables]) => {
         setProfile(nextProfile);
         setFavorites(nextFavorites);
         setAddresses(nextAddresses);
+        setReceivables(nextReceivables);
       })
       .catch((error) =>
         setNotice(getErrorMessage(error, "No pudimos cargar toda tu cuenta.")),
@@ -224,6 +234,12 @@ export function CustomerAccountModal({
               <PackageSearch /> Mis compras <ChevronRight />
             </button>
             <NavButton
+              active={section === "receivables"}
+              icon={<WalletCards />}
+              label="Cuentas por pagar"
+              onClick={() => setSection("receivables")}
+            />
+            <NavButton
               active={section === "favorites"}
               icon={<Heart />}
               label="Favoritos"
@@ -292,11 +308,29 @@ export function CustomerAccountModal({
                   <strong>Mi perfil</strong>
                   <span>Actualiza tus datos y foto</span>
                 </button>
+                <button onClick={() => setSection("receivables")} type="button">
+                  <WalletCards />
+                  <strong>{formatMoney(receivables?.summary.balance ?? 0)}</strong>
+                  <span>Saldo pendiente por pagar</span>
+                </button>
               </div>
               <button className={styles.primary} onClick={onShop} type="button">
                 Seguir comprando
               </button>
             </div>
+          ) : null}
+          {section === "receivables" ? (
+            <ReceivablesPanel
+              accessToken={accessToken}
+              catalogSlug={catalogSlug}
+              data={receivables}
+              onNotice={setNotice}
+              onRefresh={async () =>
+                setReceivables(
+                  await getCatalogCustomerReceivables(catalogSlug, accessToken),
+                )
+              }
+            />
           ) : null}
           {section === "favorites" ? (
             favorites.length ? (
@@ -586,8 +620,123 @@ function Empty({
 function sectionTitle(section: Section) {
   return {
     home: "Resumen de mi cuenta",
+    receivables: "Mis cuentas por pagar",
     favorites: "Mis favoritos",
     addresses: "Mis direcciones",
     profile: "Mi perfil",
   }[section];
+}
+
+function ReceivablesPanel({
+  accessToken,
+  catalogSlug,
+  data,
+  onNotice,
+  onRefresh,
+}: {
+  accessToken: string;
+  catalogSlug: string;
+  data: CatalogCustomerReceivables | null;
+  onNotice: (message: string | null) => void;
+  onRefresh: () => Promise<void>;
+}) {
+  const [reportingId, setReportingId] = useState<number | null>(null);
+  const [amount, setAmount] = useState("");
+  const [reference, setReference] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  if (!data) return <p className={styles.loading}>Cargando tus cuentas…</p>;
+
+  const openReceivables = data.receivables.filter((item) => item.balance > 0);
+  return (
+    <div className={styles.receivablesPanel}>
+      <div className={styles.debtSummary}>
+        <span><small>Compras a crédito</small><strong>{formatMoney(data.summary.originalAmount)}</strong></span>
+        <span><small>Ya abonaste</small><strong>{formatMoney(data.summary.paidAmount)}</strong></span>
+        <span><small>Te falta pagar</small><strong>{formatMoney(data.summary.balance)}</strong></span>
+      </div>
+      {openReceivables.length === 0 ? (
+        <Empty icon={<WalletCards />} title="Estás al día" text="No tienes cuentas pendientes por pagar." />
+      ) : (
+        <div className={styles.receivableList}>
+          {openReceivables.map((receivable) => {
+            const pendingReport = receivable.paymentReports.find(
+              (report) => report.status === "PENDING" || report.status === "REVIEWING",
+            );
+            return (
+              <article key={receivable.id}>
+                <header>
+                  <div><small>Factura</small><strong>{receivable.saleNumber}</strong></div>
+                  <div className={styles.balance}><small>Falta pagar</small><strong>{formatMoney(receivable.balance)}</strong></div>
+                </header>
+                <div className={styles.receivableItems}>
+                  {receivable.items.map((item) => (
+                    <span key={item.id}>
+                      <span>{item.quantity} × {item.name}</span>
+                      <strong>{formatMoney(item.subtotal)}</strong>
+                    </span>
+                  ))}
+                </div>
+                <div className={styles.paymentProgress}>
+                  <span>Abonado: <strong>{formatMoney(receivable.paidAmount)}</strong></span>
+                  <span>Total: <strong>{formatMoney(receivable.amount)}</strong></span>
+                </div>
+                {pendingReport ? (
+                  <p className={styles.pendingReport}>
+                    <ReceiptText /> Tu comprobante por {formatMoney(pendingReport.amount)} está pendiente de revisión.
+                  </p>
+                ) : reportingId === receivable.id ? (
+                  <form
+                    className={styles.reportForm}
+                    onSubmit={async (event) => {
+                      event.preventDefault();
+                      if (!file) return onNotice("Selecciona la imagen del comprobante.");
+                      setSubmitting(true);
+                      onNotice(null);
+                      try {
+                        await reportCatalogReceivablePayment(catalogSlug, accessToken, receivable.id, {
+                          amount: Number(amount),
+                          method: "DIGITAL_WALLET",
+                          reference,
+                          file,
+                        });
+                        await onRefresh();
+                        setReportingId(null);
+                        setAmount("");
+                        setReference("");
+                        setFile(null);
+                        onNotice("Comprobante enviado. La deuda cambiará cuando la tienda lo confirme.");
+                      } catch (error) {
+                        onNotice(getErrorMessage(error, "No pudimos enviar el comprobante."));
+                      } finally {
+                        setSubmitting(false);
+                      }
+                    }}
+                  >
+                    <label>¿Cuánto abonaste?<input max={receivable.balance} min="1" required type="number" value={amount} onChange={(e) => setAmount(e.target.value)} /></label>
+                    <label>Referencia (opcional)<input value={reference} onChange={(e) => setReference(e.target.value)} /></label>
+                    <label className={styles.proofInput}><Upload /> {file?.name ?? "Seleccionar comprobante"}<input accept="image/png,image/jpeg,image/webp" required type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} /></label>
+                    <div><button type="button" onClick={() => setReportingId(null)}>Cancelar</button><button disabled={submitting} type="submit">{submitting ? "Enviando…" : "Enviar para revisión"}</button></div>
+                  </form>
+                ) : (
+                  <button className={styles.reportButton} type="button" onClick={() => { setReportingId(receivable.id); setAmount(String(receivable.balance)); }}>
+                    <Upload /> Reportar abono por Nequi / Daviplata
+                  </button>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
