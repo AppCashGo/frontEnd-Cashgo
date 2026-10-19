@@ -94,7 +94,7 @@ type PaymentReceiptState = {
   amount: number
 }
 
-type CustomerDetailTab = 'summary' | 'receivables' | 'history'
+type CustomerDetailTab = 'summary' | 'receivables' | 'payments' | 'history'
 
 type PaymentReceiptBrand = {
   businessName: string
@@ -384,6 +384,37 @@ export function RetailCustomerDrawer({
       ),
     [customer?.purchaseHistory],
   )
+  const paymentHistory = useMemo(() => {
+    const entries = (customer?.receivables ?? []).flatMap((receivable) => {
+      let accumulatedPayments = 0
+
+      return [...receivable.payments]
+        .sort(
+          (first, second) =>
+            new Date(first.createdAt).getTime() -
+            new Date(second.createdAt).getTime(),
+        )
+        .map((payment) => {
+          accumulatedPayments += payment.amount
+
+          return {
+            payment,
+            receivable,
+            purchase: purchasesBySaleId.get(receivable.saleId) ?? null,
+            balanceAfterPayment: Math.max(
+              receivable.amount - accumulatedPayments,
+              0,
+            ),
+          }
+        })
+    })
+
+    return entries.sort(
+      (first, second) =>
+        new Date(second.payment.createdAt).getTime() -
+        new Date(first.payment.createdAt).getTime(),
+    )
+  }, [customer?.receivables, purchasesBySaleId])
   const isOldestPayment = paymentForm.receivableId === OLDEST_RECEIVABLE_OPTION
   const selectedReceivable =
     pendingReceivables.find(
@@ -1396,6 +1427,18 @@ export function RetailCustomerDrawer({
             <span>{pendingReceivables.length}</span>
           </button>
           <button
+            aria-selected={detailTab === 'payments'}
+            className={
+              detailTab === 'payments' ? styles.detailTabActive : undefined
+            }
+            role="tab"
+            type="button"
+            onClick={() => setDetailTab('payments')}
+          >
+            Abonos
+            <span>{paymentHistory.length}</span>
+          </button>
+          <button
             aria-selected={detailTab === 'history'}
             className={
               detailTab === 'history' ? styles.detailTabActive : undefined
@@ -1487,6 +1530,9 @@ export function RetailCustomerDrawer({
                 </button>
                 <button type="button" onClick={() => setDetailTab('history')}>
                   Ver historial
+                </button>
+                <button type="button" onClick={() => setDetailTab('payments')}>
+                  Ver abonos
                 </button>
               </div>
             </section>
@@ -1951,6 +1997,191 @@ export function RetailCustomerDrawer({
             </form>
           ) : null}
         </section>
+        ) : null}
+
+        {detailTab === 'payments' ? (
+          <section className={styles.section}>
+            <div className={styles.sectionHeader}>
+              <div>
+                <h4>Historial de abonos</h4>
+                <p className={styles.sectionDescription}>
+                  Todos los pagos registrados para este cliente, del más
+                  reciente al más antiguo.
+                </p>
+              </div>
+              <div className={styles.sectionHeaderActions}>
+                <span>
+                  {paymentHistory.length}{' '}
+                  {paymentHistory.length === 1 ? 'abono' : 'abonos'} ·{' '}
+                  {formatCurrency(totalPaymentsRecorded)}
+                </span>
+              </div>
+            </div>
+
+            {paymentHistory.length > 0 ? (
+              <div className={styles.customerPaymentList}>
+                {paymentHistory.map(
+                  ({
+                    payment,
+                    receivable,
+                    purchase,
+                    balanceAfterPayment,
+                  }) => {
+                    const isReceiptBusy =
+                      activeDocumentId?.startsWith(
+                        `saved-payment:${payment.id}:`,
+                      ) ?? false
+                    const methodLabel =
+                      COLLECTED_PAYMENT_METHOD_OPTIONS.find(
+                        (option) => option.value === payment.method,
+                      )?.label ?? payment.method
+
+                    return (
+                      <article
+                        className={styles.customerPaymentCard}
+                        key={payment.id}
+                      >
+                        <div className={styles.customerPaymentHeader}>
+                          <div>
+                            <span>Abono a {receivable.saleNumber}</span>
+                            <strong>{formatCurrency(payment.amount)}</strong>
+                          </div>
+                          <span className={styles.paymentStatusPill}>
+                            Registrado
+                          </span>
+                        </div>
+
+                        <div className={styles.customerPaymentDetails}>
+                          <div>
+                            <span>Fecha y hora</span>
+                            <strong>{formatDateTime(payment.createdAt)}</strong>
+                          </div>
+                          <div>
+                            <span>Medio de pago</span>
+                            <strong>{methodLabel}</strong>
+                          </div>
+                          <div>
+                            <span>Total de la factura</span>
+                            <strong>{formatCurrency(receivable.amount)}</strong>
+                          </div>
+                          <div>
+                            <span>Saldo después del abono</span>
+                            <strong>
+                              {formatCurrency(balanceAfterPayment)}
+                            </strong>
+                          </div>
+                        </div>
+
+                        {payment.reference || payment.notes ? (
+                          <div className={styles.customerPaymentNotes}>
+                            {payment.reference ? (
+                              <p>
+                                <strong>Referencia:</strong>{' '}
+                                {payment.reference}
+                              </p>
+                            ) : null}
+                            {payment.notes ? (
+                              <p>
+                                <strong>Nota:</strong> {payment.notes}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
+
+                        {purchase && purchase.products.length > 0 ? (
+                          <details className={styles.receivableProducts}>
+                            <summary>
+                              <span className={styles.receivableProductsTitle}>
+                                <ReceiptText aria-hidden="true" />
+                                Productos de la factura
+                              </span>
+                              <span>
+                                {purchase.itemCount}{' '}
+                                {purchase.itemCount === 1
+                                  ? 'producto'
+                                  : 'productos'}
+                              </span>
+                              <ChevronDown aria-hidden="true" />
+                            </summary>
+                            <div className={styles.receivableProductList}>
+                              {purchase.products.map((product) => (
+                                <div
+                                  className={styles.receivableProduct}
+                                  key={`${payment.id}:${product.productId}`}
+                                >
+                                  <div>
+                                    <strong>
+                                      {product.quantity} × {product.name}
+                                    </strong>
+                                    <span>
+                                      {formatCurrency(product.unitPrice)} c/u
+                                      {product.sku
+                                        ? ` · SKU ${product.sku}`
+                                        : ''}
+                                    </span>
+                                  </div>
+                                  <strong>
+                                    {formatCurrency(product.subtotal)}
+                                  </strong>
+                                </div>
+                              ))}
+                            </div>
+                          </details>
+                        ) : null}
+
+                        <div className={styles.customerPaymentActions}>
+                          <button
+                            disabled={isReceiptBusy}
+                            type="button"
+                            onClick={() =>
+                              void handleSavedPaymentReceipt(
+                                payment.id,
+                                receivable.saleNumber,
+                                'share',
+                              )
+                            }
+                          >
+                            <Share2 aria-hidden="true" /> Compartir
+                          </button>
+                          <button
+                            disabled={isReceiptBusy}
+                            type="button"
+                            onClick={() =>
+                              void handleSavedPaymentReceipt(
+                                payment.id,
+                                receivable.saleNumber,
+                                'print',
+                              )
+                            }
+                          >
+                            <Printer aria-hidden="true" /> Imprimir
+                          </button>
+                          <button
+                            disabled={isReceiptBusy}
+                            type="button"
+                            onClick={() =>
+                              void handleSavedPaymentReceipt(
+                                payment.id,
+                                receivable.saleNumber,
+                                'download',
+                              )
+                            }
+                          >
+                            <Download aria-hidden="true" />
+                            {isReceiptBusy ? 'Preparando…' : 'Descargar PDF'}
+                          </button>
+                        </div>
+                      </article>
+                    )
+                  },
+                )}
+              </div>
+            ) : (
+              <p className={styles.emptyText}>
+                Este cliente todavía no tiene abonos registrados.
+              </p>
+            )}
+          </section>
         ) : null}
 
         {detailTab === 'history' ? (

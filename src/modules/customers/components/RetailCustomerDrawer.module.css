@@ -130,7 +130,7 @@
   top: -1px;
   z-index: 3;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 0.35rem;
   border: 1px solid #d7e1ee;
   border-radius: 0.95rem;
@@ -946,6 +946,129 @@
   white-space: nowrap;
 }
 
+.customerPaymentList {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.customerPaymentCard {
+  display: grid;
+  gap: 0.85rem;
+  border: 1px solid #d7e1ee;
+  border-radius: 1rem;
+  background: #f8fafc;
+  padding: 1rem;
+}
+
+.customerPaymentHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.customerPaymentHeader > div > span,
+.customerPaymentDetails span {
+  display: block;
+  color: #66758c;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.customerPaymentHeader > div > strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #1f2a37;
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+
+.paymentStatusPill {
+  border-radius: 999px;
+  background: #d9f8e8;
+  color: #17744b;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.74rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.customerPaymentDetails {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.customerPaymentDetails > div {
+  border-radius: 0.75rem;
+  background: #ffffff;
+  padding: 0.7rem 0.75rem;
+}
+
+.customerPaymentDetails strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: #1f2a37;
+  font-size: 0.84rem;
+}
+
+.customerPaymentNotes {
+  border-left: 3px solid #9db8e0;
+  border-radius: 0.25rem 0.7rem 0.7rem 0.25rem;
+  background: #eef4ff;
+  padding: 0.65rem 0.75rem;
+}
+
+.customerPaymentNotes p {
+  margin: 0;
+  color: #526175;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.customerPaymentNotes p + p {
+  margin-top: 0.25rem;
+}
+
+.customerPaymentActions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.customerPaymentActions button {
+  min-height: 2.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  border: 1px solid #bfd0ed;
+  border-radius: 0.7rem;
+  background: #ffffff;
+  color: #2457b8;
+  padding: 0.5rem 0.65rem;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.customerPaymentActions button:first-child {
+  border-color: #b7e4ca;
+  background: #effbf4;
+  color: #168653;
+}
+
+.customerPaymentActions button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.customerPaymentActions svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
 .paymentAllocationNotice {
   margin: -0.25rem 0 0;
   border: 1px solid #bfdbfe;
@@ -1233,6 +1356,7 @@
 
   .detailTabs {
     position: static;
+    grid-template-columns: repeat(4, minmax(7rem, 1fr));
     overflow-x: auto;
   }
 
@@ -1278,6 +1402,11 @@
   .paymentReceiptActions button {
     flex: 1;
     justify-content: center;
+  }
+
+  .customerPaymentDetails,
+  .customerPaymentActions {
+    grid-template-columns: 1fr;
   }
 
   .receivableProduct {
