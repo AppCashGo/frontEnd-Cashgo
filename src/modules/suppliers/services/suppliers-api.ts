@@ -11,6 +11,7 @@ import type {
   SupplierPurchaseCancellationInput,
   SupplierPurchasePaymentInput,
   SupplierPurchaseReturnInput,
+  SupplierPurchaseUpdateInput,
   SupplierSupplyHistoryItem,
   SupplierSummary,
 } from '@/modules/suppliers/types/supplier'
@@ -210,6 +211,19 @@ export async function cancelSupplierPurchase(
     SupplierDetailApiRecord,
     SupplierPurchaseCancellationInput
   >(`/suppliers/${supplierId}/purchases/${purchaseId}/cancel`, input)
+
+  return normalizeSupplierDetailRecord(supplier)
+}
+
+export async function updateSupplierPurchase(
+  supplierId: string,
+  purchaseId: string,
+  input: SupplierPurchaseUpdateInput,
+) {
+  const supplier = await patchJson<
+    SupplierDetailApiRecord,
+    SupplierPurchaseUpdateInput
+  >(`/suppliers/${supplierId}/purchases/${purchaseId}`, input)
 
   return normalizeSupplierDetailRecord(supplier)
 }

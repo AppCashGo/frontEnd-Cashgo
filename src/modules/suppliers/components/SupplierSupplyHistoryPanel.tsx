@@ -15,6 +15,7 @@ import {
 import type {
   SupplierPurchasePaymentInput,
   SupplierPurchaseReturnInput,
+  SupplierPurchaseUpdateInput,
   SupplierSupplyHistoryItem,
 } from '@/modules/suppliers/types/supplier'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
@@ -30,6 +31,7 @@ type SupplierSupplyHistoryPanelProps = {
   isLoading: boolean
   payingPurchaseId?: string | null
   cancellingPurchaseId?: string | null
+  editingPurchaseId?: string | null
   returningPurchaseId?: string | null
   paymentError?: string | null
   onRegisterPayment?: (
@@ -38,6 +40,10 @@ type SupplierSupplyHistoryPanelProps = {
   ) => void
   onDownloadReceipt?: (purchaseId: string) => void
   onCancelPurchase?: (purchaseId: string, reason: string) => void
+  onUpdatePurchase?: (
+    purchaseId: string,
+    input: SupplierPurchaseUpdateInput,
+  ) => Promise<void>
   onCreateReturn?: (
     purchaseId: string,
     input: SupplierPurchaseReturnInput,
@@ -52,6 +58,15 @@ type PaymentDraft = {
   fundSource: PaymentFundSource
   reference: string
   paymentDate: string
+}
+
+type PurchaseEditDraft = {
+  purchaseId: string
+  reference: string
+  purchaseDate: string
+  dueDate: string
+  notes: string
+  items: Record<string, { quantity: string; unitCost: string }>
 }
 
 const englishPaymentMethodLabels = {
@@ -80,11 +95,13 @@ export function SupplierSupplyHistoryPanel({
   isLoading,
   payingPurchaseId = null,
   cancellingPurchaseId = null,
+  editingPurchaseId = null,
   returningPurchaseId = null,
   paymentError = null,
   onRegisterPayment,
   onDownloadReceipt,
   onCancelPurchase,
+  onUpdatePurchase,
   onCreateReturn,
   onDownloadCreditNote,
 }: SupplierSupplyHistoryPanelProps) {
@@ -104,6 +121,7 @@ export function SupplierSupplyHistoryPanel({
     refundMethod: ExpensePaymentMethod
     returnDate: string
   } | null>(null)
+  const [editDraft, setEditDraft] = useState<PurchaseEditDraft | null>(null)
 
   function getPaymentMethodLabel(method: ExpensePaymentMethod) {
     return isEnglish
@@ -112,6 +130,7 @@ export function SupplierSupplyHistoryPanel({
   }
 
   function startPayment(purchase: SupplierSupplyHistoryItem) {
+    setEditDraft(null)
     setPaymentDraft({
       purchaseId: purchase.purchaseId,
       amount: String(purchase.balance),
@@ -119,6 +138,27 @@ export function SupplierSupplyHistoryPanel({
       fundSource: 'REGISTER',
       reference: '',
       paymentDate: toExpenseDateInputValue(new Date()),
+    })
+  }
+
+  function startEditing(purchase: SupplierSupplyHistoryItem) {
+    setPaymentDraft(null)
+    setCancellationDraft(null)
+    setReturnDraft(null)
+    setEditDraft({
+      purchaseId: purchase.purchaseId,
+      reference: purchase.reference ?? '',
+      purchaseDate: toExpenseDateInputValue(new Date(purchase.purchaseDate)),
+      dueDate: purchase.dueDate
+        ? toExpenseDateInputValue(new Date(purchase.dueDate))
+        : '',
+      notes: purchase.notes ?? '',
+      items: Object.fromEntries(
+        purchase.items.map((item) => [
+          item.id,
+          { quantity: String(item.quantity), unitCost: String(item.unitCost) },
+        ]),
+      ),
     })
   }
 
@@ -222,6 +262,30 @@ export function SupplierSupplyHistoryPanel({
                   )
                 : 0
             const refundRequired = Math.max(0, returnAmount - purchase.balance)
+            const isEditing = editDraft?.purchaseId === purchase.purchaseId
+            const editedTotal = isEditing
+              ? purchase.items.reduce((total, item) => {
+                  const editedItem = editDraft.items[item.id]
+                  return (
+                    total +
+                    Number(editedItem?.quantity ?? 0) *
+                      Number(editedItem?.unitCost ?? 0)
+                  )
+                }, 0)
+              : purchase.total
+            const hasInvalidEditedItem = isEditing
+              ? purchase.items.some((item) => {
+                  const editedItem = editDraft.items[item.id]
+                  const quantity = Number(editedItem?.quantity ?? 0)
+                  const unitCost = Number(editedItem?.unitCost ?? -1)
+                  return (
+                    !Number.isInteger(quantity) ||
+                    quantity < 1 ||
+                    !Number.isFinite(unitCost) ||
+                    unitCost < 0
+                  )
+                })
+              : false
 
             return (
               <article key={purchase.purchaseId} className={styles.historyItem}>
@@ -423,6 +487,16 @@ export function SupplierSupplyHistoryPanel({
                     </button>
                   ) : null}
                   {purchase.status !== 'CANCELLED' &&
+                  purchase.returns.length === 0 &&
+                  onUpdatePurchase ? (
+                    <button
+                      type="button"
+                      onClick={() => startEditing(purchase)}
+                    >
+                      {isEnglish ? 'Edit purchase' : 'Editar compra'}
+                    </button>
+                  ) : null}
+                  {purchase.status !== 'CANCELLED' &&
                   purchase.items.some((item) => item.availableToReturn > 0) &&
                   onCreateReturn ? (
                     <button
@@ -430,6 +504,7 @@ export function SupplierSupplyHistoryPanel({
                       onClick={() => {
                         setPaymentDraft(null)
                         setCancellationDraft(null)
+                        setEditDraft(null)
                         setReturnDraft({
                           purchaseId: purchase.purchaseId,
                           quantities: {},
@@ -451,6 +526,7 @@ export function SupplierSupplyHistoryPanel({
                       type="button"
                       onClick={() => {
                         setPaymentDraft(null)
+                        setEditDraft(null)
                         setCancellationDraft({
                           purchaseId: purchase.purchaseId,
                           reason: '',
@@ -461,6 +537,190 @@ export function SupplierSupplyHistoryPanel({
                     </button>
                   ) : null}
                 </div>
+
+                {isEditing && editDraft ? (
+                  <div className={styles.editPurchaseForm}>
+                    <div className={styles.editPurchaseHeader}>
+                      <div>
+                        <strong>
+                          {isEnglish ? 'Correct purchase' : 'Corregir compra'}
+                        </strong>
+                        <p>
+                          {isEnglish
+                            ? 'Changes update inventory, product costs and the original payment.'
+                            : 'Los cambios actualizarán inventario, costos y el pago original.'}
+                        </p>
+                      </div>
+                      <strong>{formatCurrency(editedTotal)}</strong>
+                    </div>
+
+                    <div className={styles.editPurchaseItems}>
+                      {purchase.items.map((item) => (
+                        <div key={item.id}>
+                          <span>
+                            <strong>{item.productName}</strong>
+                            <small>{item.sku ?? 'Sin SKU'}</small>
+                          </span>
+                          <label>
+                            <span>{isEnglish ? 'Quantity' : 'Cantidad'}</span>
+                            <input
+                              min="1"
+                              step="1"
+                              type="number"
+                              value={editDraft.items[item.id]?.quantity ?? ''}
+                              onChange={(event) =>
+                                setEditDraft({
+                                  ...editDraft,
+                                  items: {
+                                    ...editDraft.items,
+                                    [item.id]: {
+                                      ...editDraft.items[item.id],
+                                      quantity: event.target.value,
+                                    },
+                                  },
+                                })
+                              }
+                            />
+                          </label>
+                          <label>
+                            <span>{isEnglish ? 'Unit cost' : 'Costo unitario'}</span>
+                            <input
+                              min="0"
+                              step="0.01"
+                              type="number"
+                              value={editDraft.items[item.id]?.unitCost ?? ''}
+                              onChange={(event) =>
+                                setEditDraft({
+                                  ...editDraft,
+                                  items: {
+                                    ...editDraft.items,
+                                    [item.id]: {
+                                      ...editDraft.items[item.id],
+                                      unitCost: event.target.value,
+                                    },
+                                  },
+                                })
+                              }
+                            />
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+
+                    <label>
+                      <span>{isEnglish ? 'Reference' : 'Referencia'}</span>
+                      <input
+                        maxLength={120}
+                        value={editDraft.reference}
+                        onChange={(event) =>
+                          setEditDraft({
+                            ...editDraft,
+                            reference: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>{isEnglish ? 'Purchase date' : 'Fecha de compra'}</span>
+                      <input
+                        type="date"
+                        value={editDraft.purchaseDate}
+                        onChange={(event) =>
+                          setEditDraft({
+                            ...editDraft,
+                            purchaseDate: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>{isEnglish ? 'Due date' : 'Fecha de vencimiento'}</span>
+                      <input
+                        min={editDraft.purchaseDate}
+                        type="date"
+                        value={editDraft.dueDate}
+                        onChange={(event) =>
+                          setEditDraft({
+                            ...editDraft,
+                            dueDate: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                    <label className={styles.editPurchaseNotes}>
+                      <span>{isEnglish ? 'Notes' : 'Notas'}</span>
+                      <textarea
+                        maxLength={500}
+                        rows={3}
+                        value={editDraft.notes}
+                        onChange={(event) =>
+                          setEditDraft({
+                            ...editDraft,
+                            notes: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+
+                    <div className={styles.editPurchaseNotice}>
+                      {isEnglish
+                        ? 'For safety, products cannot be added or removed here. You can correct the quantity and cost of every original line.'
+                        : 'Por seguridad no se agregan ni eliminan productos aquí. Puedes corregir la cantidad y el costo de cada producto original.'}
+                    </div>
+                    <div className={styles.paymentFormActions}>
+                      <button type="button" onClick={() => setEditDraft(null)}>
+                        {isEnglish ? 'Cancel' : 'Cancelar'}
+                      </button>
+                      <button
+                        disabled={
+                          editingPurchaseId !== null ||
+                          hasInvalidEditedItem ||
+                          editedTotal < 0 ||
+                          !editDraft.purchaseDate ||
+                          Boolean(
+                            editDraft.dueDate &&
+                              editDraft.dueDate < editDraft.purchaseDate,
+                          )
+                        }
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await onUpdatePurchase?.(purchase.purchaseId, {
+                              items: purchase.items.map((item) => ({
+                                purchaseItemId: Number(item.id),
+                                quantity: Number(
+                                  editDraft.items[item.id]?.quantity,
+                                ),
+                                unitCost: Number(
+                                  editDraft.items[item.id]?.unitCost,
+                                ),
+                              })),
+                              reference: editDraft.reference.trim() || null,
+                              purchaseDate: toExpenseRequestDate(
+                                editDraft.purchaseDate,
+                              ),
+                              dueDate: editDraft.dueDate
+                                ? toExpenseRequestDate(editDraft.dueDate)
+                                : null,
+                              notes: editDraft.notes.trim() || null,
+                            })
+                            setEditDraft(null)
+                          } catch {
+                            // The page exposes the API error above the purchase list.
+                          }
+                        }}
+                      >
+                        {editingPurchaseId === purchase.purchaseId
+                          ? isEnglish
+                            ? 'Saving...'
+                            : 'Guardando...'
+                          : isEnglish
+                            ? 'Save correction'
+                            : 'Guardar corrección'}
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
 
                 {returnDraft?.purchaseId === purchase.purchaseId ? (
                   <div className={styles.returnForm}>

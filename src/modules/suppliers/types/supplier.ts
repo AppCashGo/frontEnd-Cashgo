@@ -96,6 +96,18 @@ export type SupplierPurchaseCancellationInput = {
   reason: string
 }
 
+export type SupplierPurchaseUpdateInput = {
+  items: Array<{
+    purchaseItemId: number
+    quantity: number
+    unitCost: number
+  }>
+  reference?: string | null
+  purchaseDate: string
+  dueDate?: string | null
+  notes?: string | null
+}
+
 export type SupplierPurchaseReturnInput = {
   items: Array<{
     purchaseItemId: number

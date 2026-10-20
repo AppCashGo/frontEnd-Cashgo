@@ -21,6 +21,7 @@ import {
   useSupplierDetailQuery,
   useSuppliersQuery,
   useUpdateSupplierMutation,
+  useUpdateSupplierPurchaseMutation,
   useUploadSupplierAvatarMutation,
 } from '@/modules/suppliers/hooks/use-suppliers-query'
 import {
@@ -31,6 +32,7 @@ import type {
   SupplierMutationInput,
   SupplierPurchasePaymentInput,
   SupplierPurchaseReturnInput,
+  SupplierPurchaseUpdateInput,
 } from '@/modules/suppliers/types/supplier'
 import { RetailPremiumBanner } from '@/shared/components/retail/RetailPremiumBanner'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
@@ -69,6 +71,7 @@ export function SuppliersPage() {
   const uploadSupplierAvatarMutation = useUploadSupplierAvatarMutation()
   const registerPurchasePaymentMutation = useRegisterSupplierPurchasePaymentMutation()
   const cancelPurchaseMutation = useCancelSupplierPurchaseMutation()
+  const updatePurchaseMutation = useUpdateSupplierPurchaseMutation()
   const createPurchaseReturnMutation = useCreateSupplierPurchaseReturnMutation()
   const supplierRecords = suppliersQuery.data
   const suppliers = supplierRecords ?? []
@@ -266,6 +269,29 @@ export function SuppliersPage() {
       setPurchaseActionError(
         getErrorMessage(error, 'No pudimos anular la compra.'),
       )
+    }
+  }
+
+  async function handleUpdatePurchase(
+    purchaseId: string,
+    input: SupplierPurchaseUpdateInput,
+  ) {
+    if (!selectedSupplierId) {
+      return
+    }
+
+    setPurchaseActionError(null)
+    try {
+      await updatePurchaseMutation.mutateAsync({
+        supplierId: selectedSupplierId,
+        purchaseId,
+        input,
+      })
+    } catch (error) {
+      setPurchaseActionError(
+        getErrorMessage(error, 'No pudimos corregir la compra.'),
+      )
+      throw error
     }
   }
 
@@ -618,12 +644,14 @@ export function SuppliersPage() {
             <SupplierSupplyHistoryPanel
               supplierName={selectedSupplier?.name ?? selectedSupplierSummary?.name ?? null}
               cancellingPurchaseId={cancelPurchaseMutation.isPending ? cancelPurchaseMutation.variables?.purchaseId ?? null : null}
+              editingPurchaseId={updatePurchaseMutation.isPending ? updatePurchaseMutation.variables?.purchaseId ?? null : null}
               isLoading={supplierDetailQuery.isLoading}
               payingPurchaseId={registerPurchasePaymentMutation.isPending ? registerPurchasePaymentMutation.variables?.purchaseId ?? null : null}
               returningPurchaseId={createPurchaseReturnMutation.isPending ? createPurchaseReturnMutation.variables?.purchaseId ?? null : null}
               paymentError={purchaseActionError}
               purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
               onCancelPurchase={(purchaseId, reason) => void handleCancelPurchase(purchaseId, reason)}
+              onUpdatePurchase={handleUpdatePurchase}
               onDownloadReceipt={(purchaseId) => void handleDownloadPurchaseReceipt(purchaseId)}
               onDownloadCreditNote={(purchaseId, returnId) => void handleDownloadCreditNote(purchaseId, returnId)}
               onCreateReturn={(purchaseId, input) => void handleCreatePurchaseReturn(purchaseId, input)}
@@ -764,6 +792,11 @@ export function SuppliersPage() {
                 ? cancelPurchaseMutation.variables?.purchaseId ?? null
                 : null
             }
+            editingPurchaseId={
+              updatePurchaseMutation.isPending
+                ? updatePurchaseMutation.variables?.purchaseId ?? null
+                : null
+            }
             payingPurchaseId={
               registerPurchasePaymentMutation.isPending
                 ? registerPurchasePaymentMutation.variables?.purchaseId ?? null
@@ -779,6 +812,7 @@ export function SuppliersPage() {
             onCancelPurchase={(purchaseId, reason) => {
               void handleCancelPurchase(purchaseId, reason)
             }}
+            onUpdatePurchase={handleUpdatePurchase}
             onDownloadReceipt={(purchaseId) => {
               void handleDownloadPurchaseReceipt(purchaseId)
             }}

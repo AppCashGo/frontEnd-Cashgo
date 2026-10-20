@@ -455,6 +455,95 @@
   background: #f5f9ff;
 }
 
+.editPurchaseForm {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  border: 1px solid #93c5fd;
+  border-radius: 0.85rem;
+  padding: 0.9rem;
+  background: #f5f9ff;
+}
+
+.editPurchaseHeader,
+.editPurchaseItems,
+.editPurchaseNotes,
+.editPurchaseNotice,
+.editPurchaseForm .paymentFormActions {
+  grid-column: 1 / -1;
+}
+
+.editPurchaseHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.editPurchaseHeader p {
+  margin: 0.25rem 0 0;
+  color: #475467;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.editPurchaseItems {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.editPurchaseItems > div {
+  display: grid;
+  grid-template-columns: minmax(10rem, 1fr) 7rem 9rem;
+  align-items: end;
+  gap: 0.65rem;
+  padding: 0.7rem;
+  border: 1px solid #dbe7f7;
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.editPurchaseItems > div > span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.editPurchaseItems small {
+  color: #667085;
+}
+
+.editPurchaseForm label {
+  display: grid;
+  gap: 0.35rem;
+  color: #344054;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.editPurchaseForm input,
+.editPurchaseForm textarea {
+  width: 100%;
+  min-height: 2.55rem;
+  border: 1px solid #b9cbe4;
+  border-radius: 0.6rem;
+  padding: 0.55rem 0.65rem;
+  background: #fff;
+  color: #101828;
+  font: inherit;
+}
+
+.editPurchaseForm textarea {
+  resize: vertical;
+}
+
+.editPurchaseNotice {
+  border-radius: 0.65rem;
+  padding: 0.7rem 0.8rem;
+  background: #eaf2ff;
+  color: #244b7c;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .returnFormHeader,
 .returnItems,
 .returnReason,
@@ -536,8 +625,17 @@
 
   .balanceGrid,
   .paymentForm,
-  .returnForm {
+  .returnForm,
+  .editPurchaseForm {
     grid-template-columns: 1fr;
+  }
+
+  .editPurchaseItems > div {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .editPurchaseItems > div > span {
+    grid-column: 1 / -1;
   }
 
   .creditNotesList > div {

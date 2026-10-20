@@ -8,6 +8,7 @@ import {
   markSupplierPurchaseAsPaid,
   registerSupplierPurchasePayment,
   updateSupplier,
+  updateSupplierPurchase,
   uploadSupplierAvatar,
 } from '@/modules/suppliers/services/suppliers-api'
 import type {
@@ -16,6 +17,7 @@ import type {
   SupplierPurchaseCancellationInput,
   SupplierPurchasePaymentInput,
   SupplierPurchaseReturnInput,
+  SupplierPurchaseUpdateInput,
   SupplierSummary,
 } from '@/modules/suppliers/types/supplier'
 
@@ -167,6 +169,34 @@ export function useCancelSupplierPurchaseMutation() {
       purchaseId: string
       input: SupplierPurchaseCancellationInput
     }) => cancelSupplierPurchase(supplierId, purchaseId, input),
+    onSuccess: (supplier) => {
+      queryClient.setQueryData(
+        [...suppliersQueryKey, 'detail', supplier.id],
+        supplier,
+      )
+      void queryClient.invalidateQueries({ queryKey: suppliersQueryKey })
+      void queryClient.invalidateQueries({ queryKey: ['inventory'] })
+      void queryClient.invalidateQueries({ queryKey: ['products'] })
+      void queryClient.invalidateQueries({ queryKey: ['reports'] })
+      void queryClient.invalidateQueries({ queryKey: ['cash-register'] })
+      void queryClient.invalidateQueries({ queryKey: ['movements'] })
+    },
+  })
+}
+
+export function useUpdateSupplierPurchaseMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      supplierId,
+      purchaseId,
+      input,
+    }: {
+      supplierId: string
+      purchaseId: string
+      input: SupplierPurchaseUpdateInput
+    }) => updateSupplierPurchase(supplierId, purchaseId, input),
     onSuccess: (supplier) => {
       queryClient.setQueryData(
         [...suppliersQueryKey, 'detail', supplier.id],
