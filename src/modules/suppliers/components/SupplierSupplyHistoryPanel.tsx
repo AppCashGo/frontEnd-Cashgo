@@ -67,6 +67,7 @@ type PurchaseEditDraft = {
   dueDate: string
   notes: string
   items: Record<string, { quantity: string; unitCost: string }>
+  paymentMethod: ExpensePaymentMethod
 }
 
 const englishPaymentMethodLabels = {
@@ -153,6 +154,7 @@ export function SupplierSupplyHistoryPanel({
         ? toExpenseDateInputValue(new Date(purchase.dueDate))
         : '',
       notes: purchase.notes ?? '',
+      paymentMethod: purchase.paymentMethod,
       items: Object.fromEntries(
         purchase.items.map((item) => [
           item.id,
@@ -621,6 +623,27 @@ export function SupplierSupplyHistoryPanel({
                       />
                     </label>
                     <label>
+                      <span>
+                        {isEnglish ? 'Payment method' : 'Método de pago'}
+                      </span>
+                      <SearchableSelect
+                        value={editDraft.paymentMethod}
+                        onChange={(event) =>
+                          setEditDraft({
+                            ...editDraft,
+                            paymentMethod: event.target
+                              .value as ExpensePaymentMethod,
+                          })
+                        }
+                      >
+                        {paymentMethods.map((method) => (
+                          <option key={method} value={method}>
+                            {getPaymentMethodLabel(method)}
+                          </option>
+                        ))}
+                      </SearchableSelect>
+                    </label>
+                    <label>
                       <span>{isEnglish ? 'Purchase date' : 'Fecha de compra'}</span>
                       <input
                         type="date"
@@ -695,6 +718,7 @@ export function SupplierSupplyHistoryPanel({
                                   editDraft.items[item.id]?.unitCost,
                                 ),
                               })),
+                              paymentMethod: editDraft.paymentMethod,
                               reference: editDraft.reference.trim() || null,
                               purchaseDate: toExpenseRequestDate(
                                 editDraft.purchaseDate,

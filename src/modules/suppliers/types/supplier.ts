@@ -102,6 +102,7 @@ export type SupplierPurchaseUpdateInput = {
     quantity: number
     unitCost: number
   }>
+  paymentMethod: ExpensePaymentMethod
   reference?: string | null
   purchaseDate: string
   dueDate?: string | null

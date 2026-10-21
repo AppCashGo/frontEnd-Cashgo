@@ -520,6 +520,7 @@
 }
 
 .editPurchaseForm input,
+.editPurchaseForm select,
 .editPurchaseForm textarea {
   width: 100%;
   min-height: 2.55rem;
