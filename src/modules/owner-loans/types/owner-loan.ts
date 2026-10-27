@@ -1,9 +1,13 @@
-import type { CashRegisterPaymentMethod } from '@/modules/cash-register/types/cash-register'
+import type {
+  CashRegisterPaymentMethod,
+  PaymentFundSource,
+} from '@/modules/cash-register/types/cash-register'
 
 export type OwnerLoanPayment = {
   id: string
   amount: number
   method: CashRegisterPaymentMethod
+  fundSource: PaymentFundSource
   paymentDate: string
   notes: string | null
 }
@@ -31,6 +35,7 @@ export type CreateOwnerLoanInput = {
 export type CreateOwnerLoanPaymentInput = {
   amount: number
   method: CashRegisterPaymentMethod
+  fundSource?: PaymentFundSource
   paymentDate?: string
   notes?: string
 }

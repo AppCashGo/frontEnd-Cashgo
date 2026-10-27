@@ -1,8 +1,10 @@
-import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import { HandCoins, Plus, WalletCards } from 'lucide-react'
 import type { CashRegisterPaymentMethod } from '@/modules/cash-register/types/cash-register'
+import type { PaymentFundSource } from '@/modules/cash-register/types/cash-register'
+import { useReserveSummaryQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { formatCashRegisterCurrency } from '@/modules/cash-register/utils/format-cash-register'
 import type {
   CreateOwnerLoanInput,
@@ -48,7 +50,14 @@ export function OwnerLoansPanel({
   const [paymentAmount, setPaymentAmount] = useState('')
   const [paymentMethod, setPaymentMethod] =
     useState<CashRegisterPaymentMethod>('CASH')
+  const [paymentFundSource, setPaymentFundSource] =
+    useState<PaymentFundSource>('REGISTER')
   const [error, setError] = useState<string | null>(null)
+  const reserveSummaryQuery = useReserveSummaryQuery()
+  const selectedReserveBalance =
+    reserveSummaryQuery.data?.balances.find(
+      (balance) => balance.method === paymentMethod,
+    )?.amount ?? 0
 
   async function handleCreate(event: FormEvent) {
     event.preventDefault()
@@ -80,6 +89,7 @@ export function OwnerLoansPanel({
       await onPayment(loan.id, {
         amount: Number(paymentAmount),
         method: paymentMethod,
+        fundSource: paymentFundSource,
         paymentDate: new Date().toISOString(),
       })
       setPaymentAmount('')
@@ -99,7 +109,9 @@ export function OwnerLoansPanel({
         <div>
           <span className={styles.eyebrow}>Financiación del negocio</span>
           <h3>Préstamos del propietario</h3>
-          <p>Registra el dinero prestado y controla cuánto falta por devolver.</p>
+          <p>
+            Registra el dinero prestado y controla cuánto falta por devolver.
+          </p>
         </div>
         <button type="button" onClick={() => setShowCreate((value) => !value)}>
           <Plus /> Registrar préstamo
@@ -223,6 +235,19 @@ export function OwnerLoansPanel({
                     onChange={(event) => setPaymentAmount(event.target.value)}
                   />
                   <SearchableSelect
+                    aria-label="Origen del dinero"
+                    value={paymentFundSource}
+                    onChange={(event) =>
+                      setPaymentFundSource(
+                        event.target.value as PaymentFundSource,
+                      )
+                    }
+                  >
+                    <option value="REGISTER">Caja abierta del turno</option>
+                    <option value="RESERVE">Reservas del negocio</option>
+                  </SearchableSelect>
+                  <SearchableSelect
+                    aria-label="Medio de pago"
                     value={paymentMethod}
                     onChange={(event) =>
                       setPaymentMethod(
@@ -236,9 +261,25 @@ export function OwnerLoansPanel({
                       </option>
                     ))}
                   </SearchableSelect>
-                  <button disabled={isSubmitting} type="submit">
+                  <button
+                    disabled={
+                      isSubmitting ||
+                      (paymentFundSource === 'RESERVE' &&
+                        (Number(paymentAmount) <= 0 ||
+                          Number(paymentAmount) > selectedReserveBalance))
+                    }
+                    type="submit"
+                  >
                     Confirmar abono
                   </button>
+                  {paymentFundSource === 'RESERVE' ? (
+                    <p className={styles.paymentSourceHint}>
+                      Disponible en la reserva de{' '}
+                      {methods.find((option) => option.value === paymentMethod)
+                        ?.label ?? paymentMethod}
+                      : {formatCashRegisterCurrency(selectedReserveBalance)}
+                    </p>
+                  ) : null}
                 </form>
               ) : null}
             </article>

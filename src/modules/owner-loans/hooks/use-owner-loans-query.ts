@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   cashRegisterCurrentQueryKey,
   movementsOverviewQueryKey,
+  reserveSummaryQueryKey,
 } from '@/modules/cash-register/hooks/use-cash-register-query'
 import {
   createOwnerLoan,
@@ -22,6 +23,7 @@ async function invalidateOwnerLoanDependencies(
     queryClient.invalidateQueries({ queryKey: ownerLoansQueryKey }),
     queryClient.invalidateQueries({ queryKey: cashRegisterCurrentQueryKey }),
     queryClient.invalidateQueries({ queryKey: movementsOverviewQueryKey }),
+    queryClient.invalidateQueries({ queryKey: reserveSummaryQueryKey }),
   ])
 }
 
