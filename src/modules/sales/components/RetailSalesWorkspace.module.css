@@ -731,6 +731,48 @@
   white-space: nowrap;
 }
 
+.creditInitialPaymentGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  align-items: start;
+}
+
+.creditPaymentSummary {
+  display: grid;
+  gap: 0.48rem;
+  padding: 0.75rem 0.85rem;
+  border: 1px solid #f0d8d4;
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.creditPaymentSummary > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.creditPaymentSummary strong {
+  color: #172033;
+  font-size: 0.86rem;
+  white-space: nowrap;
+}
+
+.creditPaymentSummary .creditPaymentPendingRow {
+  padding-top: 0.48rem;
+  border-top: 1px solid #f0d8d4;
+  color: #7f2f28;
+  font-weight: 800;
+}
+
+.creditPaymentSummary .creditPaymentPendingRow strong {
+  color: #b33c31;
+}
+
 .fieldLabel em {
   display: inline-flex;
   margin-left: 0.35rem;
@@ -748,6 +790,16 @@
   color: #6b7280;
   font-size: 0.76rem;
   line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .creditInitialPaymentGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .creditTermsSummary {
+    flex-direction: column;
+  }
 }
 
 .segmentedControl {

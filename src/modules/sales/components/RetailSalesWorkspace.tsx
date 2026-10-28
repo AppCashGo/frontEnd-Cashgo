@@ -111,6 +111,7 @@ type QuickSaleFormState = {
   saleDate: string
   dueDate: string
   amountInput: string
+  initialPaymentInput: string
   customerId: string
   paymentOption: RetailPaymentOption
   note: string
@@ -215,6 +216,7 @@ function createDefaultQuickSaleState(): QuickSaleFormState {
     saleDate: getTodayDateInput(),
     dueDate: '',
     amountInput: '',
+    initialPaymentInput: '',
     customerId: '',
     paymentOption: 'CASH',
     note: '',
@@ -939,6 +941,9 @@ export function RetailSalesWorkspace() {
   const [discountAmountInput, setDiscountAmountInput] = useState('0')
   const [saleDate, setSaleDate] = useState(getTodayDateInput)
   const [creditDueDate, setCreditDueDate] = useState('')
+  const [creditInitialPaymentInput, setCreditInitialPaymentInput] = useState('')
+  const [creditPaymentOption, setCreditPaymentOption] =
+    useState<RetailPaymentOption>('CASH')
   const [paymentSplitCount, setPaymentSplitCount] =
     useState<PaymentSplitOption>('1')
   const [paymentOption, setPaymentOption] =
@@ -1131,6 +1136,14 @@ export function RetailSalesWorkspace() {
     [cartItems, discountTotal],
   )
   const totalAmount = cartFinancials.total
+  const creditInitialPayment =
+    settlement === 'CREDIT'
+      ? parseAmountInput(creditInitialPaymentInput)
+      : 0
+  const creditPendingBalance = Math.max(
+    totalAmount - Math.min(creditInitialPayment, totalAmount),
+    0,
+  )
   const paymentMethod = mapRetailPaymentOptionToSaleMethod(paymentOption)
   const selectedPaymentSplitCount = getPaymentSplitNumber(paymentSplitCount)
   const usesSplitPayments =
@@ -1174,6 +1187,14 @@ export function RetailSalesWorkspace() {
           : 0
       : 0
   const quickSaleAmount = parseAmountInput(quickSaleForm.amountInput)
+  const quickSaleInitialPayment =
+    quickSaleForm.settlement === 'CREDIT'
+      ? parseAmountInput(quickSaleForm.initialPaymentInput)
+      : 0
+  const quickSalePendingBalance = Math.max(
+    quickSaleAmount - Math.min(quickSaleInitialPayment, quickSaleAmount),
+    0,
+  )
   const quickExpenseAmount = parseAmountInput(quickExpenseForm.amountInput)
 
   useEffect(() => {
@@ -1265,6 +1286,8 @@ export function RetailSalesWorkspace() {
     setDiscountAmountInput('0')
     setSaleDate(getTodayDateInput())
     setCreditDueDate('')
+    setCreditInitialPaymentInput('')
+    setCreditPaymentOption('CASH')
     setPaymentSplitCount('1')
     setPaymentOption('CASH')
     setPaymentSplits(createCatalogPaymentSplits(1, 0))
@@ -1485,7 +1508,9 @@ export function RetailSalesWorkspace() {
       : ''
     const paymentRows =
       settlement === 'CREDIT'
-        ? '<p><strong>Estado:</strong> A crédito</p>'
+        ? creditInitialPayment > 0
+          ? `<p><strong>Abono inicial (${escapeReceiptHtml(getPaymentOptionLabel(creditPaymentOption))}):</strong> ${escapeReceiptHtml(formatCurrency(creditInitialPayment))}</p><p><strong>Saldo pendiente:</strong> ${escapeReceiptHtml(formatCurrency(creditPendingBalance))}</p>`
+          : '<p><strong>Estado:</strong> A crédito, sin abono inicial</p>'
         : usesSplitPayments
           ? splitPaymentRows
               .map(
@@ -1703,6 +1728,16 @@ export function RetailSalesWorkspace() {
       return
     }
 
+    if (
+      settlement === 'CREDIT' &&
+      creditInitialPayment > totalAmount
+    ) {
+      markCheckoutError(
+        'El abono inicial no puede ser mayor que el total de la venta.',
+      )
+      return
+    }
+
     const paidPayments = usesSplitPayments
       ? splitPaymentRows.map((paymentSplit) => ({
           method: mapRetailPaymentOptionToSaleMethod(paymentSplit.paymentOption),
@@ -1714,6 +1749,20 @@ export function RetailSalesWorkspace() {
             amount: totalAmount,
           },
         ]
+
+    const salePayments =
+      settlement === 'PAID'
+        ? paidPayments
+        : creditInitialPayment > 0
+          ? [
+              {
+                method:
+                  mapRetailPaymentOptionToSaleMethod(creditPaymentOption),
+                amount: creditInitialPayment,
+                notes: 'Abono inicial registrado al crear la venta a crédito.',
+              },
+            ]
+          : []
 
     if (
       settlement === 'PAID' &&
@@ -1765,7 +1814,7 @@ export function RetailSalesWorkspace() {
           settlement === 'CREDIT' && creditDueDate
             ? toDateOnlyRequestDate(creditDueDate)
             : undefined,
-        payments: settlement === 'PAID' ? paidPayments : [],
+        payments: salePayments,
       })
 
       completeSale(sale)
@@ -1816,6 +1865,16 @@ export function RetailSalesWorkspace() {
       return
     }
 
+    if (
+      quickSaleForm.settlement === 'CREDIT' &&
+      quickSaleInitialPayment > quickSaleAmount
+    ) {
+      markCheckoutError(
+        'El abono inicial no puede ser mayor que el total de la venta.',
+      )
+      return
+    }
+
     const refreshedSession = await currentCashRegisterQuery.refetch()
     if (!refreshedSession.data) {
       beginCashSessionFlow('QUICK_SALE')
@@ -1844,7 +1903,18 @@ export function RetailSalesWorkspace() {
                   amount: quickSaleAmount,
                 },
               ]
-            : [],
+            : quickSaleInitialPayment > 0
+              ? [
+                  {
+                    method: mapRetailPaymentOptionToSaleMethod(
+                      quickSaleForm.paymentOption,
+                    ),
+                    amount: quickSaleInitialPayment,
+                    notes:
+                      'Abono inicial registrado al crear la venta a crédito.',
+                  },
+                ]
+              : [],
       })
 
       completeSale(sale)
@@ -2459,7 +2529,65 @@ export function RetailSalesWorkspace() {
                               seguirá pendiente y no se marcará como vencida.
                             </p>
                           </div>
-                          <span>{formatCurrency(totalAmount)}</span>
+                          <span>
+                            Saldo {formatCurrency(creditPendingBalance)}
+                          </span>
+                        </div>
+                        <div className={styles.creditInitialPaymentGrid}>
+                          <label className={styles.field}>
+                            <span className={styles.fieldLabel}>
+                              Abono inicial <em>Opcional</em>
+                            </span>
+                            <input
+                              className={styles.input}
+                              inputMode="decimal"
+                              placeholder="0"
+                              type="text"
+                              value={creditInitialPaymentInput}
+                              onChange={(event) =>
+                                setCreditInitialPaymentInput(event.target.value)
+                              }
+                            />
+                            <span className={styles.fieldHint}>
+                              Escribe cuánto entrega el cliente ahora. Déjalo en
+                              0 si no paga nada hoy.
+                            </span>
+                          </label>
+                          <label className={styles.field}>
+                            <span className={styles.fieldLabel}>
+                              Medio del abono
+                            </span>
+                            <SearchableSelect
+                              className={styles.select}
+                              disabled={creditInitialPayment <= 0}
+                              value={creditPaymentOption}
+                              onChange={(event) =>
+                                setCreditPaymentOption(
+                                  event.target.value as RetailPaymentOption,
+                                )
+                              }
+                            >
+                              {paymentOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </SearchableSelect>
+                          </label>
+                        </div>
+                        <div className={styles.creditPaymentSummary}>
+                          <div>
+                            <span>Total de la venta</span>
+                            <strong>{formatCurrency(totalAmount)}</strong>
+                          </div>
+                          <div>
+                            <span>Abona ahora</span>
+                            <strong>{formatCurrency(creditInitialPayment)}</strong>
+                          </div>
+                          <div className={styles.creditPaymentPendingRow}>
+                            <span>Queda debiendo</span>
+                            <strong>{formatCurrency(creditPendingBalance)}</strong>
+                          </div>
                         </div>
                         <label className={styles.field}>
                           <span className={styles.fieldLabel}>
@@ -2741,6 +2869,22 @@ export function RetailSalesWorkspace() {
                           <span>Subtotal con impuestos</span>
                           <strong>{formatCurrency(totalAmount)}</strong>
                         </div>
+                        {settlement === 'CREDIT' ? (
+                          <>
+                            <div className={styles.paymentDetailRow}>
+                              <span>Abono inicial</span>
+                              <strong>
+                                {formatCurrency(creditInitialPayment)}
+                              </strong>
+                            </div>
+                            <div className={styles.paymentDetailRowStrong}>
+                              <span>Saldo pendiente</span>
+                              <strong>
+                                {formatCurrency(creditPendingBalance)}
+                              </strong>
+                            </div>
+                          </>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>
@@ -2914,7 +3058,67 @@ export function RetailSalesWorkspace() {
                       vacío.
                     </p>
                   </div>
-                  <span>{formatCurrency(quickSaleAmount)}</span>
+                  <span>
+                    Saldo {formatCurrency(quickSalePendingBalance)}
+                  </span>
+                </div>
+                <div className={styles.creditInitialPaymentGrid}>
+                  <label className={styles.field}>
+                    <span className={styles.fieldLabel}>
+                      Abono inicial <em>Opcional</em>
+                    </span>
+                    <input
+                      className={styles.input}
+                      inputMode="decimal"
+                      placeholder="0"
+                      type="text"
+                      value={quickSaleForm.initialPaymentInput}
+                      onChange={(event) =>
+                        setQuickSaleForm((currentState) => ({
+                          ...currentState,
+                          initialPaymentInput: event.target.value,
+                        }))
+                      }
+                    />
+                    <span className={styles.fieldHint}>
+                      Déjalo en 0 si el cliente no paga nada hoy.
+                    </span>
+                  </label>
+                  <label className={styles.field}>
+                    <span className={styles.fieldLabel}>Medio del abono</span>
+                    <SearchableSelect
+                      className={styles.select}
+                      disabled={quickSaleInitialPayment <= 0}
+                      value={quickSaleForm.paymentOption}
+                      onChange={(event) =>
+                        setQuickSaleForm((currentState) => ({
+                          ...currentState,
+                          paymentOption:
+                            event.target.value as RetailPaymentOption,
+                        }))
+                      }
+                    >
+                      {paymentOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </SearchableSelect>
+                  </label>
+                </div>
+                <div className={styles.creditPaymentSummary}>
+                  <div>
+                    <span>Total de la venta</span>
+                    <strong>{formatCurrency(quickSaleAmount)}</strong>
+                  </div>
+                  <div>
+                    <span>Abona ahora</span>
+                    <strong>{formatCurrency(quickSaleInitialPayment)}</strong>
+                  </div>
+                  <div className={styles.creditPaymentPendingRow}>
+                    <span>Queda debiendo</span>
+                    <strong>{formatCurrency(quickSalePendingBalance)}</strong>
+                  </div>
                 </div>
                 <label className={styles.field}>
                   <span className={styles.fieldLabel}>
