@@ -1,5 +1,5 @@
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   useCurrentCashRegisterQuery,
   useReserveSummaryQuery,
@@ -70,6 +70,8 @@ type PurchaseEditDraft = {
   paymentMethod: ExpensePaymentMethod
 }
 
+type HistoryView = 'PURCHASES' | 'PAYMENTS'
+
 const englishPaymentMethodLabels = {
   CASH: 'Cash',
   CARD: 'Card',
@@ -123,6 +125,31 @@ export function SupplierSupplyHistoryPanel({
     returnDate: string
   } | null>(null)
   const [editDraft, setEditDraft] = useState<PurchaseEditDraft | null>(null)
+  const [historyView, setHistoryView] = useState<HistoryView>('PURCHASES')
+  const paymentHistory = useMemo(
+    () =>
+      purchaseHistory
+        .flatMap((purchase) =>
+          purchase.payments.map((payment) => ({
+            ...payment,
+            purchaseId: purchase.purchaseId,
+            purchaseReference: purchase.reference,
+            purchaseTotal: purchase.netTotal,
+            purchaseBalance: purchase.balance,
+            products: purchase.items.map((item) => item.productName),
+          })),
+        )
+        .sort(
+          (left, right) =>
+            new Date(right.paymentDate).getTime() -
+            new Date(left.paymentDate).getTime(),
+        ),
+    [purchaseHistory],
+  )
+  const paymentHistoryTotal = paymentHistory.reduce(
+    (total, payment) => total + payment.amount,
+    0,
+  )
 
   function getPaymentMethodLabel(method: ExpensePaymentMethod) {
     return isEnglish
@@ -194,6 +221,45 @@ export function SupplierSupplyHistoryPanel({
         </span>
       </div>
 
+      <div
+        aria-label={
+          isEnglish
+            ? 'Supplier history sections'
+            : 'Secciones del historial del proveedor'
+        }
+        className={styles.historyTabs}
+        role="tablist"
+      >
+        <button
+          aria-selected={historyView === 'PURCHASES'}
+          className={
+            historyView === 'PURCHASES'
+              ? styles.historyTabActive
+              : styles.historyTab
+          }
+          role="tab"
+          type="button"
+          onClick={() => setHistoryView('PURCHASES')}
+        >
+          <span>{isEnglish ? 'Purchases' : 'Compras'}</span>
+          <strong>{purchaseHistory.length}</strong>
+        </button>
+        <button
+          aria-selected={historyView === 'PAYMENTS'}
+          className={
+            historyView === 'PAYMENTS'
+              ? styles.historyTabActive
+              : styles.historyTab
+          }
+          role="tab"
+          type="button"
+          onClick={() => setHistoryView('PAYMENTS')}
+        >
+          <span>{isEnglish ? 'Payment history' : 'Historial de abonos'}</span>
+          <strong>{paymentHistory.length}</strong>
+        </button>
+      </div>
+
       {isLoading ? (
         <div className={styles.loadingState}>
           <p className={styles.loadingTitle}>
@@ -209,7 +275,7 @@ export function SupplierSupplyHistoryPanel({
         </div>
       ) : null}
 
-      {!isLoading && purchaseHistory.length === 0 ? (
+      {!isLoading && historyView === 'PURCHASES' && purchaseHistory.length === 0 ? (
         <div className={styles.emptyState}>
           <p className={styles.emptyTitle}>
             {isEnglish ? 'No purchases yet' : 'Aún no hay compras registradas'}
@@ -222,7 +288,107 @@ export function SupplierSupplyHistoryPanel({
         </div>
       ) : null}
 
-      {!isLoading && purchaseHistory.length > 0 ? (
+      {!isLoading && historyView === 'PAYMENTS' && paymentHistory.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p className={styles.emptyTitle}>
+            {isEnglish ? 'No payments yet' : 'Aún no hay abonos registrados'}
+          </p>
+          <p className={styles.emptyDescription}>
+            {isEnglish
+              ? 'Each payment made to this supplier will appear here with its purchase and payment details.'
+              : 'Cada abono que realices a este proveedor aparecerá aquí con la compra y los datos del pago.'}
+          </p>
+        </div>
+      ) : null}
+
+      {!isLoading && historyView === 'PAYMENTS' && paymentHistory.length > 0 ? (
+        <div className={styles.paymentHistorySection}>
+          <div className={styles.paymentHistorySummary}>
+            <div>
+              <span>{isEnglish ? 'Recorded payments' : 'Abonos registrados'}</span>
+              <strong>{paymentHistory.length}</strong>
+            </div>
+            <div>
+              <span>{isEnglish ? 'Total paid' : 'Total abonado'}</span>
+              <strong>{formatCurrency(paymentHistoryTotal)}</strong>
+            </div>
+          </div>
+
+          <div className={styles.paymentHistoryList}>
+            {paymentHistory.map((payment, paymentIndex) => (
+              <article className={styles.paymentHistoryItem} key={payment.id}>
+                <div className={styles.paymentHistoryTopRow}>
+                  <div>
+                    <p>
+                      {isEnglish ? 'Payment movement' : 'Movimiento de abono'} #
+                      {paymentHistory.length - paymentIndex}
+                    </p>
+                    <span>{formatDateTime(payment.paymentDate)}</span>
+                  </div>
+                  <strong>{formatCurrency(payment.amount)}</strong>
+                </div>
+
+                <div className={styles.paymentHistoryPurchase}>
+                  <span>{isEnglish ? 'Applied to' : 'Aplicado a'}</span>
+                  <strong>
+                    {payment.purchaseReference ||
+                      `${isEnglish ? 'Purchase' : 'Compra'} ${payment.purchaseId}`}
+                  </strong>
+                  <small>
+                    {isEnglish ? 'Purchase total' : 'Total de la compra'}{' '}
+                    {formatCurrency(payment.purchaseTotal)} ·{' '}
+                    {isEnglish ? 'Current balance' : 'Saldo actual'}{' '}
+                    {formatCurrency(payment.purchaseBalance)}
+                  </small>
+                </div>
+
+                <div className={styles.paymentHistoryDetails}>
+                  <div>
+                    <span>{isEnglish ? 'Payment method' : 'Medio de pago'}</span>
+                    <strong>{getPaymentMethodLabel(payment.method)}</strong>
+                  </div>
+                  <div>
+                    <span>{isEnglish ? 'Money source' : 'Origen del dinero'}</span>
+                    <strong>
+                      {payment.fundSource === 'RESERVE'
+                        ? isEnglish
+                          ? 'Business reserve'
+                          : 'Reserva del negocio'
+                        : isEnglish
+                          ? 'Open register'
+                          : 'Caja abierta'}
+                    </strong>
+                  </div>
+                  <div>
+                    <span>{isEnglish ? 'Reference' : 'Referencia'}</span>
+                    <strong>
+                      {payment.reference ||
+                        (isEnglish ? 'No reference' : 'Sin referencia')}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className={styles.paymentHistoryProducts}>
+                  <span>{isEnglish ? 'Purchase products' : 'Productos de la compra'}</span>
+                  <p>
+                    {payment.products.length > 0
+                      ? payment.products.join(', ')
+                      : isEnglish
+                        ? 'No product detail'
+                        : 'Sin detalle de productos'}
+                  </p>
+                </div>
+
+                {payment.notes ? (
+                  <p className={styles.paymentHistoryNotes}>{payment.notes}</p>
+                ) : null}
+              </article>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {!isLoading && historyView === 'PURCHASES' && purchaseHistory.length > 0 ? (
         <div className={styles.historyList}>
           {paymentError ? (
             <p className={styles.paymentError}>{paymentError}</p>

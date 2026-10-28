@@ -39,6 +39,191 @@
   font-weight: 700;
 }
 
+.historyTabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0.3rem;
+  border: 1px solid #e3e8f1;
+  border-radius: 0.9rem;
+  background: #f6f8fb;
+}
+
+.historyTab,
+.historyTabActive {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 2.8rem;
+  padding: 0.55rem 0.75rem;
+  border: 0;
+  border-radius: 0.7rem;
+  background: transparent;
+  color: #667085;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.historyTab strong,
+.historyTabActive strong {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55rem;
+  height: 1.55rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: #e7ebf2;
+  color: #475467;
+  font-size: 0.72rem;
+}
+
+.historyTabActive {
+  background: #1f2937;
+  color: #ffffff;
+  box-shadow: 0 0.3rem 0.8rem rgba(31, 41, 55, 0.16);
+}
+
+.historyTabActive strong {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.paymentHistorySection,
+.paymentHistoryList {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.paymentHistorySummary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.paymentHistorySummary > div {
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.85rem;
+  border: 1px solid #d8e6de;
+  border-radius: 0.85rem;
+  background: #f3faf6;
+}
+
+.paymentHistorySummary span {
+  color: #667085;
+  font-size: 0.75rem;
+}
+
+.paymentHistorySummary strong {
+  color: #166534;
+  font-size: 1rem;
+}
+
+.paymentHistoryItem {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid #dfe8e3;
+  border-radius: 1rem;
+  background: #fbfefc;
+}
+
+.paymentHistoryTopRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.paymentHistoryTopRow p {
+  margin: 0;
+  color: #1f2937;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.paymentHistoryTopRow span {
+  color: #667085;
+  font-size: 0.78rem;
+}
+
+.paymentHistoryTopRow > strong {
+  color: #15803d;
+  font-size: 1.05rem;
+  white-space: nowrap;
+}
+
+.paymentHistoryPurchase {
+  display: grid;
+  gap: 0.18rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e7edf5;
+}
+
+.paymentHistoryPurchase span,
+.paymentHistoryDetails span,
+.paymentHistoryProducts > span {
+  color: #667085;
+  font-size: 0.72rem;
+}
+
+.paymentHistoryPurchase strong {
+  color: #153b73;
+  font-size: 0.88rem;
+}
+
+.paymentHistoryPurchase small {
+  color: #667085;
+  font-size: 0.74rem;
+}
+
+.paymentHistoryDetails {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.paymentHistoryDetails > div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.paymentHistoryDetails strong {
+  overflow: hidden;
+  color: #344054;
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.paymentHistoryProducts {
+  display: grid;
+  gap: 0.2rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #e7edf5;
+}
+
+.paymentHistoryProducts p,
+.paymentHistoryNotes {
+  margin: 0;
+  color: #475467;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.paymentHistoryNotes {
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.65rem;
+  background: #f2f4f7;
+}
+
 .loadingState,
 .emptyState {
   display: grid;
@@ -67,6 +252,12 @@
 .historyList {
   display: grid;
   gap: 0.8rem;
+}
+
+@media (max-width: 640px) {
+  .paymentHistoryDetails {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .historyItem {
