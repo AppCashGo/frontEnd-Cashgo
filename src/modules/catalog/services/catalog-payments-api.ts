@@ -1,4 +1,5 @@
 import { getJson, postJson } from "@/shared/services/api-client";
+import { notifyCustomerSessionExpired } from "./customer-session-expiration";
 
 export type CatalogPaymentConfiguration = {
   provider: string;
@@ -28,6 +29,11 @@ export function createCatalogPaymentCheckout(
   return postJson<CatalogPaymentCheckout, Record<string, never>>(
     `/catalog-payments/customer/${encodeURIComponent(slug)}/orders/${orderId}/checkout`,
     {},
-    { accessToken, businessId: "", handleGlobalAuthFailure: false },
+    {
+      accessToken,
+      businessId: "",
+      handleGlobalAuthFailure: false,
+      onUnauthorized: () => notifyCustomerSessionExpired(slug),
+    },
   );
 }

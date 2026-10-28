@@ -13,24 +13,26 @@ import type {
   CatalogCustomerReceivables,
   CatalogReceivablePaymentReport,
 } from "../types/catalog-customer";
+import { notifyCustomerSessionExpired } from "./customer-session-expiration";
 
-const options = (accessToken: string) => ({
+const options = (slug: string, accessToken: string) => ({
   accessToken,
   businessId: "",
   handleGlobalAuthFailure: false,
+  onUnauthorized: () => notifyCustomerSessionExpired(slug),
 });
 
 export function getCatalogSavedAddresses(slug: string, accessToken: string) {
   return getJson<CatalogSavedAddress[]>(
     `/catalog-customer/${encodeURIComponent(slug)}/addresses`,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
 export function getCatalogCustomerProfile(slug: string, accessToken: string) {
   return getJson<CatalogCustomerProfile>(
     `/catalog-customer/${encodeURIComponent(slug)}/profile`,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
@@ -45,7 +47,7 @@ export function updateCatalogCustomerProfile(
   return patchJson<CatalogCustomerProfile, typeof input>(
     `/catalog-customer/${encodeURIComponent(slug)}/profile`,
     input,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
@@ -59,14 +61,14 @@ export function uploadCatalogCustomerAvatar(
   return postFormData<{ avatarUrl: string }>(
     `/catalog-customer/${encodeURIComponent(slug)}/profile/avatar`,
     body,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
 export function getCatalogCustomerFavorites(slug: string, accessToken: string) {
   return getJson<CatalogCustomerFavorite[]>(
     `/catalog-customer/${encodeURIComponent(slug)}/favorites`,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
@@ -78,7 +80,7 @@ export function addCatalogCustomerFavorite(
   return postJson<{ saved: true }, Record<string, never>>(
     `/catalog-customer/${encodeURIComponent(slug)}/favorites/${productId}`,
     {},
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
@@ -89,7 +91,7 @@ export function removeCatalogCustomerFavorite(
 ) {
   return deleteJson<{ deleted: true }>(
     `/catalog-customer/${encodeURIComponent(slug)}/favorites/${productId}`,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
@@ -101,7 +103,7 @@ export function saveCatalogAddress(
   return postJson<CatalogSavedAddress, typeof input>(
     `/catalog-customer/${encodeURIComponent(slug)}/addresses`,
     input,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
@@ -112,14 +114,14 @@ export function deleteCatalogAddress(
 ) {
   return deleteJson<{ deleted: true }>(
     `/catalog-customer/${encodeURIComponent(slug)}/addresses/${addressId}`,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
 export function getCatalogNotifications(slug: string, accessToken: string) {
   return getJson<CatalogCustomerNotification[]>(
     `/catalog-customer/${encodeURIComponent(slug)}/notifications`,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
@@ -130,7 +132,7 @@ export function markCatalogNotificationsRead(
   return postJson<{ updated: true }, Record<string, never>>(
     `/catalog-customer/${encodeURIComponent(slug)}/notifications/read`,
     {},
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
@@ -140,7 +142,7 @@ export function getCatalogCustomerReceivables(
 ) {
   return getJson<CatalogCustomerReceivables>(
     `/catalog-customer/${encodeURIComponent(slug)}/receivables`,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }
 
@@ -165,6 +167,6 @@ export function reportCatalogReceivablePayment(
   return postFormData<CatalogReceivablePaymentReport>(
     `/catalog-customer/${encodeURIComponent(slug)}/receivables/${receivableId}/payment-reports`,
     body,
-    options(accessToken),
+    options(slug, accessToken),
   );
 }

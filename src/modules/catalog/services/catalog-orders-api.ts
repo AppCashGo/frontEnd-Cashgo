@@ -4,12 +4,14 @@ import type {
   CreateCatalogOrderPayload,
   ReviewCatalogOrderPayload,
 } from "../types/catalog-order";
+import { notifyCustomerSessionExpired } from "./customer-session-expiration";
 
-function customerOptions(accessToken: string) {
+function customerOptions(slug: string, accessToken: string) {
   return {
     accessToken,
     businessId: "",
     handleGlobalAuthFailure: false,
+    onUnauthorized: () => notifyCustomerSessionExpired(slug),
   };
 }
 
@@ -24,7 +26,7 @@ export function reportCatalogManualPayment(
   return postFormData<CatalogOrder>(
     `/catalog-orders/customer/${encodeURIComponent(slug)}/${orderId}/manual-payment`,
     formData,
-    { accessToken, businessId: "", handleGlobalAuthFailure: false },
+    customerOptions(slug, accessToken),
   );
 }
 
@@ -36,14 +38,14 @@ export function createCatalogOrder(
   return postJson<CatalogOrder, CreateCatalogOrderPayload>(
     `/catalog-orders/customer/${encodeURIComponent(slug)}`,
     payload,
-    customerOptions(accessToken),
+    customerOptions(slug, accessToken),
   );
 }
 
 export function getCustomerCatalogOrders(slug: string, accessToken: string) {
   return getJson<CatalogOrder[]>(
     `/catalog-orders/customer/${encodeURIComponent(slug)}`,
-    customerOptions(accessToken),
+    customerOptions(slug, accessToken),
   );
 }
 
@@ -56,6 +58,6 @@ export function reviewCatalogOrder(
   return postJson<CatalogOrder, ReviewCatalogOrderPayload>(
     `/catalog-orders/customer/${encodeURIComponent(slug)}/${orderId}/review`,
     input,
-    customerOptions(accessToken),
+    customerOptions(slug, accessToken),
   );
 }

@@ -431,6 +431,7 @@ type JsonRequestOptions = {
   accessToken?: string;
   businessId?: string;
   handleGlobalAuthFailure?: boolean;
+  onUnauthorized?: () => void;
 };
 
 type BlobRequestOptions = JsonRequestOptions & {
@@ -489,6 +490,10 @@ async function requestJson<TResponse, TBody = undefined>(
       options?.handleGlobalAuthFailure !== false,
     );
 
+    if (apiError.status === 401) {
+      options?.onUnauthorized?.();
+    }
+
     if (method !== "GET") {
       notifyApiWriteError(apiError);
     }
@@ -517,6 +522,9 @@ async function requestFormData<TResponse>(
       error,
       options?.handleGlobalAuthFailure !== false,
     );
+    if (apiError.status === 401) {
+      options?.onUnauthorized?.();
+    }
     notifyApiWriteError(apiError);
     throw apiError;
   }

@@ -6,6 +6,7 @@ import type {
   CustomerRegisterPayload,
   CustomerRegistrationResponse,
 } from "../types/customer-session";
+import { notifyCustomerSessionExpired } from "./customer-session-expiration";
 
 const publicOptions = {
   accessToken: "",
@@ -65,6 +66,11 @@ export function resendCatalogCustomerVerification(slug: string, email: string) {
 export function getCatalogCustomer(slug: string, accessToken: string) {
   return getJson<CatalogCustomer>(
     `/customer-auth/${encodeURIComponent(slug)}/me`,
-    { accessToken, businessId: "", handleGlobalAuthFailure: false },
+    {
+      accessToken,
+      businessId: "",
+      handleGlobalAuthFailure: false,
+      onUnauthorized: () => notifyCustomerSessionExpired(slug),
+    },
   );
 }

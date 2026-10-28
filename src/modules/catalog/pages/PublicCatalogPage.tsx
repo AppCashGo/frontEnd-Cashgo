@@ -57,6 +57,7 @@ import {
   resolveApiAssetUrl,
 } from "@/shared/services/api-client";
 import { verifyCatalogCustomerEmail } from "../services/customer-auth-api";
+import { subscribeToCustomerSessionExpired } from "../services/customer-session-expiration";
 import type {
   PublicCatalogCategory,
   PublicCatalogProduct,
@@ -258,6 +259,28 @@ export function PublicCatalogPage() {
       name: customerSession.customer.name,
     });
   }, [catalogKey, customerSession, initializeCheckoutContact]);
+
+  useEffect(() => {
+    if (!catalogKey) {
+      return;
+    }
+
+    return subscribeToCustomerSessionExpired((expiredCatalogSlug) => {
+      if (expiredCatalogSlug !== catalogKey) {
+        return;
+      }
+
+      clearCustomerSession(catalogKey);
+      setIsAccountOpen(false);
+      setIsOrdersOpen(false);
+      setIsFulfillmentOpen(false);
+      setIsCartOpen(false);
+      setPageNotice(
+        'Tu sesión expiró. Inicia sesión nuevamente para continuar.',
+      );
+      setIsCustomerAuthOpen(true);
+    });
+  }, [catalogKey, clearCustomerSession]);
 
   useEffect(() => {
     if (!customerSession || !catalogKey) {
