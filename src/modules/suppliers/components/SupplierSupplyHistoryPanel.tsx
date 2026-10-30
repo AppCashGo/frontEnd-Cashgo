@@ -68,6 +68,7 @@ type PurchaseEditDraft = {
   notes: string
   items: Record<string, { quantity: string; unitCost: string }>
   paymentMethod: ExpensePaymentMethod
+  fundSource: PaymentFundSource
 }
 
 type HistoryView = 'PURCHASES' | 'PAYMENTS'
@@ -182,6 +183,7 @@ export function SupplierSupplyHistoryPanel({
         : '',
       notes: purchase.notes ?? '',
       paymentMethod: purchase.paymentMethod,
+      fundSource: purchase.payments[0]?.fundSource ?? 'REGISTER',
       items: Object.fromEntries(
         purchase.items.map((item) => [
           item.id,
@@ -799,6 +801,10 @@ export function SupplierSupplyHistoryPanel({
                             ...editDraft,
                             paymentMethod: event.target
                               .value as ExpensePaymentMethod,
+                            fundSource:
+                              event.target.value === 'CREDIT'
+                                ? 'REGISTER'
+                                : editDraft.fundSource,
                           })
                         }
                       >
@@ -808,6 +814,50 @@ export function SupplierSupplyHistoryPanel({
                           </option>
                         ))}
                       </SearchableSelect>
+                    </label>
+                    <label>
+                      <span>
+                        {isEnglish
+                          ? 'Money source'
+                          : '¿De dónde salió el dinero?'}
+                      </span>
+                      <SearchableSelect
+                        disabled={
+                          purchase.payments.length !== 1 ||
+                          editDraft.paymentMethod === 'CREDIT'
+                        }
+                        value={editDraft.fundSource}
+                        onChange={(event) =>
+                          setEditDraft({
+                            ...editDraft,
+                            fundSource: event.target.value as PaymentFundSource,
+                          })
+                        }
+                      >
+                        <option value="REGISTER">
+                          {isEnglish
+                            ? 'Open register'
+                            : 'Caja abierta del turno'}
+                        </option>
+                        <option value="RESERVE">
+                          {isEnglish
+                            ? 'Business reserve'
+                            : 'Reserva del negocio'}
+                        </option>
+                      </SearchableSelect>
+                      {purchase.payments.length === 0 ? (
+                        <small className={styles.editPurchaseFieldHint}>
+                          {isEnglish
+                            ? 'This credit purchase does not have a payment to reassign yet.'
+                            : 'Esta compra a crédito todavía no tiene un pago para reasignar.'}
+                        </small>
+                      ) : purchase.payments.length > 1 ? (
+                        <small className={styles.editPurchaseFieldHint}>
+                          {isEnglish
+                            ? 'The source cannot be changed here because this purchase has multiple payments.'
+                            : 'No se puede cambiar aquí porque la compra tiene varios abonos.'}
+                        </small>
+                      ) : null}
                     </label>
                     <label>
                       <span>{isEnglish ? 'Purchase date' : 'Fecha de compra'}</span>
@@ -885,6 +935,7 @@ export function SupplierSupplyHistoryPanel({
                                 ),
                               })),
                               paymentMethod: editDraft.paymentMethod,
+                              fundSource: editDraft.fundSource,
                               reference: editDraft.reference.trim() || null,
                               purchaseDate: toExpenseRequestDate(
                                 editDraft.purchaseDate,
