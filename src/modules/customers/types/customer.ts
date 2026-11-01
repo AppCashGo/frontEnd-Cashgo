@@ -148,6 +148,7 @@ export type CustomerReceivable = {
   id: string
   saleId: string
   saleNumber: string
+  saleDate: string
   amount: number
   paidAmount: number
   balance: number

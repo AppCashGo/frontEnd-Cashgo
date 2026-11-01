@@ -3030,7 +3030,7 @@ function ReceivableCard({
       <div className={styles.receivableTop}>
         <div>
           <strong>{receivable.saleNumber}</strong>
-          <span>{formatDateTime(receivable.createdAt)}</span>
+          <span>{formatDateTime(receivable.saleDate)}</span>
         </div>
         <span
           className={joinClassNames(
