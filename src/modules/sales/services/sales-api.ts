@@ -5,6 +5,7 @@ import type {
   SalesHistoryFilters,
   SalesHistoryResponse,
   UpdateSaleInput,
+  UpdateSalePaymentMethodInput,
 } from '@/modules/sales/types/sale'
 import { ApiError, getBlob, getJson, patchJson, postJson } from '@/shared/services/api-client'
 import { getAuthAccessToken } from '@/shared/services/auth-session'
@@ -176,6 +177,19 @@ export async function updateSale(saleId: string, input: UpdateSaleInput) {
   const sale = await patchJson<SaleApiRecord, UpdateSaleInput>(`/sales/${saleId}`, input, {
     accessToken: getAuthAccessToken(),
   })
+
+  return normalizeSaleRecord(sale)
+}
+
+export async function updateSalePaymentMethod(
+  paymentId: string,
+  input: UpdateSalePaymentMethodInput,
+) {
+  const sale = await patchJson<SaleApiRecord, UpdateSalePaymentMethodInput>(
+    `/sales/payments/${paymentId}/method`,
+    input,
+    { accessToken: getAuthAccessToken() },
+  )
 
   return normalizeSaleRecord(sale)
 }

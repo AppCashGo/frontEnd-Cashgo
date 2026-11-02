@@ -47,6 +47,11 @@ export type UpdateSaleInput = {
   reason: string
 }
 
+export type UpdateSalePaymentMethodInput = {
+  method: SalePaymentMethod
+  reason: string
+}
+
 export type SaleReturnInput = {
   items: Array<{
     saleItemId: string

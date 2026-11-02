@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Download, MessageCircle, Printer, ReceiptText, WalletCards } from 'lucide-react'
+import { Download, MessageCircle, Pencil, Printer, ReceiptText, WalletCards } from 'lucide-react'
 import { useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
@@ -7,10 +7,14 @@ import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-c
 import {
   createCustomerCollectionActivity,
   registerCustomerPayment,
+  updateCustomerPaymentMethod,
 } from '@/modules/customers/services/customers-api'
 import type { CustomerPaymentMethod } from '@/modules/customers/types/customer'
 import { useSaleDetailQuery } from '@/modules/sales/hooks/use-sales-history-query'
-import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
+import {
+  downloadSaleReceipt,
+  updateSalePaymentMethod,
+} from '@/modules/sales/services/sales-api'
 import { routePaths } from '@/routes/route-paths'
 import { AppDrawer } from '@/shared/components/ui/AppDrawer'
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
@@ -61,6 +65,7 @@ export function SaleDetailDrawer({
   const businessName = useAuthSessionStore(
     (state) => state.user?.businessName ?? 'CashGo',
   )
+  const userRole = useAuthSessionStore((state) => state.user?.role ?? null)
   const cashRegisterQuery = useCurrentCashRegisterQuery()
   const saleQuery = useSaleDetailQuery(saleId)
   const sale = saleQuery.data ?? null
@@ -70,13 +75,25 @@ export function SaleDetailDrawer({
   const [method, setMethod] = useState<CustomerPaymentMethod>('CASH')
   const [reference, setReference] = useState('')
   const [activeAction, setActiveAction] = useState<string | null>(null)
+  const [correctionPaymentKey, setCorrectionPaymentKey] = useState<string | null>(null)
+  const [correctionMethod, setCorrectionMethod] = useState<CustomerPaymentMethod>('CASH')
+  const [correctionReason, setCorrectionReason] = useState('')
   const payments = useMemo(
     () => [
-      ...(sale?.payments ?? []),
-      ...(sale?.accountReceivable?.payments ?? []),
+      ...(sale?.payments ?? []).map((payment) => ({
+        ...payment,
+        source: 'SALE' as const,
+      })),
+      ...(sale?.accountReceivable?.payments ?? []).map((payment) => ({
+        ...payment,
+        source: 'RECEIVABLE' as const,
+      })),
     ],
     [sale],
   )
+  const canCorrectPayments =
+    userRole !== null &&
+    ['OWNER', 'ADMIN', 'MANAGER', 'CASHIER', 'ACCOUNTANT'].includes(userRole)
   const balance = sale?.accountReceivable?.balance ?? 0
   const collected = Math.max(0, (sale?.total ?? 0) - balance)
 
@@ -118,6 +135,34 @@ export function SaleDetailDrawer({
         return
       }
       setFeedback(getErrorMessage(error, 'No pudimos registrar el abono.'))
+    },
+  })
+
+  const paymentMethodMutation = useMutation({
+    mutationFn: async (payment: (typeof payments)[number]) => {
+      const input = {
+        method: correctionMethod,
+        reason: correctionReason.trim(),
+      }
+
+      if (payment.source === 'SALE') {
+        return updateSalePaymentMethod(payment.id, input)
+      }
+
+      return updateCustomerPaymentMethod(payment.id, input)
+    },
+    onSuccess: async () => {
+      setFeedback('El medio de pago se corrigió correctamente.')
+      setCorrectionPaymentKey(null)
+      setCorrectionReason('')
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['sales'] }),
+        queryClient.invalidateQueries({ queryKey: ['customers'] }),
+        queryClient.invalidateQueries({ queryKey: ['cash-register'] }),
+      ])
+    },
+    onError: (error) => {
+      setFeedback(getErrorMessage(error, 'No pudimos corregir el medio de pago.'))
     },
   })
 
@@ -182,6 +227,32 @@ export function SaleDetailDrawer({
     event.preventDefault()
     setFeedback(null)
     paymentMutation.mutate()
+  }
+
+  function startPaymentMethodCorrection(payment: (typeof payments)[number]) {
+    setCorrectionPaymentKey(`${payment.source}:${payment.id}`)
+    setCorrectionMethod(payment.method)
+    setCorrectionReason('')
+    setFeedback(null)
+  }
+
+  function submitPaymentMethodCorrection(
+    event: FormEvent,
+    payment: (typeof payments)[number],
+  ) {
+    event.preventDefault()
+    setFeedback(null)
+
+    if (correctionMethod === payment.method) {
+      setFeedback('Selecciona un medio de pago diferente al actual.')
+      return
+    }
+    if (correctionReason.trim().length < 3) {
+      setFeedback('Escribe el motivo de la corrección.')
+      return
+    }
+
+    paymentMethodMutation.mutate(payment)
   }
 
   return (
@@ -279,18 +350,84 @@ export function SaleDetailDrawer({
             <section className={styles.section}>
               <h3>Pagos</h3>
               {payments.length > 0 ? (
-                payments.map((payment) => (
+                payments.map((payment) => {
+                  const paymentKey = `${payment.source}:${payment.id}`
+
+                  return (
                   <div
-                    className={styles.paymentRow}
-                    key={`${payment.id}-${payment.createdAt}`}
+                    className={styles.paymentItem}
+                    key={paymentKey}
                   >
-                    <span>
-                      {getSharedPaymentMethodLabel(payment.method)}
-                      <small>{formatDateTime(payment.createdAt)}</small>
-                    </span>
-                    <strong>{formatCurrency(payment.amount)}</strong>
+                    <div className={styles.paymentRow}>
+                      <span>
+                        {getSharedPaymentMethodLabel(payment.method)}
+                        <small>{formatDateTime(payment.createdAt)}</small>
+                      </span>
+                      <div className={styles.paymentAmountActions}>
+                        <strong>{formatCurrency(payment.amount)}</strong>
+                        {canCorrectPayments && sale.status !== 'CANCELLED' ? (
+                          <button
+                            className={styles.correctPaymentButton}
+                            type="button"
+                            onClick={() => startPaymentMethodCorrection(payment)}
+                          >
+                            <Pencil aria-hidden="true" /> Corregir
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                    {correctionPaymentKey === paymentKey ? (
+                      <form
+                        className={styles.paymentCorrectionForm}
+                        onSubmit={(event) => submitPaymentMethodCorrection(event, payment)}
+                      >
+                        <strong>Corregir medio de pago</strong>
+                        <label>
+                          <span>Medio correcto</span>
+                          <SearchableSelect
+                            disabled={paymentMethodMutation.isPending}
+                            value={correctionMethod}
+                            onChange={(event) =>
+                              setCorrectionMethod(event.target.value as CustomerPaymentMethod)
+                            }
+                          >
+                            {COLLECTED_PAYMENT_METHOD_OPTIONS.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </SearchableSelect>
+                        </label>
+                        <label>
+                          <span>Motivo de la corrección *</span>
+                          <input
+                            disabled={paymentMethodMutation.isPending}
+                            maxLength={255}
+                            placeholder="Ej. El cliente pagó por Nequi"
+                            value={correctionReason}
+                            onChange={(event) => setCorrectionReason(event.target.value)}
+                          />
+                        </label>
+                        <small>
+                          Solo se puede corregir mientras la caja de esta venta continúe abierta.
+                        </small>
+                        <div className={styles.paymentCorrectionActions}>
+                          <button
+                            disabled={paymentMethodMutation.isPending}
+                            type="button"
+                            onClick={() => setCorrectionPaymentKey(null)}
+                          >
+                            Cancelar
+                          </button>
+                          <button disabled={paymentMethodMutation.isPending} type="submit">
+                            {paymentMethodMutation.isPending ? 'Guardando…' : 'Guardar corrección'}
+                          </button>
+                        </div>
+                      </form>
+                    ) : null}
                   </div>
-                ))
+                  )
+                })
               ) : (
                 <p className={styles.muted}>No se registraron pagos.</p>
               )}
