@@ -44,6 +44,36 @@
   gap: 1rem;
 }
 
+.barcodeInputRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+}
+
+.scanButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 3rem;
+  padding: 0 0.9rem;
+  border: 1px solid #2d67dc;
+  border-radius: 14px;
+  background: #eef4ff;
+  color: #1f56be;
+  font-weight: 800;
+}
+
+.scanButton svg {
+  width: 1.05rem;
+}
+
+@media (max-width: 520px) {
+  .barcodeInputRow {
+    grid-template-columns: 1fr;
+  }
+}
+
 .label {
   font-size: 0.92rem;
   font-weight: 600;

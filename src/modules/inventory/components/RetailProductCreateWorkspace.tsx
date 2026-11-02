@@ -1,6 +1,7 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Camera, ScanBarcode } from "lucide-react";
 import {
   type ChangeEvent,
   type DragEvent,
@@ -40,6 +41,8 @@ import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { formatCurrency } from "@/shared/utils/format-currency";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
+import { BarcodeScannerModal } from "@/shared/barcode/BarcodeScannerModal";
+import { normalizeBarcode } from "@/shared/barcode/normalize-barcode";
 import {
   IMAGE_UPLOAD_ACCEPT,
   validateImageUploadFile,
@@ -50,10 +53,17 @@ export type RetailProductCreateWorkspaceTab = "basic" | "variants" | "measures";
 
 type RetailProductCreateWorkspaceProps = {
   onBack: () => void;
+  onSaved?: (product: Product) => void;
   onTabChange?: (tab: RetailProductCreateWorkspaceTab) => void;
   productId?: string | null;
   initialTab?: RetailProductCreateWorkspaceTab;
+  initialBarcode?: string;
 };
+
+type BarcodeScannerTarget =
+  | { type: "product" }
+  | { type: "variant"; index: number }
+  | null;
 
 type ConfirmSwitchState = {
   title: string;
@@ -91,7 +101,6 @@ function createIdentifierPreview(name: string) {
 
   return {
     sku: base.slice(0, 80),
-    barcode: `COD-${base}`.slice(0, 120),
   };
 }
 
@@ -278,10 +287,13 @@ async function resizeProductImage(file: File) {
   }
 }
 
-function getDefaultValues(product?: Product | null): RetailProductCreateValues {
+function getDefaultValues(
+  product?: Product | null,
+  initialBarcode = "",
+): RetailProductCreateValues {
   if (!product) {
     return {
-      barcode: "",
+      barcode: normalizeBarcode(initialBarcode),
       name: "",
       stock: 0,
       minStock: 5,
@@ -713,9 +725,11 @@ function ProductImagePreviewDialog({
 
 export function RetailProductCreateWorkspace({
   onBack,
+  onSaved,
   onTabChange,
   productId,
   initialTab = "basic",
+  initialBarcode = "",
 }: RetailProductCreateWorkspaceProps) {
   const { languageCode } = useAppTranslation();
   const copy = getInventoryCopy(languageCode);
@@ -777,6 +791,8 @@ export function RetailProductCreateWorkspace({
   const [previewImageIndex, setPreviewImageIndex] = useState<number | null>(
     null,
   );
+  const [barcodeScannerTarget, setBarcodeScannerTarget] =
+    useState<BarcodeScannerTarget>(null);
   const {
     control,
     register,
@@ -788,7 +804,7 @@ export function RetailProductCreateWorkspace({
     formState: { errors, isSubmitting },
   } = useForm<RetailProductCreateValues>({
     resolver: zodResolver(retailProductCreateSchema),
-    defaultValues: getDefaultValues(),
+    defaultValues: getDefaultValues(null, initialBarcode),
     mode: "onChange",
   });
   const {
@@ -835,7 +851,7 @@ export function RetailProductCreateWorkspace({
   }, [categoryProductSearchTerm, products]);
 
   useEffect(() => {
-    const nextValues = getDefaultValues(currentProduct);
+    const nextValues = getDefaultValues(currentProduct, initialBarcode);
     reset(nextValues);
     setProductImages(currentProduct?.imageUrls ?? []);
     setProductImageError(null);
@@ -843,7 +859,22 @@ export function RetailProductCreateWorkspace({
     setPreviewImageIndex(null);
     setPurchaseUnit(currentProduct?.unit ?? "UNIT");
     setSaleUnit(currentProduct?.unit ?? "UNIT");
-  }, [currentProduct, reset]);
+  }, [currentProduct, initialBarcode, reset]);
+
+  function handleBarcodeDetected(barcode: string) {
+    if (barcodeScannerTarget?.type === "variant") {
+      setValue(`variants.${barcodeScannerTarget.index}.barcode`, barcode, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    } else {
+      setValue("barcode", barcode, {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+    setBarcodeScannerTarget(null);
+  }
 
   useEffect(() => {
     setActiveTab(initialTab);
@@ -1254,7 +1285,9 @@ export function RetailProductCreateWorkspace({
     const normalizedVariants = (values.variants ?? []).map((variant) => ({
       name: variant.name.trim(),
       sku: normalizeOptionalText(variant.sku),
-      barcode: normalizeOptionalText(variant.barcode),
+      barcode: variant.barcode
+        ? normalizeBarcode(variant.barcode)
+        : undefined,
       stock: variant.stock,
       minStock: variant.minStock,
       price: variant.price,
@@ -1274,7 +1307,7 @@ export function RetailProductCreateWorkspace({
     const firstVariant = normalizedVariants[0];
 
     const input: ProductMutationInput = {
-      barcode: normalizeOptionalText(values.barcode),
+      barcode: values.barcode ? normalizeBarcode(values.barcode) : undefined,
       name: values.name.trim(),
       stock:
         activeTab === "variants"
@@ -1301,16 +1334,18 @@ export function RetailProductCreateWorkspace({
     productSubmissionLockRef.current = true;
 
     try {
-      if (isEditMode && productId) {
-        await updateProductMutation.mutateAsync({
+      const savedProduct = isEditMode && productId
+        ? await updateProductMutation.mutateAsync({
           productId,
           input,
-        });
-      } else {
-        await createProductMutation.mutateAsync(input);
-      }
+        })
+        : await createProductMutation.mutateAsync(input);
 
-      onBack();
+      if (onSaved) {
+        onSaved(savedProduct);
+      } else {
+        onBack();
+      }
     } catch (error) {
       setError("root", {
         message: getErrorMessage(
@@ -1456,8 +1491,8 @@ export function RetailProductCreateWorkspace({
                   <div className={styles.identifierCopy}>
                     <strong>Identificación automática</strong>
                     <span>
-                      CashGo crea el SKU y el código cuando guardas el producto.
-                      Si ya existen, agrega un número para mantenerlos únicos.
+                      CashGo crea el SKU interno automáticamente. El código de barras
+                      debe ser el que trae el producto o el que leas con la cámara.
                     </span>
                   </div>
                   <div className={styles.identifierValues}>
@@ -1467,14 +1502,32 @@ export function RetailProductCreateWorkspace({
                         {currentProduct?.sku ?? identifierPreview.sku}
                       </strong>
                     </span>
-                    <span className={styles.identifierValue}>
-                      <small>Código</small>
-                      <strong>
-                        {currentProduct?.barcode ?? identifierPreview.barcode}
-                      </strong>
-                    </span>
                   </div>
                 </div>
+
+                <label className={styles.field}>
+                  <span className={styles.label}>Código de barras</span>
+                  <span className={styles.barcodeInputRow}>
+                    <input
+                      className={styles.input}
+                      placeholder="Escanea o escribe el código del producto"
+                      type="text"
+                      {...register("barcode")}
+                    />
+                    <button
+                      className={styles.scanBarcodeButton}
+                      type="button"
+                      onClick={() => setBarcodeScannerTarget({ type: "product" })}
+                    >
+                      <Camera aria-hidden="true" />
+                      <span>Escanear</span>
+                    </button>
+                  </span>
+                  <small className={styles.barcodeHelp}>
+                    También puedes usar un lector USB o Bluetooth y escanear directamente en este campo.
+                  </small>
+                  {errors.barcode ? <p className={styles.error}>{errors.barcode.message}</p> : null}
+                </label>
 
                 {activeTab === "measures" ? (
                   <>
@@ -1657,9 +1710,7 @@ export function RetailProductCreateWorkspace({
                     </div>
                     <p className={styles.variantsHint}>{copy.variantsHint}</p>
                     <p className={styles.variantIdentifierHint}>
-                      El SKU y el código de cada variante se crean
-                      automáticamente con el nombre del producto y de la
-                      variante.
+                      Cada variante debe usar su propio código de barras. El SKU interno se crea automáticamente.
                     </p>
                   </div>
 
@@ -1741,6 +1792,33 @@ export function RetailProductCreateWorkspace({
                                   `variants.${index}.stock` as const,
                                 )}
                               />
+                            </label>
+
+                            <label className={styles.field}>
+                              <span className={styles.label}>Código de barras</span>
+                              <span className={styles.barcodeInputRow}>
+                                <input
+                                  className={styles.input}
+                                  placeholder="Escanea o escribe el código"
+                                  type="text"
+                                  {...register(`variants.${index}.barcode` as const)}
+                                />
+                                <button
+                                  aria-label={`Escanear código de la variante ${index + 1}`}
+                                  className={styles.scanBarcodeButtonCompact}
+                                  type="button"
+                                  onClick={() =>
+                                    setBarcodeScannerTarget({ type: "variant", index })
+                                  }
+                                >
+                                  <ScanBarcode aria-hidden="true" />
+                                </button>
+                              </span>
+                              {errors.variants?.[index]?.barcode ? (
+                                <p className={styles.error}>
+                                  {errors.variants[index]?.barcode?.message}
+                                </p>
+                              ) : null}
                             </label>
 
                             <label className={styles.field}>
@@ -2005,6 +2083,17 @@ export function RetailProductCreateWorkspace({
           }}
         />
       ) : null}
+
+      <BarcodeScannerModal
+        isOpen={barcodeScannerTarget !== null}
+        title={
+          barcodeScannerTarget?.type === "variant"
+            ? "Escanear código de la variante"
+            : "Escanear código del producto"
+        }
+        onClose={() => setBarcodeScannerTarget(null)}
+        onDetected={handleBarcodeDetected}
+      />
 
       {isCategoryCreateDrawerOpen ? (
         <CategoryCreateDrawer

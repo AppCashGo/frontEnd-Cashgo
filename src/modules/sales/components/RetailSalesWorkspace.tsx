@@ -1,12 +1,14 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import type { ReactNode } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   Banknote,
   CheckCircle,
   CheckCircle2,
+  Camera,
   Crown,
+  ScanBarcode,
 } from 'lucide-react'
 import type { CashRegisterDrawerMode } from '@/modules/cash-register/components/CashRegisterSessionDrawer'
 import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashRegisterFlowDrawer'
@@ -65,6 +67,9 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { isCashSessionRequiredError } from '@/modules/cash-register/utils/is-cash-session-required-error'
+import { BarcodeScannerModal } from '@/shared/barcode/BarcodeScannerModal'
+import { normalizeBarcode } from '@/shared/barcode/normalize-barcode'
+import { useHardwareBarcodeScanner } from '@/shared/barcode/use-hardware-barcode-scanner'
 import {
   COLLECTED_PAYMENT_METHOD_OPTIONS,
   getSharedPaymentMethodLabel,
@@ -932,6 +937,12 @@ export function RetailSalesWorkspace() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [searchValue, setSearchValue] = useState('')
+  const [isBarcodeScannerOpen, setBarcodeScannerOpen] = useState(false)
+  const [barcodeNotice, setBarcodeNotice] = useState<{
+    tone: 'success' | 'error'
+    message: string
+    barcode?: string
+  } | null>(null)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [saleStep, setSaleStep] = useState<RetailStep>('CATALOG')
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
@@ -1085,6 +1096,76 @@ export function RetailSalesWorkspace() {
   } = useSaleCart(products, {
     allowSaleWithoutStock,
   })
+
+  const handleBarcodeScan = useCallback(
+    (rawBarcode: string) => {
+      const barcode = normalizeBarcode(rawBarcode)
+      const product = products.find(
+        (candidate) => normalizeBarcode(candidate.barcode ?? '') === barcode,
+      )
+
+      setBarcodeScannerOpen(false)
+      setSearchValue('')
+
+      if (!product) {
+        setBarcodeNotice({
+          tone: 'error',
+          barcode,
+          message: `No encontramos un producto con el código ${barcode}.`,
+        })
+        return
+      }
+
+      if (!product.isActive) {
+        setBarcodeNotice({
+          tone: 'error',
+          message: `${product.name} está inactivo y no puede agregarse a la venta.`,
+        })
+        return
+      }
+
+      const quantityInCart = cartQuantitiesByProductId.get(product.id) ?? 0
+      if (!allowSaleWithoutStock && quantityInCart >= product.stock) {
+        setBarcodeNotice({
+          tone: 'error',
+          message:
+            product.stock <= 0
+              ? `${product.name} no tiene existencias disponibles.`
+              : `Ya agregaste todas las unidades disponibles de ${product.name}.`,
+        })
+        return
+      }
+
+      addProduct(product)
+      setBarcodeNotice({
+        tone: 'success',
+        message: `${product.name} se agregó a la venta.`,
+      })
+    }, [addProduct, allowSaleWithoutStock, cartQuantitiesByProductId, products],
+  )
+
+  useHardwareBarcodeScanner({
+    enabled: saleStep === 'CATALOG' && !isBarcodeScannerOpen,
+    onScan: handleBarcodeScan,
+  })
+
+  useEffect(() => {
+    if (barcodeNotice?.tone !== 'success') return undefined
+    const timeoutId = window.setTimeout(() => setBarcodeNotice(null), 2_500)
+    return () => window.clearTimeout(timeoutId)
+  }, [barcodeNotice])
+
+  useEffect(() => {
+    const barcodeFromCreation = searchParams.get('barcode')
+    if (!barcodeFromCreation || !productsQuery.isSuccess) return
+
+    handleBarcodeScan(barcodeFromCreation)
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams)
+      nextParams.delete('barcode')
+      return nextParams
+    }, { replace: true })
+  }, [handleBarcodeScan, productsQuery.isSuccess, searchParams, setSearchParams])
 
   const visibleCategories = useMemo(() => {
     const productCountByCategoryId = products.reduce<Map<string, number>>(
@@ -1399,8 +1480,10 @@ export function RetailSalesWorkspace() {
     setQuickExpenseDrawerOpen(true)
   }
 
-  function handleGoToCreateProduct() {
-    navigate(`${routePaths.inventory}?create=manual&returnTo=sales`)
+  function handleGoToCreateProduct(barcode?: string) {
+    const params = new URLSearchParams({ create: 'manual', returnTo: 'sales' })
+    if (barcode) params.set('barcode', barcode)
+    navigate(`${routePaths.inventory}?${params.toString()}`)
   }
 
   function handleClearCatalogCart() {
@@ -2174,14 +2257,62 @@ export function RetailSalesWorkspace() {
               <label className={retailStyles.searchField} htmlFor="retail-sale-search">
                 <input
                   className={retailStyles.input}
+                  data-barcode-scanner="true"
                   id="retail-sale-search"
-                  placeholder="Buscar productos"
+                  placeholder="Buscar o escanear código"
                   type="search"
                   value={searchValue}
                   onChange={(event) => setSearchValue(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter') return
+                    const exactBarcode = normalizeBarcode(searchValue)
+                    if (exactBarcode) handleBarcodeScan(exactBarcode)
+                  }}
                 />
               </label>
+              <button
+                aria-label="Escanear código con la cámara"
+                className={styles.cameraScanButton}
+                type="button"
+                onClick={() => {
+                  setBarcodeNotice(null)
+                  setBarcodeScannerOpen(true)
+                }}
+              >
+                <Camera aria-hidden="true" />
+                <span>Escanear</span>
+              </button>
             </div>
+
+            {barcodeNotice ? (
+              <div
+                className={
+                  barcodeNotice.tone === 'success'
+                    ? styles.barcodeNoticeSuccess
+                    : styles.barcodeNoticeError
+                }
+                role={barcodeNotice.tone === 'error' ? 'alert' : 'status'}
+              >
+                <ScanBarcode aria-hidden="true" />
+                <span>{barcodeNotice.message}</span>
+                {barcodeNotice.barcode ? (
+                  <button
+                    type="button"
+                    onClick={() => handleGoToCreateProduct(barcodeNotice.barcode)}
+                  >
+                    Crear producto
+                  </button>
+                ) : null}
+                <button
+                  aria-label="Cerrar mensaje"
+                  className={styles.barcodeNoticeClose}
+                  type="button"
+                  onClick={() => setBarcodeNotice(null)}
+                >
+                  ×
+                </button>
+              </div>
+            ) : null}
 
             <ProductCategoryFilter
               activeCategoryId={activeCategoryId}
@@ -2193,7 +2324,7 @@ export function RetailSalesWorkspace() {
               <button
                 className={styles.createCard}
                 type="button"
-                onClick={handleGoToCreateProduct}
+                onClick={() => handleGoToCreateProduct()}
               >
                 <span className={styles.createPlus}>+</span>
                 <span className={styles.createTitle}>Crear producto</span>
@@ -3460,6 +3591,13 @@ export function RetailSalesWorkspace() {
           onClose={() => clearCheckoutFeedback()}
         />
       ) : null}
+
+      <BarcodeScannerModal
+        isOpen={isBarcodeScannerOpen}
+        title="Escanear producto para la venta"
+        onClose={() => setBarcodeScannerOpen(false)}
+        onDetected={handleBarcodeScan}
+      />
 
       {isChangeModalOpen ? (
         <ChangeCalculatorModal

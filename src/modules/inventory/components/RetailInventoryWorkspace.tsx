@@ -5,8 +5,9 @@ import {
 } from '@/modules/cash-register/hooks/use-cash-register-query'
 import type { PaymentFundSource } from '@/modules/cash-register/types/cash-register'
 import type { KeyboardEvent, ReactNode } from 'react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Camera, ScanBarcode } from 'lucide-react'
 import {
   RetailProductCreateWorkspace,
   type RetailProductCreateWorkspaceTab,
@@ -67,6 +68,9 @@ import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { BarcodeScannerModal } from '@/shared/barcode/BarcodeScannerModal'
+import { normalizeBarcode } from '@/shared/barcode/normalize-barcode'
+import { useHardwareBarcodeScanner } from '@/shared/barcode/use-hardware-barcode-scanner'
 import styles from './RetailInventoryWorkspace.module.css'
 
 type InventoryFilter = 'ALL' | 'LOW'
@@ -503,6 +507,10 @@ export function RetailInventoryWorkspace() {
     null,
   )
   const [searchTerm, setSearchTerm] = useState('')
+  const [isBarcodeScannerOpen, setBarcodeScannerOpen] = useState(false)
+  const [barcodeScannerPurpose, setBarcodeScannerPurpose] =
+    useState<'INVENTORY' | 'PURCHASE'>('INVENTORY')
+  const [unknownBarcode, setUnknownBarcode] = useState<string | null>(null)
   const [categorySearchTerm, setCategorySearchTerm] = useState('')
   const [assignedProductSearchTerm, setAssignedProductSearchTerm] = useState('')
   const [taxProductSearchTerm, setTaxProductSearchTerm] = useState('')
@@ -551,6 +559,7 @@ export function RetailInventoryWorkspace() {
     createDefaultTaxFormState(),
   )
   const productId = searchParams.get('productId')
+  const initialProductBarcode = searchParams.get('barcode') ?? ''
   const rawTab = searchParams.get('tab')
   const productWorkspaceReturnPath =
     searchParams.get('returnTo') === routeSegments.sales
@@ -560,6 +569,114 @@ export function RetailInventoryWorkspace() {
     rawTab === 'variants' || rawTab === 'measures' ? rawTab : 'basic'
   const isManualCreateDrawerOpen = searchParams.get('create') === 'manual'
   const isProductWorkspaceOpen = isManualCreateDrawerOpen || Boolean(productId)
+  const handleInventoryBarcodeScan = useCallback(
+    (rawBarcode: string) => {
+      const barcode = normalizeBarcode(rawBarcode)
+      const product = products.find(
+        (candidate) => normalizeBarcode(candidate.barcode ?? '') === barcode,
+      )
+
+      setBarcodeScannerOpen(false)
+      setActiveCategoryId(null)
+      setActiveInventoryFilter('ALL')
+
+      if (!product) {
+        setUnknownBarcode(barcode)
+        setFeedbackMessage({
+          tone: 'error',
+          text: `No encontramos un producto con el código ${barcode}.`,
+        })
+        return
+      }
+
+      setUnknownBarcode(null)
+      setSearchTerm(barcode)
+      setFeedbackMessage({
+        tone: 'success',
+        text: `Encontramos ${product.name}.`,
+      })
+      window.requestAnimationFrame(() => tableSectionRef.current?.focus())
+    },
+    [products],
+  )
+
+  const handlePurchaseBarcodeScan = useCallback(
+    (rawBarcode: string) => {
+      const barcode = normalizeBarcode(rawBarcode)
+      const product = products.find(
+        (candidate) => normalizeBarcode(candidate.barcode ?? '') === barcode,
+      )
+
+      setBarcodeScannerOpen(false)
+      if (!product) {
+        setPurchaseFormError(
+          `No encontramos un producto con el código ${barcode}. Créalo antes de registrar la compra.`,
+        )
+        return
+      }
+
+      setPurchaseFormError(null)
+      setPurchaseFormState((currentState) => {
+        const existingItem = currentState.items.find(
+          (item) => item.productId === product.id,
+        )
+        if (existingItem) {
+          return {
+            ...currentState,
+            items: currentState.items.map((item) =>
+              item.id === existingItem.id
+                ? {
+                    ...item,
+                    quantity: String(parsePositiveNumber(item.quantity) + 1),
+                  }
+                : item,
+            ),
+          }
+        }
+
+        const emptyItem = currentState.items.find((item) => !item.productId)
+        if (emptyItem) {
+          return {
+            ...currentState,
+            items: currentState.items.map((item) =>
+              item.id === emptyItem.id
+                ? {
+                    ...item,
+                    productId: product.id,
+                    quantity: '1',
+                    unitCost: String(product.cost),
+                  }
+                : item,
+            ),
+          }
+        }
+
+        return {
+          ...currentState,
+          items: [
+            ...currentState.items,
+            {
+              ...createPurchaseLineState(),
+              productId: product.id,
+              quantity: '1',
+              unitCost: String(product.cost),
+            },
+          ],
+        }
+      })
+    },
+    [products],
+  )
+
+  useHardwareBarcodeScanner({
+    enabled:
+      !isProductWorkspaceOpen &&
+      !isBarcodeScannerOpen &&
+      !isAdjustmentDrawerOpen,
+    onScan: isPurchaseDrawerOpen
+      ? handlePurchaseBarcodeScan
+      : handleInventoryBarcodeScan,
+  })
   const activeTaxOption = inventoryTaxOptions.find(
     (option) => option.id === taxFormState.selectedOptionId,
   )
@@ -1483,9 +1600,23 @@ export function RetailInventoryWorkspace() {
   if (isProductWorkspaceOpen) {
     return (
       <RetailProductCreateWorkspace
+        initialBarcode={initialProductBarcode}
         initialTab={productWorkspaceTab}
         productId={productId}
         onBack={handleCloseProductWorkspace}
+        onSaved={(product) => {
+          if (productWorkspaceReturnPath) {
+            const barcode = product.barcode ?? initialProductBarcode
+            navigate(
+              barcode
+                ? `${productWorkspaceReturnPath}?barcode=${encodeURIComponent(barcode)}`
+                : productWorkspaceReturnPath,
+              { replace: true },
+            )
+            return
+          }
+          handleCloseProductWorkspace()
+        }}
         onTabChange={handleProductWorkspaceTabChange}
       />
     )
@@ -1656,12 +1787,31 @@ export function RetailInventoryWorkspace() {
             <label className={styles.tableSearch}>
               <SearchIcon />
               <input
-                placeholder={copy.searchPlaceholder}
+                data-barcode-scanner="true"
+                placeholder="Buscar por nombre, SKU o código"
                 type="search"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'Enter') return
+                  const barcode = normalizeBarcode(searchTerm)
+                  if (barcode) handleInventoryBarcodeScan(barcode)
+                }}
               />
             </label>
+            <button
+              aria-label="Buscar producto con la cámara"
+              className={styles.inventoryScanButton}
+              type="button"
+              onClick={() => {
+                setUnknownBarcode(null)
+                setBarcodeScannerPurpose('INVENTORY')
+                setBarcodeScannerOpen(true)
+              }}
+            >
+              <Camera aria-hidden="true" />
+              <span>Escanear</span>
+            </button>
             <label className={styles.compactSelectWrap}>
               <span aria-hidden="true">≡</span>
               <SearchableSelect
@@ -1714,6 +1864,26 @@ export function RetailInventoryWorkspace() {
               </SearchableSelect>
             </label>
           </div>
+          {unknownBarcode ? (
+            <div className={styles.unknownBarcodeCard}>
+              <ScanBarcode aria-hidden="true" />
+              <span>¿Este es un producto nuevo?</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchParams((currentParams) => {
+                    const nextParams = new URLSearchParams(currentParams)
+                    nextParams.set('create', 'manual')
+                    nextParams.set('barcode', unknownBarcode)
+                    nextParams.delete('productId')
+                    return nextParams
+                  })
+                }}
+              >
+                Crear con este código
+              </button>
+            </div>
+          ) : null}
 
           <div className={styles.tableToolbarRight}>
             <span className={styles.resultsCount}>
@@ -2698,18 +2868,30 @@ export function RetailInventoryWorkspace() {
                     {copy.purchaseProductHint}
                   </small>
                 </div>
-                <button
-                  className={styles.addPurchaseItemButton}
-                  type="button"
-                  onClick={() =>
-                    setPurchaseFormState((currentState) => ({
-                      ...currentState,
-                      items: [...currentState.items, createPurchaseLineState()],
-                    }))
-                  }
-                >
-                  + {copy.purchaseAddProduct}
-                </button>
+                <div className={styles.purchaseHeaderActions}>
+                  <button
+                    className={styles.scanPurchaseButton}
+                    type="button"
+                    onClick={() => {
+                      setBarcodeScannerPurpose('PURCHASE')
+                      setBarcodeScannerOpen(true)
+                    }}
+                  >
+                    <ScanBarcode aria-hidden="true" /> Escanear producto
+                  </button>
+                  <button
+                    className={styles.addPurchaseItemButton}
+                    type="button"
+                    onClick={() =>
+                      setPurchaseFormState((currentState) => ({
+                        ...currentState,
+                        items: [...currentState.items, createPurchaseLineState()],
+                      }))
+                    }
+                  >
+                    + {copy.purchaseAddProduct}
+                  </button>
+                </div>
               </div>
 
               {purchaseFormState.items.map((item, index) => {
@@ -3242,6 +3424,21 @@ export function RetailInventoryWorkspace() {
                 : `${supplier.name} fue creado y seleccionado para esta compra.`,
           })
         }}
+      />
+
+      <BarcodeScannerModal
+        isOpen={isBarcodeScannerOpen}
+        title={
+          barcodeScannerPurpose === 'PURCHASE'
+            ? 'Agregar producto a la compra'
+            : 'Buscar producto por código de barras'
+        }
+        onClose={() => setBarcodeScannerOpen(false)}
+        onDetected={
+          barcodeScannerPurpose === 'PURCHASE'
+            ? handlePurchaseBarcodeScan
+            : handleInventoryBarcodeScan
+        }
       />
 
       {confirmationDialog}

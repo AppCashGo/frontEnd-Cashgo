@@ -1321,3 +1321,51 @@
     flex-direction: column;
   }
 }
+
+.barcodeInputRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+}
+
+.scanBarcodeButton,
+.scanBarcodeButtonCompact {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.85rem;
+  padding: 0 1rem;
+  border: 1px solid #2d67dc;
+  border-radius: 0.75rem;
+  background: #eef4ff;
+  color: #1f56be;
+  font-weight: 800;
+}
+
+.scanBarcodeButton svg,
+.scanBarcodeButtonCompact svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.scanBarcodeButtonCompact {
+  width: 2.85rem;
+  padding: 0;
+}
+
+.barcodeHelp {
+  color: #66758d;
+  line-height: 1.45;
+}
+
+@media (max-width: 520px) {
+  .barcodeInputRow {
+    grid-template-columns: 1fr;
+  }
+
+  .scanBarcodeButton,
+  .scanBarcodeButtonCompact {
+    width: 100%;
+  }
+}

@@ -1,6 +1,7 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect } from 'react'
+import { Camera } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
   productFormSchema,
@@ -16,6 +17,8 @@ import {
 } from '@/modules/products/utils/product-unit-options'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { ApiError } from '@/shared/services/api-client'
+import { BarcodeScannerModal } from '@/shared/barcode/BarcodeScannerModal'
+import { normalizeBarcode } from '@/shared/barcode/normalize-barcode'
 import styles from './ProductFormPanel.module.css'
 
 type ProductFormPanelProps = {
@@ -65,11 +68,13 @@ export function ProductFormPanel({
   onSubmit,
 }: ProductFormPanelProps) {
   const isEditing = product !== null
+  const [isScannerOpen, setScannerOpen] = useState(false)
   const {
     register,
     handleSubmit,
     reset,
     setError,
+    setValue,
     formState: { errors },
   } = useForm<ProductFormValues>({
     resolver: zodResolver(productFormSchema),
@@ -86,7 +91,7 @@ export function ProductFormPanel({
         name: values.name.trim(),
         description: normalizeOptionalText(values.description),
         sku: normalizeOptionalText(values.sku),
-        barcode: normalizeOptionalText(values.barcode),
+        barcode: values.barcode ? normalizeBarcode(values.barcode) : undefined,
         cost: values.cost,
         price: values.price,
         stock: values.stock,
@@ -208,17 +213,28 @@ export function ProductFormPanel({
             <label className={styles.label} htmlFor="product-barcode">
               Código de barras
             </label>
-            <input
-              aria-describedby={
-                errors.barcode ? 'product-barcode-error' : undefined
-              }
-              aria-invalid={Boolean(errors.barcode)}
-              className={styles.input}
-              id="product-barcode"
-              placeholder="770000000001"
-              type="text"
-              {...register('barcode')}
-            />
+            <div className={styles.barcodeInputRow}>
+              <input
+                aria-describedby={
+                  errors.barcode ? 'product-barcode-error' : undefined
+                }
+                aria-invalid={Boolean(errors.barcode)}
+                className={styles.input}
+                id="product-barcode"
+                placeholder="770000000001"
+                type="text"
+                {...register('barcode')}
+              />
+              <button
+                aria-label="Escanear código con la cámara"
+                className={styles.scanButton}
+                type="button"
+                onClick={() => setScannerOpen(true)}
+              >
+                <Camera aria-hidden="true" />
+                Escanear
+              </button>
+            </div>
             {errors.barcode ? (
               <p className={styles.errorMessage} id="product-barcode-error">
                 {errors.barcode.message}
@@ -386,6 +402,14 @@ export function ProductFormPanel({
           </button>
         </div>
       </form>
+      <BarcodeScannerModal
+        isOpen={isScannerOpen}
+        onClose={() => setScannerOpen(false)}
+        onDetected={(barcode) => {
+          setValue('barcode', barcode, { shouldDirty: true, shouldValidate: true })
+          setScannerOpen(false)
+        }}
+      />
     </SurfaceCard>
   )
 }

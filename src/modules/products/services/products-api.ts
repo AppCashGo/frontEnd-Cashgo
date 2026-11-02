@@ -28,6 +28,15 @@ export async function getProducts() {
   return products.map(normalizeProductRecord)
 }
 
+export async function getProductByBarcode(barcode: string) {
+  const product = await getJson<ProductApiRecord>(
+    `/products/barcode/${encodeURIComponent(barcode)}`,
+    { accessToken: getAuthAccessToken() },
+  )
+
+  return normalizeProductRecord(product)
+}
+
 export async function createProduct(input: ProductMutationInput) {
   const product = await postJson<ProductApiRecord, ProductMutationInput>(
     '/products',
