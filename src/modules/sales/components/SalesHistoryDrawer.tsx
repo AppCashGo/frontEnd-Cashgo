@@ -1,20 +1,17 @@
-import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { useEffect, useMemo, useState } from 'react'
-import { Download, RotateCcw, Search, XCircle } from 'lucide-react'
+import { Download, Pencil, RotateCcw, Search, XCircle } from 'lucide-react'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import {
   useCancelSaleMutation,
   useCreateSaleReturnMutation,
+  useUpdateSaleMutation,
 } from '@/modules/sales/hooks/use-create-sale-mutation'
 import {
   downloadSaleReceipt,
   downloadSaleReturnCreditNote,
 } from '@/modules/sales/services/sales-api'
-import type {
-  SalePaymentMethod,
-  SaleReceipt,
-  SaleReturnInput,
-} from '@/modules/sales/types/sale'
+import type { SalePaymentMethod, SaleReceipt, SaleReturnInput } from '@/modules/sales/types/sale'
 import { AppDrawer } from '@/shared/components/ui/AppDrawer'
 import { COLLECTED_PAYMENT_METHOD_OPTIONS } from '@/shared/payments/payment-methods'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
@@ -22,6 +19,7 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { toOperationDateTime } from '@/shared/utils/date-input'
+import { toDateOnlyRequestDate, toDateInputValue } from '@/shared/utils/date-input'
 import { isCashSessionRequiredError } from '@/modules/cash-register/utils/is-cash-session-required-error'
 import styles from './SalesHistoryDrawer.module.css'
 
@@ -33,7 +31,12 @@ type SalesHistoryDrawerProps = {
   onCashSessionRequired?: () => void
 }
 
-type DraftMode = 'return' | 'cancel' | null
+type DraftMode = 'edit' | 'return' | 'cancel' | null
+
+type EditItemDraft = {
+  quantity: string
+  unitPrice: string
+}
 
 const refundMethods: Array<{ value: SalePaymentMethod; label: string }> =
   COLLECTED_PAYMENT_METHOD_OPTIONS.map(({ value, label }) => ({
@@ -68,11 +71,10 @@ export function SalesHistoryDrawer({
   onCashSessionRequired,
 }: SalesHistoryDrawerProps) {
   const currentUser = useAuthSessionStore((state) => state.user)
-  const canManageReturns = ['OWNER', 'ADMIN', 'MANAGER'].includes(
-    currentUser?.role ?? '',
-  )
+  const canManageReturns = ['OWNER', 'ADMIN', 'MANAGER'].includes(currentUser?.role ?? '')
   const cancelMutation = useCancelSaleMutation()
   const returnMutation = useCreateSaleReturnMutation()
+  const updateMutation = useUpdateSaleMutation()
   const [search, setSearch] = useState('')
   const [selectedSaleId, setSelectedSaleId] = useState<string | null>(null)
   const [draftMode, setDraftMode] = useState<DraftMode>(null)
@@ -81,6 +83,11 @@ export function SalesHistoryDrawer({
   const [refundMethod, setRefundMethod] = useState<SalePaymentMethod>('CASH')
   const [quantities, setQuantities] = useState<Record<string, string>>({})
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [editItems, setEditItems] = useState<Record<string, EditItemDraft>>({})
+  const [editSaleDate, setEditSaleDate] = useState('')
+  const [editDueDate, setEditDueDate] = useState('')
+  const [editNotes, setEditNotes] = useState('')
+  const [editReason, setEditReason] = useState('')
 
   const normalizedSearch = search.trim().toLowerCase()
   const visibleSales = useMemo(
@@ -104,17 +111,13 @@ export function SalesHistoryDrawer({
       }))
       .filter((line) => line.available > 0) ?? []
   const originalItemsAmount =
-    selectedSale?.items.reduce(
-      (total, item) => total + item.price * item.quantity,
-      0,
-    ) ?? 0
+    selectedSale?.items.reduce((total, item) => total + item.price * item.quantity, 0) ?? 0
   const estimatedReturnAmount = selectedSale
     ? selectedLines.reduce(
         (total, line) =>
           total +
           (originalItemsAmount > 0
-            ? (selectedSale.total * line.item.price * line.quantity) /
-              originalItemsAmount
+            ? (selectedSale.total * line.item.price * line.quantity) / originalItemsAmount
             : 0),
         0,
       )
@@ -123,7 +126,25 @@ export function SalesHistoryDrawer({
     estimatedReturnAmount - (selectedSale?.accountReceivable?.balance ?? 0),
     0,
   )
-  const isSubmitting = cancelMutation.isPending || returnMutation.isPending
+  const estimatedEditTotal = selectedSale
+    ? Math.max(
+        selectedSale.items.reduce((total, item) => {
+          const draft = editItems[item.id]
+          const quantity = Number(draft?.quantity)
+          const unitPrice = Number(draft?.unitPrice)
+
+          return (
+            total +
+            (Number.isFinite(quantity) && Number.isFinite(unitPrice) ? quantity * unitPrice : 0)
+          )
+        }, 0) +
+          selectedSale.deliveryFee -
+          selectedSale.discountTotal,
+        0,
+      )
+    : 0
+  const isSubmitting =
+    cancelMutation.isPending || returnMutation.isPending || updateMutation.isPending
 
   useEffect(() => {
     if (isOpen && initialSaleId) {
@@ -138,6 +159,33 @@ export function SalesHistoryDrawer({
     setReturnDate(todayInputValue())
     setRefundMethod('CASH')
     setFeedback(null)
+    setEditItems({})
+    setEditSaleDate('')
+    setEditDueDate('')
+    setEditNotes('')
+    setEditReason('')
+  }
+
+  function startEditing() {
+    if (!selectedSale) return
+
+    setFeedback(null)
+    setEditItems(
+      Object.fromEntries(
+        selectedSale.items.map((item) => [
+          item.id,
+          {
+            quantity: String(item.quantity),
+            unitPrice: String(item.price),
+          },
+        ]),
+      ),
+    )
+    setEditSaleDate(toDateInputValue(selectedSale.saleDate))
+    setEditDueDate(toDateInputValue(selectedSale.accountReceivable?.dueDate ?? ''))
+    setEditNotes(selectedSale.notes ?? '')
+    setEditReason('')
+    setDraftMode('edit')
   }
 
   function selectSale(saleId: string) {
@@ -150,23 +198,16 @@ export function SalesHistoryDrawer({
       const { blob, filename } = await downloadSaleReceipt(sale.id)
       downloadBlobFile(blob, filename ?? `${sale.saleNumber}.pdf`)
     } catch (error) {
-      setFeedback(
-        getErrorMessage(error, 'No pudimos descargar el comprobante.'),
-      )
+      setFeedback(getErrorMessage(error, 'No pudimos descargar el comprobante.'))
     }
   }
 
   async function downloadCreditNote(saleId: string, returnId: string) {
     try {
-      const { blob, filename } = await downloadSaleReturnCreditNote(
-        saleId,
-        returnId,
-      )
+      const { blob, filename } = await downloadSaleReturnCreditNote(saleId, returnId)
       downloadBlobFile(blob, filename ?? `nota-credito-${returnId}.html`)
     } catch (error) {
-      setFeedback(
-        getErrorMessage(error, 'No pudimos descargar la nota crédito.'),
-      )
+      setFeedback(getErrorMessage(error, 'No pudimos descargar la nota crédito.'))
     }
   }
 
@@ -181,14 +222,10 @@ export function SalesHistoryDrawer({
       }))
     const hasInvalidQuantity = selectedLines.some(
       (line) =>
-        line.quantity < 0 ||
-        !Number.isInteger(line.quantity) ||
-        line.quantity > line.available,
+        line.quantity < 0 || !Number.isInteger(line.quantity) || line.quantity > line.available,
     )
     if (items.length === 0 || hasInvalidQuantity || reason.trim().length < 3) {
-      setFeedback(
-        'Selecciona cantidades válidas y escribe el motivo de la devolución.',
-      )
+      setFeedback('Selecciona cantidades válidas y escribe el motivo de la devolución.')
       return
     }
 
@@ -201,9 +238,7 @@ export function SalesHistoryDrawer({
 
     try {
       await returnMutation.mutateAsync({ saleId: selectedSale.id, input })
-      setFeedback(
-        'La devolución y la nota crédito se registraron correctamente.',
-      )
+      setFeedback('La devolución y la nota crédito se registraron correctamente.')
       setDraftMode(null)
       setQuantities({})
       setReason('')
@@ -236,6 +271,51 @@ export function SalesHistoryDrawer({
         return
       }
       setFeedback(getErrorMessage(error, 'No pudimos anular la venta.'))
+    }
+  }
+
+  async function submitEdit() {
+    if (!selectedSale) return
+
+    const items = selectedSale.items.map((item) => ({
+      saleItemId: item.id,
+      quantity: Number(editItems[item.id]?.quantity),
+      unitPrice: Number(editItems[item.id]?.unitPrice),
+    }))
+    const hasInvalidItem = items.some(
+      (item) =>
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1 ||
+        !Number.isFinite(item.unitPrice) ||
+        item.unitPrice < 0,
+    )
+    if (
+      hasInvalidItem ||
+      !editSaleDate ||
+      editReason.trim().length < 3 ||
+      (editDueDate && editDueDate < editSaleDate)
+    ) {
+      setFeedback(
+        'Revisa cantidades, precios y fechas, y escribe un motivo de al menos 3 caracteres.',
+      )
+      return
+    }
+
+    try {
+      await updateMutation.mutateAsync({
+        saleId: selectedSale.id,
+        input: {
+          items,
+          saleDate: toOperationDateTime(editSaleDate, selectedSale.saleDate),
+          dueDate: editDueDate ? toDateOnlyRequestDate(editDueDate) : null,
+          notes: editNotes.trim() || null,
+          reason: editReason.trim(),
+        },
+      })
+      setFeedback('La factura fue corregida y el inventario quedó actualizado.')
+      setDraftMode(null)
+    } catch (error) {
+      setFeedback(getErrorMessage(error, 'No pudimos editar la factura.'))
     }
   }
 
@@ -274,9 +354,7 @@ export function SalesHistoryDrawer({
           </label>
           <div className={styles.salesList}>
             {visibleSales.length === 0 ? (
-              <div className={styles.emptyState}>
-                No encontramos ventas con ese criterio.
-              </div>
+              <div className={styles.emptyState}>No encontramos ventas con ese criterio.</div>
             ) : (
               visibleSales.map((sale) => (
                 <button
@@ -288,8 +366,7 @@ export function SalesHistoryDrawer({
                   <span>
                     <strong>{sale.saleNumber}</strong>
                     <small>
-                      {sale.customer?.name ?? 'Venta de mostrador'} ·{' '}
-                      {formatDate(sale.saleDate)}
+                      {sale.customer?.name ?? 'Venta de mostrador'} · {formatDate(sale.saleDate)}
                     </small>
                   </span>
                   <span className={styles.saleCardValue}>
@@ -306,9 +383,7 @@ export function SalesHistoryDrawer({
           <section className={styles.summaryCard}>
             <div>
               <span>Cliente</span>
-              <strong>
-                {selectedSale.customer?.name ?? 'Venta de mostrador'}
-              </strong>
+              <strong>{selectedSale.customer?.name ?? 'Venta de mostrador'}</strong>
             </div>
             <div>
               <span>Total original</span>
@@ -316,16 +391,12 @@ export function SalesHistoryDrawer({
             </div>
             <div>
               <span>Notas crédito</span>
-              <strong>
-                -{formatCurrency(saleReturnedAmount(selectedSale))}
-              </strong>
+              <strong>-{formatCurrency(saleReturnedAmount(selectedSale))}</strong>
             </div>
             <div>
               <span>Total neto</span>
               <strong>
-                {formatCurrency(
-                  selectedSale.total - saleReturnedAmount(selectedSale),
-                )}
+                {formatCurrency(selectedSale.total - saleReturnedAmount(selectedSale))}
               </strong>
             </div>
           </section>
@@ -350,8 +421,8 @@ export function SalesHistoryDrawer({
                   <span>
                     <strong>{item.product.name}</strong>
                     <small>
-                      {item.quantity - item.returnedQuantity} de {item.quantity}{' '}
-                      disponibles para devolver
+                      {item.quantity - item.returnedQuantity} de {item.quantity} disponibles para
+                      devolver
                     </small>
                   </span>
                   <strong>{formatCurrency(item.price * item.quantity)}</strong>
@@ -369,20 +440,14 @@ export function SalesHistoryDrawer({
                     <span>
                       <strong>{saleReturn.creditNumber}</strong>
                       <small>
-                        {formatDate(saleReturn.returnDate)} ·{' '}
-                        {saleReturn.reason}
+                        {formatDate(saleReturn.returnDate)} · {saleReturn.reason}
                       </small>
                     </span>
                     <span>
                       <strong>{formatCurrency(saleReturn.amount)}</strong>
                       <button
                         type="button"
-                        onClick={() =>
-                          void downloadCreditNote(
-                            selectedSale.id,
-                            saleReturn.id,
-                          )
-                        }
+                        onClick={() => void downloadCreditNote(selectedSale.id, saleReturn.id)}
                       >
                         Descargar
                       </button>
@@ -399,14 +464,130 @@ export function SalesHistoryDrawer({
             </p>
           ) : null}
 
+          {draftMode === 'edit' ? (
+            <section className={styles.actionForm}>
+              <div className={styles.sectionHeader}>
+                <div>
+                  <strong>Editar factura pendiente</strong>
+                  <small>Corrige cantidades, precios y fechas de los productos originales.</small>
+                </div>
+                <strong>{formatCurrency(estimatedEditTotal)}</strong>
+              </div>
+
+              <div className={styles.editItems}>
+                {selectedSale.items.map((item) => (
+                  <div className={styles.editItemRow} key={item.id}>
+                    <span>
+                      <strong>{item.product.name}</strong>
+                      <small>Producto original de la factura</small>
+                    </span>
+                    <label>
+                      <span>Cantidad</span>
+                      <input
+                        inputMode="numeric"
+                        min="1"
+                        step="1"
+                        type="number"
+                        value={editItems[item.id]?.quantity ?? ''}
+                        onChange={(event) =>
+                          setEditItems((current) => ({
+                            ...current,
+                            [item.id]: {
+                              ...current[item.id],
+                              quantity: event.target.value,
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                    <label>
+                      <span>Precio unitario</span>
+                      <input
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        type="number"
+                        value={editItems[item.id]?.unitPrice ?? ''}
+                        onChange={(event) =>
+                          setEditItems((current) => ({
+                            ...current,
+                            [item.id]: {
+                              ...current[item.id],
+                              unitPrice: event.target.value,
+                            },
+                          }))
+                        }
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+
+              <div className={styles.fieldGrid}>
+                <label>
+                  <span>Fecha de venta</span>
+                  <input
+                    type="date"
+                    value={editSaleDate}
+                    onChange={(event) => setEditSaleDate(event.target.value)}
+                  />
+                </label>
+                <label>
+                  <span>Fecha de vencimiento</span>
+                  <input
+                    min={editSaleDate}
+                    type="date"
+                    value={editDueDate}
+                    onChange={(event) => setEditDueDate(event.target.value)}
+                  />
+                </label>
+              </div>
+
+              <label className={styles.reasonField}>
+                <span>Notas de la factura</span>
+                <textarea
+                  maxLength={500}
+                  value={editNotes}
+                  onChange={(event) => setEditNotes(event.target.value)}
+                />
+              </label>
+              <label className={styles.reasonField}>
+                <span>Motivo de la corrección</span>
+                <textarea
+                  maxLength={255}
+                  placeholder="Ej. cantidad o precio registrado incorrectamente"
+                  value={editReason}
+                  onChange={(event) => setEditReason(event.target.value)}
+                />
+              </label>
+
+              <div className={styles.formActions}>
+                <button
+                  className={styles.secondaryButton}
+                  disabled={isSubmitting}
+                  type="button"
+                  onClick={resetDraft}
+                >
+                  Volver
+                </button>
+                <button
+                  className={styles.primaryButton}
+                  disabled={isSubmitting || editReason.trim().length < 3}
+                  type="button"
+                  onClick={() => void submitEdit()}
+                >
+                  {updateMutation.isPending ? 'Guardando…' : 'Guardar corrección'}
+                </button>
+              </div>
+            </section>
+          ) : null}
+
           {draftMode === 'return' ? (
             <section className={styles.actionForm}>
               <div className={styles.sectionHeader}>
                 <div>
                   <strong>Registrar devolución</strong>
-                  <small>
-                    El saldo pendiente se reduce antes de generar un reembolso.
-                  </small>
+                  <small>El saldo pendiente se reduce antes de generar un reembolso.</small>
                 </div>
                 <strong>{formatCurrency(estimatedReturnAmount)}</strong>
               </div>
@@ -447,9 +628,7 @@ export function SalesHistoryDrawer({
                     <span>Método de reembolso</span>
                     <SearchableSelect
                       value={refundMethod}
-                      onChange={(event) =>
-                        setRefundMethod(event.target.value as SalePaymentMethod)
-                      }
+                      onChange={(event) => setRefundMethod(event.target.value as SalePaymentMethod)}
                     >
                       {refundMethods.map((method) => (
                         <option key={method.value} value={method.value}>
@@ -496,9 +675,7 @@ export function SalesHistoryDrawer({
                   type="button"
                   onClick={() => void submitReturn()}
                 >
-                  {returnMutation.isPending
-                    ? 'Registrando…'
-                    : 'Crear nota crédito'}
+                  {returnMutation.isPending ? 'Registrando…' : 'Crear nota crédito'}
                 </button>
               </div>
             </section>
@@ -508,9 +685,8 @@ export function SalesHistoryDrawer({
             <section className={styles.actionForm}>
               <strong>Anular venta completa</strong>
               <p>
-                Esta acción restaura todo el inventario y revierte el saldo
-                pendiente. Úsala solo si la venta completa debe quedar sin
-                efecto.
+                Esta acción restaura todo el inventario y revierte el saldo pendiente. Úsala solo si
+                la venta completa debe quedar sin efecto.
               </p>
               <label className={styles.reasonField}>
                 <span>Motivo de anulación</span>
@@ -535,18 +711,22 @@ export function SalesHistoryDrawer({
                   type="button"
                   onClick={() => void submitCancellation()}
                 >
-                  {cancelMutation.isPending
-                    ? 'Anulando…'
-                    : 'Confirmar anulación'}
+                  {cancelMutation.isPending ? 'Anulando…' : 'Confirmar anulación'}
                 </button>
               </div>
             </section>
           ) : null}
 
-          {canManageReturns &&
-          !draftMode &&
-          selectedSale.status !== 'CANCELLED' ? (
+          {canManageReturns && !draftMode && selectedSale.status !== 'CANCELLED' ? (
             <div className={styles.mainActions}>
+              {selectedSale.accountReceivable &&
+              selectedSale.accountReceivable.balance > 0 &&
+              selectedSale.returns.length === 0 &&
+              !selectedSale.invoice ? (
+                <button className={styles.secondaryButton} type="button" onClick={startEditing}>
+                  <Pencil aria-hidden="true" /> Editar factura
+                </button>
+              ) : null}
               {selectedLines.length > 0 ? (
                 <button
                   className={styles.primaryButton}

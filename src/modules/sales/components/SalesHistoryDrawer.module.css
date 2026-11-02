@@ -34,6 +34,7 @@
 .creditList,
 .actionForm,
 .returnItems,
+.editItems,
 .reasonField {
   display: grid;
   gap: 0.75rem;
@@ -197,6 +198,35 @@
 .returnItems input {
   width: 5.5rem;
 }
+.editItemRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 6.5rem 9rem;
+  gap: 0.75rem;
+  align-items: end;
+  padding: 0.75rem;
+  border: 1px solid #dce3ed;
+  border-radius: 12px;
+  background: #fff;
+}
+.editItemRow > span,
+.editItemRow label {
+  display: grid;
+  gap: 0.35rem;
+}
+.editItemRow small,
+.editItemRow label > span {
+  color: #667085;
+  font-size: 0.78rem;
+}
+.editItemRow input {
+  min-width: 0;
+  min-height: 2.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.65rem;
+  font: inherit;
+  background: #fff;
+}
 .fieldGrid {
   align-items: stretch;
   gap: 0.75rem;
@@ -287,6 +317,9 @@
   }
   .returnItems label {
     align-items: center;
+  }
+  .editItemRow {
+    grid-template-columns: 1fr;
   }
   .formActions {
     display: grid;

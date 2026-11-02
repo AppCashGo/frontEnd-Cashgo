@@ -451,6 +451,7 @@
 }
 
 .reminderButton,
+.manageInvoiceButton,
 .termsButton,
 .promiseButton {
   display: inline-flex;
@@ -475,12 +476,18 @@
   color: #41516a;
 }
 
+.manageInvoiceButton {
+  border-color: #9cb8e8;
+  color: #174ea6;
+}
+
 .promiseButton {
   border-color: #cbbcf6;
   color: #6646b8;
 }
 
 .reminderButton svg,
+.manageInvoiceButton svg,
 .termsButton svg,
 .promiseButton svg,
 .reminderActions svg,
@@ -1326,8 +1333,14 @@
   padding: 0.9rem;
 }
 .paymentReportQueue h4,
-.paymentReportQueue p { margin: 0; }
-.paymentReportQueue p { margin-top: 0.2rem; color: #6b5a24; font-size: 0.8rem; }
+.paymentReportQueue p {
+  margin: 0;
+}
+.paymentReportQueue p {
+  margin-top: 0.2rem;
+  color: #6b5a24;
+  font-size: 0.8rem;
+}
 .paymentReportQueue article {
   display: grid;
   grid-template-columns: minmax(170px, 1fr) auto auto auto;
@@ -1337,8 +1350,13 @@
   background: #fff;
   padding: 0.75rem;
 }
-.paymentReportQueue article > div { display: grid; gap: 0.1rem; }
-.paymentReportQueue article small { color: #64748b; }
+.paymentReportQueue article > div {
+  display: grid;
+  gap: 0.1rem;
+}
+.paymentReportQueue article small {
+  color: #64748b;
+}
 .paymentReportQueue a,
 .paymentReportQueue button {
   display: inline-flex;
@@ -1357,9 +1375,19 @@
   text-decoration: none;
   cursor: pointer;
 }
-.paymentReportQueue button:last-child { border-color: #158653; background: #158653; color: #fff; }
-.paymentReportQueue svg { width: 1rem; height: 1rem; }
-.paymentReportQueue button:disabled { opacity: 0.55; cursor: wait; }
+.paymentReportQueue button:last-child {
+  border-color: #158653;
+  background: #158653;
+  color: #fff;
+}
+.paymentReportQueue svg {
+  width: 1rem;
+  height: 1rem;
+}
+.paymentReportQueue button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
 
 .paymentHistory {
   display: grid;

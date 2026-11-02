@@ -8,18 +8,18 @@ import {
   createSale,
   createSaleReturn,
   getSales,
+  updateSale,
 } from '@/modules/sales/services/sales-api'
 import type {
   CancelSaleInput,
   CreateSaleInput,
   SaleReturnInput,
+  UpdateSaleInput,
 } from '@/modules/sales/types/sale'
 
 export const salesQueryKey = ['sales'] as const
 
-function invalidateSaleFlowQueries(
-  queryClient: ReturnType<typeof useQueryClient>,
-) {
+function invalidateSaleFlowQueries(queryClient: ReturnType<typeof useQueryClient>) {
   return Promise.all([
     invalidateCashRegisterQueries(queryClient),
     queryClient.invalidateQueries({
@@ -59,13 +59,20 @@ export function useCancelSaleMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      saleId,
-      input,
-    }: {
-      saleId: string
-      input: CancelSaleInput
-    }) => cancelSale(saleId, input),
+    mutationFn: ({ saleId, input }: { saleId: string; input: CancelSaleInput }) =>
+      cancelSale(saleId, input),
+    onSuccess: async () => {
+      await invalidateSaleFlowQueries(queryClient)
+    },
+  })
+}
+
+export function useUpdateSaleMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ saleId, input }: { saleId: string; input: UpdateSaleInput }) =>
+      updateSale(saleId, input),
     onSuccess: async () => {
       await invalidateSaleFlowQueries(queryClient)
     },
@@ -76,13 +83,8 @@ export function useCreateSaleReturnMutation() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({
-      saleId,
-      input,
-    }: {
-      saleId: string
-      input: SaleReturnInput
-    }) => createSaleReturn(saleId, input),
+    mutationFn: ({ saleId, input }: { saleId: string; input: SaleReturnInput }) =>
+      createSaleReturn(saleId, input),
     onSuccess: async () => {
       await invalidateSaleFlowQueries(queryClient)
     },

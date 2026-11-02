@@ -4,14 +4,9 @@ import type {
   SaleReturnInput,
   SalesHistoryFilters,
   SalesHistoryResponse,
+  UpdateSaleInput,
 } from '@/modules/sales/types/sale'
-import {
-  ApiError,
-  getBlob,
-  getJson,
-  patchJson,
-  postJson,
-} from '@/shared/services/api-client'
+import { ApiError, getBlob, getJson, patchJson, postJson } from '@/shared/services/api-client'
 import { getAuthAccessToken } from '@/shared/services/auth-session'
 import {
   normalizeSaleRecord,
@@ -19,10 +14,7 @@ import {
 } from '@/modules/sales/utils/normalize-sale-record'
 import { normalizeNumber } from '@/shared/utils/normalize-number'
 
-const pendingSaleRequests = new Map<
-  string,
-  Promise<ReturnType<typeof normalizeSaleRecord>>
->()
+const pendingSaleRequests = new Map<string, Promise<ReturnType<typeof normalizeSaleRecord>>>()
 const saleAttemptKeys = new Map<string, string>()
 
 function createIdempotencyKey() {
@@ -43,19 +35,15 @@ export async function createSale(input: CreateSaleInput) {
   }
 
   const idempotencyKey =
-    input.idempotencyKey ??
-    saleAttemptKeys.get(requestSignature) ??
-    createIdempotencyKey()
+    input.idempotencyKey ?? saleAttemptKeys.get(requestSignature) ?? createIdempotencyKey()
   saleAttemptKeys.set(requestSignature, idempotencyKey)
   const requestInput = {
     ...input,
     idempotencyKey,
   }
-  const request = postJson<SaleApiRecord, CreateSaleInput>(
-    '/sales',
-    requestInput,
-    { accessToken },
-  ).then(normalizeSaleRecord)
+  const request = postJson<SaleApiRecord, CreateSaleInput>('/sales', requestInput, {
+    accessToken,
+  }).then(normalizeSaleRecord)
 
   pendingSaleRequests.set(requestSignature, request)
   void request.then(
@@ -69,16 +57,10 @@ export async function createSale(input: CreateSaleInput) {
     },
     (error) => {
       pendingSaleRequests.delete(requestSignature)
-      if (
-        !(error instanceof ApiError) ||
-        error.code !== 'CASH_SESSION_REQUIRED'
-      ) {
+      if (!(error instanceof ApiError) || error.code !== 'CASH_SESSION_REQUIRED') {
         saleAttemptKeys.delete(requestSignature)
       } else {
-        globalThis.setTimeout(
-          () => saleAttemptKeys.delete(requestSignature),
-          30 * 60 * 1_000,
-        )
+        globalThis.setTimeout(() => saleAttemptKeys.delete(requestSignature), 30 * 60 * 1_000)
       }
     },
   )
@@ -109,17 +91,29 @@ type SalesHistoryApiResponse = Omit<SalesHistoryResponse, 'items' | 'facets'> & 
     grossProfit: number | string
     collectedTotal: number | string
     outstandingTotal: number | string
-    paymentMethods: Array<{ method: SalesHistoryResponse['summary']['paymentMethods'][number]['method']; amount: number | string }>
+    paymentMethods: Array<{
+      method: SalesHistoryResponse['summary']['paymentMethods'][number]['method']
+      amount: number | string
+    }>
   }
   items: Array<
-    Omit<SalesHistoryResponse['items'][number], 'id' | 'total' | 'collectedAmount' | 'balance' | 'customer' | 'seller' | 'invoice'> & {
+    Omit<
+      SalesHistoryResponse['items'][number],
+      'id' | 'total' | 'collectedAmount' | 'balance' | 'customer' | 'seller' | 'invoice'
+    > & {
       id: string | number
       total: number | string
       collectedAmount: number | string
       balance: number | string
-      customer: ({ id: string | number } & NonNullable<SalesHistoryResponse['items'][number]['customer']>) | null
-      seller: ({ id: string | number } & NonNullable<SalesHistoryResponse['items'][number]['seller']>) | null
-      invoice: ({ id: string | number } & NonNullable<SalesHistoryResponse['items'][number]['invoice']>) | null
+      customer:
+        | ({ id: string | number } & NonNullable<SalesHistoryResponse['items'][number]['customer']>)
+        | null
+      seller:
+        | ({ id: string | number } & NonNullable<SalesHistoryResponse['items'][number]['seller']>)
+        | null
+      invoice:
+        | ({ id: string | number } & NonNullable<SalesHistoryResponse['items'][number]['invoice']>)
+        | null
     }
   >
   facets: {
@@ -133,10 +127,9 @@ export async function getSalesHistory(filters: SalesHistoryFilters) {
     if (value !== undefined && value !== '') searchParams.set(key, String(value))
   })
   const suffix = searchParams.size > 0 ? `?${searchParams.toString()}` : ''
-  const response = await getJson<SalesHistoryApiResponse>(
-    `/sales/history${suffix}`,
-    { accessToken: getAuthAccessToken() },
-  )
+  const response = await getJson<SalesHistoryApiResponse>(`/sales/history${suffix}`, {
+    accessToken: getAuthAccessToken(),
+  })
 
   return {
     ...response,
@@ -172,13 +165,17 @@ export async function getSalesHistory(filters: SalesHistoryFilters) {
 }
 
 export async function cancelSale(saleId: string, input: CancelSaleInput) {
-  const sale = await patchJson<SaleApiRecord, CancelSaleInput>(
-    `/sales/${saleId}/cancel`,
-    input,
-    {
-      accessToken: getAuthAccessToken(),
-    },
-  )
+  const sale = await patchJson<SaleApiRecord, CancelSaleInput>(`/sales/${saleId}/cancel`, input, {
+    accessToken: getAuthAccessToken(),
+  })
+
+  return normalizeSaleRecord(sale)
+}
+
+export async function updateSale(saleId: string, input: UpdateSaleInput) {
+  const sale = await patchJson<SaleApiRecord, UpdateSaleInput>(`/sales/${saleId}`, input, {
+    accessToken: getAuthAccessToken(),
+  })
 
   return normalizeSaleRecord(sale)
 }
@@ -191,11 +188,9 @@ export function downloadSaleReceipt(saleId: string) {
 }
 
 export async function createSaleReturn(saleId: string, input: SaleReturnInput) {
-  const sale = await postJson<SaleApiRecord, SaleReturnInput>(
-    `/sales/${saleId}/returns`,
-    input,
-    { accessToken: getAuthAccessToken() },
-  )
+  const sale = await postJson<SaleApiRecord, SaleReturnInput>(`/sales/${saleId}/returns`, input, {
+    accessToken: getAuthAccessToken(),
+  })
 
   return normalizeSaleRecord(sale)
 }

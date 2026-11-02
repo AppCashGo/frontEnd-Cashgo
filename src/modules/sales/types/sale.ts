@@ -3,11 +3,7 @@ import type { Product } from '@/modules/products/types/product'
 
 export type SalePaymentMethod = CashRegisterPaymentMethod
 
-export type SaleStatus =
-  | 'COMPLETED'
-  | 'PARTIALLY_PAID'
-  | 'PENDING_PAYMENT'
-  | 'CANCELLED'
+export type SaleStatus = 'COMPLETED' | 'PARTIALLY_PAID' | 'PENDING_PAYMENT' | 'CANCELLED'
 
 export type CreateSaleInput = {
   idempotencyKey?: string
@@ -36,6 +32,18 @@ export type CreateSaleInput = {
 }
 
 export type CancelSaleInput = {
+  reason: string
+}
+
+export type UpdateSaleInput = {
+  items: Array<{
+    saleItemId: string
+    quantity: number
+    unitPrice: number
+  }>
+  saleDate: string
+  dueDate?: string | null
+  notes?: string | null
   reason: string
 }
 
@@ -87,6 +95,7 @@ export type SaleReceipt = {
   status: SaleStatus
   subtotal: number
   discountTotal: number
+  deliveryFee: number
   taxTotal: number
   total: number
   notes: string | null
@@ -140,12 +149,7 @@ export type SaleReceipt = {
   }>
 }
 
-export type SalesHistoryStatus =
-  | 'PAID'
-  | 'PARTIAL'
-  | 'PENDING'
-  | 'OVERDUE'
-  | 'CANCELLED'
+export type SalesHistoryStatus = 'PAID' | 'PARTIAL' | 'PENDING' | 'OVERDUE' | 'CANCELLED'
 
 export type SalesHistoryItem = {
   id: string

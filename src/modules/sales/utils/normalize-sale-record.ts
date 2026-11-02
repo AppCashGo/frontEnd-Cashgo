@@ -1,8 +1,4 @@
-import type {
-  SaleAccountReceivable,
-  SalePayment,
-  SaleReceipt,
-} from '@/modules/sales/types/sale'
+import type { SaleAccountReceivable, SalePayment, SaleReceipt } from '@/modules/sales/types/sale'
 import {
   normalizeProductRecord,
   type ProductApiRecord,
@@ -58,6 +54,7 @@ export type SaleApiRecord = Omit<
   SaleReceipt,
   | 'subtotal'
   | 'discountTotal'
+  | 'deliveryFee'
   | 'taxTotal'
   | 'total'
   | 'saleDate'
@@ -71,6 +68,7 @@ export type SaleApiRecord = Omit<
 > & {
   subtotal: number | string
   discountTotal: number | string
+  deliveryFee: number | string
   taxTotal: number | string
   total: number | string
   saleDate?: string | null
@@ -111,9 +109,7 @@ function normalizeSalePayment(record: SalePaymentApiRecord): SalePayment {
   }
 }
 
-function normalizeAccountReceivable(
-  record: SaleAccountReceivableApiRecord | null,
-) {
+function normalizeAccountReceivable(record: SaleAccountReceivableApiRecord | null) {
   if (!record) {
     return null
   }
@@ -145,6 +141,7 @@ export function normalizeSaleRecord(record: SaleApiRecord): SaleReceipt {
     notes: record.notes ?? null,
     subtotal: normalizeNumber(record.subtotal),
     discountTotal: normalizeNumber(record.discountTotal),
+    deliveryFee: normalizeNumber(record.deliveryFee),
     taxTotal: normalizeNumber(record.taxTotal),
     total: normalizeNumber(record.total),
     saleDate: record.saleDate ?? record.createdAt,
@@ -171,8 +168,7 @@ export function normalizeSaleRecord(record: SaleApiRecord): SaleReceipt {
     invoice: record.invoice
       ? {
           id: String(record.invoice.id),
-          documentNumber:
-            record.invoice.fullNumber ?? `Factura #${record.invoice.id}`,
+          documentNumber: record.invoice.fullNumber ?? `Factura #${record.invoice.id}`,
           type: record.invoice.type,
           status: record.invoice.status,
         }
