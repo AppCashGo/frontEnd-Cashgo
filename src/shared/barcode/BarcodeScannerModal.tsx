@@ -1,9 +1,11 @@
 import { BrowserCodeReader, BrowserMultiFormatReader, type IScannerControls } from '@zxing/browser'
+import { BarcodeFormat } from '@zxing/library'
 import { Camera, CameraOff, RefreshCw, ScanBarcode } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppModal } from '@/shared/components/ui/AppModal'
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { playBarcodeScanSound, prepareBarcodeScanSound } from './barcode-scan-sound'
 import { isUsableBarcode, normalizeBarcode } from './normalize-barcode'
 import styles from './BarcodeScannerModal.module.css'
 
@@ -15,6 +17,37 @@ type BarcodeScannerModalProps = {
 }
 
 type ScannerStatus = 'IDLE' | 'STARTING' | 'SCANNING' | 'ERROR'
+
+const RETAIL_BARCODE_FORMATS = [
+  BarcodeFormat.EAN_13,
+  BarcodeFormat.EAN_8,
+  BarcodeFormat.UPC_A,
+  BarcodeFormat.UPC_E,
+  BarcodeFormat.CODE_128,
+  BarcodeFormat.CODE_39,
+  BarcodeFormat.ITF,
+  BarcodeFormat.CODABAR,
+]
+
+const SCAN_ATTEMPT_DELAY_MS = 40
+
+async function enableContinuousFocus(video: HTMLVideoElement | null) {
+  const track = (video?.srcObject as MediaStream | null)?.getVideoTracks()[0]
+  if (!track?.getCapabilities) return
+
+  const capabilities = track.getCapabilities() as MediaTrackCapabilities & {
+    focusMode?: string[]
+  }
+  if (!capabilities.focusMode?.includes('continuous')) return
+
+  try {
+    await track.applyConstraints({
+      advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet],
+    })
+  } catch {
+    // Some browsers advertise focus controls but reject them at runtime.
+  }
+}
 
 function getCameraErrorMessage(error: unknown) {
   if (error instanceof DOMException) {
@@ -52,6 +85,15 @@ export function BarcodeScannerModal({
     onDetectedRef.current = onDetected
   }, [onDetected])
 
+  useEffect(() => {
+    function prepareSound() {
+      prepareBarcodeScanSound()
+    }
+
+    window.addEventListener('pointerdown', prepareSound, { capture: true, once: true })
+    return () => window.removeEventListener('pointerdown', prepareSound, true)
+  }, [])
+
   const stopScanner = useCallback(() => {
     controlsRef.current?.stop()
     controlsRef.current = null
@@ -70,7 +112,11 @@ export function BarcodeScannerModal({
     }
 
     let cancelled = false
-    const reader = new BrowserMultiFormatReader()
+    const reader = new BrowserMultiFormatReader(undefined, {
+      delayBetweenScanAttempts: SCAN_ATTEMPT_DELAY_MS,
+      delayBetweenScanSuccess: SCAN_ATTEMPT_DELAY_MS,
+    })
+    reader.possibleFormats = RETAIL_BARCODE_FORMATS
     detectedRef.current = false
     setStatus('STARTING')
     setErrorMessage(null)
@@ -90,6 +136,7 @@ export function BarcodeScannerModal({
                   facingMode: { ideal: 'environment' },
                   width: { ideal: 1280 },
                   height: { ideal: 720 },
+                  frameRate: { ideal: 30 },
                 },
               },
               videoRef.current ?? undefined,
@@ -102,6 +149,11 @@ export function BarcodeScannerModal({
         }
 
         controlsRef.current = controls
+        await enableContinuousFocus(videoRef.current)
+        if (cancelled || detectedRef.current) {
+          controls.stop()
+          return
+        }
         setStatus('SCANNING')
         const availableDevices = await BrowserCodeReader.listVideoInputDevices()
         if (!cancelled) {
@@ -125,6 +177,7 @@ export function BarcodeScannerModal({
 
       detectedRef.current = true
       stopScanner()
+      playBarcodeScanSound()
       onDetectedRef.current(barcode)
     }
 
