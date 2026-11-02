@@ -3,7 +3,8 @@ import { getJson } from '@/shared/services/api-client'
 import { getAuthAccessToken } from '@/shared/services/auth-session'
 import { normalizeNumber } from '@/shared/utils/normalize-number'
 
-type DashboardSummaryApiRecord = Omit<DashboardSummary, 'totalRevenue'> & {
+type DashboardSummaryApiRecord = Omit<DashboardSummary, 'revenueToday' | 'totalRevenue'> & {
+  revenueToday: number | string
   totalRevenue: number | string
 }
 
@@ -36,6 +37,7 @@ export async function getDashboardSummary() {
 
   return {
     ...summary,
+    revenueToday: normalizeNumber(summary.revenueToday),
     totalRevenue: normalizeNumber(summary.totalRevenue),
     qaEvidence: summary.qaEvidence ?? emptyQaEvidence,
   }

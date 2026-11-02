@@ -36,7 +36,10 @@ export type QaEvidenceSummary = {
 
 export type DashboardSummary = {
   salesToday: number
+  revenueToday: number
   totalRevenue: number
+  customersCount: number
+  activeProductsCount: number
   bestSellingProducts: BestSellingProduct[]
   lowStockAlerts: LowStockAlert[]
   qaEvidence: QaEvidenceSummary

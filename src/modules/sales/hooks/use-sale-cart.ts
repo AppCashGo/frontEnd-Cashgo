@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { Product } from '@/modules/products/types/product'
 import type { SaleCartItem, SaleReceipt } from '@/modules/sales/types/sale'
 
@@ -10,6 +10,15 @@ type CartEntry = {
 
 type UseSaleCartOptions = {
   allowSaleWithoutStock?: boolean
+  persistenceKey?: string
+}
+
+function removePersistedCart(persistenceKey: string) {
+  try {
+    window.localStorage.removeItem(persistenceKey)
+  } catch {
+    // Storage can be unavailable in private or restricted browser contexts.
+  }
 }
 
 export function useSaleCart(
@@ -17,13 +26,20 @@ export function useSaleCart(
   options: UseSaleCartOptions = {},
 ) {
   const allowSaleWithoutStock = options.allowSaleWithoutStock ?? false
+  const persistenceKey = options.persistenceKey
   const [cartEntries, setCartEntries] = useState<CartEntry[]>([])
+  const [hydratedPersistenceKey, setHydratedPersistenceKey] = useState<
+    string | null
+  >(null)
   const [checkoutErrorMessage, setCheckoutErrorMessage] = useState<
     string | null
   >(null)
   const [completedSale, setCompletedSale] = useState<SaleReceipt | null>(null)
 
-  const productsById = new Map(products.map((product) => [product.id, product]))
+  const productsById = useMemo(
+    () => new Map(products.map((product) => [product.id, product])),
+    [products],
+  )
   const cartQuantitiesByProductId = new Map(
     cartEntries.map((entry) => [entry.productId, entry.quantity]),
   )
@@ -45,6 +61,75 @@ export function useSaleCart(
   })
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0)
   const totalAmount = cartItems.reduce((sum, item) => sum + item.lineTotal, 0)
+
+  useEffect(() => {
+    if (
+      !persistenceKey ||
+      products.length === 0 ||
+      hydratedPersistenceKey === persistenceKey
+    ) {
+      return
+    }
+
+    try {
+      const storedDraft = window.localStorage.getItem(persistenceKey)
+      const parsedDraft = storedDraft ? (JSON.parse(storedDraft) as unknown) : null
+      const storedEntries =
+        parsedDraft &&
+        typeof parsedDraft === 'object' &&
+        'entries' in parsedDraft &&
+        Array.isArray(parsedDraft.entries)
+          ? parsedDraft.entries
+          : []
+
+      setCartEntries(
+        storedEntries.flatMap((entry) => {
+          if (!entry || typeof entry !== 'object') return []
+
+          const candidate = entry as Partial<CartEntry>
+          if (
+            typeof candidate.productId !== 'string' ||
+            !productsById.has(candidate.productId) ||
+            !Number.isInteger(candidate.quantity) ||
+            (candidate.quantity ?? 0) <= 0 ||
+            !Number.isFinite(candidate.unitPrice) ||
+            (candidate.unitPrice ?? -1) < 0
+          ) {
+            return []
+          }
+
+          return [candidate as CartEntry]
+        }),
+      )
+    } catch {
+      removePersistedCart(persistenceKey)
+    } finally {
+      setHydratedPersistenceKey(persistenceKey)
+    }
+  }, [hydratedPersistenceKey, persistenceKey, products.length, productsById])
+
+  useEffect(() => {
+    if (
+      !persistenceKey ||
+      hydratedPersistenceKey !== persistenceKey
+    ) {
+      return
+    }
+
+    if (cartEntries.length === 0) {
+      removePersistedCart(persistenceKey)
+      return
+    }
+
+    try {
+      window.localStorage.setItem(
+        persistenceKey,
+        JSON.stringify({ entries: cartEntries, updatedAt: new Date().toISOString() }),
+      )
+    } catch {
+      // The sale remains usable when storage is unavailable or full.
+    }
+  }, [cartEntries, hydratedPersistenceKey, persistenceKey])
 
   function clearCheckoutFeedback() {
     setCheckoutErrorMessage(null)

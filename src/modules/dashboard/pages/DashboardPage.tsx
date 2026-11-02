@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom'
+import type { FormEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   Bell,
   CircleHelp,
@@ -22,16 +24,19 @@ import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './DashboardPage.module.css'
 
 export function DashboardPage() {
+  const navigate = useNavigate()
+  const [globalSearch, setGlobalSearch] = useState('')
+  const globalSearchRef = useRef<HTMLInputElement>(null)
   const dashboardSummaryQuery = useDashboardSummaryQuery()
   const summary = dashboardSummaryQuery.data
   const bestSellingProducts = summary?.bestSellingProducts ?? []
   const lowStockAlerts = summary?.lowStockAlerts ?? []
   const topSeller = bestSellingProducts[0]
   const salesToday = summary?.salesToday ?? 0
-  const totalRevenue = summary?.totalRevenue ?? 0
-  const averageSale = salesToday > 0 ? totalRevenue / salesToday : 0
-  const registeredCustomers = summary?.qaEvidence?.counts.customers ?? 0
-  const activeProducts = summary?.qaEvidence?.counts.products ?? 0
+  const revenueToday = summary?.revenueToday ?? 0
+  const averageSale = salesToday > 0 ? revenueToday / salesToday : 0
+  const registeredCustomers = summary?.customersCount ?? 0
+  const activeProducts = summary?.activeProductsCount ?? 0
   const totalBestSellerUnits = bestSellingProducts.reduce(
     (total, product) => total + product.quantitySold,
     0,
@@ -52,27 +57,50 @@ export function DashboardPage() {
         ? styles.demandTrackMedium
         : styles.demandTrackLow
 
+  useEffect(() => {
+    function focusGlobalSearch(event: KeyboardEvent) {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return
+      event.preventDefault()
+      globalSearchRef.current?.focus()
+    }
+
+    window.addEventListener('keydown', focusGlobalSearch)
+    return () => window.removeEventListener('keydown', focusGlobalSearch)
+  }, [])
+
+  function handleGlobalSearchSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    const query = globalSearch.trim()
+    navigate(
+      query
+        ? `${routePaths.salesNew}?search=${encodeURIComponent(query)}`
+        : routePaths.salesNew,
+    )
+  }
+
   return (
     <div className={styles.page}>
       <header className={styles.topbar}>
-        <label className={styles.searchBox}>
+        <form className={styles.searchBox} onSubmit={handleGlobalSearchSubmit}>
           <Search aria-hidden="true" className={styles.searchIcon} />
           <input
             aria-label="Buscar productos y ventas"
             placeholder="Buscar productos, ventas..."
-            readOnly
+            ref={globalSearchRef}
             type="search"
+            value={globalSearch}
+            onChange={(event) => setGlobalSearch(event.target.value)}
           />
           <kbd>CMD + K</kbd>
-        </label>
+        </form>
 
         <div className={styles.topbarActions}>
-          <button aria-label="Notificaciones" className={styles.iconButton} type="button">
+          <Link aria-label="Alertas de inventario" className={styles.iconButton} to={routePaths.inventory}>
             <Bell aria-hidden="true" />
-          </button>
-          <button aria-label="Ayuda" className={styles.iconButton} type="button">
+          </Link>
+          <Link aria-label="Ayuda" className={styles.iconButton} to={routePaths.help}>
             <CircleHelp aria-hidden="true" />
-          </button>
+          </Link>
           <Link className={styles.saleButton} to={routePaths.salesNew}>
             <Plus aria-hidden="true" />
             Nueva Venta
@@ -179,12 +207,12 @@ export function DashboardPage() {
           value={salesToday.toString()}
         />
         <DashboardMetricCard
-          hint="Ingresos acumulados registrados por el sistema."
+          hint="Ingresos registrados desde que comenzó el día."
           icon={<Coins aria-hidden="true" />}
-          label="Ingresos totales"
-          meta="Total acumulado"
+          label="Ingresos de hoy"
+          meta="Hoy"
           tone="secondary"
-          value={formatCurrency(totalRevenue)}
+          value={formatCurrency(revenueToday)}
         />
         <DashboardMetricCard
           hint={

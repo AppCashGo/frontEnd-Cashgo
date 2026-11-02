@@ -1,5 +1,14 @@
 import { useEffect } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
+import {
+  getActiveBusinessCategory,
+  getActiveBusinessRole,
+} from "@/modules/auth/utils/get-active-business";
+import {
+  getModuleLandingPath,
+  getModuleNavigationRoutes,
+} from "@/routes/module-navigation-routes";
 import { Header } from "@/shared/components/layout/Header";
 import { Sidebar } from "@/shared/components/layout/Sidebar";
 import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
@@ -11,6 +20,9 @@ import styles from "./MainLayout.module.css";
 export function MainLayout() {
   const location = useLocation();
   const { languageCode } = useAppTranslation();
+  const user = useAuthSessionStore((state) => state.user);
+  const activeBusinessCategory = getActiveBusinessCategory(user);
+  const activeBusinessRole = getActiveBusinessRole(user);
   const navigationPreset = useBusinessNavigationPreset();
   const isRetailPreset = navigationPreset === "retail";
   const {
@@ -26,6 +38,29 @@ export function MainLayout() {
   useEffect(() => {
     document.documentElement.lang = languageCode;
   }, [languageCode]);
+
+  const currentModule = getModuleNavigationRoutes(
+    languageCode,
+    activeBusinessCategory,
+    activeBusinessRole,
+  ).find(
+    (route) =>
+      location.pathname === route.path ||
+      location.pathname.startsWith(`${route.path}/`),
+  );
+
+  if (activeBusinessRole && currentModule && !currentModule.isVisible) {
+    return (
+      <Navigate
+        replace
+        to={getModuleLandingPath(
+          languageCode,
+          activeBusinessCategory,
+          activeBusinessRole,
+        )}
+      />
+    );
+  }
 
   return (
     <div

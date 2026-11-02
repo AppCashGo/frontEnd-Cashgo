@@ -15,6 +15,8 @@ import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashR
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { QuickCreateCustomerDrawer } from '@/modules/customers/components/QuickCreateCustomerDrawer'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
+import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import { getActiveBusiness } from '@/modules/auth/utils/get-active-business'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
 import {
   useCreateExpenseMutation,
@@ -169,6 +171,7 @@ const paymentSplitOptions = ['1', '2', '3', '4', '5', '6', 'Otro'] as const
 type PaymentSplitOption = (typeof paymentSplitOptions)[number]
 const changeCalculatorQuickAmounts = [1000, 2000, 5000, 10000] as const
 const defaultSortOption: ProductSortOption = 'NAME_ASC'
+const PRODUCT_PAGE_SIZE = 48
 let cashRegisterAudioContext: AudioContext | null = null
 
 const productSortSections: Array<{
@@ -935,8 +938,15 @@ function SaleSuccessModal({ sale, onClose }: SaleSuccessModalProps) {
 
 export function RetailSalesWorkspace() {
   const navigate = useNavigate()
+  const authUser = useAuthSessionStore((state) => state.user)
+  const activeBusiness = getActiveBusiness(authUser)
+  const cartPersistenceKey =
+    authUser && activeBusiness
+      ? `cashgo:sale-draft:${activeBusiness.id}:${authUser.id}`
+      : undefined
   const [searchParams, setSearchParams] = useSearchParams()
   const [searchValue, setSearchValue] = useState('')
+  const [visibleProductLimit, setVisibleProductLimit] = useState(PRODUCT_PAGE_SIZE)
   const [isBarcodeScannerOpen, setBarcodeScannerOpen] = useState(false)
   const [barcodeNotice, setBarcodeNotice] = useState<{
     tone: 'success' | 'error'
@@ -1095,6 +1105,7 @@ export function RetailSalesWorkspace() {
     setProductQuantity,
   } = useSaleCart(products, {
     allowSaleWithoutStock,
+    persistenceKey: cartPersistenceKey,
   })
 
   const handleBarcodeScan = useCallback(
@@ -1157,6 +1168,18 @@ export function RetailSalesWorkspace() {
 
   useEffect(() => {
     const barcodeFromCreation = searchParams.get('barcode')
+    const searchFromDashboard = searchParams.get('search')
+
+    if (searchFromDashboard) {
+      setSearchValue(searchFromDashboard)
+      setSearchParams((currentParams) => {
+        const nextParams = new URLSearchParams(currentParams)
+        nextParams.delete('search')
+        return nextParams
+      }, { replace: true })
+      return
+    }
+
     if (!barcodeFromCreation || !productsQuery.isSuccess) return
 
     handleBarcodeScan(barcodeFromCreation)
@@ -1210,6 +1233,15 @@ export function RetailSalesWorkspace() {
     salesHistory,
     sortOption,
   ])
+  const visibleProducts = useMemo(
+    () => filteredProducts.slice(0, visibleProductLimit),
+    [filteredProducts, visibleProductLimit],
+  )
+  const hiddenProductCount = filteredProducts.length - visibleProducts.length
+
+  useEffect(() => {
+    setVisibleProductLimit(PRODUCT_PAGE_SIZE)
+  }, [activeCategoryId, deferredSearchValue, sortOption])
 
   const discountTotal = discountOpen ? parseAmountInput(discountAmountInput) : 0
   const cartFinancials = useMemo(
@@ -2243,7 +2275,13 @@ export function RetailSalesWorkspace() {
           </div>
         ) : null}
 
-        <div className={styles.workspace}>
+        <div
+          className={
+            saleStep === 'PAYMENT'
+              ? `${styles.workspace} ${styles.workspacePayment}`
+              : styles.workspace
+          }
+        >
           <section className={styles.catalogColumn}>
             <div className={styles.toolbar}>
               <button
@@ -2330,7 +2368,7 @@ export function RetailSalesWorkspace() {
                 <span className={styles.createTitle}>Crear producto</span>
               </button>
 
-              {filteredProducts.map((product) => {
+              {visibleProducts.map((product) => {
                 const productQuantity = cartQuantitiesByProductId.get(product.id) ?? 0
                 const productImageUrl = resolveProductImageUrl(product.imageUrls)
                 const canSellProduct =
@@ -2382,6 +2420,25 @@ export function RetailSalesWorkspace() {
                 )
               })}
             </div>
+
+            {hiddenProductCount > 0 ? (
+              <div className={styles.productResultsFooter}>
+                <p>
+                  Mostrando {visibleProducts.length.toString()} de{' '}
+                  {filteredProducts.length.toString()} productos
+                </p>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleProductLimit((currentLimit) =>
+                      Math.min(currentLimit + PRODUCT_PAGE_SIZE, filteredProducts.length),
+                    )
+                  }
+                >
+                  Mostrar {Math.min(PRODUCT_PAGE_SIZE, hiddenProductCount).toString()} más
+                </button>
+              </div>
+            ) : null}
           </section>
 
           <aside className={styles.checkoutColumn}>
@@ -2496,7 +2553,8 @@ export function RetailSalesWorkspace() {
                             </div>
 
                             <p className={styles.cartMetaLine}>
-                              Precio por {item.quantity.toString()} unidades:{' '}
+                              Precio por {item.quantity.toString()}{' '}
+                              {item.quantity === 1 ? 'unidad' : 'unidades'}:{' '}
                               <strong>{formatCurrency(item.lineTotal)}</strong>
                             </p>
                           </article>
