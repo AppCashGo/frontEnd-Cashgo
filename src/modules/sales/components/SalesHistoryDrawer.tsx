@@ -1,5 +1,5 @@
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Download, Pencil, RotateCcw, Search, XCircle } from 'lucide-react'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import {
@@ -25,6 +25,7 @@ import styles from './SalesHistoryDrawer.module.css'
 
 type SalesHistoryDrawerProps = {
   initialSaleId?: string | null
+  initialMode?: 'edit' | null
   isOpen: boolean
   sales: SaleReceipt[]
   onClose: () => void
@@ -65,6 +66,7 @@ function statusLabel(sale: SaleReceipt) {
 
 export function SalesHistoryDrawer({
   initialSaleId = null,
+  initialMode = null,
   isOpen,
   sales,
   onClose,
@@ -88,6 +90,7 @@ export function SalesHistoryDrawer({
   const [editDueDate, setEditDueDate] = useState('')
   const [editNotes, setEditNotes] = useState('')
   const [editReason, setEditReason] = useState('')
+  const initialModeAppliedRef = useRef(false)
 
   const normalizedSearch = search.trim().toLowerCase()
   const visibleSales = useMemo(
@@ -151,6 +154,40 @@ export function SalesHistoryDrawer({
       setSelectedSaleId(initialSaleId)
     }
   }, [initialSaleId, isOpen])
+
+  useEffect(() => {
+    if (!isOpen) {
+      initialModeAppliedRef.current = false
+      return
+    }
+    if (
+      initialMode !== 'edit' ||
+      !selectedSale ||
+      selectedSale.id !== initialSaleId ||
+      initialModeAppliedRef.current
+    ) {
+      return
+    }
+
+    initialModeAppliedRef.current = true
+    setFeedback(null)
+    setEditItems(
+      Object.fromEntries(
+        selectedSale.items.map((item) => [
+          item.id,
+          {
+            quantity: String(item.quantity),
+            unitPrice: String(item.price),
+          },
+        ]),
+      ),
+    )
+    setEditSaleDate(toDateInputValue(selectedSale.saleDate))
+    setEditDueDate(toDateInputValue(selectedSale.accountReceivable?.dueDate ?? ''))
+    setEditNotes(selectedSale.notes ?? '')
+    setEditReason('')
+    setDraftMode('edit')
+  }, [initialMode, initialSaleId, isOpen, selectedSale])
 
   function resetDraft() {
     setDraftMode(null)

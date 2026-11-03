@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Download, MessageCircle, Pencil, Printer, ReceiptText, WalletCards } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
@@ -33,6 +33,7 @@ import {
   sharePdfFile,
 } from '@/shared/utils/pdf-document-actions'
 import styles from './SaleDetailDrawer.module.css'
+import { SalesHistoryDrawer } from './SalesHistoryDrawer'
 
 type SaleDetailDrawerProps = {
   saleId: string | null
@@ -78,6 +79,7 @@ export function SaleDetailDrawer({
   const [correctionPaymentKey, setCorrectionPaymentKey] = useState<string | null>(null)
   const [correctionMethod, setCorrectionMethod] = useState<CustomerPaymentMethod>('CASH')
   const [correctionReason, setCorrectionReason] = useState('')
+  const [isSaleEditorOpen, setSaleEditorOpen] = useState(false)
   const payments = useMemo(
     () => [
       ...(sale?.payments ?? []).map((payment) => ({
@@ -94,8 +96,25 @@ export function SaleDetailDrawer({
   const canCorrectPayments =
     userRole !== null &&
     ['OWNER', 'ADMIN', 'MANAGER', 'CASHIER', 'ACCOUNTANT'].includes(userRole)
+  const canManageSale =
+    userRole !== null && ['OWNER', 'ADMIN', 'MANAGER'].includes(userRole)
   const balance = sale?.accountReceivable?.balance ?? 0
   const collected = Math.max(0, (sale?.total ?? 0) - balance)
+  const canEditSale = Boolean(
+    sale &&
+      canManageSale &&
+      sale.status !== 'CANCELLED' &&
+      sale.accountReceivable &&
+      sale.accountReceivable.balance > 0 &&
+      sale.returns.length === 0 &&
+      !sale.invoice,
+  )
+
+  useEffect(() => {
+    if (saleId === null) {
+      setSaleEditorOpen(false)
+    }
+  }, [saleId])
 
   const paymentMutation = useMutation({
     mutationFn: async () => {
@@ -256,7 +275,8 @@ export function SaleDetailDrawer({
   }
 
   return (
-    <AppDrawer
+    <>
+      <AppDrawer
       description="Productos, pagos y documentos asociados a la venta."
       isOpen={saleId !== null}
       size="xl"
@@ -474,6 +494,15 @@ export function SaleDetailDrawer({
           {feedback ? <p className={styles.feedback} role="status">{feedback}</p> : null}
 
           <div className={styles.actions}>
+            {canEditSale ? (
+              <button
+                className={styles.editSaleAction}
+                type="button"
+                onClick={() => setSaleEditorOpen(true)}
+              >
+                <Pencil /> Editar venta
+              </button>
+            ) : null}
             <button disabled={activeAction !== null} type="button" onClick={() => void handleDocument('print')}><Printer /> Imprimir</button>
             <button disabled={activeAction !== null} type="button" onClick={() => void handleDocument('download')}><Download /> Descargar</button>
             {sale.customer ? <button disabled={activeAction !== null} type="button" onClick={() => void handleDocument('share')}><MessageCircle /> Compartir</button> : null}
@@ -482,6 +511,16 @@ export function SaleDetailDrawer({
           </div>
         </div>
       ) : null}
-    </AppDrawer>
+      </AppDrawer>
+
+      <SalesHistoryDrawer
+        initialMode="edit"
+        initialSaleId={sale?.id ?? null}
+        isOpen={isSaleEditorOpen && sale !== null}
+        sales={sale ? [sale] : []}
+        onCashSessionRequired={onCashSessionRequired}
+        onClose={() => setSaleEditorOpen(false)}
+      />
+    </>
   )
 }
