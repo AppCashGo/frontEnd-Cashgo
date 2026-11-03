@@ -10,6 +10,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Camera, ClipboardCheck, ScanBarcode } from 'lucide-react'
 import { InventoryCountDrawer } from '@/modules/inventory/components/InventoryCountDrawer'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import { getActiveBusinessRole } from '@/modules/auth/utils/get-active-business'
+import { isTeamManagementRole } from '@/shared/constants/user-roles'
 import {
   RetailProductCreateWorkspace,
   type RetailProductCreateWorkspaceTab,
@@ -466,6 +468,7 @@ export function RetailInventoryWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams()
   const productsQuery = useProductsQuery()
   const authUser = useAuthSessionStore((state) => state.user)
+  const canManageInventory = isTeamManagementRole(getActiveBusinessRole(authUser))
   const suppliersQuery = useSuppliersQuery()
   const categoriesQuery = useInventoryCategoriesQuery()
   const lowStockQuery = useInventoryLowStockQuery()
@@ -1634,14 +1637,16 @@ export function RetailInventoryWorkspace() {
       meta={<span>{copy.pageDescription}</span>}
       actions={
         <>
-          <button
-            className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
-            type="button"
-            onClick={() => setInventoryCountOpen(true)}
-          >
-            <ClipboardCheck aria-hidden="true" />
-            <span>Inventario físico</span>
-          </button>
+          {canManageInventory ? (
+            <button
+              className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
+              type="button"
+              onClick={() => setInventoryCountOpen(true)}
+            >
+              <ClipboardCheck aria-hidden="true" />
+              <span>Inventario físico</span>
+            </button>
+          ) : null}
           <button
             className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
             type="button"
@@ -1787,14 +1792,16 @@ export function RetailInventoryWorkspace() {
           <span className={styles.promoBadge}>{copy.newModule}</span>
           <strong>{copy.auditTitle}</strong>
           <p>{copy.auditDescription}</p>
-          <button
-            className={styles.auditButton}
-            type="button"
-            onClick={() => setInventoryCountOpen(true)}
-          >
-            <ClipboardCheck aria-hidden="true" />
-            Comenzar conteo
-          </button>
+          {canManageInventory ? (
+            <button
+              className={styles.auditButton}
+              type="button"
+              onClick={() => setInventoryCountOpen(true)}
+            >
+              <ClipboardCheck aria-hidden="true" />
+              Comenzar conteo
+            </button>
+          ) : null}
         </article>
       </section>
 

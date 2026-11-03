@@ -143,7 +143,7 @@ export function ProductsPage() {
         meta={<span>Gestiona tu catálogo detallado de artículos y servicios.</span>}
         actions={<>
           <Link className={`${retailStyles.buttonOutline} ${styles.headerButton}`} to={routePaths.inventory}>
-            <ClipboardCheck aria-hidden="true" size={18} /> Inventario físico
+            <ClipboardCheck aria-hidden="true" size={18} /> Ver existencias
           </Link>
           <button className={`${retailStyles.buttonOutline} ${styles.headerButton}`} type="button" onClick={() => updateWorkspaceParams({ mode: 'import' })}>
             <Upload aria-hidden="true" size={18} /> Carga masiva
