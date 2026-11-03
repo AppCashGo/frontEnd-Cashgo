@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { dashboardSummaryQueryKey } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
 import {
+  applyInventoryCount,
   createInventoryAdjustment,
   createInventoryCategory,
   deleteInventoryCategory,
@@ -14,6 +15,7 @@ import {
 } from '@/modules/inventory/services/inventory-api'
 import type {
   InventoryAdjustmentInput,
+  InventoryCountInput,
   InventoryProductCategoryInput,
   InventoryProductTaxesInput,
   InventoryPurchaseInput,
@@ -67,6 +69,17 @@ export function useCreateInventoryAdjustmentMutation() {
           queryKey: dashboardSummaryQueryKey,
         }),
       ])
+    },
+  })
+}
+
+export function useApplyInventoryCountMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (input: InventoryCountInput) => applyInventoryCount(input),
+    onSuccess: async () => {
+      await invalidateInventoryDependencies(queryClient)
     },
   })
 }

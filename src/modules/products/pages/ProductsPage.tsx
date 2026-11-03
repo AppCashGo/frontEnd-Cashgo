@@ -1,7 +1,7 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, ImageIcon, MoreVertical, Plus, Search, Upload } from 'lucide-react'
-import { useSearchParams } from 'react-router-dom'
+import { ChevronLeft, ChevronRight, ClipboardCheck, ImageIcon, MoreVertical, Plus, Search, Upload } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { RetailProductCreateWorkspace, type RetailProductCreateWorkspaceTab } from '@/modules/inventory/components/RetailProductCreateWorkspace'
 import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inventory-query'
 import { useDeleteProductMutation, useImportProductsMutation, useProductsQuery } from '@/modules/products/hooks/use-products-query'
@@ -15,6 +15,7 @@ import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { routePaths } from '@/routes/route-paths'
 import styles from './ProductsPage.module.css'
 
 type StockFilter = 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK'
@@ -141,6 +142,9 @@ export function ProductsPage() {
         title="Productos"
         meta={<span>Gestiona tu catálogo detallado de artículos y servicios.</span>}
         actions={<>
+          <Link className={`${retailStyles.buttonOutline} ${styles.headerButton}`} to={routePaths.inventory}>
+            <ClipboardCheck aria-hidden="true" size={18} /> Inventario físico
+          </Link>
           <button className={`${retailStyles.buttonOutline} ${styles.headerButton}`} type="button" onClick={() => updateWorkspaceParams({ mode: 'import' })}>
             <Upload aria-hidden="true" size={18} /> Carga masiva
           </button>

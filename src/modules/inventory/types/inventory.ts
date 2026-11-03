@@ -51,6 +51,28 @@ export type InventoryAdjustmentInput = {
   reason?: string;
 };
 
+export type InventoryCountInput = {
+  items: Array<{
+    productId: string;
+    countedStock: number;
+  }>;
+  reason?: string;
+};
+
+export type InventoryCountResult = {
+  countedCount: number;
+  adjustedCount: number;
+  unchangedCount: number;
+  totalDifference: number;
+  adjustments: Array<{
+    productId: string;
+    productName: string;
+    previousStock: number;
+    countedStock: number;
+    difference: number;
+  }>;
+};
+
 export type InventoryProductCategory = {
   id: string;
   businessId: string;

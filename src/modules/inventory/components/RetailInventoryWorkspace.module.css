@@ -1085,6 +1085,28 @@
   color: #e3e9f3;
 }
 
+.auditButton {
+  width: fit-content;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.4rem;
+  margin-top: auto;
+  padding: 0.55rem 0.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.16);
+  color: inherit;
+  font-weight: 900;
+}
+
+.auditButton svg,
+.headerCoreButton svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
 .tableToolbar {
   display: flex;
   align-items: center;

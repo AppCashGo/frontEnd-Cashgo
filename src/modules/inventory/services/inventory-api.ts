@@ -4,6 +4,8 @@ import {
 } from "@/modules/products/utils/normalize-product-record";
 import type {
   InventoryAdjustmentInput,
+  InventoryCountInput,
+  InventoryCountResult,
   InventoryExportFilters,
   InventoryLowStockAlert,
   InventoryMovement,
@@ -165,6 +167,29 @@ export async function createInventoryAdjustment(
   });
 
   return normalizeInventoryMovement(movement);
+}
+
+export async function applyInventoryCount(input: InventoryCountInput) {
+  const result = await postJson<InventoryCountResult, InventoryCountInput>(
+    "/inventory/count",
+    input,
+    { accessToken: getAuthAccessToken() },
+  );
+
+  return {
+    ...result,
+    countedCount: normalizeNumber(result.countedCount),
+    adjustedCount: normalizeNumber(result.adjustedCount),
+    unchangedCount: normalizeNumber(result.unchangedCount),
+    totalDifference: normalizeNumber(result.totalDifference),
+    adjustments: result.adjustments.map((adjustment) => ({
+      ...adjustment,
+      productId: normalizeId(adjustment.productId),
+      previousStock: normalizeNumber(adjustment.previousStock),
+      countedStock: normalizeNumber(adjustment.countedStock),
+      difference: normalizeNumber(adjustment.difference),
+    })),
+  };
 }
 
 export async function getInventoryCategories() {

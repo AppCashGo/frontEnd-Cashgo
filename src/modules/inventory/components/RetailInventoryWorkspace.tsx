@@ -7,7 +7,9 @@ import type { PaymentFundSource } from '@/modules/cash-register/types/cash-regis
 import type { KeyboardEvent, ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Camera, ScanBarcode } from 'lucide-react'
+import { Camera, ClipboardCheck, ScanBarcode } from 'lucide-react'
+import { InventoryCountDrawer } from '@/modules/inventory/components/InventoryCountDrawer'
+import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import {
   RetailProductCreateWorkspace,
   type RetailProductCreateWorkspaceTab,
@@ -463,6 +465,7 @@ export function RetailInventoryWorkspace() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const productsQuery = useProductsQuery()
+  const authUser = useAuthSessionStore((state) => state.user)
   const suppliersQuery = useSuppliersQuery()
   const categoriesQuery = useInventoryCategoriesQuery()
   const lowStockQuery = useInventoryLowStockQuery()
@@ -527,6 +530,7 @@ export function RetailInventoryWorkspace() {
   const [isPurchaseDrawerOpen, setPurchaseDrawerOpen] = useState(false)
   const [isQuickSupplierOpen, setQuickSupplierOpen] = useState(false)
   const [isAdjustmentDrawerOpen, setAdjustmentDrawerOpen] = useState(false)
+  const [isInventoryCountOpen, setInventoryCountOpen] = useState(false)
   const [shareCatalogPhone, setShareCatalogPhone] = useState('')
   const [activeInventoryFilter, setActiveInventoryFilter] =
     useState<InventoryFilter>('ALL')
@@ -672,7 +676,8 @@ export function RetailInventoryWorkspace() {
     enabled:
       !isProductWorkspaceOpen &&
       !isBarcodeScannerOpen &&
-      !isAdjustmentDrawerOpen,
+      !isAdjustmentDrawerOpen &&
+      !isInventoryCountOpen,
     onScan: isPurchaseDrawerOpen
       ? handlePurchaseBarcodeScan
       : handleInventoryBarcodeScan,
@@ -1632,6 +1637,14 @@ export function RetailInventoryWorkspace() {
           <button
             className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
             type="button"
+            onClick={() => setInventoryCountOpen(true)}
+          >
+            <ClipboardCheck aria-hidden="true" />
+            <span>Inventario físico</span>
+          </button>
+          <button
+            className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
+            type="button"
             onClick={() => {
               resetFeedback()
               setCategoriesDrawerOpen(true)
@@ -1774,6 +1787,14 @@ export function RetailInventoryWorkspace() {
           <span className={styles.promoBadge}>{copy.newModule}</span>
           <strong>{copy.auditTitle}</strong>
           <p>{copy.auditDescription}</p>
+          <button
+            className={styles.auditButton}
+            type="button"
+            onClick={() => setInventoryCountOpen(true)}
+          >
+            <ClipboardCheck aria-hidden="true" />
+            Comenzar conteo
+          </button>
         </article>
       </section>
 
@@ -3424,6 +3445,24 @@ export function RetailInventoryWorkspace() {
                 : `${supplier.name} fue creado y seleccionado para esta compra.`,
           })
         }}
+      />
+
+      <InventoryCountDrawer
+        categories={categories}
+        isOpen={isInventoryCountOpen}
+        persistenceKey={`cashgo:inventory-count:${authUser?.businessId ?? 'unknown'}`}
+        products={products}
+        onApplied={(result) => {
+          setInventoryCountOpen(false)
+          setFeedbackMessage({
+            tone: 'success',
+            text:
+              result.adjustedCount > 0
+                ? `Conteo aplicado: ${result.countedCount} productos revisados y ${result.adjustedCount} existencias corregidas.`
+                : `Conteo aplicado: los ${result.countedCount} productos coinciden con el sistema.`,
+          })
+        }}
+        onClose={() => setInventoryCountOpen(false)}
       />
 
       <BarcodeScannerModal
