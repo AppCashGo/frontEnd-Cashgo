@@ -1,5 +1,6 @@
 import type {
   CancelSaleInput,
+  ConvertSaleToCreditInput,
   CreateSaleInput,
   SaleReturnInput,
   SalesHistoryFilters,
@@ -187,6 +188,19 @@ export async function updateSalePaymentMethod(
 ) {
   const sale = await patchJson<SaleApiRecord, UpdateSalePaymentMethodInput>(
     `/sales/payments/${paymentId}/method`,
+    input,
+    { accessToken: getAuthAccessToken() },
+  )
+
+  return normalizeSaleRecord(sale)
+}
+
+export async function convertSaleToCredit(
+  saleId: string,
+  input: ConvertSaleToCreditInput,
+) {
+  const sale = await patchJson<SaleApiRecord, ConvertSaleToCreditInput>(
+    `/sales/${saleId}/convert-to-credit`,
     input,
     { accessToken: getAuthAccessToken() },
   )

@@ -1,5 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { Download, MessageCircle, Pencil, Printer, ReceiptText, WalletCards } from 'lucide-react'
+import {
+  CalendarClock,
+  Download,
+  MessageCircle,
+  Pencil,
+  Printer,
+  ReceiptText,
+  Undo2,
+  WalletCards,
+} from 'lucide-react'
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
@@ -12,6 +21,7 @@ import {
 import type { CustomerPaymentMethod } from '@/modules/customers/types/customer'
 import { useSaleDetailQuery } from '@/modules/sales/hooks/use-sales-history-query'
 import {
+  convertSaleToCredit,
   downloadSaleReceipt,
   updateSalePaymentMethod,
 } from '@/modules/sales/services/sales-api'
@@ -80,6 +90,9 @@ export function SaleDetailDrawer({
   const [correctionMethod, setCorrectionMethod] = useState<CustomerPaymentMethod>('CASH')
   const [correctionReason, setCorrectionReason] = useState('')
   const [isSaleEditorOpen, setSaleEditorOpen] = useState(false)
+  const [isCreditCorrectionOpen, setCreditCorrectionOpen] = useState(false)
+  const [creditCorrectionReason, setCreditCorrectionReason] = useState('')
+  const [creditDueDate, setCreditDueDate] = useState('')
   const payments = useMemo(
     () => [
       ...(sale?.payments ?? []).map((payment) => ({
@@ -109,10 +122,21 @@ export function SaleDetailDrawer({
       sale.returns.length === 0 &&
       !sale.invoice,
   )
+  const canConvertToCredit = Boolean(
+    sale &&
+      canManageSale &&
+      sale.status === 'COMPLETED' &&
+      sale.customer &&
+      sale.payments.length > 0 &&
+      !sale.accountReceivable &&
+      sale.returns.length === 0 &&
+      !sale.invoice,
+  )
 
   useEffect(() => {
     if (saleId === null) {
       setSaleEditorOpen(false)
+      setCreditCorrectionOpen(false)
     }
   }, [saleId])
 
@@ -185,6 +209,39 @@ export function SaleDetailDrawer({
     },
   })
 
+  const creditCorrectionMutation = useMutation({
+    mutationFn: async () => {
+      if (!sale) throw new Error('La venta ya no está disponible.')
+      if (creditCorrectionReason.trim().length < 3) {
+        throw new Error('Escribe el motivo de la corrección.')
+      }
+
+      return convertSaleToCredit(sale.id, {
+        dueDate: creditDueDate || null,
+        reason: creditCorrectionReason.trim(),
+      })
+    },
+    onSuccess: async () => {
+      setFeedback('La venta quedó a crédito y el pago salió de la caja esperada.')
+      setCreditCorrectionOpen(false)
+      setCreditCorrectionReason('')
+      setCreditDueDate('')
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['sales'] }),
+        queryClient.invalidateQueries({ queryKey: ['customers'] }),
+        queryClient.invalidateQueries({ queryKey: ['cash-register'] }),
+      ])
+    },
+    onError: (error) => {
+      if (isCashSessionRequiredError(error)) {
+        setFeedback('La caja original debe continuar abierta para hacer esta corrección.')
+        onCashSessionRequired?.()
+        return
+      }
+      setFeedback(getErrorMessage(error, 'No pudimos convertir la venta a crédito.'))
+    },
+  })
+
   async function handleDocument(action: 'download' | 'print' | 'share') {
     if (!sale) return
     setActiveAction(action)
@@ -249,10 +306,17 @@ export function SaleDetailDrawer({
   }
 
   function startPaymentMethodCorrection(payment: (typeof payments)[number]) {
+    setCreditCorrectionOpen(false)
     setCorrectionPaymentKey(`${payment.source}:${payment.id}`)
     setCorrectionMethod(payment.method)
     setCorrectionReason('')
     setFeedback(null)
+  }
+
+  function submitCreditCorrection(event: FormEvent) {
+    event.preventDefault()
+    setFeedback(null)
+    creditCorrectionMutation.mutate()
   }
 
   function submitPaymentMethodCorrection(
@@ -451,6 +515,90 @@ export function SaleDetailDrawer({
               ) : (
                 <p className={styles.muted}>No se registraron pagos.</p>
               )}
+              {canConvertToCredit ? (
+                <div className={styles.creditCorrectionBlock}>
+                  {!isCreditCorrectionOpen ? (
+                    <button
+                      className={styles.convertToCreditButton}
+                      type="button"
+                      onClick={() => {
+                        setCorrectionPaymentKey(null)
+                        setCreditCorrectionOpen(true)
+                        setFeedback(null)
+                      }}
+                    >
+                      <Undo2 aria-hidden="true" /> El cliente no pagó · Cambiar a crédito
+                    </button>
+                  ) : (
+                    <form
+                      className={styles.creditCorrectionForm}
+                      onSubmit={submitCreditCorrection}
+                    >
+                      <div className={styles.creditCorrectionHeading}>
+                        <span className={styles.creditCorrectionIcon}>
+                          <Undo2 aria-hidden="true" />
+                        </span>
+                        <div>
+                          <strong>Cambiar venta pagada a crédito</strong>
+                          <small>
+                            Se retirarán {formatCurrency(sale.total)} de los pagos de esta
+                            venta y se creará una cuenta por cobrar al cliente.
+                          </small>
+                        </div>
+                      </div>
+                      <label>
+                        <span>Fecha acordada de pago <small>Opcional</small></span>
+                        <div className={styles.inputWithIcon}>
+                          <CalendarClock aria-hidden="true" />
+                          <input
+                            disabled={creditCorrectionMutation.isPending}
+                            type="date"
+                            value={creditDueDate}
+                            onChange={(event) => setCreditDueDate(event.target.value)}
+                          />
+                        </div>
+                      </label>
+                      <label>
+                        <span>Motivo de la corrección *</span>
+                        <input
+                          disabled={creditCorrectionMutation.isPending}
+                          maxLength={255}
+                          placeholder="Ej. Se registró como pagada por error"
+                          value={creditCorrectionReason}
+                          onChange={(event) =>
+                            setCreditCorrectionReason(event.target.value)
+                          }
+                        />
+                      </label>
+                      <p className={styles.creditCorrectionWarning}>
+                        Esta acción cambia el saldo de caja y la deuda del cliente. Quedará
+                        registrada en la auditoría y solo puede hacerse con la caja original
+                        abierta.
+                      </p>
+                      <div className={styles.paymentCorrectionActions}>
+                        <button
+                          disabled={creditCorrectionMutation.isPending}
+                          type="button"
+                          onClick={() => setCreditCorrectionOpen(false)}
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          disabled={
+                            creditCorrectionMutation.isPending ||
+                            creditCorrectionReason.trim().length < 3
+                          }
+                          type="submit"
+                        >
+                          {creditCorrectionMutation.isPending
+                            ? 'Aplicando corrección…'
+                            : 'Confirmar venta a crédito'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              ) : null}
             </section>
             <section className={`${styles.section} ${styles.totals}`}>
               <div><span>Subtotal</span><strong>{formatCurrency(sale.subtotal)}</strong></div>

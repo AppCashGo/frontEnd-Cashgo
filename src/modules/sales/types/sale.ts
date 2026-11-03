@@ -52,6 +52,11 @@ export type UpdateSalePaymentMethodInput = {
   reason: string
 }
 
+export type ConvertSaleToCreditInput = {
+  dueDate?: string | null
+  reason: string
+}
+
 export type SaleReturnInput = {
   items: Array<{
     saleItemId: string
