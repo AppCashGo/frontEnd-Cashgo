@@ -1,6 +1,6 @@
 .shell {
   min-height: 100vh;
-  background: #f8fafc;
+  background: var(--ui-canvas);
 }
 
 .backdrop {
@@ -26,17 +26,17 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  background: var(--ui-canvas);
 }
 
 .contentRetail {
-  background: #ffffff;
+  background: var(--ui-canvas);
 }
 
 .main {
   flex: 1;
   min-width: 0;
-  padding: 1rem 1.35rem 1.35rem;
+  padding: 1.25rem 1.5rem 1.5rem;
 }
 
 .mainInner {
@@ -59,15 +59,15 @@
 @media (min-width: 992px) {
   .shell {
     display: grid;
-    grid-template-columns: 328px 1fr;
+    grid-template-columns: 272px minmax(0, 1fr);
   }
 
   .shellRetail {
-    grid-template-columns: 24rem 1fr;
+    grid-template-columns: 272px minmax(0, 1fr);
   }
 
   .shellCollapsed {
-    grid-template-columns: 92px 1fr;
+    grid-template-columns: 76px minmax(0, 1fr);
   }
 
   .backdrop {

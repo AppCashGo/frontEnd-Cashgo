@@ -17,15 +17,43 @@
   --color-border-strong: rgba(20, 184, 166, 0.28);
   --color-accent: #0f766e;
   --color-accent-dark: #115e59;
-  --color-action: #2563eb;
+  --color-action: #1d5fa7;
   --color-warm: #f97316;
   --shadow-sm: 0 18px 32px rgba(15, 23, 42, 0.08);
-  --brand-primary: #2563eb;
-  --brand-secondary: #4f46e5;
+  --brand-primary: #1d5fa7;
+  --brand-secondary: #174a82;
   --brand-tertiary: #0f172a;
   --brand-neutral: #64748b;
-  --brand-primary-soft: rgba(37, 99, 235, 0.12);
-  --brand-secondary-soft: rgba(79, 70, 229, 0.12);
+  --brand-primary-soft: rgba(29, 95, 167, 0.12);
+  --brand-secondary-soft: rgba(23, 74, 130, 0.12);
+  --ui-primary: #1d5fa7;
+  --ui-primary-hover: #174f8d;
+  --ui-primary-strong: #123f72;
+  --ui-primary-soft: #edf5fc;
+  --ui-accent: #475569;
+  --ui-success: #0f9f6e;
+  --ui-warning: #d97706;
+  --ui-danger: #dc3545;
+  --ui-canvas: #f4f7fb;
+  --ui-surface: #ffffff;
+  --ui-surface-subtle: #f8fafc;
+  --ui-surface-raised: rgba(255, 255, 255, 0.96);
+  --ui-text: #172033;
+  --ui-text-secondary: #5c6980;
+  --ui-text-tertiary: #8792a6;
+  --ui-border: #d8e0ec;
+  --ui-border-strong: #b8c4d6;
+  --ui-control-height: 3rem;
+  --ui-radius-sm: 0.65rem;
+  --ui-radius-md: 0.85rem;
+  --ui-radius-lg: 1.1rem;
+  --ui-radius-xl: 1.4rem;
+  --ui-shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --ui-shadow-sm: 0 8px 22px rgba(15, 23, 42, 0.07);
+  --ui-shadow-md: 0 18px 42px rgba(15, 23, 42, 0.12);
+  --ui-shadow-lg: 0 28px 72px rgba(15, 23, 42, 0.18);
+  --ui-focus-ring: 0 0 0 4px rgba(29, 95, 167, 0.16);
+  --ui-transition: 160ms cubic-bezier(0.2, 0, 0, 1);
   --safe-area-top: env(safe-area-inset-top, 0px);
   --safe-area-right: env(safe-area-inset-right, 0px);
   --safe-area-bottom: env(safe-area-inset-bottom, 0px);
@@ -46,9 +74,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background:
-    linear-gradient(135deg, rgba(20, 184, 166, 0.08) 0%, transparent 35%),
-    linear-gradient(180deg, #f8fafc 0%, #eef6ff 100%);
+  background: var(--ui-canvas);
 }
 
 body,
@@ -57,6 +83,95 @@ input,
 textarea,
 select {
   font: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  transition:
+    transform var(--ui-transition),
+    box-shadow var(--ui-transition),
+    border-color var(--ui-transition),
+    background-color var(--ui-transition),
+    color var(--ui-transition),
+    opacity var(--ui-transition);
+}
+
+:where(input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select) {
+  color: var(--ui-text);
+  caret-color: var(--ui-primary);
+  transition:
+    border-color var(--ui-transition),
+    box-shadow var(--ui-transition),
+    background-color var(--ui-transition);
+}
+
+:where(input, textarea)::placeholder {
+  color: var(--ui-text-tertiary);
+  opacity: 1;
+}
+
+:where(input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select):hover:not(:disabled) {
+  border-color: var(--ui-border-strong);
+}
+
+:where(input:not([type='checkbox']):not([type='radio']):not([type='range']), textarea, select):focus {
+  border-color: var(--ui-primary) !important;
+  outline: none !important;
+  box-shadow: var(--ui-focus-ring) !important;
+}
+
+:where(input, textarea, select)[aria-invalid='true'] {
+  border-color: var(--ui-danger) !important;
+  box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1) !important;
+}
+
+:where(input, textarea, select):disabled {
+  cursor: not-allowed;
+  background-color: #f1f4f8;
+  color: var(--ui-text-tertiary);
+  opacity: 0.78;
+}
+
+:where(input[type='checkbox'], input[type='radio']) {
+  accent-color: var(--ui-primary);
+}
+
+:where(button, a, [role='button'], [tabindex]):focus-visible {
+  outline: 3px solid rgba(49, 94, 251, 0.38);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgba(49, 94, 251, 0.2);
+  color: var(--ui-text);
+}
+
+* {
+  scrollbar-color: #bec9da transparent;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 0.18rem solid transparent;
+  border-radius: 999px;
+  background: #bec9da;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: #9ba9bd;
+  background-clip: padding-box;
 }
 
 a {

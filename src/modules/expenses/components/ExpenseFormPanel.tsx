@@ -1,6 +1,7 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
+  Archive,
   Banknote,
   Building2,
   Check,
@@ -26,6 +27,7 @@ import {
   toExpenseDateInputValue,
   toExpenseRequestDate,
 } from '@/modules/expenses/utils/format-expense'
+import { getExpenseCategoryLabel } from '@/modules/expenses/utils/expense-category-label'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { ApiError } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
@@ -59,6 +61,7 @@ function getDefaultValues(expense: Expense | null): ExpenseFormValues {
     categoryId: expense?.categoryId ?? '',
     amount: expense?.amount ?? 0,
     paymentMethod: expense?.paymentMethod ?? 'CASH',
+    fundSource: expense?.fundSource ?? 'REGISTER',
     status: expense?.status ?? 'PAID',
     expenseDate: toExpenseDateInputValue(expense?.expenseDate ?? new Date()),
     notes: expense?.notes ?? '',
@@ -106,6 +109,7 @@ export function ExpenseFormPanel({
 
   const selectedStatus = watch('status')
   const selectedPaymentMethod = watch('paymentMethod')
+  const selectedFundSource = watch('fundSource')
 
   useEffect(() => {
     reset(getDefaultValues(expense))
@@ -118,6 +122,7 @@ export function ExpenseFormPanel({
         categoryId: normalizeOptionalRelationId(values.categoryId),
         amount: values.amount,
         paymentMethod: values.paymentMethod,
+        fundSource: values.fundSource,
         status: values.status,
         expenseDate: toExpenseRequestDate(
           values.expenseDate,
@@ -253,7 +258,7 @@ export function ExpenseFormPanel({
             <option value="">Selecciona una categoría</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
-                {category.name}
+                {getExpenseCategoryLabel(category.name)}
               </option>
             ))}
           </SearchableSelect>
@@ -280,6 +285,39 @@ export function ExpenseFormPanel({
             ))}
           </div>
         </fieldset>
+
+        {isPaid ? (
+          <fieldset className={styles.paymentFieldset}>
+            <legend className={styles.label}>Origen del dinero</legend>
+            <input type="hidden" {...register('fundSource')} />
+            <div className={styles.fundSourceGrid}>
+              <button
+                aria-pressed={selectedFundSource === 'REGISTER'}
+                className={joinClassNames(
+                  styles.fundSourceButton,
+                  selectedFundSource === 'REGISTER' && styles.paymentButtonActive,
+                )}
+                type="button"
+                onClick={() => setValue('fundSource', 'REGISTER', { shouldDirty: true })}
+              >
+                <Banknote aria-hidden="true" size={21} />
+                <span><strong>Caja abierta</strong><small>Descuenta del turno actual</small></span>
+              </button>
+              <button
+                aria-pressed={selectedFundSource === 'RESERVE'}
+                className={joinClassNames(
+                  styles.fundSourceButton,
+                  selectedFundSource === 'RESERVE' && styles.paymentButtonActive,
+                )}
+                type="button"
+                onClick={() => setValue('fundSource', 'RESERVE', { shouldDirty: true })}
+              >
+                <Archive aria-hidden="true" size={21} />
+                <span><strong>Reserva del negocio</strong><small>Descuenta de los fondos reservados</small></span>
+              </button>
+            </div>
+          </fieldset>
+        ) : null}
 
         <div className={styles.statusCard}>
           <span className={styles.label}>Estado del gasto</span>
@@ -311,7 +349,7 @@ export function ExpenseFormPanel({
           </button>
         </div>
 
-        {isPaid && selectedPaymentMethod === 'CASH' ? (
+        {isPaid && selectedFundSource === 'REGISTER' && selectedPaymentMethod === 'CASH' ? (
           <div className={styles.helperBanner}>
             Si hay una caja abierta, este gasto impactará automáticamente el arqueo diario.
           </div>

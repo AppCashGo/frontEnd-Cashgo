@@ -9,6 +9,8 @@ import {
   getInventoryLowStockAlerts,
   getInventoryMovements,
   registerInventoryPurchase,
+  registerInventoryProduction,
+  registerInventoryWaste,
   uploadInventoryPurchaseInvoice,
   updateInventoryCategory,
   updateInventoryProductTaxes,
@@ -19,6 +21,7 @@ import type {
   InventoryProductCategoryInput,
   InventoryProductTaxesInput,
   InventoryPurchaseInput,
+  InventoryOperationInput,
 } from '@/modules/inventory/types/inventory'
 import { productsQueryKey } from '@/modules/products/hooks/use-products-query'
 import { suppliersQueryKey } from '@/modules/suppliers/hooks/use-suppliers-query'
@@ -81,6 +84,23 @@ export function useApplyInventoryCountMutation() {
     onSuccess: async () => {
       await invalidateInventoryDependencies(queryClient)
     },
+  })
+}
+
+export function useRegisterInventoryProductionMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: InventoryOperationInput) =>
+      registerInventoryProduction(input),
+    onSuccess: async () => invalidateInventoryDependencies(queryClient),
+  })
+}
+
+export function useRegisterInventoryWasteMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: InventoryOperationInput) => registerInventoryWaste(input),
+    onSuccess: async () => invalidateInventoryDependencies(queryClient),
   })
 }
 

@@ -836,6 +836,8 @@ export function CashRegisterPage() {
         description = `Reserva (${paymentMethod}) → Pago a proveedor`;
       } else if (movement.kind === "SUPPLIER_REFUND") {
         description = `Reintegro de proveedor → Reserva (${paymentMethod})`;
+      } else if (movement.kind === "EXPENSE") {
+        description = `Reserva (${paymentMethod}) → Gasto operativo`;
       } else if (movement.amount >= 0) {
         description = `Ingreso por conciliación → Reserva (${paymentMethod})`;
       } else {
@@ -1173,6 +1175,7 @@ export function CashRegisterPage() {
       supplierId: input.partyId ?? null,
       amount: input.amount,
       paymentMethod: input.kind === "payables" ? "CREDIT" : input.paymentMethod,
+      fundSource: "REGISTER",
       status: input.kind === "payables" ? "PENDING" : "PAID",
       expenseDate: toOperationDateTime(input.movementDate),
       notes: null,

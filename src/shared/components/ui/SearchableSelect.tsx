@@ -14,7 +14,7 @@ import {
   type SelectHTMLAttributes,
 } from "react";
 import { createPortal } from "react-dom";
-import { Search } from "lucide-react";
+import { Check, Search } from "lucide-react";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import styles from "./SearchableSelect.module.css";
 
@@ -361,7 +361,10 @@ export const SearchableSelect = forwardRef<
                       type="button"
                       onClick={() => commitValue(option.value)}
                     >
-                      {option.label}
+                      <span className={styles.optionLabel}>{option.label}</span>
+                      {option.value === currentValue ? (
+                        <Check aria-hidden="true" className={styles.optionCheck} />
+                      ) : null}
                     </button>
                   ))
                 ) : (

@@ -300,6 +300,7 @@ function getDefaultValues(
       price: 0,
       cost: 0,
       unit: "UNIT",
+      inventoryBehavior: "PURCHASED",
       categoryId: "",
       description: "",
       taxOptionId: "ninguno",
@@ -323,6 +324,7 @@ function getDefaultValues(
     price: product.price,
     cost: product.cost,
     unit: product.unit,
+    inventoryBehavior: product.inventoryBehavior,
     categoryId: product.categoryId ?? "",
     description: product.description ?? "",
     taxOptionId: matchingTaxOption.id,
@@ -818,6 +820,7 @@ export function RetailProductCreateWorkspace({
   const isVisibleInCatalog = watch("isVisibleInCatalog");
   const selectedCategoryId = watch("categoryId") ?? "";
   const productName = watch("name") ?? "";
+  const inventoryBehavior = watch("inventoryBehavior");
   const identifierPreview = useMemo(
     () => createIdentifierPreview(productName),
     [productName],
@@ -1310,17 +1313,23 @@ export function RetailProductCreateWorkspace({
       barcode: values.barcode ? normalizeBarcode(values.barcode) : undefined,
       name: values.name.trim(),
       stock:
-        activeTab === "variants"
+        values.inventoryBehavior === "MADE_TO_ORDER"
+          ? 0
+          : activeTab === "variants"
           ? normalizedVariants.reduce(
               (total, variant) => total + variant.stock,
               0,
             )
           : values.stock,
-      minStock: activeTab === "variants" ? 0 : values.minStock,
+      minStock:
+        values.inventoryBehavior === "MADE_TO_ORDER" || activeTab === "variants"
+          ? 0
+          : values.minStock,
       price:
         activeTab === "variants" ? (firstVariant?.price ?? 0) : values.price,
       cost: activeTab === "variants" ? (firstVariant?.cost ?? 0) : values.cost,
       unit: saleUnit,
+      inventoryBehavior: values.inventoryBehavior,
       categoryId: normalizeOptionalRelationId(values.categoryId),
       description: normalizeOptionalText(values.description),
       taxLabel:
@@ -1529,6 +1538,28 @@ export function RetailProductCreateWorkspace({
                   {errors.barcode ? <p className={styles.error}>{errors.barcode.message}</p> : null}
                 </label>
 
+                <label className={styles.field}>
+                  <span className={styles.label}>
+                    ¿Cómo manejas este producto?
+                    <span className={styles.required}>*</span>
+                  </span>
+                  <SearchableSelect
+                    className={styles.select}
+                    {...register("inventoryBehavior")}
+                  >
+                    <option value="PURCHASED">Lo compro y lo revendo</option>
+                    <option value="PRODUCED">Lo producimos por cantidades</option>
+                    <option value="MADE_TO_ORDER">Lo preparamos cuando lo piden</option>
+                  </SearchableSelect>
+                  <small className={styles.barcodeHelp}>
+                    {inventoryBehavior === "PURCHASED"
+                      ? "Las compras aumentan sus existencias y cada venta las descuenta."
+                      : inventoryBehavior === "PRODUCED"
+                        ? "La producción aumenta sus existencias y cada venta las descuenta."
+                        : "Cuenta en las ventas, pero no exige ni descuenta existencias."}
+                  </small>
+                </label>
+
                 {activeTab === "measures" ? (
                   <>
                     <label className={styles.field}>
@@ -1551,7 +1582,14 @@ export function RetailProductCreateWorkspace({
                       </SearchableSelect>
                     </label>
 
-                    <div className={styles.gridTwo}>
+                    {inventoryBehavior === "MADE_TO_ORDER" ? (
+                      <div className={styles.field}>
+                        <span className={styles.label}>Inventario</span>
+                        <small className={styles.barcodeHelp}>
+                          Este producto se prepara al recibir el pedido y no necesita una cantidad disponible.
+                        </small>
+                      </div>
+                    ) : <div className={styles.gridTwo}>
                       <label className={styles.field}>
                         <span className={styles.label}>
                           {copy.availableQuantityUnit} ({purchaseUnit})
@@ -1586,7 +1624,7 @@ export function RetailProductCreateWorkspace({
                           </p>
                         ) : null}
                       </label>
-                    </div>
+                    </div>}
 
                     <label className={styles.field}>
                       <span className={styles.label}>
@@ -1604,7 +1642,14 @@ export function RetailProductCreateWorkspace({
                   </>
                 ) : (
                   <>
-                    <div className={styles.gridTwo}>
+                    {inventoryBehavior === "MADE_TO_ORDER" ? (
+                      <div className={styles.field}>
+                        <span className={styles.label}>Inventario</span>
+                        <small className={styles.barcodeHelp}>
+                          Cada venta quedará registrada sin descontar una existencia del producto terminado.
+                        </small>
+                      </div>
+                    ) : <div className={styles.gridTwo}>
                       <label className={styles.field}>
                         <span className={styles.label}>
                           Cantidad disponible
@@ -1636,7 +1681,7 @@ export function RetailProductCreateWorkspace({
                           </p>
                         ) : null}
                       </label>
-                    </div>
+                    </div>}
 
                     <label className={styles.field}>
                       <span className={styles.label}>
@@ -1657,7 +1702,9 @@ export function RetailProductCreateWorkspace({
                     </label>
 
                     <label className={styles.field}>
-                      <span className={styles.label}>Costo de compra</span>
+                      <span className={styles.label}>
+                        {inventoryBehavior === "PURCHASED" ? "Costo de compra" : "Costo estimado por unidad"}
+                      </span>
                       <input
                         className={styles.input}
                         inputMode="decimal"

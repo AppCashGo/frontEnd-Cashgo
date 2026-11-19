@@ -1,4 +1,5 @@
 export type ExpenseStatus = "PAID" | "PENDING" | "CANCELLED";
+export type ExpenseFundSource = "REGISTER" | "RESERVE";
 
 export type ExpensePaymentMethod =
   | "CASH"
@@ -31,6 +32,7 @@ export type Expense = {
   notes: string | null;
   amount: number;
   paymentMethod: ExpensePaymentMethod;
+  fundSource: ExpenseFundSource;
   status: ExpenseStatus;
   expenseDate: string;
   createdAt: string;
@@ -49,6 +51,7 @@ export type ExpenseMutationInput = {
   supplierId?: string | null;
   amount: number;
   paymentMethod: ExpensePaymentMethod;
+  fundSource: ExpenseFundSource;
   status: ExpenseStatus;
   expenseDate: string;
   notes?: string | null;

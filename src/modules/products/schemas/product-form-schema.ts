@@ -35,6 +35,7 @@ export const productFormSchema = z.object({
     .int('Minimum stock must be a valid integer.')
     .refine((value) => value >= 0, 'Minimum stock must be greater than or equal to 0.'),
   unit: z.enum(productUnits),
+  inventoryBehavior: z.enum(['PURCHASED', 'PRODUCED', 'MADE_TO_ORDER']),
   isActive: z.boolean(),
 })
 

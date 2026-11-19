@@ -175,6 +175,7 @@ export type ReserveMovement = {
     | "TRANSFER_TO_REGISTER"
     | "SUPPLIER_PAYMENT"
     | "SUPPLIER_REFUND"
+    | "EXPENSE"
     | "ADJUSTMENT";
   amount: number;
   notes: string | null;

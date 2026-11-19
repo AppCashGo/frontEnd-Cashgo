@@ -13,6 +13,7 @@ export const productUnits = [
 export type ProductUnit = (typeof productUnits)[number];
 
 export type ProductType = "BASIC" | "VARIANT_PARENT" | "VARIANT";
+export type InventoryBehavior = "PURCHASED" | "PRODUCED" | "MADE_TO_ORDER";
 
 export type ProductVariantInput = {
   name: string;
@@ -29,6 +30,7 @@ export type Product = {
   categoryId: string | null;
   parentProductId: string | null;
   productType: ProductType;
+  inventoryBehavior: InventoryBehavior;
   variantName: string | null;
   imageUrls: string[];
   name: string;
@@ -61,6 +63,7 @@ export type ProductMutationInput = {
   stock: number;
   minStock?: number;
   unit?: ProductUnit;
+  inventoryBehavior?: InventoryBehavior;
   isActive?: boolean;
   isVisibleInCatalog?: boolean;
   imageUrls?: string[];

@@ -6,6 +6,7 @@ import type {
 import { ListFilter, Search, X } from 'lucide-react'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import styles from './ExpensesFiltersBar.module.css'
+import { getExpenseCategoryLabel } from '@/modules/expenses/utils/expense-category-label'
 
 type ExpensesFiltersBarProps = {
   categories: ExpenseCategory[]
@@ -82,7 +83,7 @@ export function ExpensesFiltersBar({
             <option value="">Todas</option>
             {categories.map((category) => (
               <option key={category.id} value={category.id}>
-                {category.name}
+                {getExpenseCategoryLabel(category.name)}
               </option>
             ))}
           </SearchableSelect>

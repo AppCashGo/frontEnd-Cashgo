@@ -3,6 +3,31 @@
   gap: 20px;
   color: #202838;
 }
+.drawerTitleIcon,
+.sectionTitle svg {
+  color: #176b50;
+}
+.drawerTitleIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.8rem;
+  background: #e8f7ef;
+}
+.drawerTitleIcon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.sectionTitle svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
 .state,
 .muted {
   color: #68758d;

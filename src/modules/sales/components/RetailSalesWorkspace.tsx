@@ -656,6 +656,10 @@ function mapRetailPaymentOptionToExpenseMethod(
 }
 
 function getStockToneClass(product: Product) {
+  if (product.inventoryBehavior === 'MADE_TO_ORDER') {
+    return ''
+  }
+
   const threshold = Math.max(product.minStock, 5)
 
   if (product.stock === 0) {
@@ -1289,7 +1293,11 @@ export function RetailSalesWorkspace() {
       }
 
       const quantityInCart = cartQuantitiesByProductId.get(product.id) ?? 0
-      if (!allowSaleWithoutStock && quantityInCart >= product.stock) {
+      if (
+        !allowSaleWithoutStock &&
+        product.inventoryBehavior !== 'MADE_TO_ORDER' &&
+        quantityInCart >= product.stock
+      ) {
         setBarcodeNotice({
           tone: 'error',
           message:
@@ -2090,7 +2098,9 @@ export function RetailSalesWorkspace() {
 
     if (!allowSaleWithoutStock) {
       const stockMismatchItem = cartItems.find(
-        (item) => item.quantity > item.product.stock,
+        (item) =>
+          item.product.inventoryBehavior !== 'MADE_TO_ORDER' &&
+          item.quantity > item.product.stock,
       )
 
       if (stockMismatchItem) {
@@ -2298,6 +2308,7 @@ export function RetailSalesWorkspace() {
           quickExpenseForm.status === 'PAID'
             ? mapRetailPaymentOptionToExpenseMethod(quickExpenseForm.paymentOption)
             : 'CREDIT',
+        fundSource: 'REGISTER',
         status: quickExpenseForm.status,
         expenseDate: toOperationDateTime(quickExpenseForm.expenseDate),
         notes: normalizeOptionalText(quickExpenseForm.note),
@@ -2571,7 +2582,10 @@ export function RetailSalesWorkspace() {
                 const productQuantity = cartQuantitiesByProductId.get(product.id) ?? 0
                 const productImageUrl = resolveProductImageUrl(product.imageUrls)
                 const canSellProduct =
-                  product.isActive && (allowSaleWithoutStock || product.stock > 0)
+                  product.isActive &&
+                  (product.inventoryBehavior === 'MADE_TO_ORDER' ||
+                    allowSaleWithoutStock ||
+                    product.stock > 0)
 
                 return (
                   <button
@@ -2613,7 +2627,9 @@ export function RetailSalesWorkspace() {
                     </p>
                     <p className={styles.productName}>{product.name}</p>
                     <span className={`${styles.stockPill} ${getStockToneClass(product)}`}>
-                      {product.stock.toString()} disponibles
+                      {product.inventoryBehavior === 'MADE_TO_ORDER'
+                        ? 'Preparado al pedir'
+                        : `${product.stock.toString()} disponibles`}
                     </span>
                   </button>
                 )
@@ -2721,7 +2737,9 @@ export function RetailSalesWorkspace() {
                                 <SaleQuantityInput
                                   className={styles.quantityInput}
                                   max={
-                                    allowSaleWithoutStock
+                                    allowSaleWithoutStock ||
+                                    item.product.inventoryBehavior ===
+                                      'MADE_TO_ORDER'
                                       ? undefined
                                       : item.product.stock
                                   }
@@ -2735,6 +2753,8 @@ export function RetailSalesWorkspace() {
                                   className={styles.quantityButton}
                                   disabled={
                                     !allowSaleWithoutStock &&
+                                    item.product.inventoryBehavior !==
+                                      'MADE_TO_ORDER' &&
                                     item.quantity >= item.product.stock
                                   }
                                   type="button"

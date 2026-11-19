@@ -1,8 +1,8 @@
 .surface {
-  border: 1px solid rgba(192, 204, 218, 0.9);
-  border-radius: 1rem;
-  background: #ffffff;
-  box-shadow: 0 0.8rem 2rem rgba(18, 27, 38, 0.04);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-xs);
 }
 
 .actionRow {
@@ -21,36 +21,46 @@
   justify-content: center;
   min-height: 3rem;
   padding: 0.75rem 1.25rem;
-  border-radius: 0.95rem;
+  border-radius: var(--ui-radius-md);
   font-weight: 800;
   line-height: 1;
 }
 
 .buttonDark {
-  background: #1f2a37;
+  background: var(--ui-primary);
   color: #ffffff;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.18);
 }
 
 .buttonSuccess {
-  background: #17a34a;
+  background: var(--ui-success);
   color: #ffffff;
 }
 
 .buttonDanger {
-  background: #d4493b;
+  background: var(--ui-danger);
   color: #ffffff;
 }
 
 .buttonOutline {
-  border: 2px solid #1f2a37;
-  background: #ffffff;
-  color: #1f2a37;
+  border: 1px solid var(--ui-border-strong);
+  background: var(--ui-surface);
+  color: var(--ui-text);
 }
 
 .buttonMuted {
-  border: 1px solid rgba(192, 204, 218, 0.95);
-  background: #f4f7fb;
-  color: #6f7d8d;
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text-secondary);
+}
+
+.buttonDark:hover:not(:disabled),
+.buttonSuccess:hover:not(:disabled),
+.buttonDanger:hover:not(:disabled),
+.buttonOutline:hover:not(:disabled),
+.buttonMuted:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: var(--ui-shadow-sm);
 }
 
 .premiumBanner {
@@ -98,10 +108,28 @@
   align-items: center;
   min-height: 3rem;
   padding: 0 1rem;
-  border: 1px solid rgba(184, 197, 213, 0.98);
-  border-radius: 0.9rem;
-  background: #ffffff;
-  color: #516072;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text-secondary);
+  box-shadow: var(--ui-shadow-xs);
+  transition:
+    border-color var(--ui-transition),
+    box-shadow var(--ui-transition),
+    background-color var(--ui-transition);
+}
+
+.searchField:hover,
+.selectField:hover,
+.dateField:hover {
+  border-color: var(--ui-border-strong);
+}
+
+.searchField:focus-within,
+.selectField:focus-within,
+.dateField:focus-within {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
 }
 
 .searchField {
@@ -118,7 +146,7 @@
   width: 100%;
   border: 0;
   background: transparent;
-  color: #334155;
+  color: var(--ui-text);
   font: inherit;
 }
 

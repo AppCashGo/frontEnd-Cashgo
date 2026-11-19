@@ -39,6 +39,7 @@ function getDefaultValues(product: Product | null): ProductFormValues {
     stock: product?.stock ?? 0,
     minStock: product?.minStock ?? 0,
     unit: product?.unit ?? 'UNIT',
+    inventoryBehavior: product?.inventoryBehavior ?? 'PURCHASED',
     isActive: product?.isActive ?? true,
   }
 }
@@ -97,6 +98,7 @@ export function ProductFormPanel({
         stock: values.stock,
         minStock: values.minStock,
         unit: values.unit,
+        inventoryBehavior: values.inventoryBehavior,
         isActive: values.isActive,
       })
 

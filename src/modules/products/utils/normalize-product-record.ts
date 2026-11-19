@@ -31,6 +31,7 @@ export function normalizeProductRecord(record: ProductApiRecord): Product {
     categoryId: normalizeOptionalId(record.categoryId),
     parentProductId: normalizeOptionalId(record.parentProductId ?? null),
     productType: record.productType ?? "BASIC",
+    inventoryBehavior: record.inventoryBehavior ?? "PURCHASED",
     variantName: record.variantName ?? null,
     imageUrls: normalizeProductImageUrls(record.imageUrls),
     description: record.description ?? null,

@@ -1,8 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   CalendarClock,
+  Calculator,
   Download,
   MessageCircle,
+  PackageOpen,
   Pencil,
   Printer,
   ReceiptText,
@@ -345,6 +347,7 @@ export function SaleDetailDrawer({
       isOpen={saleId !== null}
       size="xl"
       title={sale?.saleNumber ?? 'Detalle de venta'}
+      titleAccessory={<span className={styles.drawerTitleIcon}><ReceiptText aria-hidden="true" /></span>}
       onClose={onClose}
     >
       {saleQuery.isLoading ? <p className={styles.state}>Cargando venta…</p> : null}
@@ -402,7 +405,7 @@ export function SaleDetailDrawer({
           </div>
 
           <section className={styles.section}>
-            <h3>Productos</h3>
+            <h3 className={styles.sectionTitle}><PackageOpen aria-hidden="true" /> Productos</h3>
             <div className={styles.tableScroller}>
               <table className={styles.table}>
                 <thead>
@@ -432,7 +435,7 @@ export function SaleDetailDrawer({
 
           <div className={styles.financialGrid}>
             <section className={styles.section}>
-              <h3>Pagos</h3>
+              <h3 className={styles.sectionTitle}><WalletCards aria-hidden="true" /> Pagos</h3>
               {payments.length > 0 ? (
                 payments.map((payment) => {
                   const paymentKey = `${payment.source}:${payment.id}`
@@ -601,6 +604,7 @@ export function SaleDetailDrawer({
               ) : null}
             </section>
             <section className={`${styles.section} ${styles.totals}`}>
+              <h3 className={styles.sectionTitle}><Calculator aria-hidden="true" /> Resumen</h3>
               <div><span>Subtotal</span><strong>{formatCurrency(sale.subtotal)}</strong></div>
               {sale.discountTotal > 0 ? <div><span>Descuentos</span><strong>-{formatCurrency(sale.discountTotal)}</strong></div> : null}
               {sale.taxTotal > 0 ? <div><span>Impuestos</span><strong>{formatCurrency(sale.taxTotal)}</strong></div> : null}

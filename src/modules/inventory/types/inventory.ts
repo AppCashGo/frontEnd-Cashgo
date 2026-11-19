@@ -10,6 +10,8 @@ export const inventoryMovementTypes = [
   "IN",
   "OUT",
   "ADJUSTMENT",
+  "PRODUCTION_IN",
+  "WASTE_OUT",
   "SALE_OUT",
   "SALE_CANCELLED_IN",
   "RETURN_IN",
@@ -49,6 +51,16 @@ export type InventoryAdjustmentInput = {
   type: ManualInventoryAdjustmentType;
   quantity: number;
   reason?: string;
+};
+
+export type InventoryOperationInput = {
+  items: Array<{ productId: string; quantity: number }>;
+  reason?: string;
+};
+
+export type InventoryOperationResult = {
+  affectedProducts: number;
+  totalUnits: number;
 };
 
 export type InventoryCountInput = {

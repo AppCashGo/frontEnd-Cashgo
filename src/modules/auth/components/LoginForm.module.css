@@ -111,6 +111,7 @@
 }
 
 .googleButton,
+.credentialsButton,
 .primaryButton,
 .googleButtonHost {
   display: inline-flex;
@@ -135,6 +136,12 @@
   color: #20293a;
 }
 
+.credentialsButton {
+  border: 1px solid #9aa8bd;
+  background: #f7f9fc;
+  color: #273144;
+}
+
 .googleButtonHost {
   width: 100%;
   overflow: hidden;
@@ -154,8 +161,16 @@
 }
 
 .googleButton:hover,
+.credentialsButton:hover,
 .primaryButton:hover:enabled {
   transform: translateY(-1px);
+}
+
+.localCredentialsHint {
+  margin: -0.2rem 0 0;
+  color: #667287;
+  font-size: 0.82rem;
+  text-align: center;
 }
 
 .primaryButton:disabled {

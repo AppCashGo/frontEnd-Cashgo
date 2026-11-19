@@ -1,7 +1,7 @@
 .card {
-  border: 1px solid rgba(192, 204, 218, 0.9);
-  background: #ffffff;
-  box-shadow: 0 0.8rem 2rem rgba(18, 27, 38, 0.04);
+  border: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-xs);
 }
 
 .default {
@@ -19,7 +19,7 @@
 }
 
 .elevated {
-  box-shadow: 0 1.2rem 2.6rem rgba(18, 27, 38, 0.09);
+  box-shadow: var(--ui-shadow-sm);
 }
 
 .interactive {
@@ -31,9 +31,9 @@
 }
 
 .interactive:hover {
-  border-color: rgba(31, 42, 55, 0.52);
-  box-shadow: 0 1.2rem 2.6rem rgba(18, 27, 38, 0.1);
-  transform: translateY(-1px);
+  border-color: rgba(49, 94, 251, 0.38);
+  box-shadow: var(--ui-shadow-md);
+  transform: translateY(-2px);
 }
 
 .smRadius {

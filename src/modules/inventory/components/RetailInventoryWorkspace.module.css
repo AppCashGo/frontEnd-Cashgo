@@ -1057,18 +1057,17 @@
   align-content: center;
   gap: 0.45rem;
   padding: 1.4rem;
-  background:
-    linear-gradient(90deg, rgba(9, 18, 31, 0.9), rgba(9, 69, 152, 0.68)),
-    radial-gradient(circle at 86% 20%, #4f8be2, transparent 44%), #173966;
-  color: #ffffff;
+  border-color: #c7d7fe;
+  background: #eef4ff;
+  color: #173b7a;
 }
 
 .promoBadge {
   width: fit-content;
   padding: 0.28rem 0.55rem;
   border-radius: 0.35rem;
-  background: rgba(36, 83, 211, 0.9);
-  color: #8fb4ff;
+  background: #dbeafe;
+  color: #1d4ed8;
   font-size: 0.72rem;
   font-weight: 900;
   letter-spacing: 0.05em;
@@ -1082,7 +1081,7 @@
 .promoCard > p {
   margin: 0;
   max-width: 26rem;
-  color: #e3e9f3;
+  color: #526581;
 }
 
 .auditButton {
@@ -1094,10 +1093,10 @@
   min-height: 2.4rem;
   margin-top: auto;
   padding: 0.55rem 0.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.52);
+  border: 1px solid #93b4f7;
   border-radius: 0.75rem;
-  background: rgba(255, 255, 255, 0.16);
-  color: inherit;
+  background: #ffffff;
+  color: #1d4ed8;
   font-weight: 900;
 }
 
@@ -1272,6 +1271,20 @@
 
 .valueBoxWarning {
   color: #d11d1d;
+}
+
+.stockNotApplicable {
+  display: inline-flex;
+  min-height: 1.75rem;
+  align-items: center;
+  padding: 0 0.65rem;
+  border: 1px solid #dfe5ed;
+  border-radius: 999px;
+  background: #f7f9fc;
+  color: #647086;
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .gainCell {

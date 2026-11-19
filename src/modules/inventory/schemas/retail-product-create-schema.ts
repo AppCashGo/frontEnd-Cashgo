@@ -35,6 +35,7 @@ export const retailProductCreateSchema = z.object({
     })
     .min(0, 'El costo debe ser mayor o igual a 0.'),
   unit: z.enum(productUnits),
+  inventoryBehavior: z.enum(['PURCHASED', 'PRODUCED', 'MADE_TO_ORDER']),
   categoryId: z.string().trim().optional(),
   description: z
     .string()

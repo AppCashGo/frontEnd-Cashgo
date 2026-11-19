@@ -143,9 +143,10 @@ export function useSaleCart(
       const existingEntry = currentEntries.find(
         (entry) => entry.productId === product.id,
       )
+      const tracksStock = product.inventoryBehavior !== 'MADE_TO_ORDER'
 
       if (!existingEntry) {
-        if (!allowSaleWithoutStock && product.stock <= 0) {
+        if (!allowSaleWithoutStock && tracksStock && product.stock <= 0) {
           return currentEntries
         }
 
@@ -159,7 +160,11 @@ export function useSaleCart(
         ]
       }
 
-      if (!allowSaleWithoutStock && existingEntry.quantity >= product.stock) {
+      if (
+        !allowSaleWithoutStock &&
+        tracksStock &&
+        existingEntry.quantity >= product.stock
+      ) {
         return currentEntries
       }
 
@@ -187,7 +192,9 @@ export function useSaleCart(
 
         if (
           !product ||
-          (!allowSaleWithoutStock && entry.quantity >= product.stock)
+          (!allowSaleWithoutStock &&
+            product.inventoryBehavior !== 'MADE_TO_ORDER' &&
+            entry.quantity >= product.stock)
         ) {
           return entry
         }
@@ -244,7 +251,9 @@ export function useSaleCart(
 
         return {
           ...entry,
-          quantity: allowSaleWithoutStock
+          quantity:
+            allowSaleWithoutStock ||
+            product.inventoryBehavior === 'MADE_TO_ORDER'
             ? quantity
             : Math.min(quantity, product.stock),
         }

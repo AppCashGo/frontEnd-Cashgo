@@ -1,6 +1,6 @@
 .card {
-  --metric-accent: #2563eb;
-  --metric-accent-soft: rgba(37, 99, 235, 0.12);
+  --metric-accent: #1d5fa7;
+  --metric-accent-soft: rgba(29, 95, 167, 0.12);
   display: grid;
   align-content: space-between;
   gap: 1rem;
@@ -14,8 +14,8 @@
 }
 
 .cardSecondary {
-  --metric-accent: #4f46e5;
-  --metric-accent-soft: rgba(79, 70, 229, 0.12);
+  --metric-accent: #174a82;
+  --metric-accent-soft: rgba(23, 74, 130, 0.12);
 }
 
 .cardSuccess {

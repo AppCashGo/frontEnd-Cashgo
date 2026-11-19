@@ -34,6 +34,9 @@ function isWorkspaceTab(value: string | null): value is RetailProductCreateWorks
 
 function getStockStatus(product: Product) {
   if (!product.isActive) return { label: 'Inactivo', tone: styles.statusInactive }
+  if (product.inventoryBehavior === 'MADE_TO_ORDER') {
+    return { label: 'Preparado al pedir', tone: styles.statusHealthy }
+  }
   if (product.stock === 0) return { label: 'Agotado', tone: styles.statusOut }
   if (product.stock <= Math.max(product.minStock, 5)) {
     return { label: 'Stock bajo', tone: styles.statusLow }
@@ -42,6 +45,7 @@ function getStockStatus(product: Product) {
 }
 
 function matchesStockFilter(product: Product, filter: StockFilter) {
+  if (product.inventoryBehavior === 'MADE_TO_ORDER') return filter === 'ALL'
   if (filter === 'OUT_OF_STOCK') return product.stock === 0
   if (filter === 'LOW_STOCK') {
     return product.stock > 0 && product.stock <= Math.max(product.minStock, 5)
@@ -100,7 +104,14 @@ export function ProductsPage() {
   const paginatedProducts = filteredProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
   const firstVisible = filteredProducts.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1
   const lastVisible = Math.min(page * PAGE_SIZE, filteredProducts.length)
-  const totalSaleValue = products.reduce((total, product) => total + product.price * product.stock, 0)
+  const totalSaleValue = products.reduce(
+    (total, product) =>
+      total +
+      (product.inventoryBehavior === 'MADE_TO_ORDER'
+        ? 0
+        : product.price * product.stock),
+    0,
+  )
 
   useEffect(() => setPage(1), [categoryId, deferredSearch, stockFilter])
   useEffect(() => {
@@ -195,7 +206,7 @@ export function ProductsPage() {
                     <td data-label="SKU">{product.sku ?? '—'}</td>
                     <td data-label="Costo">{formatCurrency(product.cost)}</td>
                     <td data-label="Precio de venta" className={styles.price}>{formatCurrency(product.price)}</td>
-                    <td data-label="Stock"><span className={product.stock <= Math.max(product.minStock, 5) ? styles.lowStock : undefined}><strong>{product.stock}</strong> {getProductUnitStockLabel(product.unit, product.stock)}</span></td>
+                    <td data-label="Stock">{product.inventoryBehavior === 'MADE_TO_ORDER' ? <span> No aplica </span> : <span className={product.stock <= Math.max(product.minStock, 5) ? styles.lowStock : undefined}><strong>{product.stock}</strong> {getProductUnitStockLabel(product.unit, product.stock)}</span>}</td>
                     <td data-label="Estado"><span className={`${styles.status} ${status.tone}`}>{status.label}</span></td>
                     <td data-label="Acciones" className={styles.actionCell}>
                       <button aria-expanded={openMenuId === product.id} aria-label={`Acciones de ${product.name}`} className={styles.menuButton} type="button" onClick={() => setOpenMenuId((current) => current === product.id ? null : product.id)}><MoreVertical aria-hidden="true" size={20} /></button>

@@ -213,6 +213,7 @@ export function ExpensesPage() {
         supplierId: expense.supplierId,
         amount: expense.amount,
         paymentMethod: expense.paymentMethod,
+        fundSource: expense.fundSource,
         status: 'PAID',
         expenseDate: expense.expenseDate,
         notes: expense.notes,

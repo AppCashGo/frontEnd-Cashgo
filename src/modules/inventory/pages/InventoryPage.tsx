@@ -156,7 +156,7 @@ export function InventoryPage() {
         <aside className={styles.secondaryColumn}>
           <InventoryAdjustmentPanel
             isSubmitting={createInventoryAdjustmentMutation.isPending}
-            products={products}
+            products={products.filter((product) => product.inventoryBehavior !== 'MADE_TO_ORDER')}
             submitErrorMessage={
               productsQuery.isError
                 ? getErrorMessage(

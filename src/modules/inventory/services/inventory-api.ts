@@ -17,6 +17,8 @@ import type {
   InventoryPurchaseInput,
   InventoryPurchaseResult,
   InventoryReferenceType,
+  InventoryOperationInput,
+  InventoryOperationResult,
 } from "@/modules/inventory/types/inventory";
 import {
   deleteJson,
@@ -167,6 +169,22 @@ export async function createInventoryAdjustment(
   });
 
   return normalizeInventoryMovement(movement);
+}
+
+export function registerInventoryProduction(input: InventoryOperationInput) {
+  return postJson<InventoryOperationResult, InventoryOperationInput>(
+    "/inventory/production",
+    input,
+    { accessToken: getAuthAccessToken() },
+  );
+}
+
+export function registerInventoryWaste(input: InventoryOperationInput) {
+  return postJson<InventoryOperationResult, InventoryOperationInput>(
+    "/inventory/waste",
+    input,
+    { accessToken: getAuthAccessToken() },
+  );
 }
 
 export async function applyInventoryCount(input: InventoryCountInput) {

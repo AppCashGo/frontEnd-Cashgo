@@ -11,6 +11,7 @@ import type {
 } from '@/modules/expenses/types/expense'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { ApiError } from '@/shared/services/api-client'
+import { getExpenseCategoryLabel } from '@/modules/expenses/utils/expense-category-label'
 import styles from './ExpenseCategoriesPanel.module.css'
 
 type ExpenseCategoriesPanelProps = {
@@ -113,7 +114,9 @@ export function ExpenseCategoriesPanel({
         {categories.map((category) => (
           <div key={category.id} className={styles.categoryItem}>
             <div>
-              <p className={styles.categoryName}>{category.name}</p>
+              <p className={styles.categoryName}>
+                {getExpenseCategoryLabel(category.name)}
+              </p>
               <p className={styles.categoryMeta}>
                 {usageCountByCategoryId[category.id] ?? 0} gasto
                 {(usageCountByCategoryId[category.id] ?? 0) === 1 ? '' : 's'}

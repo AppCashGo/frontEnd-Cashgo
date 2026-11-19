@@ -7,8 +7,8 @@
 .trigger {
   display: flex;
   width: 100%;
-  min-height: inherit;
   min-width: 0;
+  min-height: inherit;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
@@ -16,23 +16,24 @@
   border: 0;
   border-radius: inherit;
   outline: none;
+  appearance: none;
   background: transparent;
+  background-image: none !important;
   color: inherit;
   cursor: pointer;
   font: inherit;
   line-height: inherit;
   text-align: left;
-  background-image: none !important;
-  appearance: none;
 }
 
 .trigger:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 3px;
+  outline: 3px solid rgba(49, 94, 251, 0.3);
+  outline-offset: 2px;
 }
 
 .trigger:disabled {
   cursor: not-allowed;
+  opacity: 0.64;
 }
 
 .value {
@@ -43,14 +44,14 @@
 }
 
 .chevron {
-  flex: 0 0 auto;
   width: 0.55rem;
   height: 0.55rem;
+  flex: 0 0 auto;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
-  opacity: 0.72;
+  opacity: 0.68;
   transform: translateY(-0.15rem) rotate(45deg);
-  transition: transform 160ms ease;
+  transition: transform var(--ui-transition);
 }
 
 .chevronOpen {
@@ -74,12 +75,15 @@
   position: fixed;
   z-index: 10000;
   display: grid;
-  gap: 0.5rem;
-  padding: 0.6rem;
-  border: 1px solid #dce3ef;
-  border-radius: 0.9rem;
-  background: #fff;
-  box-shadow: 0 18px 48px rgb(15 23 42 / 20%);
+  gap: 0.6rem;
+  padding: 0.65rem;
+  border: 1px solid rgba(184, 196, 214, 0.78);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface-raised);
+  box-shadow: var(--ui-shadow-lg);
+  backdrop-filter: blur(18px);
+  animation: menuEnter 140ms cubic-bezier(0.2, 0, 0, 1);
+  transform-origin: top center;
 }
 
 .searchWrap {
@@ -89,45 +93,46 @@
 .searchIcon {
   position: absolute;
   top: 50%;
-  left: 0.75rem;
+  left: 0.8rem;
   width: 1rem;
   height: 1rem;
-  color: #667085;
+  color: var(--ui-text-tertiary);
   pointer-events: none;
   transform: translateY(-50%);
 }
 
 .search {
   width: 100%;
-  min-height: 2.55rem;
-  padding: 0.55rem 0.75rem 0.55rem 2.25rem;
-  border: 1px solid #cfd8e6;
-  border-radius: 0.7rem;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.75rem 0.55rem 2.3rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
   outline: none;
-  background: #fff;
-  color: #172033;
+  background: var(--ui-surface-subtle);
+  color: var(--ui-text);
   font: inherit;
-}
-
-.search:focus {
-  border-color: #4f63ff;
-  box-shadow: 0 0 0 3px rgb(79 99 255 / 14%);
 }
 
 .options {
   display: grid;
-  max-height: min(17rem, 42vh);
+  max-height: min(19rem, 46vh);
+  gap: 0.18rem;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
 .option {
+  display: flex;
   width: 100%;
-  padding: 0.7rem 0.75rem;
+  min-height: 2.65rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.68rem 0.78rem;
   border: 0;
-  border-radius: 0.65rem;
+  border-radius: 0.72rem;
   background: transparent;
-  color: #263247;
+  color: var(--ui-text);
   cursor: pointer;
   font: inherit;
   text-align: left;
@@ -136,31 +141,64 @@
 .option:hover,
 .option:focus-visible {
   outline: none;
-  background: #f2f5ff;
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
 }
 
 .optionSelected {
-  background: #e9edff;
-  color: #3046d3;
-  font-weight: 700;
+  background: linear-gradient(135deg, #eef2ff, #f4f0ff);
+  color: var(--ui-primary-strong);
+  font-weight: 800;
 }
 
 .option:disabled {
-  color: #98a2b3;
-  cursor: not-allowed;
   background: transparent;
+  color: var(--ui-text-tertiary);
+  cursor: not-allowed;
+}
+
+.optionLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.optionCheck {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  stroke-width: 3;
 }
 
 .empty {
   margin: 0;
-  padding: 0.85rem 0.75rem;
-  color: #667085;
+  padding: 1rem 0.75rem;
+  color: var(--ui-text-secondary);
   font-size: 0.9rem;
   text-align: center;
+}
+
+@keyframes menuEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-0.35rem) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 @media (max-width: 640px) {
   .menu {
     max-width: calc(100vw - 1rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu {
+    animation: none;
   }
 }

@@ -94,6 +94,10 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
   const [providerNotice, setProviderNotice] = useState<string | null>(null);
   const googleButtonRef = useRef<HTMLDivElement | null>(null);
   const googleClientId = getGoogleClientId();
+  const isLocalDevelopment =
+    import.meta.env.DEV ||
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1";
 
   const loginCopy =
     languageCode === "es"
@@ -103,6 +107,9 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
           choiceTitle: "Inicia sesión",
           google: "Ingresa con Google",
           phone: "Ingresa con tu número de celular",
+          credentials: "Ingresa con usuario y contraseña",
+          localCredentialsHint:
+            "Acceso local: admin@cashgo.test / admin12345",
           noAccount: "¿No tienes cuenta?",
           createAccount: "Crea una cuenta",
           googleNotice:
@@ -149,6 +156,9 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
           choiceTitle: "Sign in",
           google: "Continue with Google",
           phone: "Continue with your phone number",
+          credentials: "Continue with username and password",
+          localCredentialsHint:
+            "Local access: admin@cashgo.test / admin12345",
           noAccount: "Don't have an account?",
           createAccount: "Create an account",
           googleNotice:
@@ -483,6 +493,24 @@ export function LoginForm({ onBack, onGoToRegister }: LoginFormProps) {
               >
                 {loginCopy.phone}
               </button>
+
+              {isLocalDevelopment ? (
+                <>
+                  <button
+                    className={styles.credentialsButton}
+                    type="button"
+                    onClick={() => {
+                      setValue("identifier", "admin@cashgo.test");
+                      setStage("credentials");
+                    }}
+                  >
+                    {loginCopy.credentials}
+                  </button>
+                  <p className={styles.localCredentialsHint}>
+                    {loginCopy.localCredentialsHint}
+                  </p>
+                </>
+              ) : null}
             </div>
 
             {providerNotice ? (

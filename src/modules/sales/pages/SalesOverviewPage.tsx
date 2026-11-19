@@ -1,4 +1,14 @@
-import { BarChart3, Eye, Plus, Search } from 'lucide-react'
+import {
+  Banknote,
+  BarChart3,
+  CreditCard,
+  Eye,
+  Landmark,
+  Plus,
+  Search,
+  Smartphone,
+  WalletCards,
+} from 'lucide-react'
 import {
   useDeferredValue,
   useEffect,
@@ -115,15 +125,16 @@ export function SalesOverviewPage() {
     (data?.summary.paymentMethods ?? []).map((item) => [item.method, item.amount]),
   )
   const paymentRows = [
-    { label: 'Efectivo', amount: methodTotals.get('CASH') ?? 0 },
-    { label: 'Nequi / Daviplata', amount: methodTotals.get('DIGITAL_WALLET') ?? 0 },
-    { label: 'Transferencia', amount: methodTotals.get('TRANSFER') ?? 0 },
-    { label: 'Tarjeta', amount: methodTotals.get('CARD') ?? 0 },
+    { label: 'Efectivo', amount: methodTotals.get('CASH') ?? 0, icon: <Banknote /> },
+    { label: 'Nequi / Daviplata', amount: methodTotals.get('DIGITAL_WALLET') ?? 0, icon: <Smartphone /> },
+    { label: 'Transferencia', amount: methodTotals.get('TRANSFER') ?? 0, icon: <Landmark /> },
+    { label: 'Tarjeta', amount: methodTotals.get('CARD') ?? 0, icon: <CreditCard /> },
     {
       label: 'Otros',
       amount:
         (methodTotals.get('BANK_DEPOSIT') ?? 0) +
         (methodTotals.get('OTHER') ?? 0),
+      icon: <WalletCards />,
     },
   ]
 
@@ -212,7 +223,7 @@ export function SalesOverviewPage() {
       <section className={styles.paymentCard}>
         <div><h2>Medios de pago</h2><p>Cómo fueron cobradas las ventas seleccionadas.</p></div>
         <div className={styles.paymentGrid}>
-          {paymentRows.map((row) => <div key={row.label}><span>{row.label}</span><strong>{formatCurrency(row.amount)}</strong></div>)}
+          {paymentRows.map((row) => <div key={row.label}><span className={styles.paymentIcon} aria-hidden="true">{row.icon}</span><span>{row.label}</span><strong>{formatCurrency(row.amount)}</strong></div>)}
         </div>
       </section>
 

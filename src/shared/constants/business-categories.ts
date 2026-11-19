@@ -50,7 +50,6 @@ const restaurantCategorySet = new Set<BusinessCategoryOption>([
   "restaurant_fast_food",
   "coffee_shop",
   "bar",
-  "bakery_pastry",
   "hotels_tourism",
 ]);
 
@@ -74,6 +73,7 @@ const retailCategorySet = new Set<BusinessCategoryOption>([
   "sporting_goods",
   "auto_parts_accessories",
   "agricultural_supplies",
+  "bakery_pastry",
 ]);
 
 export function isBusinessCategoryOption(

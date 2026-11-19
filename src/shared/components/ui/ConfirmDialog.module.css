@@ -1,14 +1,15 @@
 .backdrop {
-  background: rgba(15, 23, 42, 0.48);
+  background: rgba(15, 23, 42, 0.54);
+  backdrop-filter: blur(8px);
 }
 
 .dialog {
   width: min(100%, 31rem);
   padding: 1.25rem;
-  border: 1px solid rgba(203, 213, 225, 0.94);
-  border-radius: 1rem;
-  background: #ffffff;
-  box-shadow: 0 1.6rem 4rem rgba(15, 23, 42, 0.2);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-xl);
+  background: var(--ui-surface-raised);
+  box-shadow: var(--ui-shadow-lg);
 }
 
 .dialogContent {
@@ -75,8 +76,8 @@
   justify-content: center;
   border: 0;
   border-radius: 999px;
-  background: #111827;
-  color: #ffffff;
+  background: #eef2f7;
+  color: var(--ui-text-secondary);
   font-size: 1.1rem;
   font-weight: 800;
   cursor: pointer;
@@ -113,14 +114,14 @@
 }
 
 .confirmButton {
-  border: 1px solid #1f2a37;
-  background: #1f2a37;
+  border: 1px solid var(--ui-primary);
+  background: var(--ui-primary);
   color: #ffffff;
 }
 
 .confirmButtonDanger {
-  border-color: #c9352c;
-  background: #c9352c;
+  border-color: var(--ui-danger);
+  background: var(--ui-danger);
 }
 
 @media (max-width: 520px) {

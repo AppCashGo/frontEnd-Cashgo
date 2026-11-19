@@ -6,7 +6,7 @@
   align-items: center;
   min-height: 3.15rem;
   padding: 0.35rem 1rem;
-  background: rgba(248, 250, 252, 0.96);
+  background: rgba(255, 255, 255, 0.94);
   border-bottom: 1px solid rgba(31, 41, 55, 0.08);
   backdrop-filter: blur(18px);
 }
@@ -67,17 +67,17 @@
   .desktopSidebarButton {
     position: fixed;
     top: 9px;
-    left: 68px;
+    left: 52px;
     z-index: 201;
     display: inline-flex;
     width: 2.75rem;
     height: 2.75rem;
     padding: 0;
-    border: 0;
+    border: 1px solid var(--ui-border);
     border-radius: 999px;
-    background: #38a9f8;
-    color: #ffffff;
-    box-shadow: 0 0.9rem 1.7rem rgba(56, 169, 248, 0.32);
+    background: #ffffff;
+    color: var(--ui-text-secondary);
+    box-shadow: var(--ui-shadow-sm);
     pointer-events: auto;
     transform: translate(0) rotate(0);
     transition:
@@ -87,12 +87,14 @@
   }
 
   .desktopSidebarButton:hover {
-    background: #238ee2;
-    box-shadow: 0 1rem 2rem rgba(35, 142, 226, 0.34);
+    border-color: #93b4f7;
+    background: #eff6ff;
+    color: var(--ui-primary);
+    box-shadow: var(--ui-shadow-sm);
   }
 
   .desktopSidebarButtonExpanded {
-    transform: translate(220px) rotate(0);
+    transform: translate(196px) rotate(0);
   }
 
   .sidebarToggleIcon {

@@ -10,6 +10,7 @@ import {
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './ExpensesTable.module.css'
+import { getExpenseCategoryLabel } from '@/modules/expenses/utils/expense-category-label'
 
 type ExpensesTableProps = {
   errorMessage: string | null
@@ -119,7 +120,9 @@ export function ExpensesTable({
                     <div>
                       <p className={styles.mobileConcept}>{expense.concept}</p>
                       <p className={styles.mobileMeta}>
-                        {expense.category?.name ?? 'Sin categoría'} ·{' '}
+                        {expense.category
+                          ? getExpenseCategoryLabel(expense.category.name)
+                          : 'Sin categoría'} ·{' '}
                         {getExpensePaymentMethodLabel(expense.paymentMethod)}
                       </p>
                     </div>
@@ -207,7 +210,9 @@ export function ExpensesTable({
                     </td>
                     <td>
                       <span className={styles.categoryBadge}>
-                        {expense.category?.name ?? 'Sin categoría'}
+                        {expense.category
+                          ? getExpenseCategoryLabel(expense.category.name)
+                          : 'Sin categoría'}
                       </span>
                     </td>
                     <td className={styles.amountCell}>

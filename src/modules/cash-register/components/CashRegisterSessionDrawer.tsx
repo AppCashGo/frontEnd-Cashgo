@@ -686,6 +686,13 @@ export function CashRegisterSessionDrawer({
     event.preventDefault();
     setErrorMessage(null);
 
+    if (!reserveAdjustmentAmount.trim()) {
+      setErrorMessage(
+        "Ingresa el saldo real guardado antes de actualizar la reserva.",
+      );
+      return;
+    }
+
     try {
       await onReserveAdjust({
         method: reserveAdjustmentMethod,
@@ -1507,6 +1514,7 @@ export function CashRegisterSessionDrawer({
                   inputMode="decimal"
                   min="0"
                   placeholder="$ 0"
+                  required
                   step="0.01"
                   type="number"
                   value={reserveAdjustmentAmount}

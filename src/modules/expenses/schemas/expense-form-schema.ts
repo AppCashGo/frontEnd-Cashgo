@@ -19,6 +19,7 @@ export const expenseFormSchema = z.object({
     'CREDIT',
     'OTHER',
   ]),
+  fundSource: z.enum(['REGISTER', 'RESERVE']),
   status: z.enum(['PAID', 'PENDING', 'CANCELLED']),
   expenseDate: z.string().min(1, 'Selecciona la fecha del gasto.'),
   notes: z

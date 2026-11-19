@@ -8,9 +8,13 @@ import type { KeyboardEvent, ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Camera, ClipboardCheck, ScanBarcode } from 'lucide-react'
+import { BakeryDailyOperationsPanel } from '@/modules/inventory/components/BakeryDailyOperationsPanel'
 import { InventoryCountDrawer } from '@/modules/inventory/components/InventoryCountDrawer'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
-import { getActiveBusinessRole } from '@/modules/auth/utils/get-active-business'
+import {
+  getActiveBusinessCategory,
+  getActiveBusinessRole,
+} from '@/modules/auth/utils/get-active-business'
 import { isTeamManagementRole } from '@/shared/constants/user-roles'
 import {
   RetailProductCreateWorkspace,
@@ -26,6 +30,7 @@ import {
   useDeleteInventoryCategoryMutation,
   useInventoryCategoriesQuery,
   useInventoryLowStockQuery,
+  useInventoryMovementsQuery,
   useCreateInventoryAdjustmentMutation,
   useRegisterInventoryPurchaseMutation,
   useUploadInventoryPurchaseInvoiceMutation,
@@ -468,10 +473,12 @@ export function RetailInventoryWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams()
   const productsQuery = useProductsQuery()
   const authUser = useAuthSessionStore((state) => state.user)
+  const isBakery = getActiveBusinessCategory(authUser) === 'bakery_pastry'
   const canManageInventory = isTeamManagementRole(getActiveBusinessRole(authUser))
   const suppliersQuery = useSuppliersQuery()
   const categoriesQuery = useInventoryCategoriesQuery()
   const lowStockQuery = useInventoryLowStockQuery()
+  const inventoryMovementsQuery = useInventoryMovementsQuery()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const reserveSummaryQuery = useReserveSummaryQuery()
   const createCategoryMutation = useCreateInventoryCategoryMutation()
@@ -486,6 +493,14 @@ export function RetailInventoryWorkspace() {
   const businessSettingsQuery = useBusinessSettingsQuery()
   const updateBusinessSettingsMutation = useUpdateBusinessSettingsMutation()
   const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data])
+  const trackedProducts = useMemo(
+    () => products.filter((product) => product.inventoryBehavior !== 'MADE_TO_ORDER'),
+    [products],
+  )
+  const purchasableProducts = useMemo(
+    () => products.filter((product) => product.inventoryBehavior === 'PURCHASED'),
+    [products],
+  )
   const suppliers = useMemo(
     () => suppliersQuery.data ?? [],
     [suppliersQuery.data],
@@ -579,7 +594,7 @@ export function RetailInventoryWorkspace() {
   const handleInventoryBarcodeScan = useCallback(
     (rawBarcode: string) => {
       const barcode = normalizeBarcode(rawBarcode)
-      const product = products.find(
+      const product = trackedProducts.find(
         (candidate) => normalizeBarcode(candidate.barcode ?? '') === barcode,
       )
 
@@ -604,13 +619,13 @@ export function RetailInventoryWorkspace() {
       })
       window.requestAnimationFrame(() => tableSectionRef.current?.focus())
     },
-    [products],
+    [trackedProducts],
   )
 
   const handlePurchaseBarcodeScan = useCallback(
     (rawBarcode: string) => {
       const barcode = normalizeBarcode(rawBarcode)
-      const product = products.find(
+      const product = purchasableProducts.find(
         (candidate) => normalizeBarcode(candidate.barcode ?? '') === barcode,
       )
 
@@ -672,7 +687,7 @@ export function RetailInventoryWorkspace() {
         }
       })
     },
-    [products],
+    [purchasableProducts],
   )
 
   useHardwareBarcodeScanner({
@@ -1720,6 +1735,13 @@ export function RetailInventoryWorkspace() {
         </div>
       ) : null}
 
+      {isBakery ? (
+        <BakeryDailyOperationsPanel
+          movements={inventoryMovementsQuery.data ?? []}
+          products={products}
+        />
+      ) : null}
+
       {isPremiumBannerVisible && lowStockAlerts.length > 0 ? (
         <section className={styles.banner}>
           <div className={styles.bannerLead}>
@@ -2079,41 +2101,47 @@ export function RetailInventoryWorkspace() {
                       </label>
                     </td>
                     <td data-label={copy.stockColumn}>
-                      <label
-                        className={
-                          isLowStock
-                            ? `${styles.inlineEditBox} ${styles.valueBoxWarning}`
-                            : styles.inlineEditBox
-                        }
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        <input
-                          aria-label={`Cantidad disponible de ${product.name}`}
-                          className={styles.inlineEditInput}
-                          disabled={
-                            savingProductField === `${product.id}:stock`
+                      {product.inventoryBehavior === 'MADE_TO_ORDER' ? (
+                        <span className={styles.stockNotApplicable}>
+                          No aplica · al pedir
+                        </span>
+                      ) : (
+                        <label
+                          className={
+                            isLowStock
+                              ? `${styles.inlineEditBox} ${styles.valueBoxWarning}`
+                              : styles.inlineEditBox
                           }
-                          inputMode="numeric"
-                          min="0"
-                          step="1"
-                          type="text"
-                          value={productDraft.stock}
-                          onBlur={() => {
-                            void handleCommitProductDraft(product, 'stock')
-                          }}
-                          onChange={(event) =>
-                            handleProductDraftChange(
-                              product.id,
-                              'stock',
-                              event.target.value,
-                            )
-                          }
-                          onFocus={(event) => event.stopPropagation()}
-                          onKeyDown={(event) =>
-                            handleInlineProductKeyDown(event, product, 'stock')
-                          }
-                        />
-                      </label>
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <input
+                            aria-label={`Cantidad disponible de ${product.name}`}
+                            className={styles.inlineEditInput}
+                            disabled={
+                              savingProductField === `${product.id}:stock`
+                            }
+                            inputMode="numeric"
+                            min="0"
+                            step="1"
+                            type="text"
+                            value={productDraft.stock}
+                            onBlur={() => {
+                              void handleCommitProductDraft(product, 'stock')
+                            }}
+                            onChange={(event) =>
+                              handleProductDraftChange(
+                                product.id,
+                                'stock',
+                                event.target.value,
+                              )
+                            }
+                            onFocus={(event) => event.stopPropagation()}
+                            onKeyDown={(event) =>
+                              handleInlineProductKeyDown(event, product, 'stock')
+                            }
+                          />
+                        </label>
+                      )}
                     </td>
                     <td data-label={copy.marginColumn}>
                       <div className={styles.gainCell}>
@@ -2676,7 +2704,7 @@ export function RetailInventoryWorkspace() {
                 }
               >
                 <option value="">{copy.selectOption}</option>
-                {products.map((product) => (
+                {trackedProducts.map((product) => (
                   <option key={product.id} value={product.id}>
                     {product.name}
                   </option>
@@ -2989,7 +3017,7 @@ export function RetailInventoryWorkspace() {
                         }
                       >
                         <option value="">{copy.selectOption}</option>
-                        {products.map((product) => (
+                        {purchasableProducts.map((product) => (
                           <option key={product.id} value={product.id}>
                             {product.name}
                           </option>
@@ -3458,7 +3486,7 @@ export function RetailInventoryWorkspace() {
         categories={categories}
         isOpen={isInventoryCountOpen}
         persistenceKey={`cashgo:inventory-count:${authUser?.businessId ?? 'unknown'}`}
-        products={products}
+        products={trackedProducts}
         onApplied={(result) => {
           setInventoryCountOpen(false)
           setFeedbackMessage({
