@@ -77,8 +77,7 @@
 .saleButton,
 .primaryAction,
 .secondaryAction,
-.feedbackButton,
-.floatingAction {
+.feedbackButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -117,8 +116,7 @@
 }
 
 .saleButton svg,
-.primaryAction svg,
-.floatingAction svg {
+.primaryAction svg {
   width: 1.05rem;
   height: 1.05rem;
 }
@@ -220,8 +218,7 @@
 .secondaryAction:hover,
 .linkAction:hover,
 .saleButton:hover,
-.iconButton:hover,
-.floatingAction:hover {
+.iconButton:hover {
   transform: translateY(-1px);
 }
 
@@ -405,19 +402,6 @@
 .panelsGrid {
   display: grid;
   gap: 1rem;
-}
-
-.floatingAction {
-  position: fixed;
-  right: max(1.25rem, env(safe-area-inset-right));
-  bottom: max(1.25rem, env(safe-area-inset-bottom));
-  z-index: 10;
-  width: 3.7rem;
-  height: 3.7rem;
-  border-radius: 999px;
-  background: var(--home-primary);
-  color: #ffffff;
-  box-shadow: 0 1.2rem 2.2rem rgba(29, 95, 167, 0.24);
 }
 
 @media (min-width: 640px) {

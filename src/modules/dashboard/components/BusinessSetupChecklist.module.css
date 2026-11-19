@@ -1,0 +1,188 @@
+.card {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #dbeafe;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, #f8fbff 0%, #ffffff 62%);
+  box-shadow: 0 0.85rem 2.2rem rgba(37, 99, 235, 0.07);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.header > div:first-child {
+  min-width: 0;
+}
+
+.eyebrow {
+  color: #2563eb;
+  font-size: 0.7rem;
+  font-weight: 950;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.header h2 {
+  margin: 0.25rem 0 0;
+  color: #172033;
+  font-size: 1.25rem;
+  font-weight: 950;
+}
+
+.header p {
+  margin: 0.35rem 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+}
+
+.progressSummary {
+  display: grid;
+  flex: 0 0 auto;
+  justify-items: end;
+}
+
+.progressSummary strong {
+  color: #1d4ed8;
+  font-size: 1.35rem;
+  font-weight: 950;
+}
+
+.progressSummary span {
+  color: #94a3b8;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.progressTrack {
+  overflow: hidden;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: #dbeafe;
+}
+
+.progressTrack span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #2563eb;
+  transition: width 300ms ease;
+}
+
+.tasks {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.task,
+.taskComplete {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+  padding: 0.8rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.9rem;
+  background: #ffffff;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.task:hover {
+  border-color: #93c5fd;
+  box-shadow: 0 0.55rem 1.2rem rgba(37, 99, 235, 0.08);
+  transform: translateY(-1px);
+}
+
+.taskComplete {
+  border-color: #d1fae5;
+  background: #f7fefb;
+}
+
+.taskIcon {
+  display: inline-grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.taskComplete .taskIcon {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.taskIcon svg,
+.taskState svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.taskCopy {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.taskCopy strong {
+  overflow: hidden;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.taskCopy small {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #94a3b8;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.taskState {
+  color: #cbd5e1;
+}
+
+.taskComplete .taskState {
+  color: #059669;
+}
+
+@media (max-width: 1100px) {
+  .tasks {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .card {
+    padding: 1rem;
+  }
+
+  .header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .progressSummary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .tasks {
+    grid-template-columns: 1fr;
+  }
+}
