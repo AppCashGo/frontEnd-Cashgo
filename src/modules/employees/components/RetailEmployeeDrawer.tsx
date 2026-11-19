@@ -1,10 +1,18 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   ArrowLeft,
+  BarChart3,
   Check,
   ChevronDown,
   ChevronUp,
+  DollarSign,
+  PackageCheck,
+  ReceiptText,
+  Settings2,
+  ShieldCheck,
   UserCheck,
+  UsersRound,
+  UtensilsCrossed,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -229,6 +237,28 @@ function getGroupLabel(group: EmployeePermissionGroup) {
   return permissionGroupLabels[group.id] ?? group.label
 }
 
+function getPermissionGroupIcon(groupId: string) {
+  switch (groupId) {
+    case 'sales':
+      return <ReceiptText aria-hidden="true" />
+    case 'tables':
+      return <UtensilsCrossed aria-hidden="true" />
+    case 'cash':
+    case 'operations':
+      return <DollarSign aria-hidden="true" />
+    case 'catalog':
+      return <PackageCheck aria-hidden="true" />
+    case 'finance':
+      return <BarChart3 aria-hidden="true" />
+    case 'contacts':
+      return <UsersRound aria-hidden="true" />
+    case 'admin':
+      return <Settings2 aria-hidden="true" />
+    default:
+      return <ShieldCheck aria-hidden="true" />
+  }
+}
+
 function getInitialExpandedGroups(preset: EmployeePermissionPreset) {
   const firstGroupId = preset.permissionGroups[0]?.id
 
@@ -319,12 +349,26 @@ function EmployeePermissionsModal({
       onClose={onClose}
     >
         <div className={styles.modalHeader}>
-          <h3 className={styles.modalTitle}>
-            Permisos de {roleLabel.toLowerCase()}
-          </h3>
-          <p className={styles.modalDescription}>
-            Elige que puede hacer esta persona dentro de tu tienda.
-          </p>
+          <span className={styles.modalHeaderIcon}>
+            <ShieldCheck aria-hidden="true" />
+          </span>
+          <div className={styles.modalHeaderCopy}>
+            <span className={styles.modalEyebrow}>Control de acceso</span>
+            <h3 className={styles.modalTitle}>
+              Permisos de {roleLabel.toLowerCase()}
+            </h3>
+            <p className={styles.modalDescription}>
+              Define claramente qué puede consultar y administrar esta persona.
+            </p>
+          </div>
+        </div>
+
+        <div className={styles.permissionsSummary}>
+          <div>
+            <strong>{selectedPermissions.size}</strong>
+            <span>permisos activos</span>
+          </div>
+          <span className={styles.roleBadge}>{roleLabel}</span>
         </div>
 
         <div className={styles.permissionsList}>
@@ -338,7 +382,12 @@ function EmployeePermissionsModal({
             )
 
             return (
-              <article className={styles.permissionGroupCard} key={group.id}>
+              <article
+                className={`${styles.permissionGroupCard} ${
+                  isExpanded ? styles.permissionGroupCardExpanded : ''
+                }`}
+                key={group.id}
+              >
                 <div className={styles.permissionGroupHeader}>
                   <button
                     aria-label={
@@ -358,16 +407,34 @@ function EmployeePermissionsModal({
                   </button>
                   <button
                     className={styles.permissionGroupToggle}
+                    aria-controls={`permission-group-${group.id}`}
+                    aria-expanded={isExpanded}
                     type="button"
                     onClick={() => toggleExpandedGroup(group.id)}
                   >
-                    <strong>{getGroupLabel(group)}</strong>
-                    {isExpanded ? <ChevronUp /> : <ChevronDown />}
+                    <span className={styles.permissionGroupIdentity}>
+                      <span className={styles.permissionGroupIcon}>
+                        {getPermissionGroupIcon(group.id)}
+                      </span>
+                      <span className={styles.permissionGroupCopy}>
+                        <strong>{getGroupLabel(group)}</strong>
+                        <small>
+                          {group.permissions.length}{' '}
+                          {group.permissions.length === 1 ? 'permiso' : 'permisos'}
+                        </small>
+                      </span>
+                    </span>
+                    <span className={styles.permissionChevron}>
+                      {isExpanded ? <ChevronUp /> : <ChevronDown />}
+                    </span>
                   </button>
                 </div>
 
                 {isExpanded ? (
-                  <div className={styles.permissionItems}>
+                  <div
+                    className={styles.permissionItems}
+                    id={`permission-group-${group.id}`}
+                  >
                     {group.permissions.map((permission) => {
                       const isPermissionSelected = selectedPermissions.has(
                         permission.key,
@@ -375,7 +442,11 @@ function EmployeePermissionsModal({
 
                       return (
                         <button
-                          className={styles.permissionItem}
+                          className={`${styles.permissionItem} ${
+                            isPermissionSelected
+                              ? styles.permissionItemSelected
+                              : ''
+                          }`}
                           key={permission.key}
                           type="button"
                           onClick={() => togglePermission(permission.key)}
@@ -400,9 +471,13 @@ function EmployeePermissionsModal({
           })}
         </div>
 
-        <button className={styles.modalPrimaryButton} type="button" onClick={onClose}>
-          Modificar permisos
-        </button>
+        <div className={styles.permissionsFooter}>
+          <span>Los permisos seleccionados quedarán asociados a este rol.</span>
+          <button className={styles.modalPrimaryButton} type="button" onClick={onClose}>
+            <ShieldCheck aria-hidden="true" />
+            Guardar permisos
+          </button>
+        </div>
     </ModalShell>
   )
 }
@@ -629,12 +704,22 @@ export function RetailEmployeeDrawer({
                 type="button"
                 onClick={() => setRoleMenuOpen((isOpenMenu) => !isOpenMenu)}
               >
-                <span>
-                  {selectedRole
-                    ? getRetailRoleLabel(selectedRole)
-                    : 'Selecciona un rol'}
+                <span className={styles.roleSelectValue}>
+                  <span className={styles.roleSelectIcon}>
+                    <UserCheck aria-hidden="true" />
+                  </span>
+                  <span className={styles.roleSelectCopy}>
+                    <strong>
+                      {selectedRole
+                        ? getRetailRoleLabel(selectedRole)
+                        : 'Selecciona un rol'}
+                    </strong>
+                    <small>Perfil de acceso del empleado</small>
+                  </span>
                 </span>
-                {isRoleMenuOpen ? <ChevronUp /> : <ChevronDown />}
+                <span className={styles.roleSelectChevron}>
+                  {isRoleMenuOpen ? <ChevronUp /> : <ChevronDown />}
+                </span>
               </button>
 
               {isRoleMenuOpen ? (
@@ -649,7 +734,13 @@ export function RetailEmployeeDrawer({
                           setRoleMenuOpen(false)
                         }}
                       >
-                        {option.label}
+                        <span className={styles.roleOptionIcon}>
+                          <UserCheck aria-hidden="true" />
+                        </span>
+                        <span>{option.label}</span>
+                        {option.role === selectedRole ? (
+                          <Check className={styles.roleSelectedIcon} aria-hidden="true" />
+                        ) : null}
                       </button>
                       <button
                         className={styles.permissionLink}
@@ -661,7 +752,7 @@ export function RetailEmployeeDrawer({
                           setRoleMenuOpen(false)
                         }}
                       >
-                        Ver Permisos
+                        Ver permisos
                       </button>
                     </div>
                   ))}
