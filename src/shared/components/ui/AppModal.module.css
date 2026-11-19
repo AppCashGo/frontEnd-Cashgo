@@ -21,9 +21,38 @@
 }
 
 .header {
-  display: grid;
-  gap: 0.45rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
   padding-right: 2.6rem;
+}
+
+.titleAccessory {
+  display: inline-grid;
+  place-items: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  flex: 0 0 2.7rem;
+  border-radius: 0.85rem;
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
+}
+
+.titleAccessory svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  stroke-width: 2.15;
+}
+
+.customTitleAccessory {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.headerCopy {
+  display: grid;
+  min-width: 0;
+  gap: 0.35rem;
 }
 
 .title,
@@ -47,12 +76,36 @@
   min-width: 0;
 }
 
+.body :global(input:not([type='checkbox']):not([type='radio']):not([type='range'])),
+.body :global(textarea),
+.body :global(select) {
+  width: 100%;
+  min-height: var(--ui-control-height);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: #ffffff;
+  color: var(--ui-text);
+}
+
+.body :global(input:not([type='checkbox']):not([type='radio']):not([type='range'])),
+.body :global(select) {
+  padding-inline: 0.85rem;
+}
+
+.body :global(textarea) {
+  min-height: 6rem;
+  padding: 0.75rem 0.85rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
 .footer {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 0.75rem;
   padding-top: 0.4rem;
+  border-top: 1px solid var(--ui-border);
 }
 
 @media (max-width: 640px) {

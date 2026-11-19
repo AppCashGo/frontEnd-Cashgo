@@ -1,5 +1,11 @@
 .footer {
+  align-items: center;
   gap: 0.75rem;
+}
+
+.footer > :global(button),
+.footer > :global(a) {
+  min-height: 2.85rem;
 }
 
 .grid,

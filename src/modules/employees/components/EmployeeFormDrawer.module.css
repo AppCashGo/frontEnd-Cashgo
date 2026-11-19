@@ -51,8 +51,9 @@
 
 .primaryButton {
   border: none;
-  background: linear-gradient(135deg, var(--color-accent), #d78943);
-  color: #fffdf8;
+  background: var(--ui-primary);
+  color: #ffffff;
+  box-shadow: 0 0.5rem 1.1rem rgba(37, 99, 235, 0.18);
 }
 
 .statusBanner,

@@ -20,6 +20,7 @@
 }
 
 .header {
+  position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -28,7 +29,36 @@
   border-bottom: 1px solid rgba(226, 232, 240, 0.84);
 }
 
+.header::after {
+  position: absolute;
+  bottom: -1px;
+  left: 1.2rem;
+  width: 4rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--ui-primary);
+  content: "";
+}
+
 .titleAccessory {
+  display: inline-grid;
+  place-items: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  flex: 0 0 auto;
+  border-radius: 0.85rem;
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
+}
+
+.titleAccessory svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  stroke-width: 2.15;
+}
+
+.customTitleAccessory {
+  display: inline-flex;
   flex: 0 0 auto;
 }
 
@@ -64,9 +94,12 @@
   border-radius: 999px;
   background: #eef2f7;
   color: var(--ui-text-secondary);
-  font-size: 1.1rem;
-  font-weight: 800;
   cursor: pointer;
+}
+
+.closeButton svg {
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
 .closeButton:hover:not(:disabled) {
@@ -82,13 +115,56 @@
 .body {
   min-height: 0;
   overflow-y: auto;
-  padding: 0 1.2rem 1rem;
+  padding: 1.1rem 1.2rem 1rem;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcfe 100%);
+}
+
+.drawer :global(form) {
+  min-width: 0;
+}
+
+.drawer :global(input:not([type='checkbox']):not([type='radio']):not([type='range'])),
+.drawer :global(textarea),
+.drawer :global(select) {
+  width: 100%;
+  min-height: var(--ui-control-height);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: #ffffff;
+  color: var(--ui-text);
+}
+
+.drawer :global(input:not([type='checkbox']):not([type='radio']):not([type='range'])),
+.drawer :global(select) {
+  padding-inline: 0.85rem;
+}
+
+.drawer :global(textarea) {
+  min-height: 6rem;
+  padding: 0.75rem 0.85rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.drawer :global(fieldset) {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.drawer :global(legend) {
+  margin-bottom: 0.7rem;
+  color: var(--ui-text);
+  font-weight: 850;
 }
 
 .footer {
   padding: 1rem 1.2rem 1.2rem;
   border-top: 1px solid rgba(226, 232, 240, 0.94);
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), #ffffff 48%);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 -0.7rem 1.5rem rgba(15, 23, 42, 0.035);
+  backdrop-filter: blur(12px);
 }
 
 @keyframes drawerEnter {

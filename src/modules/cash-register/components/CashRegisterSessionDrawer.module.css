@@ -199,7 +199,7 @@
   padding: 0.3rem 0.6rem;
   border-radius: 999px;
   background: #ffffff;
-  color: #4f46e5;
+  color: var(--ui-primary-strong);
   font-size: 0.72rem;
   font-style: normal;
   font-weight: 800;

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { useId } from "react";
 import { joinClassNames } from "@/shared/utils/join-class-names";
+import { ContextualSurfaceIcon } from "./ContextualSurfaceIcon";
 import { ModalShell } from "./ModalShell";
 import styles from "./AppModal.module.css";
 
@@ -23,6 +24,7 @@ export type AppModalProps = {
   showCloseButton?: boolean;
   size?: AppModalSize;
   title?: ReactNode;
+  titleAccessory?: ReactNode;
   titleId?: string;
   onClose: () => void;
 };
@@ -36,6 +38,7 @@ export function AppModal({
   panelClassName,
   size = "md",
   title,
+  titleAccessory,
   titleId,
   ...props
 }: AppModalProps) {
@@ -51,11 +54,22 @@ export function AppModal({
       {title || description ? (
         <div className={styles.header}>
           {title ? (
-            <h3 className={styles.title} id={resolvedTitleId}>
-              {title}
-            </h3>
+            titleAccessory ? (
+              <span className={styles.customTitleAccessory}>{titleAccessory}</span>
+            ) : (
+              <span className={styles.titleAccessory}>
+                <ContextualSurfaceIcon label={typeof title === "string" ? title : ""} />
+              </span>
+            )
           ) : null}
-          {description ? <p className={styles.description}>{description}</p> : null}
+          <div className={styles.headerCopy}>
+            {title ? (
+              <h3 className={styles.title} id={resolvedTitleId}>
+                {title}
+              </h3>
+            ) : null}
+            {description ? <p className={styles.description}>{description}</p> : null}
+          </div>
         </div>
       ) : null}
 

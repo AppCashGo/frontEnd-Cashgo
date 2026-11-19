@@ -146,7 +146,7 @@
 }
 
 .optionSelected {
-  background: linear-gradient(135deg, #eef2ff, #f4f0ff);
+  background: var(--ui-primary-soft);
   color: var(--ui-primary-strong);
   font-weight: 800;
 }

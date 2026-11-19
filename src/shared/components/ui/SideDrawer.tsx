@@ -1,6 +1,8 @@
+import { X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { ContextualSurfaceIcon } from "./ContextualSurfaceIcon";
 import styles from "./SideDrawer.module.css";
 
 type SideDrawerProps = {
@@ -87,7 +89,7 @@ export function SideDrawer({
       type="button"
       onClick={requestClose}
     >
-      {closeContent ?? <>&times;</>}
+      {closeContent ?? <X aria-hidden="true" />}
     </button>
   );
 
@@ -109,8 +111,12 @@ export function SideDrawer({
             {closeButtonPlacement === "start" ? closeButton : null}
 
             {titleAccessory ? (
-              <span className={styles.titleAccessory}>{titleAccessory}</span>
-            ) : null}
+              <span className={styles.customTitleAccessory}>{titleAccessory}</span>
+            ) : (
+              <span className={styles.titleAccessory}>
+                <ContextualSurfaceIcon label={title} />
+              </span>
+            )}
 
             <div className={styles.headerCopy}>
               <h3 className={styles.title}>{title}</h3>
