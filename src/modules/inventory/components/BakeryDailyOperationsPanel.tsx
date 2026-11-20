@@ -99,9 +99,9 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
   const planQuery = useProductionPlanQuery(1)
   const dailySummaryQuery = useBakeryDailySummaryQuery(closeDate)
   const costAnalysisQuery = useBakeryCostAnalysisQuery(costHistoryDays)
-  const producedProducts = products.filter((product) => product.inventoryBehavior === 'PRODUCED')
+  const recipeProducts = products.filter((product) => ['PRODUCED', 'MADE_TO_ORDER'].includes(product.inventoryBehavior))
   const recipes = recipesQuery.data ?? []
-  const recipeProduct = producedProducts.find((product) => product.id === recipeProductId) ?? null
+  const recipeProduct = recipeProducts.find((product) => product.id === recipeProductId) ?? null
   const recipe = recipes.find((item) => item.productId === recipeProductId) ?? null
   const isProduction = operation === 'PRODUCTION'
   const eligibleProducts = products.filter((product) =>
@@ -239,15 +239,15 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
 
       {operation === 'RECIPES' ? (
         <div className={styles.recipeWorkspace}>
-          <div className={styles.sectionIntro}><div><strong>Recetas de productos elaborados</strong><span>Relaciona cada producto terminado con los insumos que consume.</span></div></div>
-          {producedProducts.length === 0 ? <p className={styles.empty}>Primero crea productos marcados como “Lo producimos por cantidades”.</p> : (
+          <div className={styles.sectionIntro}><div><strong>Recetas y consumos automáticos</strong><span>Los productos por cantidades descuentan ingredientes al producir; los preparados al momento los descuentan al vender.</span></div></div>
+          {recipeProducts.length === 0 ? <p className={styles.empty}>Primero crea un producto elaborado o preparado al momento.</p> : (
             <div className={styles.recipeList}>
-              {producedProducts.map((product) => {
+              {recipeProducts.map((product) => {
                 const currentRecipe = recipes.find((item) => item.productId === product.id)
                 return (
                   <button key={product.id} type="button" onClick={() => setRecipeProductId(product.id)}>
                     <span className={currentRecipe ? styles.recipeReadyIcon : styles.recipePendingIcon}>{currentRecipe ? <Wheat aria-hidden="true" /> : <ChefHat aria-hidden="true" />}</span>
-                    <span><strong>{product.name}</strong><small>{currentRecipe ? `${currentRecipe.ingredients.length} insumos · produce ${currentRecipe.yieldQuantity}` : 'Pendiente de configurar'}</small></span>
+                    <span><strong>{product.name}</strong><small>{currentRecipe ? `${currentRecipe.ingredients.length} insumos · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? 'descuento en cada venta' : `produce ${currentRecipe.yieldQuantity}`}` : `Pendiente · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? 'preparado al momento' : 'producción por cantidades'}`}</small></span>
                     <b>{currentRecipe ? 'Editar' : 'Crear receta'}</b>
                   </button>
                 )

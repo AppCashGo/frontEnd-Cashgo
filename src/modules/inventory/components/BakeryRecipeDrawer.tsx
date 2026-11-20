@@ -43,6 +43,7 @@ export function BakeryRecipeDrawer({ isOpen, onClose, product, products, recipe 
   const [feedback, setFeedback] = useState<string | null>(null)
   const upsertMutation = useUpsertProductRecipeMutation()
   const deleteMutation = useDeleteProductRecipeMutation()
+  const isMadeToOrder = product?.inventoryBehavior === 'MADE_TO_ORDER'
   const ingredientProducts = useMemo(
     () => products.filter((candidate) =>
       candidate.id !== product?.id &&
@@ -90,7 +91,9 @@ export function BakeryRecipeDrawer({ isOpen, onClose, product, products, recipe 
         productId: product.id,
         input: { yieldQuantity: parsedYield, ingredients: parsedIngredients },
       })
-      setFeedback('Receta guardada. Los insumos se descontarán al registrar producción.')
+      setFeedback(isMadeToOrder
+        ? 'Receta guardada. Los insumos se descontarán automáticamente en cada venta.'
+        : 'Receta guardada. Los insumos se descontarán al registrar producción.')
     } catch (error) {
       setFeedback(getErrorMessage(error, 'No fue posible guardar la receta.'))
     }
@@ -108,7 +111,9 @@ export function BakeryRecipeDrawer({ isOpen, onClose, product, products, recipe 
 
   return (
     <AppDrawer
-      description="Define los insumos utilizados para una cantidad estándar de producto terminado."
+      description={isMadeToOrder
+        ? 'Define los insumos que se descontarán automáticamente cuando vendas este producto.'
+        : 'Define los insumos utilizados para una cantidad estándar de producto terminado.'}
       isOpen={isOpen}
       size="lg"
       title={product ? `Receta de ${product.name}` : 'Configurar receta'}
@@ -136,10 +141,10 @@ export function BakeryRecipeDrawer({ isOpen, onClose, product, products, recipe 
       </div>
 
       <label className={styles.field}>
-        <span>Esta receta produce</span>
+        <span>{isMadeToOrder ? 'Esta preparación corresponde a' : 'Esta receta produce'}</span>
         <div className={styles.yieldControl}>
           <input min="1" inputMode="numeric" type="number" value={yieldQuantity} onChange={(event) => setYieldQuantity(event.target.value)} />
-          <span>{product ? unitLabels[product.unit] : 'unidades'} de producto terminado</span>
+          <span>{product ? unitLabels[product.unit] : 'unidades'} {isMadeToOrder ? 'vendidas' : 'de producto terminado'}</span>
         </div>
       </label>
 
