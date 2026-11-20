@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Camera,
   Crown,
+  Layers3,
   Plus,
   ScanBarcode,
   Star,
@@ -170,6 +171,13 @@ type SaleCartFinancials = {
   totalTaxes: number
   total: number
   breakdown: SaleTaxBreakdown[]
+}
+
+type CatalogProductEntry = {
+  id: string
+  name: string
+  products: Product[]
+  representative: Product
 }
 
 type DrawerShellProps = {
@@ -1131,6 +1139,8 @@ export function RetailSalesWorkspace() {
   } | null>(null)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [favoritesOnly, setFavoritesOnly] = useState(false)
+  const [selectedVariantEntry, setSelectedVariantEntry] =
+    useState<CatalogProductEntry | null>(null)
   const [saleStep, setSaleStep] = useState<RetailStep>('CATALOG')
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
   const [settlement, setSettlement] = useState<RetailSettlement>('PAID')
@@ -1401,7 +1411,7 @@ export function RetailSalesWorkspace() {
   const visibleCategories = useMemo(() => {
     const productCountByCategoryId = products.reduce<Map<string, number>>(
       (counts, product) => {
-        if (!product.isActive || !product.categoryId) {
+        if (!product.isActive || !product.isVisibleInCatalog || !product.categoryId) {
           return counts
         }
 
@@ -1422,11 +1432,14 @@ export function RetailSalesWorkspace() {
 
   const filteredProducts = useMemo(() => {
     return products
-      .filter((product) => product.isActive)
+      .filter((product) => product.isActive && product.isVisibleInCatalog)
       .filter((product) =>
         deferredSearchValue.length === 0
           ? true
-          : matchesProductSearch(product, deferredSearchValue),
+          : matchesProductSearch(product, deferredSearchValue) ||
+            product.variantGroup?.name
+              .toLocaleLowerCase()
+              .includes(deferredSearchValue.toLocaleLowerCase()),
       )
       .filter((product) =>
         activeCategoryId ? product.categoryId === activeCategoryId : true,
@@ -1443,18 +1456,49 @@ export function RetailSalesWorkspace() {
     salesHistory,
     sortOption,
   ])
-  const visibleProducts = useMemo(
-    () => filteredProducts.slice(0, visibleProductLimit),
-    [filteredProducts, visibleProductLimit],
+  const catalogEntries = useMemo(() => {
+    const groupedProducts = new Map<string, Product[]>()
+    const entryOrder: string[] = []
+
+    for (const product of filteredProducts) {
+      const entryId = product.variantGroup
+        ? `variant-group-${product.variantGroup.id}`
+        : `product-${product.id}`
+      const currentProducts = groupedProducts.get(entryId)
+
+      if (currentProducts) {
+        currentProducts.push(product)
+      } else {
+        groupedProducts.set(entryId, [product])
+        entryOrder.push(entryId)
+      }
+    }
+
+    return entryOrder.map((entryId) => {
+      const entryProducts = groupedProducts.get(entryId) ?? []
+      const representative = entryProducts[0]
+
+      return {
+        id: entryId,
+        name: representative.variantGroup?.name ?? representative.name,
+        products: entryProducts,
+        representative,
+      }
+    })
+  }, [filteredProducts])
+  const visibleCatalogEntries = useMemo(
+    () => catalogEntries.slice(0, visibleProductLimit),
+    [catalogEntries, visibleProductLimit],
   )
-  const hiddenProductCount = filteredProducts.length - visibleProducts.length
+  const hiddenProductCount = catalogEntries.length - visibleCatalogEntries.length
 
   useEffect(() => {
     setVisibleProductLimit(PRODUCT_PAGE_SIZE)
   }, [activeCategoryId, deferredSearchValue, favoritesOnly, sortOption])
 
   const favoriteProductCount = products.filter(
-    (product) => product.isActive && product.isFavorite,
+    (product) =>
+      product.isActive && product.isVisibleInCatalog && product.isFavorite,
   ).length
 
   const discountTotal = discountOpen ? parseAmountInput(discountAmountInput) : 0
@@ -2788,20 +2832,46 @@ export function RetailSalesWorkspace() {
                 <span className={styles.createTitle}>Crear producto</span>
               </button>
 
-              {visibleProducts.map((product) => {
-                const productQuantity = cartQuantitiesByProductId.get(product.id) ?? 0
-                const productImageUrl = resolveProductImageUrl(product.imageUrls)
-                const canSellProduct =
-                  product.isActive &&
-                  canSellProductQuantity(product, 1, allowSaleWithoutStock)
+              {visibleCatalogEntries.map((entry) => {
+                const product = entry.representative
+                const isVariantGroup = entry.products.length > 1
+                const productQuantity = entry.products.reduce(
+                  (total, entryProduct) =>
+                    total + (cartQuantitiesByProductId.get(entryProduct.id) ?? 0),
+                  0,
+                )
+                const groupImageUrl = product.variantGroup
+                  ? resolveProductImageUrl(product.variantGroup.imageUrls)
+                  : null
+                const productImageUrl =
+                  groupImageUrl ?? resolveProductImageUrl(product.imageUrls)
+                const sellableProducts = entry.products.filter(
+                  (entryProduct) =>
+                    entryProduct.isActive &&
+                    canSellProductQuantity(
+                      entryProduct,
+                      1,
+                      allowSaleWithoutStock,
+                    ),
+                )
+                const canSellProduct = sellableProducts.length > 0
+                const minimumPrice = Math.min(
+                  ...entry.products.map((entryProduct) => entryProduct.price),
+                )
 
                 return (
-                  <article className={styles.productCardShell} key={product.id}>
+                  <article className={styles.productCardShell} key={entry.id}>
                     <button
                       className={styles.productCard}
                       type="button"
                       disabled={!canSellProduct}
-                      onClick={() => addProduct(product)}
+                      onClick={() => {
+                        if (isVariantGroup) {
+                          setSelectedVariantEntry(entry)
+                          return
+                        }
+                        addProduct(product)
+                      }}
                     >
                       {productQuantity > 0 ? (
                         <span className={styles.productCounter}>
@@ -2825,34 +2895,42 @@ export function RetailSalesWorkspace() {
                           />
                         ) : (
                           <span className={styles.productPreviewMark}>
-                            {product.name.slice(0, 1).toUpperCase()}
+                          {entry.name.slice(0, 1).toUpperCase()}
                           </span>
                         )}
                       </div>
 
                       <p className={styles.productPrice}>
-                        {formatCurrency(product.price)}
+                        {isVariantGroup ? 'Desde ' : ''}{formatCurrency(minimumPrice)}
                       </p>
-                      <p className={styles.productName}>{product.name}</p>
-                      <span className={`${styles.stockPill} ${getStockToneClass(product)}`}>
-                        {getProductAvailabilityLabel(product)}
+                      <p className={styles.productName}>{entry.name}</p>
+                      <span
+                        className={`${styles.stockPill} ${
+                          isVariantGroup ? styles.stockPillOptions : getStockToneClass(product)
+                        }`}
+                      >
+                        {isVariantGroup ? (
+                          <><Layers3 aria-hidden="true" /> {entry.products.length} opciones</>
+                        ) : getProductAvailabilityLabel(product)}
                       </span>
                     </button>
-                    <button
-                      aria-label={`${product.isFavorite ? 'Quitar' : 'Agregar'} ${product.name} ${product.isFavorite ? 'de' : 'a'} favoritos`}
-                      className={`${styles.favoriteButton} ${product.isFavorite ? styles.favoriteButtonActive : ''}`}
-                      disabled={updateFavoriteMutation.isPending}
-                      title={product.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
-                      type="button"
-                      onClick={() =>
-                        updateFavoriteMutation.mutate({
-                          productId: product.id,
-                          isFavorite: !product.isFavorite,
-                        })
-                      }
-                    >
-                      <Star aria-hidden="true" fill={product.isFavorite ? 'currentColor' : 'none'} />
-                    </button>
+                    {!isVariantGroup ? (
+                      <button
+                        aria-label={`${product.isFavorite ? 'Quitar' : 'Agregar'} ${product.name} ${product.isFavorite ? 'de' : 'a'} favoritos`}
+                        className={`${styles.favoriteButton} ${product.isFavorite ? styles.favoriteButtonActive : ''}`}
+                        disabled={updateFavoriteMutation.isPending}
+                        title={product.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                        type="button"
+                        onClick={() =>
+                          updateFavoriteMutation.mutate({
+                            productId: product.id,
+                            isFavorite: !product.isFavorite,
+                          })
+                        }
+                      >
+                        <Star aria-hidden="true" fill={product.isFavorite ? 'currentColor' : 'none'} />
+                      </button>
+                    ) : null}
                   </article>
                 )
               })}
@@ -2861,14 +2939,14 @@ export function RetailSalesWorkspace() {
             {hiddenProductCount > 0 ? (
               <div className={styles.productResultsFooter}>
                 <p>
-                  Mostrando {visibleProducts.length.toString()} de{' '}
-                  {filteredProducts.length.toString()} productos
+                  Mostrando {visibleCatalogEntries.length.toString()} de{' '}
+                  {catalogEntries.length.toString()} productos
                 </p>
                 <button
                   type="button"
                   onClick={() =>
                     setVisibleProductLimit((currentLimit) =>
-                      Math.min(currentLimit + PRODUCT_PAGE_SIZE, filteredProducts.length),
+                      Math.min(currentLimit + PRODUCT_PAGE_SIZE, catalogEntries.length),
                     )
                   }
                 >
@@ -4027,6 +4105,63 @@ export function RetailSalesWorkspace() {
           onClose={() => clearCheckoutFeedback()}
         />
       ) : null}
+
+      <SideDrawer
+        description="Selecciona la presentación del combo. Solo se agregará la opción elegida y sus componentes se descontarán al cobrar."
+        isOpen={selectedVariantEntry !== null}
+        title={selectedVariantEntry?.name ?? 'Elegir opción'}
+        titleAccessory={
+          <span className={styles.variantDrawerIcon}><Layers3 aria-hidden="true" /></span>
+        }
+        onClose={() => setSelectedVariantEntry(null)}
+      >
+        {selectedVariantEntry ? (
+          <div className={styles.variantPicker}>
+            <div className={styles.variantPickerSummary}>
+              <span>{selectedVariantEntry.products.length} opciones disponibles</span>
+              <strong>Elige una para agregarla a la venta</strong>
+            </div>
+            <div className={styles.variantOptionList}>
+              {selectedVariantEntry.products.map((variant) => {
+                const canSellVariant = canSellProductQuantity(
+                  variant,
+                  (cartQuantitiesByProductId.get(variant.id) ?? 0) + 1,
+                  allowSaleWithoutStock,
+                )
+                const quantityInCart = cartQuantitiesByProductId.get(variant.id) ?? 0
+
+                return (
+                  <button
+                    className={styles.variantOptionCard}
+                    disabled={!canSellVariant}
+                    key={variant.id}
+                    type="button"
+                    onClick={() => {
+                      addProduct(variant)
+                      setSelectedVariantEntry(null)
+                    }}
+                  >
+                    <span className={styles.variantOptionMark}>
+                      {(variant.variantName ?? variant.name).slice(0, 1).toUpperCase()}
+                    </span>
+                    <span className={styles.variantOptionCopy}>
+                      <strong>{variant.variantName ?? variant.name}</strong>
+                      <small>{getProductAvailabilityLabel(variant)}</small>
+                    </span>
+                    <span className={styles.variantOptionPrice}>
+                      <strong>{formatCurrency(variant.price)}</strong>
+                      {quantityInCart > 0 ? <small>{quantityInCart} en canasta</small> : null}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            <p className={styles.variantPickerHint}>
+              Cada opción puede tener su propio precio, código de barras, receta y disponibilidad.
+            </p>
+          </div>
+        ) : null}
+      </SideDrawer>
 
       <BarcodeScannerModal
         isOpen={isBarcodeScannerOpen}

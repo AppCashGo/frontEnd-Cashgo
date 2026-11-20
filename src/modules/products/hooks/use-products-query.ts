@@ -53,6 +53,8 @@ export function useProductsQuery() {
     queryKey: productsQueryKey,
     queryFn: getProducts,
     initialData: () => readOfflineSnapshot<Product[]>(businessId, 'products'),
+    initialDataUpdatedAt: 0,
+    refetchOnMount: 'always',
   })
 
   useEffect(() => {

@@ -2914,6 +2914,134 @@
   color: #b91c1c;
 }
 
+.stockPillOptions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.stockPillOptions svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.variantDrawerIcon {
+  display: inline-grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  place-items: center;
+  border-radius: 0.85rem;
+  background: linear-gradient(145deg, #ede9fe, #dbeafe);
+  color: #5b21b6;
+}
+
+.variantDrawerIcon svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
+.variantPicker {
+  display: grid;
+  gap: 1rem;
+}
+
+.variantPickerSummary {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1rem;
+  border: 1px solid #ddd6fe;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #f5f3ff, #eff6ff);
+}
+
+.variantPickerSummary span {
+  color: #6d28d9;
+  font-size: 0.75rem;
+  font-weight: 850;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.variantPickerSummary strong {
+  color: #1e1b4b;
+  font-size: 1rem;
+}
+
+.variantOptionList {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.variantOptionCard {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  min-height: 5rem;
+  padding: 0.85rem;
+  border: 1px solid #dbe3ef;
+  border-radius: 1rem;
+  background: #ffffff;
+  color: #172033;
+  text-align: left;
+  box-shadow: 0 0.5rem 1.4rem rgba(15, 23, 42, 0.06);
+  cursor: pointer;
+}
+
+.variantOptionCard:hover:not(:disabled),
+.variantOptionCard:focus-visible {
+  border-color: #8b5cf6;
+  background: #faf8ff;
+  box-shadow: 0 0.8rem 1.7rem rgba(91, 33, 182, 0.12);
+  transform: translateY(-1px);
+}
+
+.variantOptionCard:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.variantOptionMark {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  place-items: center;
+  border-radius: 0.85rem;
+  background: #ede9fe;
+  color: #6d28d9;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.variantOptionCopy,
+.variantOptionPrice {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.variantOptionCopy small,
+.variantOptionPrice small,
+.variantPickerHint {
+  color: #64748b;
+  font-size: 0.8rem;
+}
+
+.variantOptionPrice {
+  justify-items: end;
+  color: #111827;
+}
+
+.variantPickerHint {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  background: #f8fafc;
+  line-height: 1.5;
+}
+
 .checkoutColumn {
   min-width: 0;
 }

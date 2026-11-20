@@ -38,6 +38,11 @@ export type Product = {
   productType: ProductType;
   inventoryBehavior: InventoryBehavior;
   recipeAvailability?: ProductRecipeAvailability | null;
+  variantGroup?: {
+    id: string;
+    name: string;
+    imageUrls: string[];
+  } | null;
   variantName: string | null;
   imageUrls: string[];
   name: string;
