@@ -112,6 +112,7 @@ export function InventoryMovementsTable({
                       ? formatSystemGeneratedText(movement.reason)
                       : 'Sin motivo registrado'}
                   </span>
+                  <span>Registrado por: {movement.performedByUser?.name ?? 'Proceso automático'}</span>
                 </div>
               </article>
             ))}
@@ -126,6 +127,7 @@ export function InventoryMovementsTable({
                   <th>Type</th>
                   <th>Quantity</th>
                   <th>Reason</th>
+                  <th>Registrado por</th>
                 </tr>
               </thead>
               <tbody>
@@ -149,6 +151,7 @@ export function InventoryMovementsTable({
                         ? formatSystemGeneratedText(movement.reason)
                         : 'Sin motivo registrado'}
                     </td>
+                    <td>{movement.performedByUser?.name ?? 'Proceso automático'}</td>
                   </tr>
                 ))}
               </tbody>

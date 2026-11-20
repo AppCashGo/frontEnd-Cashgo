@@ -7,6 +7,9 @@ import {
   ChefHat,
   CircleDollarSign,
   ClipboardList,
+  FileDown,
+  History,
+  LockKeyhole,
   PackageCheck,
   Sparkles,
   TrendingUp,
@@ -26,6 +29,8 @@ import type { Product } from '@/modules/products/types/product'
 import { getProductAvailabilityLabel } from '@/modules/products/utils/product-sale-availability'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { formatCurrency } from '@/shared/utils/format-currency'
+import { formatDateTime } from '@/shared/utils/format-date-time'
+import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import styles from './BakeryDailyOperationsPanel.module.css'
 
 type Operation = 'PLAN' | 'PRODUCTION' | 'WASTE' | 'RECIPES' | 'CLOSE' | 'COSTS'
@@ -44,6 +49,8 @@ function getOperationFromSearch(value: string | null): Operation {
 }
 
 type Props = {
+  canManageInventory: boolean
+  canOperateBakery: boolean
   movements: InventoryMovement[]
   products: Product[]
 }
@@ -59,6 +66,26 @@ function getBusinessDate() {
     month: '2-digit',
     day: '2-digit',
   }).format(new Date())
+}
+
+function getMovementBusinessDate(value: string) {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date(value))
+}
+
+function escapeCsv(value: string | number) {
+  const normalized = String(value).replace(/"/g, '""')
+  return /[",\n]/.test(normalized) ? `"${normalized}"` : normalized
+}
+
+function getAuthorizedOperation(requested: Operation, canManageInventory: boolean, canOperateBakery: boolean): Operation {
+  if ((requested === 'PRODUCTION' || requested === 'WASTE') && !canOperateBakery) return 'PLAN'
+  if (requested === 'RECIPES' && !canManageInventory) return 'PLAN'
+  return requested
 }
 
 function getCloseStatus(status: BakeryDailyProductStatus) {
@@ -84,10 +111,10 @@ function getCostStatus(status: BakeryCostStatus) {
   return statuses[status]
 }
 
-export function BakeryDailyOperationsPanel({ movements, products }: Props) {
+export function BakeryDailyOperationsPanel({ canManageInventory, canOperateBakery, movements, products }: Props) {
   const [searchParams] = useSearchParams()
   const requestedOperation = getOperationFromSearch(searchParams.get('bakeryTab'))
-  const [operation, setOperation] = useState<Operation>(requestedOperation)
+  const [operation, setOperation] = useState<Operation>(() => getAuthorizedOperation(requestedOperation, canManageInventory, canOperateBakery))
   const [quantities, setQuantities] = useState<Record<string, string>>({})
   const [reason, setReason] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -111,6 +138,10 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
     isProduction ? product.inventoryBehavior === 'PRODUCED' : product.inventoryBehavior !== 'MADE_TO_ORDER',
   )
   const todayMovements = movements.filter((movement) => isToday(movement.createdAt))
+  const closeAuditMovements = movements
+    .filter((movement) => getMovementBusinessDate(movement.createdAt) === closeDate)
+    .filter((movement) => ['PRODUCTION_IN', 'WASTE_OUT', 'DAMAGED_OUT', 'ADJUSTMENT'].includes(movement.type))
+    .slice(0, 8)
   const summary = useMemo(() => ({
     produced: todayMovements.filter((movement) => movement.type === 'PRODUCTION_IN').reduce((total, movement) => total + Math.abs(movement.quantity), 0),
     sold: todayMovements.filter((movement) => movement.type === 'SALE_OUT').reduce((total, movement) => total + Math.abs(movement.quantity), 0),
@@ -121,8 +152,8 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
   const suggestedProducts = plan?.products.filter((product) => product.suggestedProduction > 0) ?? []
 
   useEffect(() => {
-    setOperation(requestedOperation)
-  }, [requestedOperation])
+    setOperation(getAuthorizedOperation(requestedOperation, canManageInventory, canOperateBakery))
+  }, [canManageInventory, canOperateBakery, requestedOperation])
 
   function selectOperation(nextOperation: Operation) {
     setOperation(nextOperation)
@@ -130,13 +161,35 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
   }
 
   function usePlanSuggestions() {
-    if (!plan) return
+    if (!plan || !canOperateBakery) return
     setQuantities(Object.fromEntries(
       plan.products
         .filter((product) => product.suggestedProduction > 0)
         .map((product) => [product.productId, String(product.suggestedProduction)]),
     ))
     selectOperation('PRODUCTION')
+  }
+
+  function downloadDailyClose() {
+    const summary = dailySummaryQuery.data
+    if (!summary) return
+    const rows = [
+      ['Producto', 'Producido', 'Vendido', 'Devuelto', 'Merma', 'Existencia final', 'Balance', 'Estado'],
+      ...summary.products.map((product) => [
+        product.name,
+        product.produced,
+        product.sold,
+        product.returned,
+        product.waste,
+        product.stock,
+        product.netDailyFlow,
+        product.status,
+      ]),
+      [],
+      ['Totales', summary.totals.produced, summary.totals.sold, summary.totals.returned, summary.totals.waste, '', summary.totals.netDailyFlow, `Merma ${summary.totals.wasteRate}%`],
+    ]
+    const csv = `\uFEFF${rows.map((row) => row.map((value) => escapeCsv(value)).join(',')).join('\n')}`
+    downloadBlobFile(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `cierre-panaderia-${closeDate}.csv`)
   }
 
   async function submit() {
@@ -186,18 +239,20 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
 
       <div className={styles.tabs} role="tablist" aria-label="Operación de panadería">
         <button className={operation === 'PLAN' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('PLAN')}><Sparkles aria-hidden="true" /> Plan sugerido</button>
-        <button className={operation === 'PRODUCTION' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('PRODUCTION')}><Boxes aria-hidden="true" /> Producción</button>
-        <button className={operation === 'WASTE' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('WASTE')}><AlertTriangle aria-hidden="true" /> Merma</button>
-        <button className={operation === 'RECIPES' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('RECIPES')}><ClipboardList aria-hidden="true" /> Recetas</button>
+        {canOperateBakery ? <button className={operation === 'PRODUCTION' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('PRODUCTION')}><Boxes aria-hidden="true" /> Producción</button> : null}
+        {canOperateBakery ? <button className={operation === 'WASTE' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('WASTE')}><AlertTriangle aria-hidden="true" /> Merma</button> : null}
+        {canManageInventory ? <button className={operation === 'RECIPES' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('RECIPES')}><ClipboardList aria-hidden="true" /> Recetas</button> : null}
         <button className={operation === 'CLOSE' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('CLOSE')}><CalendarCheck2 aria-hidden="true" /> Cierre diario</button>
         <button className={operation === 'COSTS' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('COSTS')}><CircleDollarSign aria-hidden="true" /> Rentabilidad</button>
       </div>
+
+      {!canOperateBakery ? <div className={styles.readOnlyNotice}><LockKeyhole aria-hidden="true" /><span><strong>Consulta habilitada</strong><small>Tu rol puede revisar planes, cierres y rentabilidad. La producción, merma y recetas requieren permisos operativos.</small></span></div> : null}
 
       {operation === 'PLAN' ? (
         <div className={styles.planWorkspace}>
           <div className={styles.sectionIntro}>
             <div><strong>Necesidad estimada para hoy</strong><span>Pronóstico inteligente con {plan?.historyDays ?? 28} días de historia, días de semana comparables, merma, pedidos pendientes y stock de seguridad.</span></div>
-            <button disabled={!suggestedProducts.length} type="button" onClick={usePlanSuggestions}>Usar cantidades sugeridas</button>
+            {canOperateBakery ? <button disabled={!suggestedProducts.length} type="button" onClick={usePlanSuggestions}>Usar cantidades sugeridas</button> : null}
           </div>
           {planQuery.isLoading ? <p className={styles.empty}>Calculando el plan de producción…</p> : null}
           {planQuery.isError ? <p className={styles.feedback}>No pudimos calcular el plan. Intenta actualizar la página.</p> : null}
@@ -264,7 +319,10 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
         <div className={styles.closeWorkspace}>
           <div className={styles.closeToolbar}>
             <div><strong>Cierre operativo</strong><span>Compara lo producido, vendido y desperdiciado para ajustar el siguiente día.</span></div>
-            <label><span>Fecha</span><input aria-label="Fecha del cierre diario" max={getBusinessDate()} type="date" value={closeDate} onChange={(event) => setCloseDate(event.target.value)} /></label>
+            <div className={styles.closeActions}>
+              <label><span>Fecha</span><input aria-label="Fecha del cierre diario" max={getBusinessDate()} type="date" value={closeDate} onChange={(event) => setCloseDate(event.target.value)} /></label>
+              <button disabled={!dailySummaryQuery.data} type="button" onClick={downloadDailyClose}><FileDown aria-hidden="true" /> Descargar CSV</button>
+            </div>
           </div>
           {dailySummaryQuery.isLoading ? <p className={styles.empty}>Preparando el cierre del día…</p> : null}
           {dailySummaryQuery.isError ? <p className={styles.feedback}>No pudimos preparar el cierre. Intenta actualizar la página.</p> : null}
@@ -297,6 +355,10 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
                   <button type="button" onClick={() => selectOperation('PLAN')}>Ver plan</button>
                 </div>
               ) : null}
+              <div className={styles.auditTrail}>
+                <div className={styles.auditHeading}><History aria-hidden="true" /><span><strong>Trazabilidad operativa</strong><small>Últimos movimientos registrados para la fecha seleccionada.</small></span></div>
+                {closeAuditMovements.length ? <div className={styles.auditList}>{closeAuditMovements.map((movement) => <article key={movement.id}><span><strong>{movement.product.name}</strong><small>{formatDateTime(movement.createdAt)}</small></span><span><b>{movement.type === 'PRODUCTION_IN' ? 'Producción' : movement.type === 'ADJUSTMENT' ? 'Ajuste' : 'Merma'} · {Math.abs(movement.quantity)} unidades</b><small>{movement.performedByUser?.name ?? 'Proceso automático'}{movement.reason ? ` · ${movement.reason}` : ''}</small></span></article>)}</div> : <p className={styles.empty}>No hay movimientos operativos registrados para esta fecha.</p>}
+              </div>
             </>
           ) : null}
         </div>

@@ -52,6 +52,7 @@ type InventoryMovementApiRecord = Omit<
   | "newStock"
   | "unitCost"
   | "product"
+  | "performedByUser"
   | "type"
   | "referenceType"
 > & {
@@ -64,6 +65,11 @@ type InventoryMovementApiRecord = Omit<
   newStock: number | string;
   unitCost: number | string | null;
   product: ProductApiRecord;
+  performedByUser: {
+    id: number | string;
+    name: string;
+    email: string;
+  } | null;
   type: InventoryMovementType;
   referenceType: InventoryReferenceType | null;
 };
@@ -119,6 +125,12 @@ function normalizeInventoryMovement(
     referenceType: record.referenceType ?? null,
     referenceId: normalizeOptionalId(record.referenceId),
     performedByUserId: normalizeOptionalId(record.performedByUserId),
+    performedByUser: record.performedByUser
+      ? {
+          ...record.performedByUser,
+          id: normalizeId(record.performedByUser.id),
+        }
+      : null,
     reason: record.reason ?? null,
     notes: record.notes ?? null,
     product: normalizeProductRecord(record.product),

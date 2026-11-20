@@ -44,6 +44,11 @@ export type InventoryMovement = {
   notes: string | null;
   createdAt: string;
   product: Product;
+  performedByUser: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
 };
 
 export type InventoryAdjustmentInput = {

@@ -476,7 +476,9 @@ export function RetailInventoryWorkspace() {
   const productsQuery = useProductsQuery()
   const authUser = useAuthSessionStore((state) => state.user)
   const isBakery = getActiveBusinessCategory(authUser) === 'bakery_pastry'
-  const canManageInventory = isTeamManagementRole(getActiveBusinessRole(authUser))
+  const activeBusinessRole = getActiveBusinessRole(authUser)
+  const canManageInventory = isTeamManagementRole(activeBusinessRole)
+  const canOperateBakery = canManageInventory || activeBusinessRole === 'STAFF'
   const suppliersQuery = useSuppliersQuery()
   const categoriesQuery = useInventoryCategoriesQuery()
   const lowStockQuery = useInventoryLowStockQuery()
@@ -1664,7 +1666,7 @@ export function RetailInventoryWorkspace() {
               <span>Inventario físico</span>
             </button>
           ) : null}
-          <button
+          {canManageInventory ? <button
             className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
             type="button"
             onClick={() => {
@@ -1674,9 +1676,9 @@ export function RetailInventoryWorkspace() {
           >
             <TagsIcon />
             <span>{copy.categories}</span>
-          </button>
+          </button> : null}
 
-          <div className={styles.dropdownGroup} ref={createMenuRef}>
+          {canManageInventory ? <div className={styles.dropdownGroup} ref={createMenuRef}>
             <button
               aria-expanded={isCreateMenuOpen}
               aria-haspopup="menu"
@@ -1709,7 +1711,7 @@ export function RetailInventoryWorkspace() {
                 </button>
               </div>
             ) : null}
-          </div>
+          </div> : null}
         </>
       }
     >
@@ -1739,12 +1741,14 @@ export function RetailInventoryWorkspace() {
 
       {isBakery ? (
         <BakeryDailyOperationsPanel
+          canManageInventory={canManageInventory}
+          canOperateBakery={canOperateBakery}
           movements={inventoryMovementsQuery.data ?? []}
           products={products}
         />
       ) : null}
 
-      <PurchaseOrdersPanel products={products} suppliers={suppliers} />
+      {canManageInventory ? <PurchaseOrdersPanel products={products} suppliers={suppliers} /> : null}
 
       {isPremiumBannerVisible && lowStockAlerts.length > 0 ? (
         <section className={styles.banner}>
@@ -1918,7 +1922,7 @@ export function RetailInventoryWorkspace() {
               </SearchableSelect>
             </label>
           </div>
-          {unknownBarcode ? (
+          {unknownBarcode && canManageInventory ? (
             <div className={styles.unknownBarcodeCard}>
               <ScanBarcode aria-hidden="true" />
               <span>¿Este es un producto nuevo?</span>
@@ -1955,27 +1959,27 @@ export function RetailInventoryWorkspace() {
               >
                 <BoxIcon />
               </IconButton>
-              <IconButton
+              {canManageInventory ? <IconButton
                 label={copy.registerPurchase}
                 tooltip={copy.registerPurchase}
                 onClick={() => setPurchaseDrawerOpen(true)}
               >
                 <BoxIcon />
-              </IconButton>
-              <IconButton
+              </IconButton> : null}
+              {canManageInventory ? <IconButton
                 label={copy.adjustInventory}
                 tooltip={copy.adjustInventory}
                 onClick={() => setAdjustmentDrawerOpen(true)}
               >
                 <AdjustmentIcon />
-              </IconButton>
-              <IconButton
+              </IconButton> : null}
+              {canManageInventory ? <IconButton
                 label={copy.productTaxes}
                 tooltip={copy.productTaxes}
                 onClick={() => setTaxesDrawerOpen(true)}
               >
                 <TaxIcon />
-              </IconButton>
+              </IconButton> : null}
               <IconButton
                 label={copy.downloadInventory}
                 tooltip={copy.downloadInventory}
@@ -2043,7 +2047,7 @@ export function RetailInventoryWorkspace() {
                       </div>
                     </td>
                     <td data-label={copy.priceColumn}>
-                      <label
+                      {canManageInventory ? <label
                         className={styles.inlineEditBox}
                         onClick={(event) => event.stopPropagation()}
                       >
@@ -2072,10 +2076,10 @@ export function RetailInventoryWorkspace() {
                             handleInlineProductKeyDown(event, product, 'price')
                           }
                         />
-                      </label>
+                      </label> : <span>{formatCurrency(product.price)}</span>}
                     </td>
                     <td data-label={copy.costColumn}>
-                      <label
+                      {canManageInventory ? <label
                         className={styles.inlineEditBox}
                         onClick={(event) => event.stopPropagation()}
                       >
@@ -2102,14 +2106,14 @@ export function RetailInventoryWorkspace() {
                             handleInlineProductKeyDown(event, product, 'cost')
                           }
                         />
-                      </label>
+                      </label> : <span>{formatCurrency(product.cost)}</span>}
                     </td>
                     <td data-label={copy.stockColumn}>
                       {product.inventoryBehavior === 'MADE_TO_ORDER' ? (
                         <span className={styles.stockNotApplicable}>
                           {getProductAvailabilityLabel(product)}
                         </span>
-                      ) : (
+                      ) : canManageInventory ? (
                         <label
                           className={
                             isLowStock
@@ -2145,7 +2149,7 @@ export function RetailInventoryWorkspace() {
                             }
                           />
                         </label>
-                      )}
+                      ) : <span>{product.stock}</span>}
                     </td>
                     <td data-label={copy.marginColumn}>
                       <div className={styles.gainCell}>
@@ -2155,7 +2159,7 @@ export function RetailInventoryWorkspace() {
                       </div>
                     </td>
                     <td data-label={copy.actionsColumn}>
-                      <button
+                      {canManageInventory ? <button
                         aria-label={`${copy.editProduct}: ${product.name}`}
                         className={styles.rowActionButton}
                         type="button"
@@ -2165,7 +2169,7 @@ export function RetailInventoryWorkspace() {
                         }}
                       >
                         <MoreIcon />
-                      </button>
+                      </button> : <span>Solo lectura</span>}
                     </td>
                   </tr>
                 )
@@ -2182,7 +2186,7 @@ export function RetailInventoryWorkspace() {
                   description={copy.emptyDescription}
                   title={copy.emptyTitle}
                 />
-                <div className={styles.emptyActions}>
+                {canManageInventory ? <div className={styles.emptyActions}>
                   <button
                     className={retailStyles.buttonOutline}
                     type="button"
@@ -2190,7 +2194,7 @@ export function RetailInventoryWorkspace() {
                   >
                     {copy.createManual}
                   </button>
-                </div>
+                </div> : null}
               </>
             ) : (
               <RetailEmptyState
