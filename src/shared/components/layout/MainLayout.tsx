@@ -12,6 +12,7 @@ import {
 import { Header } from "@/shared/components/layout/Header";
 import { Sidebar } from "@/shared/components/layout/Sidebar";
 import { ExperienceCenter } from "@/shared/components/experience/ExperienceCenter";
+import { OfflineSalesSyncManager } from "@/modules/sales/components/OfflineSalesSyncManager";
 import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigation-preset";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import { useAppUiStore } from "@/shared/hooks/use-app-ui-store";
@@ -110,6 +111,7 @@ export function MainLayout() {
       </div>
 
       <ExperienceCenter />
+      <OfflineSalesSyncManager />
     </div>
   );
 }

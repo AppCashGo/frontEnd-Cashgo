@@ -432,6 +432,7 @@ type JsonRequestOptions = {
   businessId?: string;
   handleGlobalAuthFailure?: boolean;
   onUnauthorized?: () => void;
+  suppressNetworkWriteNotification?: boolean;
 };
 
 type BlobRequestOptions = JsonRequestOptions & {
@@ -494,7 +495,10 @@ async function requestJson<TResponse, TBody = undefined>(
       options?.onUnauthorized?.();
     }
 
-    if (method !== "GET") {
+    if (
+      method !== "GET" &&
+      !(options?.suppressNetworkWriteNotification && apiError.isNetworkError)
+    ) {
       notifyApiWriteError(apiError);
     }
 

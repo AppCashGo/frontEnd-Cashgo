@@ -28,6 +28,7 @@ type SaleCartPanelProps = {
   isSubmitting: boolean
   errorMessage: string | null
   completedSale: SaleReceipt | null
+  offlineConfirmation?: string | null
   currentCashRegisterSession: CashRegisterSession | null
   customers: CustomerSummary[]
   selectedCustomerId: string
@@ -78,6 +79,7 @@ export function SaleCartPanel({
   isSubmitting,
   errorMessage,
   completedSale,
+  offlineConfirmation,
   currentCashRegisterSession,
   customers,
   selectedCustomerId,
@@ -161,6 +163,13 @@ export function SaleCartPanel({
             sale={completedSale}
             onRegisterAnother={onClearCart}
           />
+        </div>
+      ) : null}
+
+      {offlineConfirmation ? (
+        <div className={styles.successBanner} role="status">
+          <p className={styles.successTitle}>Venta guardada en este dispositivo</p>
+          <p className={styles.successDescription}>{offlineConfirmation}</p>
         </div>
       ) : null}
 

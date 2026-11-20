@@ -1,4 +1,7 @@
+import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import { readOfflineSnapshot, writeOfflineSnapshot } from '@/shared/services/offline-snapshot'
 import {
   createCustomer,
   createCustomerCollectionActivity,
@@ -65,10 +68,18 @@ function toCustomerSummary(customer: CustomerDetail): CustomerSummary {
 }
 
 export function useCustomersQuery() {
-  return useQuery({
+  const businessId = useAuthSessionStore((state) => state.user?.businessId)
+  const query = useQuery({
     queryKey: customersQueryKey,
     queryFn: getCustomers,
+    initialData: () => readOfflineSnapshot<CustomerSummary[]>(businessId, 'customers'),
   })
+
+  useEffect(() => {
+    if (query.data) writeOfflineSnapshot(businessId, 'customers', query.data)
+  }, [businessId, query.data])
+
+  return query
 }
 
 export function useCustomerCollectionAgendaQuery() {

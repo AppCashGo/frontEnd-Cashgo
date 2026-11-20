@@ -19,7 +19,7 @@ import { normalizeNumber } from '@/shared/utils/normalize-number'
 const pendingSaleRequests = new Map<string, Promise<ReturnType<typeof normalizeSaleRecord>>>()
 const saleAttemptKeys = new Map<string, string>()
 
-function createIdempotencyKey() {
+export function createSaleIdempotencyKey() {
   if (typeof globalThis.crypto?.randomUUID === 'function') {
     return globalThis.crypto.randomUUID()
   }
@@ -37,7 +37,7 @@ export async function createSale(input: CreateSaleInput) {
   }
 
   const idempotencyKey =
-    input.idempotencyKey ?? saleAttemptKeys.get(requestSignature) ?? createIdempotencyKey()
+    input.idempotencyKey ?? saleAttemptKeys.get(requestSignature) ?? createSaleIdempotencyKey()
   saleAttemptKeys.set(requestSignature, idempotencyKey)
   const requestInput = {
     ...input,
@@ -45,6 +45,7 @@ export async function createSale(input: CreateSaleInput) {
   }
   const request = postJson<SaleApiRecord, CreateSaleInput>('/sales', requestInput, {
     accessToken,
+    suppressNetworkWriteNotification: true,
   }).then(normalizeSaleRecord)
 
   pendingSaleRequests.set(requestSignature, request)

@@ -1,0 +1,193 @@
+.panel {
+  display: grid;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--primary-500, #6d4aff) 22%, #dce3ee);
+  border-radius: 22px;
+  background: linear-gradient(135deg, #fbfaff 0%, #f4f7ff 100%);
+  box-shadow: 0 12px 32px rgb(37 44 73 / 7%);
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.headingIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  border-radius: 14px;
+  color: #6941c6;
+  background: #ede9fe;
+}
+
+.headingCopy {
+  min-width: 0;
+  flex: 1;
+}
+
+.eyebrow {
+  margin: 0 0 3px;
+  color: #6941c6;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.headingCopy h2,
+.headingCopy p {
+  margin: 0;
+}
+
+.headingCopy h2 {
+  color: #172033;
+  font-size: 1rem;
+}
+
+.headingCopy p {
+  margin-top: 3px;
+  color: #667085;
+  font-size: 0.84rem;
+}
+
+.syncButton,
+.retryButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 12px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.syncButton {
+  min-height: 42px;
+  padding: 0 15px;
+  color: white;
+  background: #5f3dc4;
+}
+
+.syncButton:disabled,
+.retryButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.records {
+  display: grid;
+  gap: 8px;
+}
+
+.record {
+  display: grid;
+  grid-template-columns: auto minmax(160px, 1fr) auto auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 12px;
+  border: 1px solid #e5e9f2;
+  border-radius: 14px;
+  background: rgb(255 255 255 / 88%);
+}
+
+.statusIcon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 11px;
+}
+
+.recordCopy {
+  display: grid;
+  gap: 2px;
+}
+
+.recordCopy strong,
+.total {
+  color: #1d2939;
+  font-size: 0.86rem;
+}
+
+.recordCopy span,
+.recordCopy small {
+  color: #667085;
+  font-size: 0.73rem;
+}
+
+.recordCopy small {
+  color: #b42318;
+}
+
+.status {
+  padding: 5px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.pending,
+.syncing {
+  color: #6941c6;
+  background: #f0eaff;
+}
+
+.failed {
+  color: #b42318;
+  background: #fee4e2;
+}
+
+.synced {
+  color: #067647;
+  background: #dcfae6;
+}
+
+.retryButton {
+  min-height: 32px;
+  padding: 0 10px;
+  color: #344054;
+  border: 1px solid #d0d5dd;
+  background: white;
+}
+
+.spinning {
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 760px) {
+  .heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .syncButton {
+    width: 100%;
+  }
+
+  .record {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .retryButton {
+    grid-column: 3;
+    grid-row: 2;
+  }
+}

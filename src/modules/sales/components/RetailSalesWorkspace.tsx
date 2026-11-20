@@ -41,6 +41,7 @@ import {
 import { useSaleCart } from '@/modules/sales/hooks/use-sale-cart'
 import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
 import { SaleCompletionActions } from '@/modules/sales/components/SaleCompletionActions'
+import { OfflineSalesQueuePanel } from '@/modules/sales/components/OfflineSalesQueuePanel'
 import { SaleQuantityInput } from '@/modules/sales/components/SaleQuantityInput'
 import { ProductCategoryFilter } from '@/modules/sales/components/ProductCategoryFilter'
 import {
@@ -54,7 +55,15 @@ import {
   useUpdateHeldSaleMutation,
 } from '@/modules/sales/hooks/use-held-sales-query'
 import type { HeldSale } from '@/modules/sales/types/held-sale'
-import type { SalePaymentMethod, SaleReceipt } from '@/modules/sales/types/sale'
+import type {
+  CreateSaleInput,
+  SalePaymentMethod,
+  SaleReceipt,
+} from '@/modules/sales/types/sale'
+import { useNetworkStatus } from '@/modules/sales/hooks/use-network-status'
+import { useOfflineSales } from '@/modules/sales/hooks/use-offline-sales'
+import { createSaleIdempotencyKey } from '@/modules/sales/services/sales-api'
+import { queueOfflineSale } from '@/modules/sales/services/offline-sales-queue'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import { routePaths } from '@/routes/route-paths'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
@@ -69,7 +78,7 @@ import {
 } from '@/shared/utils/date-input'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
-import { resolveApiAssetUrl } from '@/shared/services/api-client'
+import { ApiError, resolveApiAssetUrl } from '@/shared/services/api-client'
 import { isCashSessionRequiredError } from '@/modules/cash-register/utils/is-cash-session-required-error'
 import { BarcodeScannerModal } from '@/shared/barcode/BarcodeScannerModal'
 import { normalizeBarcode } from '@/shared/barcode/normalize-barcode'
@@ -1097,6 +1106,8 @@ export function RetailSalesWorkspace() {
   const navigate = useNavigate()
   const authUser = useAuthSessionStore((state) => state.user)
   const activeBusiness = getActiveBusiness(authUser)
+  const isOnline = useNetworkStatus()
+  const offlineSales = useOfflineSales(activeBusiness?.id, authUser?.id)
   const cartPersistenceKey =
     authUser && activeBusiness
       ? `cashgo:sale-draft:${activeBusiness.id}:${authUser.id}`
@@ -1156,6 +1167,7 @@ export function RetailSalesWorkspace() {
   const [quickExpenseForm, setQuickExpenseForm] = useState<QuickExpenseFormState>(
     createDefaultQuickExpenseState,
   )
+  const [offlineConfirmation, setOfflineConfirmation] = useState<string | null>(null)
   const deferredSearchValue = useMemo(
     () => searchValue.trim().toLowerCase(),
     [searchValue],
@@ -1992,10 +2004,17 @@ export function RetailSalesWorkspace() {
   async function handleCatalogSaleSubmit() {
     prepareCashRegisterSound()
 
-    const refreshedSession = await currentCashRegisterQuery.refetch()
-    if (!refreshedSession.data) {
+    if (!currentCashRegister) {
       beginCashSessionFlow('CATALOG_CHECKOUT')
       return
+    }
+
+    if (isOnline) {
+      const refreshedSession = await currentCashRegisterQuery.refetch()
+      if (!refreshedSession.data) {
+        beginCashSessionFlow('CATALOG_CHECKOUT')
+        return
+      }
     }
 
     if (settlement === 'PAID' && hasCashCatalogPayment) {
@@ -2013,6 +2032,7 @@ export function RetailSalesWorkspace() {
     }
 
     clearCheckoutFeedback()
+    setOfflineConfirmation(null)
 
     if (settlement === 'CREDIT' && selectedCustomerId.trim().length === 0) {
       markCheckoutError(
@@ -2111,8 +2131,8 @@ export function RetailSalesWorkspace() {
       }
     }
 
-    try {
-      const sale = await createSaleMutation.mutateAsync({
+    const saleInput: CreateSaleInput & { idempotencyKey: string } = {
+      idempotencyKey: createSaleIdempotencyKey(),
         heldSaleId: activeHeldSaleId ?? undefined,
         items: cartItems.map((item) => ({
           productId: item.product.id,
@@ -2129,7 +2149,42 @@ export function RetailSalesWorkspace() {
             ? toDateOnlyRequestDate(creditDueDate)
             : undefined,
         payments: salePayments,
+    }
+
+    async function saveCatalogSaleOffline() {
+      if (!authUser || !activeBusiness) {
+        throw new Error('No pudimos identificar el negocio activo.')
+      }
+      await queueOfflineSale({
+        businessId: activeBusiness.id,
+        userId: authUser.id,
+        input: saleInput,
+        total: totalAmount,
+        itemCount: totalItems,
       })
+      clearCart()
+      setActiveHeldSaleId(null)
+      resetPaymentStep()
+      setSaleStep('CATALOG')
+      setChangeModalOpen(false)
+      setOfflineConfirmation(
+        `La venta por ${formatCurrency(totalAmount)} quedó guardada y se sincronizará automáticamente.`,
+      )
+    }
+
+    if (!isOnline) {
+      try {
+        await saveCatalogSaleOffline()
+      } catch (error) {
+        markCheckoutError(
+          getErrorMessage(error, 'No pudimos guardar la venta en este dispositivo.'),
+        )
+      }
+      return
+    }
+
+    try {
+      const sale = await createSaleMutation.mutateAsync(saleInput)
 
       completeSale(sale)
       setActiveHeldSaleId(null)
@@ -2139,6 +2194,19 @@ export function RetailSalesWorkspace() {
       resetPaymentStep()
       setSaleStep('CATALOG')
     } catch (error) {
+      if (error instanceof ApiError && error.isNetworkError) {
+        try {
+          await saveCatalogSaleOffline()
+        } catch (storageError) {
+          markCheckoutError(
+            getErrorMessage(
+              storageError,
+              'Se perdió la conexión y no pudimos guardar la venta localmente.',
+            ),
+          )
+        }
+        return
+      }
       if (isCashSessionRequiredError(error)) {
         markCheckoutError(
           'La caja se cerró antes de confirmar. Ábrela para continuar con esta venta.',
@@ -2157,6 +2225,7 @@ export function RetailSalesWorkspace() {
 
   async function handleCreateQuickSale() {
     clearCheckoutFeedback()
+    setOfflineConfirmation(null)
 
     if (quickSaleAmount <= 0) {
       markCheckoutError('Ingresa un valor válido para la venta libre.')
@@ -2199,47 +2268,86 @@ export function RetailSalesWorkspace() {
       return
     }
 
-    const refreshedSession = await currentCashRegisterQuery.refetch()
-    if (!refreshedSession.data) {
+    if (!currentCashRegister) {
       beginCashSessionFlow('QUICK_SALE')
       return
     }
 
-    try {
-      const sale = await createSaleMutation.mutateAsync({
-        items: [],
-        manualSubtotal: quickSaleAmount,
-        customerId: normalizeOptionalText(quickSaleForm.customerId),
-        cashRegisterId: currentCashRegister?.id,
-        notes: normalizeOptionalText(quickSaleForm.note),
-        saleDate: toOperationDateTime(quickSaleForm.saleDate),
-        dueDate:
-          quickSaleForm.settlement === 'CREDIT' && quickSaleForm.dueDate
-            ? toDateOnlyRequestDate(quickSaleForm.dueDate)
-            : undefined,
-        payments:
-          quickSaleForm.settlement === 'PAID'
-            ? [
-                {
+    if (isOnline) {
+      const refreshedSession = await currentCashRegisterQuery.refetch()
+      if (!refreshedSession.data) {
+        beginCashSessionFlow('QUICK_SALE')
+        return
+      }
+    }
+
+    const quickSaleInput: CreateSaleInput & { idempotencyKey: string } = {
+      idempotencyKey: createSaleIdempotencyKey(),
+      items: [],
+      manualSubtotal: quickSaleAmount,
+      customerId: normalizeOptionalText(quickSaleForm.customerId),
+      cashRegisterId: currentCashRegister.id,
+      notes: normalizeOptionalText(quickSaleForm.note),
+      saleDate: toOperationDateTime(quickSaleForm.saleDate),
+      dueDate:
+        quickSaleForm.settlement === 'CREDIT' && quickSaleForm.dueDate
+          ? toDateOnlyRequestDate(quickSaleForm.dueDate)
+          : undefined,
+      payments:
+        quickSaleForm.settlement === 'PAID'
+          ? [
+              {
+                method: mapRetailPaymentOptionToSaleMethod(
+                  quickSaleForm.paymentOption,
+                ),
+                amount: quickSaleAmount,
+              },
+            ]
+          : quickSaleInitialPayment > 0
+            ? quickSaleCreditPaymentRows
+                .filter((payment) => payment.amount > 0)
+                .map((payment) => ({
                   method: mapRetailPaymentOptionToSaleMethod(
-                    quickSaleForm.paymentOption,
+                    payment.paymentOption,
                   ),
-                  amount: quickSaleAmount,
-                },
-              ]
-            : quickSaleInitialPayment > 0
-              ? quickSaleCreditPaymentRows
-                  .filter((payment) => payment.amount > 0)
-                  .map((payment) => ({
-                    method: mapRetailPaymentOptionToSaleMethod(
-                      payment.paymentOption,
-                    ),
-                    amount: payment.amount,
-                    notes:
-                      'Abono inicial registrado al crear la venta a crédito.',
-                  }))
-              : [],
+                  amount: payment.amount,
+                  notes:
+                    'Abono inicial registrado al crear la venta a crédito.',
+                }))
+            : [],
+    }
+
+    async function saveQuickSaleOffline() {
+      if (!authUser || !activeBusiness) {
+        throw new Error('No pudimos identificar el negocio activo.')
+      }
+      await queueOfflineSale({
+        businessId: activeBusiness.id,
+        userId: authUser.id,
+        input: quickSaleInput,
+        total: quickSaleAmount,
+        itemCount: 1,
       })
+      setQuickSaleDrawerOpen(false)
+      setQuickSaleForm(createDefaultQuickSaleState())
+      setOfflineConfirmation(
+        `La venta libre por ${formatCurrency(quickSaleAmount)} quedó guardada y pendiente de sincronización.`,
+      )
+    }
+
+    if (!isOnline) {
+      try {
+        await saveQuickSaleOffline()
+      } catch (error) {
+        markCheckoutError(
+          getErrorMessage(error, 'No pudimos guardar la venta en este dispositivo.'),
+        )
+      }
+      return
+    }
+
+    try {
+      const sale = await createSaleMutation.mutateAsync(quickSaleInput)
 
       completeSale(sale)
       if (saleCompletionSoundEnabled) {
@@ -2248,6 +2356,19 @@ export function RetailSalesWorkspace() {
       setQuickSaleDrawerOpen(false)
       setQuickSaleForm(createDefaultQuickSaleState())
     } catch (error) {
+      if (error instanceof ApiError && error.isNetworkError) {
+        try {
+          await saveQuickSaleOffline()
+        } catch (storageError) {
+          markCheckoutError(
+            getErrorMessage(
+              storageError,
+              'Se perdió la conexión y no pudimos guardar la venta localmente.',
+            ),
+          )
+        }
+        return
+      }
       if (isCashSessionRequiredError(error)) {
         markCheckoutError(
           'La caja se cerró antes de confirmar. Ábrela para continuar.',
@@ -2479,6 +2600,20 @@ export function RetailSalesWorkspace() {
           </>
         }
       >
+        <OfflineSalesQueuePanel
+          isOnline={isOnline}
+          isSyncing={offlineSales.isSyncing}
+          records={offlineSales.records}
+          onRetry={(id) => void offlineSales.retry(id)}
+          onSynchronize={() => void offlineSales.synchronize()}
+        />
+
+        {offlineConfirmation ? (
+          <div className={styles.feedbackBanner} role="status">
+            {offlineConfirmation}
+          </div>
+        ) : null}
+
         {checkoutErrorMessage ? (
           <div className={styles.feedbackBanner} role="alert">
             {checkoutErrorMessage}

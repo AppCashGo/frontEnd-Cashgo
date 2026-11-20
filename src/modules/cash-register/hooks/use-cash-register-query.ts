@@ -1,4 +1,8 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
+import { readOfflineSnapshot, writeOfflineSnapshot } from "@/shared/services/offline-snapshot";
+import type { CashRegisterSession } from "@/modules/cash-register/types/cash-register";
 import {
   adjustReserveBalance,
   closeCashRegister,
@@ -57,10 +61,24 @@ export function invalidateCashRegisterQueries(
 }
 
 export function useCurrentCashRegisterQuery() {
-  return useQuery({
+  const businessId = useAuthSessionStore((state) => state.user?.businessId);
+  const query = useQuery({
     queryKey: cashRegisterCurrentQueryKey,
     queryFn: getCurrentCashRegisterSession,
+    initialData: () =>
+      readOfflineSnapshot<CashRegisterSession | null>(
+        businessId,
+        "cash-register-current",
+      ),
   });
+
+  useEffect(() => {
+    if (query.data !== undefined) {
+      writeOfflineSnapshot(businessId, "cash-register-current", query.data);
+    }
+  }, [businessId, query.data]);
+
+  return query;
 }
 
 export function useReserveSummaryQuery() {

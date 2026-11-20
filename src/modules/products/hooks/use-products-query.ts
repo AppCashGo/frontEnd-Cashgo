@@ -1,4 +1,8 @@
+import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import type { Product } from '@/modules/products/types/product'
+import { readOfflineSnapshot, writeOfflineSnapshot } from '@/shared/services/offline-snapshot'
 import { dashboardSummaryQueryKey } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
 import {
   inventoryCategoriesQueryKey,
@@ -43,10 +47,18 @@ async function invalidateProductDependencies(
 }
 
 export function useProductsQuery() {
-  return useQuery({
+  const businessId = useAuthSessionStore((state) => state.user?.businessId)
+  const query = useQuery({
     queryKey: productsQueryKey,
     queryFn: getProducts,
+    initialData: () => readOfflineSnapshot<Product[]>(businessId, 'products'),
   })
+
+  useEffect(() => {
+    if (query.data) writeOfflineSnapshot(businessId, 'products', query.data)
+  }, [businessId, query.data])
+
+  return query
 }
 
 export function useCreateProductMutation() {
