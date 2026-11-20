@@ -94,6 +94,8 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
   const [recipeProductId, setRecipeProductId] = useState<string | null>(null)
   const [closeDate, setCloseDate] = useState(getBusinessDate)
   const [costHistoryDays, setCostHistoryDays] = useState(7)
+  const [indirectCostPerUnit, setIndirectCostPerUnit] = useState('0')
+  const [targetMarginPercent, setTargetMarginPercent] = useState('35')
   const productionMutation = useRegisterInventoryProductionMutation()
   const wasteMutation = useRegisterInventoryWasteMutation()
   const recipesQuery = useProductRecipesQuery()
@@ -306,6 +308,11 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
             <div><strong>Costos y margen estimado</strong><span>Usa el costo de la receta cuando existe; para los demás productos toma el costo registrado.</span></div>
             <div className={styles.periodButtons} aria-label="Periodo de rentabilidad"><button className={costHistoryDays === 7 ? styles.activePeriod : undefined} type="button" onClick={() => setCostHistoryDays(7)}>7 días</button><button className={costHistoryDays === 30 ? styles.activePeriod : undefined} type="button" onClick={() => setCostHistoryDays(30)}>30 días</button></div>
           </div>
+          <div className={styles.simulatorControls}>
+            <div><CircleDollarSign aria-hidden="true" /><span><strong>Simulador de precio</strong><small>Agrega un costo indirecto estimado y define el margen que deseas obtener.</small></span></div>
+            <label><span>Costo indirecto por unidad</span><input aria-label="Costo indirecto por unidad" inputMode="decimal" min="0" type="number" value={indirectCostPerUnit} onChange={(event) => setIndirectCostPerUnit(event.target.value)} /></label>
+            <label><span>Margen objetivo</span><span className={styles.percentInput}><input aria-label="Margen objetivo" inputMode="decimal" max="95" min="0" type="number" value={targetMarginPercent} onChange={(event) => setTargetMarginPercent(event.target.value)} /><b>%</b></span></label>
+          </div>
           {costAnalysisQuery.isLoading ? <p className={styles.empty}>Calculando costos y márgenes…</p> : null}
           {costAnalysisQuery.isError ? <p className={styles.feedback}>No pudimos calcular la rentabilidad. Intenta actualizar la página.</p> : null}
           {costAnalysisQuery.data ? (
@@ -319,18 +326,39 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
               <div className={styles.costProductList}>
                 {costAnalysisQuery.data.products.filter((product) => product.price > 0).map((product) => {
                   const status = getCostStatus(product.status)
+                  const indirectCost = Math.max(0, Number(indirectCostPerUnit) || 0)
+                  const targetMargin = Math.min(95, Math.max(0, Number(targetMarginPercent) || 0))
+                  const simulatedUnitCost = product.unitCost + indirectCost
+                  const suggestedPrice = targetMargin < 100
+                    ? simulatedUnitCost / (1 - targetMargin / 100)
+                    : simulatedUnitCost
+                  const latestCost = product.costHistory[0]
+                  const bestSupplierCost = product.supplierCosts.find((cost) => cost.ingredientId === latestCost?.ingredientId)
+                    ?? product.supplierCosts[0]
+                  const yieldPerformance = product.yieldPerformance
                   return (
                     <article key={product.productId}>
                       <div className={styles.costProductHeading}><span><strong>{product.name}</strong><small>{product.recipeUnitCost !== null ? 'Costo calculado desde receta' : 'Costo registrado en el producto'}</small></span><em className={status.className}>{status.label}</em></div>
                       <div className={styles.costNumbers}><span><small>Precio</small><b>{formatCurrency(product.price)}</b></span><span><small>Costo unitario</small><b>{formatCurrency(product.unitCost)}</b></span><span><small>Margen</small><b>{product.marginPercent}%</b></span></div>
                       <div className={styles.costActivity}><span>{product.soldUnits} vendidos</span><span>{formatCurrency(product.estimatedGrossProfit)} de utilidad estimada</span>{product.wasteUnits > 0 ? <span>{formatCurrency(product.estimatedWasteCost)} en merma</span> : null}</div>
+                      <div className={styles.priceSimulation}>
+                        <span><small>Costo con indirectos</small><strong>{formatCurrency(simulatedUnitCost)}</strong></span>
+                        <span><small>Precio sugerido al {targetMargin}%</small><strong>{formatCurrency(Math.ceil(suggestedPrice / 50) * 50)}</strong></span>
+                      </div>
+                      {latestCost || bestSupplierCost || yieldPerformance.expectedYield ? (
+                        <div className={styles.costInsights}>
+                          {latestCost ? <span><small>Última compra</small><strong>{latestCost.ingredientName} · {formatCurrency(latestCost.unitCost)}</strong><em>{latestCost.supplierName}{latestCost.changePercent === null ? '' : ` · ${latestCost.changePercent > 0 ? '+' : ''}${latestCost.changePercent}%`}</em></span> : null}
+                          {bestSupplierCost ? <span><small>Mejor costo de {bestSupplierCost.ingredientName}</small><strong>{bestSupplierCost.supplierName}</strong><em>{formatCurrency(bestSupplierCost.averageUnitCost)} en {bestSupplierCost.purchaseCount} compra{bestSupplierCost.purchaseCount === 1 ? '' : 's'}</em></span> : null}
+                          {yieldPerformance.expectedYield ? <span><small>Rendimiento por lote</small><strong>Esperado: {yieldPerformance.expectedYield}</strong><em>{yieldPerformance.actualAverageYield === null ? 'Sin lotes registrados en el periodo' : `Real: ${yieldPerformance.actualAverageYield} · ${yieldPerformance.variancePercent && yieldPerformance.variancePercent > 0 ? '+' : ''}${yieldPerformance.variancePercent ?? 0}%`}</em></span> : null}
+                        </div>
+                      ) : null}
                       <p>{status.detail}</p>
                       {product.status === 'NO_RECIPE' ? <button type="button" onClick={() => setRecipeProductId(product.productId)}>Configurar receta</button> : null}
                     </article>
                   )
                 })}
               </div>
-              <p className={styles.costDisclaimer}>Valores estimados antes de gastos fijos, impuestos y descuentos. Sirven para comparar productos y tomar decisiones de precio.</p>
+              <p className={styles.costDisclaimer}>Los precios sugeridos incluyen el costo indirecto indicado y redondean al siguiente múltiplo de $50. El rendimiento real usa el promedio de los lotes registrados durante el período.</p>
             </>
           ) : null}
         </div>

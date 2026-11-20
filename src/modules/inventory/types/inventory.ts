@@ -191,6 +191,31 @@ export type BakeryCostAnalysis = {
     estimatedGrossProfit: number;
     wasteUnits: number;
     estimatedWasteCost: number;
+    costHistory: Array<{
+      ingredientId: string;
+      ingredientName: string;
+      supplierId: string;
+      supplierName: string;
+      purchaseDate: string;
+      unitCost: number;
+      previousUnitCost: number | null;
+      changePercent: number | null;
+    }>;
+    supplierCosts: Array<{
+      ingredientId: string;
+      ingredientName: string;
+      supplierId: string;
+      supplierName: string;
+      latestUnitCost: number;
+      averageUnitCost: number;
+      purchaseCount: number;
+    }>;
+    yieldPerformance: {
+      expectedYield: number | null;
+      actualAverageYield: number | null;
+      variancePercent: number | null;
+      batches: number;
+    };
     status: BakeryCostStatus;
   }>;
 };

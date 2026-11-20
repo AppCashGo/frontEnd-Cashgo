@@ -354,6 +354,46 @@ export async function getBakeryCostAnalysis(historyDays = 7) {
       estimatedGrossProfit: normalizeNumber(product.estimatedGrossProfit),
       wasteUnits: normalizeNumber(product.wasteUnits),
       estimatedWasteCost: normalizeNumber(product.estimatedWasteCost),
+      costHistory: (product.costHistory ?? []).map((entry) => ({
+        ...entry,
+        ingredientId: normalizeId(entry.ingredientId),
+        supplierId: normalizeId(entry.supplierId),
+        unitCost: normalizeNumber(entry.unitCost),
+        previousUnitCost:
+          entry.previousUnitCost === null
+            ? null
+            : normalizeNumber(entry.previousUnitCost),
+        changePercent:
+          entry.changePercent === null
+            ? null
+            : normalizeNumber(entry.changePercent),
+      })),
+      supplierCosts: (product.supplierCosts ?? []).map((entry) => ({
+        ...entry,
+        ingredientId: normalizeId(entry.ingredientId),
+        supplierId: normalizeId(entry.supplierId),
+        latestUnitCost: normalizeNumber(entry.latestUnitCost),
+        averageUnitCost: normalizeNumber(entry.averageUnitCost),
+        purchaseCount: normalizeNumber(entry.purchaseCount),
+      })),
+      yieldPerformance: {
+        expectedYield:
+          product.yieldPerformance?.expectedYield === null ||
+          product.yieldPerformance?.expectedYield === undefined
+            ? null
+            : normalizeNumber(product.yieldPerformance.expectedYield),
+        actualAverageYield:
+          product.yieldPerformance?.actualAverageYield === null ||
+          product.yieldPerformance?.actualAverageYield === undefined
+            ? null
+            : normalizeNumber(product.yieldPerformance.actualAverageYield),
+        variancePercent:
+          product.yieldPerformance?.variancePercent === null ||
+          product.yieldPerformance?.variancePercent === undefined
+            ? null
+            : normalizeNumber(product.yieldPerformance.variancePercent),
+        batches: normalizeNumber(product.yieldPerformance?.batches),
+      },
     })),
   };
 }
