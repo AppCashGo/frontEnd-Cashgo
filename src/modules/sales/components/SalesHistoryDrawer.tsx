@@ -1,6 +1,6 @@
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Download, Pencil, RotateCcw, Search, XCircle } from 'lucide-react'
+import { Download, Minus, Pencil, Plus, RotateCcw, Search, XCircle } from 'lucide-react'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import {
   useCancelSaleMutation,
@@ -25,7 +25,7 @@ import styles from './SalesHistoryDrawer.module.css'
 
 type SalesHistoryDrawerProps = {
   initialSaleId?: string | null
-  initialMode?: 'edit' | null
+  initialMode?: 'edit' | 'return' | null
   isOpen: boolean
   sales: SaleReceipt[]
   onClose: () => void
@@ -161,7 +161,7 @@ export function SalesHistoryDrawer({
       return
     }
     if (
-      initialMode !== 'edit' ||
+      !initialMode ||
       !selectedSale ||
       selectedSale.id !== initialSaleId ||
       initialModeAppliedRef.current
@@ -171,6 +171,13 @@ export function SalesHistoryDrawer({
 
     initialModeAppliedRef.current = true
     setFeedback(null)
+    if (initialMode === 'return') {
+      setQuantities({})
+      setReason('')
+      setReturnDate(todayInputValue())
+      setDraftMode('return')
+      return
+    }
     setEditItems(
       Object.fromEntries(
         selectedSale.items.map((item) => [
@@ -228,6 +235,22 @@ export function SalesHistoryDrawer({
   function selectSale(saleId: string) {
     setSelectedSaleId(saleId)
     resetDraft()
+  }
+
+  function updateReturnQuantity(itemId: string, quantity: number, maximum: number) {
+    const nextQuantity = Math.max(0, Math.min(Math.trunc(quantity), maximum))
+    setQuantities((current) => ({
+      ...current,
+      [itemId]: String(nextQuantity),
+    }))
+  }
+
+  function selectFullReturn() {
+    setQuantities(
+      Object.fromEntries(
+        selectedLines.map((line) => [line.item.id, String(line.available)]),
+      ),
+    )
   }
 
   async function downloadReceipt(sale: SaleReceipt) {
@@ -623,32 +646,81 @@ export function SalesHistoryDrawer({
             <section className={styles.actionForm}>
               <div className={styles.sectionHeader}>
                 <div>
-                  <strong>Registrar devolución</strong>
-                  <small>El saldo pendiente se reduce antes de generar un reembolso.</small>
+                  <strong>Corregir con devolución</strong>
+                  <small>Elige qué unidades regresan. CashGo ajustará inventario, caja y cartera.</small>
                 </div>
-                <strong>{formatCurrency(estimatedReturnAmount)}</strong>
+                <div className={styles.returnHeaderActions}>
+                  <button type="button" onClick={selectFullReturn}>Devolver todo</button>
+                  <strong>{formatCurrency(estimatedReturnAmount)}</strong>
+                </div>
               </div>
               <div className={styles.returnItems}>
                 {selectedLines.map((line) => (
-                  <label key={line.item.id}>
+                  <div className={styles.returnItem} key={line.item.id}>
                     <span>
                       <strong>{line.item.product.name}</strong>
                       <small>Máximo {line.available}</small>
                     </span>
-                    <input
-                      min="0"
-                      max={line.available}
-                      step="1"
-                      type="number"
-                      value={quantities[line.item.id] ?? ''}
-                      onChange={(event) =>
-                        setQuantities((current) => ({
-                          ...current,
-                          [line.item.id]: event.target.value,
-                        }))
-                      }
-                    />
-                  </label>
+                    <div className={styles.returnQuantityControls}>
+                      <button
+                        aria-label={`Disminuir devolución de ${line.item.product.name}`}
+                        disabled={line.quantity <= 0}
+                        type="button"
+                        onClick={() =>
+                          updateReturnQuantity(
+                            line.item.id,
+                            line.quantity - 1,
+                            line.available,
+                          )
+                        }
+                      >
+                        <Minus aria-hidden="true" />
+                      </button>
+                      <input
+                        aria-label={`Cantidad a devolver de ${line.item.product.name}`}
+                        inputMode="numeric"
+                        min="0"
+                        max={line.available}
+                        step="1"
+                        type="number"
+                        value={quantities[line.item.id] ?? '0'}
+                        onChange={(event) =>
+                          updateReturnQuantity(
+                            line.item.id,
+                            Number(event.target.value),
+                            line.available,
+                          )
+                        }
+                      />
+                      <button
+                        aria-label={`Aumentar devolución de ${line.item.product.name}`}
+                        disabled={line.quantity >= line.available}
+                        type="button"
+                        onClick={() =>
+                          updateReturnQuantity(
+                            line.item.id,
+                            line.quantity + 1,
+                            line.available,
+                          )
+                        }
+                      >
+                        <Plus aria-hidden="true" />
+                      </button>
+                      <button
+                        className={styles.returnAllButton}
+                        type="button"
+                        onClick={() =>
+                          updateReturnQuantity(
+                            line.item.id,
+                            line.available,
+                            line.available,
+                          )
+                        }
+                      >
+                        Todo
+                      </button>
+                    </div>
+                  </div>
                 ))}
               </div>
               <div className={styles.fieldGrid}>
@@ -688,19 +760,29 @@ export function SalesHistoryDrawer({
                   </div>
                 )}
               </div>
-              <label className={styles.reasonField}>
+              <div className={styles.reasonField}>
                 <span>Motivo</span>
+                <div className={styles.reasonPresets}>
+                  {['Producto incorrecto', 'Cliente cambió de opinión', 'Error en cantidad'].map(
+                    (preset) => (
+                      <button key={preset} type="button" onClick={() => setReason(preset)}>
+                        {preset}
+                      </button>
+                    ),
+                  )}
+                </div>
                 <textarea
+                  aria-label="Motivo de la devolución"
                   maxLength={255}
                   placeholder="Ej. producto defectuoso o cambio solicitado"
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
                 />
-              </label>
+              </div>
               <div className={styles.formActions}>
                 <button
                   className={styles.secondaryButton}
-                  disabled={isSubmitting || reason.trim().length < 3}
+                  disabled={isSubmitting}
                   type="button"
                   onClick={resetDraft}
                 >
@@ -708,7 +790,11 @@ export function SalesHistoryDrawer({
                 </button>
                 <button
                   className={styles.primaryButton}
-                  disabled={isSubmitting || estimatedReturnAmount <= 0}
+                  disabled={
+                    isSubmitting ||
+                    estimatedReturnAmount <= 0 ||
+                    reason.trim().length < 3
+                  }
                   type="button"
                   onClick={() => void submitReturn()}
                 >
@@ -725,14 +811,24 @@ export function SalesHistoryDrawer({
                 Esta acción restaura todo el inventario y revierte el saldo pendiente. Úsala solo si
                 la venta completa debe quedar sin efecto.
               </p>
-              <label className={styles.reasonField}>
+              <div className={styles.reasonField}>
                 <span>Motivo de anulación</span>
+                <div className={styles.reasonPresets}>
+                  {['Venta duplicada', 'Venta registrada por error', 'Cliente canceló la compra'].map(
+                    (preset) => (
+                      <button key={preset} type="button" onClick={() => setReason(preset)}>
+                        {preset}
+                      </button>
+                    ),
+                  )}
+                </div>
                 <textarea
+                  aria-label="Motivo de la anulación"
                   maxLength={255}
                   value={reason}
                   onChange={(event) => setReason(event.target.value)}
                 />
-              </label>
+              </div>
               <div className={styles.formActions}>
                 <button
                   className={styles.secondaryButton}
@@ -744,7 +840,7 @@ export function SalesHistoryDrawer({
                 </button>
                 <button
                   className={styles.dangerButton}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || reason.trim().length < 3}
                   type="button"
                   onClick={() => void submitCancellation()}
                 >
@@ -761,7 +857,8 @@ export function SalesHistoryDrawer({
               selectedSale.returns.length === 0 &&
               !selectedSale.invoice ? (
                 <button className={styles.secondaryButton} type="button" onClick={startEditing}>
-                  <Pencil aria-hidden="true" /> Editar factura
+                  <Pencil aria-hidden="true" />
+                  <span><strong>Corregir venta pendiente</strong><small>Ajustar cantidades, precios o fecha</small></span>
                 </button>
               ) : null}
               {selectedLines.length > 0 ? (
@@ -773,7 +870,8 @@ export function SalesHistoryDrawer({
                     setDraftMode('return')
                   }}
                 >
-                  <RotateCcw aria-hidden="true" /> Registrar devolución
+                  <RotateCcw aria-hidden="true" />
+                  <span><strong>Corregir o devolver</strong><small>Regresar una parte o toda la compra</small></span>
                 </button>
               ) : null}
               {selectedSale.returns.length === 0 ? (
@@ -785,7 +883,8 @@ export function SalesHistoryDrawer({
                     setDraftMode('cancel')
                   }}
                 >
-                  <XCircle aria-hidden="true" /> Anular venta
+                  <XCircle aria-hidden="true" />
+                  <span><strong>Anular venta completa</strong><small>Revertir toda la operación</small></span>
                 </button>
               ) : null}
             </div>

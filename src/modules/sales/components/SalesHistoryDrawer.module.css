@@ -3,7 +3,7 @@
 .sectionHeader,
 .itemRow,
 .creditList > div,
-.returnItems label,
+.returnItem,
 .fieldGrid,
 .mainActions,
 .formActions {
@@ -180,7 +180,7 @@
   color: #667085;
   line-height: 1.5;
 }
-.returnItems label {
+.returnItem {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem;
@@ -188,15 +188,63 @@
   border-radius: 12px;
   background: #fff;
 }
-.returnItems label > span {
+.returnItem > span {
   display: grid;
   gap: 0.25rem;
 }
 .returnItems small {
   color: #667085;
 }
-.returnItems input {
-  width: 5.5rem;
+.returnHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.returnHeaderActions button,
+.reasonPresets button,
+.returnQuantityControls button {
+  min-height: 2.55rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  color: #344054;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+.returnHeaderActions button {
+  padding: 0.55rem 0.8rem;
+  border-color: #93c5fd;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+.returnQuantityControls {
+  display: grid;
+  grid-template-columns: 2.65rem 4rem 2.65rem auto;
+  align-items: center;
+  gap: 0.35rem;
+}
+.returnQuantityControls button {
+  display: inline-grid;
+  place-items: center;
+  padding: 0 0.65rem;
+}
+.returnQuantityControls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+.returnQuantityControls svg {
+  width: 1rem;
+  height: 1rem;
+}
+.returnQuantityControls input {
+  width: 4rem;
+  min-height: 2.55rem;
+  text-align: center;
+}
+.returnQuantityControls .returnAllButton {
+  padding-inline: 0.8rem;
+  color: #0758d1;
 }
 .editItemRow {
   display: grid;
@@ -257,6 +305,24 @@
   min-height: 5.5rem;
   resize: vertical;
 }
+.reasonPresets {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+}
+.reasonPresets button {
+  flex: 0 0 auto;
+  min-height: 2.35rem;
+  padding: 0.45rem 0.7rem;
+  font-size: 0.78rem;
+}
+.reasonPresets button:hover,
+.reasonPresets button:focus-visible {
+  border-color: #60a5fa;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
 .balanceNotice {
   display: grid;
   gap: 0.3rem;
@@ -273,6 +339,27 @@
   justify-content: flex-end;
   gap: 0.7rem;
   flex-wrap: wrap;
+}
+.mainActions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+.mainActions > button {
+  min-height: 5rem;
+  justify-content: flex-start;
+  padding: 0.85rem;
+  text-align: left;
+}
+.mainActions > button > span {
+  display: grid;
+  gap: 0.2rem;
+}
+.mainActions > button small {
+  color: #667085;
+  font-size: 0.72rem;
+  font-weight: 550;
+  line-height: 1.35;
 }
 .primaryButton {
   border: 1px solid #0758d1;
@@ -315,7 +402,7 @@
   .mainActions > * {
     width: 100%;
   }
-  .returnItems label {
+  .returnItem {
     align-items: center;
   }
   .editItemRow {
@@ -324,6 +411,17 @@
   .formActions {
     display: grid;
     grid-template-columns: 1fr;
+  }
+  .mainActions {
+    grid-template-columns: 1fr;
+  }
+  .returnItem,
+  .returnHeaderActions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .returnQuantityControls {
+    grid-template-columns: 2.85rem minmax(4rem, 1fr) 2.85rem auto;
   }
   .section,
   .actionForm {

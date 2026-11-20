@@ -3,6 +3,7 @@ import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert"
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  ArrowLeft,
   Banknote,
   CheckCircle,
   CheckCircle2,
@@ -11,6 +12,7 @@ import {
   Layers3,
   Plus,
   ScanBarcode,
+  ShoppingCart,
   Star,
   Trash2,
 } from 'lucide-react'
@@ -1076,9 +1078,10 @@ function ProductSortDrawer({
 type SaleSuccessModalProps = {
   sale: SaleReceipt
   onClose: () => void
+  onCorrectSale: () => void
 }
 
-function SaleSuccessModal({ sale, onClose }: SaleSuccessModalProps) {
+function SaleSuccessModal({ sale, onClose, onCorrectSale }: SaleSuccessModalProps) {
   return (
     <ModalShell
       ariaLabel="Venta creada con éxito"
@@ -1111,7 +1114,11 @@ function SaleSuccessModal({ sale, onClose }: SaleSuccessModalProps) {
           </div>
         </div>
 
-        <SaleCompletionActions sale={sale} onRegisterAnother={onClose} />
+        <SaleCompletionActions
+          sale={sale}
+          onCorrectSale={onCorrectSale}
+          onRegisterAnother={onClose}
+        />
       </div>
 
     </ModalShell>
@@ -1164,10 +1171,14 @@ export function RetailSalesWorkspace() {
   const [quickCustomerTarget, setQuickCustomerTarget] =
     useState<QuickCustomerTarget | null>(null)
   const [isSalesHistoryOpen, setSalesHistoryOpen] = useState(false)
+  const [historyInitialSaleId, setHistoryInitialSaleId] = useState<string | null>(null)
+  const [historyInitialMode, setHistoryInitialMode] = useState<'return' | null>(null)
   const [isHeldSalesOpen, setHeldSalesOpen] = useState(false)
   const [isHoldSaleModalOpen, setHoldSaleModalOpen] = useState(false)
   const [activeHeldSaleId, setActiveHeldSaleId] = useState<string | null>(null)
   const [isQuickExpenseDrawerOpen, setQuickExpenseDrawerOpen] = useState(false)
+  const catalogSectionRef = useRef<HTMLElement | null>(null)
+  const checkoutSectionRef = useRef<HTMLElement | null>(null)
   const [isCashRegisterDrawerOpen, setCashRegisterDrawerOpen] = useState(false)
   const [cashRegisterDrawerMode, setCashRegisterDrawerMode] =
     useState<CashRegisterDrawerMode>('manage')
@@ -2577,6 +2588,27 @@ export function RetailSalesWorkspace() {
     setCashRegisterMenuOpen(false)
   }
 
+  function openSalesHistory() {
+    setHistoryInitialSaleId(null)
+    setHistoryInitialMode(null)
+    setSalesHistoryOpen(true)
+  }
+
+  function openSaleCorrection(sale: SaleReceipt) {
+    clearCheckoutFeedback()
+    setHistoryInitialSaleId(sale.id)
+    setHistoryInitialMode('return')
+    setSalesHistoryOpen(true)
+  }
+
+  function scrollToCatalog() {
+    catalogSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
+  function scrollToCheckout() {
+    checkoutSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   function beginCashSessionFlow(intent: Exclude<PendingCashIntent, null>) {
     setPendingCashIntent(intent)
     setChangeModalOpen(false)
@@ -2695,7 +2727,7 @@ export function RetailSalesWorkspace() {
             <button
               className={styles.quickSaleButton}
               type="button"
-              onClick={() => setSalesHistoryOpen(true)}
+              onClick={openSalesHistory}
             >
               Historial de ventas
             </button>
@@ -2743,7 +2775,7 @@ export function RetailSalesWorkspace() {
               : styles.workspace
           }
         >
-          <section className={styles.catalogColumn}>
+          <section className={styles.catalogColumn} ref={catalogSectionRef}>
             <div className={styles.toolbar}>
               <button
                 className={styles.iconButton}
@@ -2954,11 +2986,35 @@ export function RetailSalesWorkspace() {
                 </button>
               </div>
             ) : null}
+
+            <button
+              className={styles.touchCartBar}
+              disabled={cartItems.length === 0}
+              type="button"
+              onClick={scrollToCheckout}
+            >
+              <span className={styles.touchCartIcon}>
+                <ShoppingCart aria-hidden="true" />
+                <small>{totalItems}</small>
+              </span>
+              <span>
+                <strong>{cartItems.length > 0 ? 'Ver canasta' : 'Canasta vacía'}</strong>
+                <small>{cartItems.length > 0 ? 'Revisar productos y cobrar' : 'Agrega un producto para continuar'}</small>
+              </span>
+              <strong>{formatCurrency(totalAmount)}</strong>
+            </button>
           </section>
 
-          <aside className={styles.checkoutColumn}>
+          <aside className={styles.checkoutColumn} ref={checkoutSectionRef}>
             {saleStep === 'CATALOG' ? (
               <section className={styles.checkoutPanel}>
+                <button
+                  className={styles.touchBackToCatalog}
+                  type="button"
+                  onClick={scrollToCatalog}
+                >
+                  <ArrowLeft aria-hidden="true" /> Seguir agregando productos
+                </button>
                 <div className={styles.panelHeader}>
                   <div>
                     <p className={styles.panelTitle}>Productos</p>
@@ -3607,9 +3663,15 @@ export function RetailSalesWorkspace() {
       </RetailPageLayout>
 
       <SalesHistoryDrawer
+        initialMode={historyInitialMode}
+        initialSaleId={historyInitialSaleId}
         isOpen={isSalesHistoryOpen}
         sales={salesHistory}
-        onClose={() => setSalesHistoryOpen(false)}
+        onClose={() => {
+          setSalesHistoryOpen(false)
+          setHistoryInitialSaleId(null)
+          setHistoryInitialMode(null)
+        }}
         onCashSessionRequired={() => beginCashSessionFlow('SALES_HISTORY')}
       />
 
@@ -4103,6 +4165,7 @@ export function RetailSalesWorkspace() {
         <SaleSuccessModal
           sale={completedSale}
           onClose={() => clearCheckoutFeedback()}
+          onCorrectSale={() => openSaleCorrection(completedSale)}
         />
       ) : null}
 

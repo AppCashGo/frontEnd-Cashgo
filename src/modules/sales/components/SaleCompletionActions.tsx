@@ -1,4 +1,4 @@
-import { Download, MessageCircle, Printer, RotateCcw } from 'lucide-react'
+import { Download, MessageCircle, Printer, RotateCcw, Undo2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { createCustomerCollectionActivity } from '@/modules/customers/services/customers-api'
@@ -20,9 +20,11 @@ import styles from './SaleCompletionActions.module.css'
 export function SaleCompletionActions({
   sale,
   onRegisterAnother,
+  onCorrectSale,
 }: {
   sale: SaleReceipt
   onRegisterAnother: () => void
+  onCorrectSale?: () => void
 }) {
   const businessName = useAuthSessionStore((state) => state.user?.businessName ?? 'CashGo')
   const [activeAction, setActiveAction] = useState<string | null>(null)
@@ -69,6 +71,7 @@ export function SaleCompletionActions({
         <button disabled={activeAction !== null} type="button" onClick={() => void run('print')}><Printer /> Imprimir</button>
         <button disabled={activeAction !== null} type="button" onClick={() => void run('download')}><Download /> Descargar</button>
         {sale.customer ? <button disabled={activeAction !== null} type="button" onClick={() => void run('share')}><MessageCircle /> Compartir</button> : null}
+        {onCorrectSale ? <button type="button" onClick={onCorrectSale}><Undo2 /> Corregir o devolver</button> : null}
       </div>
       <div className={styles.primary}>
         <button type="button" onClick={onRegisterAnother}><RotateCcw /> Registrar otra venta</button>

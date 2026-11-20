@@ -3546,7 +3546,103 @@
   background: #eff6ff;
 }
 
+.touchCartBar,
+.touchBackToCatalog {
+  display: none;
+}
+
 @media (max-width: 1099px) {
+  .touchCartBar {
+    position: sticky;
+    z-index: 12;
+    bottom: 0.85rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.8rem;
+    width: min(100%, 38rem);
+    min-height: 4.4rem;
+    margin: 0.35rem auto 0;
+    padding: 0.65rem 0.8rem;
+    border: 1px solid rgba(37, 99, 235, 0.38);
+    border-radius: 1.1rem;
+    background: rgba(15, 23, 42, 0.96);
+    color: #fff;
+    text-align: left;
+    box-shadow: 0 1.2rem 2.6rem rgba(15, 23, 42, 0.28);
+    backdrop-filter: blur(14px);
+    cursor: pointer;
+  }
+
+  .touchCartBar:disabled {
+    cursor: not-allowed;
+    opacity: 0.62;
+  }
+
+  .touchCartBar > span:not(.touchCartIcon) {
+    display: grid;
+    gap: 0.15rem;
+  }
+
+  .touchCartBar small {
+    color: #cbd5e1;
+    font-size: 0.74rem;
+  }
+
+  .touchCartIcon {
+    position: relative;
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border-radius: 0.85rem;
+    background: #2563eb;
+  }
+
+  .touchCartIcon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .touchCartIcon small {
+    position: absolute;
+    top: -0.35rem;
+    right: -0.35rem;
+    display: grid;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    place-items: center;
+    padding: 0 0.25rem;
+    border: 2px solid #0f172a;
+    border-radius: 999px;
+    background: #f97316;
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 900;
+  }
+
+  .touchBackToCatalog {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    width: calc(100% - 2rem);
+    min-height: 3rem;
+    margin: 1rem 1rem 0;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.85rem;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font: inherit;
+    font-weight: 850;
+    cursor: pointer;
+  }
+
+  .touchBackToCatalog svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
   .workspacePayment {
     display: block;
     background: transparent;
@@ -3580,6 +3676,12 @@
 
   .productResultsFooter button {
     width: 100%;
+  }
+
+  .touchCartBar {
+    width: 100%;
+    bottom: 0.55rem;
+    border-radius: 1rem;
   }
 
   .workspacePayment .paymentPanel {
