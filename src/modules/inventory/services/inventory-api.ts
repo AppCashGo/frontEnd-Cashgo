@@ -210,12 +210,14 @@ export function registerInventoryWaste(input: InventoryOperationInput) {
 
 type ProductRecipeApiRecord = Omit<
   ProductRecipe,
-  "id" | "productId" | "yieldQuantity" | "product" | "ingredients"
+  "id" | "productId" | "yieldQuantity" | "product" | "ingredients" | "createdByUser" | "updatedByUser"
 > & {
   id: number | string;
   productId: number | string;
   yieldQuantity: number | string;
   product: ProductApiRecord;
+  createdByUser: { id: number | string; name: string; email: string } | null;
+  updatedByUser: { id: number | string; name: string; email: string } | null;
   ingredients: Array<{
     id: number | string;
     productId: number | string;
@@ -231,6 +233,12 @@ function normalizeProductRecipe(record: ProductRecipeApiRecord): ProductRecipe {
     productId: normalizeId(record.productId),
     yieldQuantity: normalizeNumber(record.yieldQuantity),
     product: normalizeProductRecord(record.product),
+    createdByUser: record.createdByUser
+      ? { ...record.createdByUser, id: normalizeId(record.createdByUser.id) }
+      : null,
+    updatedByUser: record.updatedByUser
+      ? { ...record.updatedByUser, id: normalizeId(record.updatedByUser.id) }
+      : null,
     ingredients: record.ingredients.map((ingredient) => ({
       ...ingredient,
       id: normalizeId(ingredient.id),
@@ -412,11 +420,14 @@ export async function getBakeryCostAnalysis(historyDays = 7) {
 
 type PurchaseOrderApiRecord = Omit<
   PurchaseOrder,
-  'id' | 'supplierId' | 'supplier' | 'items' | 'purchases'
+  'id' | 'supplierId' | 'supplier' | 'items' | 'purchases' | 'createdByUser' | 'orderedByUser' | 'cancelledByUser'
 > & {
   id: number | string;
   supplierId: number | string;
   supplier: { id: number | string; name: string };
+  createdByUser: { id: number | string; name: string; email: string } | null;
+  orderedByUser: { id: number | string; name: string; email: string } | null;
+  cancelledByUser: { id: number | string; name: string; email: string } | null;
   items: Array<{
     id: number | string;
     productId: number | string;
@@ -439,6 +450,15 @@ function normalizePurchaseOrder(record: PurchaseOrderApiRecord): PurchaseOrder {
     id: normalizeId(record.id),
     supplierId: normalizeId(record.supplierId),
     supplier: { ...record.supplier, id: normalizeId(record.supplier.id) },
+    createdByUser: record.createdByUser
+      ? { ...record.createdByUser, id: normalizeId(record.createdByUser.id) }
+      : null,
+    orderedByUser: record.orderedByUser
+      ? { ...record.orderedByUser, id: normalizeId(record.orderedByUser.id) }
+      : null,
+    cancelledByUser: record.cancelledByUser
+      ? { ...record.cancelledByUser, id: normalizeId(record.cancelledByUser.id) }
+      : null,
     items: record.items.map((item) => ({
       ...item,
       id: normalizeId(item.id),

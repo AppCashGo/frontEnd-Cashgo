@@ -210,10 +210,18 @@ export function PurchaseOrdersPanel({ products, suppliers }: Props) {
         {orders.slice(0, 6).map((order) => {
           const ordered = order.items.reduce((total, item) => total + item.orderedQuantity, 0)
           const received = order.items.reduce((total, item) => total + item.receivedQuantity, 0)
+          const auditActor = order.status === 'CANCELLED'
+            ? order.cancelledByUser
+            : order.orderedByUser ?? order.createdByUser
+          const auditAction = order.status === 'CANCELLED'
+            ? 'Cancelada por'
+            : order.orderedByUser
+              ? 'Enviada por'
+              : 'Creada por'
           return (
             <article key={order.id}>
               <div className={styles.orderIcon}>{order.status === 'RECEIVED' ? <CheckCircle2 aria-hidden="true" /> : <ShoppingBasket aria-hidden="true" />}</div>
-              <div className={styles.orderMain}><span><strong>{order.reference || `Orden #${order.id}`}</strong><em className={styles[order.status.toLowerCase()]}>{statusLabels[order.status]}</em></span><small>{order.supplier.name} · {order.items.length} productos · {received}/{ordered} unidades recibidas</small></div>
+              <div className={styles.orderMain}><span><strong>{order.reference || `Orden #${order.id}`}</strong><em className={styles[order.status.toLowerCase()]}>{statusLabels[order.status]}</em></span><small>{order.supplier.name} · {order.items.length} productos · {received}/{ordered} unidades recibidas</small><small className={styles.orderAudit}>{auditAction} {auditActor?.name ?? 'usuario no registrado'}</small></div>
               <strong className={styles.total}>{formatCurrency(orderTotal(order))}</strong>
               <div className={styles.actions}>
                 {order.status === 'DRAFT' ? <button type="button" onClick={() => void sendMutation.mutateAsync(order.id)}><Send aria-hidden="true" /> Enviar</button> : null}

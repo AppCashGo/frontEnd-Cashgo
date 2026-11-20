@@ -70,6 +70,12 @@ export type InventoryOperationResult = {
   ingredientUnitsConsumed?: number;
 };
 
+export type InventoryAuditActor = {
+  id: string;
+  name: string;
+  email: string;
+};
+
 export type ProductRecipeIngredient = {
   id: string;
   productId: string;
@@ -83,6 +89,8 @@ export type ProductRecipe = {
   yieldQuantity: number;
   product: Product;
   ingredients: ProductRecipeIngredient[];
+  createdByUser: InventoryAuditActor | null;
+  updatedByUser: InventoryAuditActor | null;
   createdAt: string;
   updatedAt: string;
 };
@@ -314,6 +322,9 @@ export type PurchaseOrder = {
   createdAt: string;
   updatedAt: string;
   supplier: { id: string; name: string };
+  createdByUser: InventoryAuditActor | null;
+  orderedByUser: InventoryAuditActor | null;
+  cancelledByUser: InventoryAuditActor | null;
   items: Array<{
     id: string;
     productId: string;

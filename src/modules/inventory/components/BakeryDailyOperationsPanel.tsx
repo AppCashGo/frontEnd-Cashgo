@@ -305,7 +305,7 @@ export function BakeryDailyOperationsPanel({ canManageInventory, canOperateBaker
                 return (
                   <button key={product.id} type="button" onClick={() => setRecipeProductId(product.id)}>
                     <span className={currentRecipe ? styles.recipeReadyIcon : styles.recipePendingIcon}>{currentRecipe ? <Wheat aria-hidden="true" /> : <ChefHat aria-hidden="true" />}</span>
-                    <span><strong>{product.name}</strong><small>{currentRecipe ? `${currentRecipe.ingredients.length} insumos · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? getProductAvailabilityLabel(product) : `produce ${currentRecipe.yieldQuantity}`}` : `Pendiente · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? 'preparado al momento' : 'producción por cantidades'}`}</small></span>
+                    <span><strong>{product.name}</strong><small>{currentRecipe ? `${currentRecipe.ingredients.length} insumos · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? getProductAvailabilityLabel(product) : `produce ${currentRecipe.yieldQuantity}`}` : `Pendiente · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? 'preparado al momento' : 'producción por cantidades'}`}</small>{currentRecipe ? <small>Última edición: {currentRecipe.updatedByUser?.name ?? 'Sin usuario registrado'} · {formatDateTime(currentRecipe.updatedAt)}</small> : null}</span>
                     <b>{currentRecipe ? 'Editar' : 'Crear receta'}</b>
                   </button>
                 )

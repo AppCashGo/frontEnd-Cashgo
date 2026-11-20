@@ -52,6 +52,7 @@
 .orderMain { display: grid; gap: .18rem; }
 .orderMain > span { display: flex; align-items: center; gap: .45rem; }
 .orderMain small { color: #7b8494; }
+.orderMain .orderAudit { color: #4f6381; font-size: .68rem; font-weight: 750; }
 .orderMain em { border-radius: 999px; padding: .2rem .45rem; font-size: .64rem; font-style: normal; font-weight: 850; }
 .draft { background: #f0f2f5; color: #5e6877; }.ordered { background: #e9f1ff; color: #2e63ae; }.partially_received { background: #fff4dc; color: #a56217; }.received { background: #e8f8ef; color: #24764a; }.cancelled { background: #feecec; color: #b43535; }
 .total { white-space: nowrap; }
