@@ -33,6 +33,11 @@ import { useProductsQuery } from '@/modules/products/hooks/use-products-query'
 import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
+import {
+  canSellProductQuantity,
+  getProductAvailabilityLabel,
+  getProductSaleAvailability,
+} from '@/modules/products/utils/product-sale-availability'
 import { useSuppliersQuery } from '@/modules/suppliers/hooks/use-suppliers-query'
 import {
   useCreateSaleMutation,
@@ -665,17 +670,16 @@ function mapRetailPaymentOptionToExpenseMethod(
 }
 
 function getStockToneClass(product: Product) {
-  if (product.inventoryBehavior === 'MADE_TO_ORDER') {
-    return ''
-  }
+  const availableQuantity = getProductSaleAvailability(product)
+  if (availableQuantity === null) return ''
 
   const threshold = Math.max(product.minStock, 5)
 
-  if (product.stock === 0) {
+  if (availableQuantity === 0) {
     return styles.stockPillOut
   }
 
-  if (product.stock <= threshold) {
+  if (availableQuantity <= threshold) {
     return styles.stockPillLow
   }
 
@@ -1212,12 +1216,35 @@ export function RetailSalesWorkspace() {
   }, [activeHeldSaleId, heldSales])
   const products = useMemo(
     () =>
-      rawProducts.map((product) => ({
-        ...product,
-        stock: allowSaleWithoutStock
-          ? product.stock
-          : Math.max(product.stock - (reservedQuantities.get(product.id) ?? 0), 0),
-      })),
+      rawProducts.map((product) => {
+        const reservedQuantity = reservedQuantities.get(product.id) ?? 0
+
+        if (
+          product.inventoryBehavior === 'MADE_TO_ORDER' &&
+          product.recipeAvailability?.availableQuantity !== null &&
+          product.recipeAvailability?.availableQuantity !== undefined
+        ) {
+          return {
+            ...product,
+            recipeAvailability: {
+              ...product.recipeAvailability,
+              availableQuantity: allowSaleWithoutStock
+                ? product.recipeAvailability.availableQuantity
+                : Math.max(
+                    product.recipeAvailability.availableQuantity - reservedQuantity,
+                    0,
+                  ),
+            },
+          }
+        }
+
+        return {
+          ...product,
+          stock: allowSaleWithoutStock
+            ? product.stock
+            : Math.max(product.stock - reservedQuantity, 0),
+        }
+      }),
     [allowSaleWithoutStock, rawProducts, reservedQuantities],
   )
   const customers = useMemo(
@@ -1306,15 +1333,17 @@ export function RetailSalesWorkspace() {
 
       const quantityInCart = cartQuantitiesByProductId.get(product.id) ?? 0
       if (
-        !allowSaleWithoutStock &&
-        product.inventoryBehavior !== 'MADE_TO_ORDER' &&
-        quantityInCart >= product.stock
+        !canSellProductQuantity(
+          product,
+          quantityInCart + 1,
+          allowSaleWithoutStock,
+        )
       ) {
         setBarcodeNotice({
           tone: 'error',
           message:
-            product.stock <= 0
-              ? `${product.name} no tiene existencias disponibles.`
+            getProductSaleAvailability(product) === 0
+              ? `${product.name} no tiene insumos o existencias disponibles.`
               : `Ya agregaste todas las unidades disponibles de ${product.name}.`,
         })
         return
@@ -2119,8 +2148,7 @@ export function RetailSalesWorkspace() {
     if (!allowSaleWithoutStock) {
       const stockMismatchItem = cartItems.find(
         (item) =>
-          item.product.inventoryBehavior !== 'MADE_TO_ORDER' &&
-          item.quantity > item.product.stock,
+          !canSellProductQuantity(item.product, item.quantity, false),
       )
 
       if (stockMismatchItem) {
@@ -2718,9 +2746,7 @@ export function RetailSalesWorkspace() {
                 const productImageUrl = resolveProductImageUrl(product.imageUrls)
                 const canSellProduct =
                   product.isActive &&
-                  (product.inventoryBehavior === 'MADE_TO_ORDER' ||
-                    allowSaleWithoutStock ||
-                    product.stock > 0)
+                  canSellProductQuantity(product, 1, allowSaleWithoutStock)
 
                 return (
                   <button
@@ -2762,9 +2788,7 @@ export function RetailSalesWorkspace() {
                     </p>
                     <p className={styles.productName}>{product.name}</p>
                     <span className={`${styles.stockPill} ${getStockToneClass(product)}`}>
-                      {product.inventoryBehavior === 'MADE_TO_ORDER'
-                        ? 'Preparado al pedir'
-                        : `${product.stock.toString()} disponibles`}
+                      {getProductAvailabilityLabel(product)}
                     </span>
                   </button>
                 )
@@ -2873,10 +2897,9 @@ export function RetailSalesWorkspace() {
                                   className={styles.quantityInput}
                                   max={
                                     allowSaleWithoutStock ||
-                                    item.product.inventoryBehavior ===
-                                      'MADE_TO_ORDER'
+                                    getProductSaleAvailability(item.product) === null
                                       ? undefined
-                                      : item.product.stock
+                                      : (getProductSaleAvailability(item.product) ?? undefined)
                                   }
                                   productName={item.product.name}
                                   quantity={item.quantity}
@@ -2887,10 +2910,11 @@ export function RetailSalesWorkspace() {
                                 <button
                                   className={styles.quantityButton}
                                   disabled={
-                                    !allowSaleWithoutStock &&
-                                    item.product.inventoryBehavior !==
-                                      'MADE_TO_ORDER' &&
-                                    item.quantity >= item.product.stock
+                                    !canSellProductQuantity(
+                                      item.product,
+                                      item.quantity + 1,
+                                      allowSaleWithoutStock,
+                                    )
                                   }
                                   type="button"
                                   onClick={() =>

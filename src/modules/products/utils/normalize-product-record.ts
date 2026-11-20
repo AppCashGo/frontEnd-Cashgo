@@ -4,7 +4,7 @@ import { normalizeNumber } from "@/shared/utils/normalize-number";
 
 export type ProductApiRecord = Omit<
   Product,
-  "id" | "categoryId" | "parentProductId" | "price" | "cost"
+  "id" | "categoryId" | "parentProductId" | "price" | "cost" | "recipeAvailability"
 > & {
   id: number | string;
   categoryId: number | string | null;
@@ -13,6 +13,11 @@ export type ProductApiRecord = Omit<
   cost: number | string;
   price: number | string;
   taxRate: number | string;
+  recipeAvailability?: {
+    configured?: boolean;
+    availableQuantity?: number | string | null;
+    limitingIngredientName?: string | null;
+  } | null;
 };
 
 function normalizeProductImageUrls(imageUrls: unknown) {
@@ -32,6 +37,18 @@ export function normalizeProductRecord(record: ProductApiRecord): Product {
     parentProductId: normalizeOptionalId(record.parentProductId ?? null),
     productType: record.productType ?? "BASIC",
     inventoryBehavior: record.inventoryBehavior ?? "PURCHASED",
+    recipeAvailability: record.recipeAvailability
+      ? {
+          configured: record.recipeAvailability.configured ?? false,
+          availableQuantity:
+            record.recipeAvailability.availableQuantity === null ||
+            record.recipeAvailability.availableQuantity === undefined
+              ? null
+              : normalizeNumber(record.recipeAvailability.availableQuantity),
+          limitingIngredientName:
+            record.recipeAvailability.limitingIngredientName ?? null,
+        }
+      : null,
     variantName: record.variantName ?? null,
     imageUrls: normalizeProductImageUrls(record.imageUrls),
     description: record.description ?? null,

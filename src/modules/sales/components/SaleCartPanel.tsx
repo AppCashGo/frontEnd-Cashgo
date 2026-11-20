@@ -2,6 +2,7 @@ import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import type { CashRegisterSession } from '@/modules/cash-register/types/cash-register'
 import { getPaymentMethodLabel } from '@/modules/cash-register/utils/format-cash-register'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
+import { getProductSaleAvailability } from '@/modules/products/utils/product-sale-availability'
 import type {
   SaleCartItem,
   SalePaymentMethod,
@@ -191,7 +192,8 @@ export function SaleCartPanel({
         <>
           <ul className={styles.cartList}>
             {cartItems.map((item) => {
-              const canIncreaseQuantity = item.quantity < item.product.stock
+              const availability = getProductSaleAvailability(item.product)
+              const canIncreaseQuantity = availability === null || item.quantity < availability
 
               return (
                 <li className={styles.cartItem} key={item.product.id}>
@@ -223,7 +225,7 @@ export function SaleCartPanel({
                       </button>
                       <SaleQuantityInput
                         className={styles.quantityInput}
-                        max={item.product.stock}
+                        max={availability ?? undefined}
                         productName={item.product.name}
                         quantity={item.quantity}
                         onQuantityChange={(quantity) =>

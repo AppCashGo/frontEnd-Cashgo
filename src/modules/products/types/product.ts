@@ -15,6 +15,12 @@ export type ProductUnit = (typeof productUnits)[number];
 export type ProductType = "BASIC" | "VARIANT_PARENT" | "VARIANT";
 export type InventoryBehavior = "PURCHASED" | "PRODUCED" | "MADE_TO_ORDER";
 
+export type ProductRecipeAvailability = {
+  configured: boolean;
+  availableQuantity: number | null;
+  limitingIngredientName: string | null;
+};
+
 export type ProductVariantInput = {
   name: string;
   sku?: string;
@@ -31,6 +37,7 @@ export type Product = {
   parentProductId: string | null;
   productType: ProductType;
   inventoryBehavior: InventoryBehavior;
+  recipeAvailability?: ProductRecipeAvailability | null;
   variantName: string | null;
   imageUrls: string[];
   name: string;

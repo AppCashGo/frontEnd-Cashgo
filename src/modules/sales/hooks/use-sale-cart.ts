@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Product } from '@/modules/products/types/product'
+import {
+  canSellProductQuantity,
+  getProductSaleAvailability,
+} from '@/modules/products/utils/product-sale-availability'
 import type { SaleCartItem, SaleReceipt } from '@/modules/sales/types/sale'
 
 type CartEntry = {
@@ -143,10 +147,8 @@ export function useSaleCart(
       const existingEntry = currentEntries.find(
         (entry) => entry.productId === product.id,
       )
-      const tracksStock = product.inventoryBehavior !== 'MADE_TO_ORDER'
-
       if (!existingEntry) {
-        if (!allowSaleWithoutStock && tracksStock && product.stock <= 0) {
+        if (!canSellProductQuantity(product, 1, allowSaleWithoutStock)) {
           return currentEntries
         }
 
@@ -161,9 +163,11 @@ export function useSaleCart(
       }
 
       if (
-        !allowSaleWithoutStock &&
-        tracksStock &&
-        existingEntry.quantity >= product.stock
+        !canSellProductQuantity(
+          product,
+          existingEntry.quantity + 1,
+          allowSaleWithoutStock,
+        )
       ) {
         return currentEntries
       }
@@ -192,9 +196,11 @@ export function useSaleCart(
 
         if (
           !product ||
-          (!allowSaleWithoutStock &&
-            product.inventoryBehavior !== 'MADE_TO_ORDER' &&
-            entry.quantity >= product.stock)
+          !canSellProductQuantity(
+            product,
+            entry.quantity + 1,
+            allowSaleWithoutStock,
+          )
         ) {
           return entry
         }
@@ -249,13 +255,14 @@ export function useSaleCart(
           return entry
         }
 
+        const availability = getProductSaleAvailability(product)
+
         return {
           ...entry,
           quantity:
-            allowSaleWithoutStock ||
-            product.inventoryBehavior === 'MADE_TO_ORDER'
+            allowSaleWithoutStock || availability === null
             ? quantity
-            : Math.min(quantity, product.stock),
+            : Math.min(quantity, availability),
         }
       }),
     )

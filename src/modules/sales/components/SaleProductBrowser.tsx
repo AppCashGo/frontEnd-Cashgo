@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom'
 import type { Product } from '@/modules/products/types/product'
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
+import {
+  getProductAvailabilityLabel,
+  getProductSaleAvailability,
+} from '@/modules/products/utils/product-sale-availability'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { routePaths } from '@/routes/route-paths'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -36,13 +40,15 @@ const inventoryFilterOptions: Array<{
 ]
 
 function getStockToneClass(product: Product) {
+  const availability = getProductSaleAvailability(product)
+  if (availability === null) return styles.stockBadgeHealthy
   const threshold = Math.max(product.minStock, 5)
 
-  if (product.stock === 0) {
+  if (availability === 0) {
     return styles.stockBadgeCritical
   }
 
-  if (product.stock <= threshold) {
+  if (availability <= threshold) {
     return styles.stockBadgeWarning
   }
 
@@ -187,8 +193,9 @@ export function SaleProductBrowser({
 
           {products.map((product) => {
             const quantityInCart = cartQuantitiesByProductId.get(product.id) ?? 0
-            const remainingStock = Math.max(product.stock - quantityInCart, 0)
-            const canAddProduct = remainingStock > 0 && product.isActive
+            const availability = getProductSaleAvailability(product)
+            const remainingStock = availability === null ? null : Math.max(availability - quantityInCart, 0)
+            const canAddProduct = (remainingStock === null || remainingStock > 0) && product.isActive
             const productImageUrl = resolveProductImageUrl(product.imageUrls)
 
             return (
@@ -239,7 +246,7 @@ export function SaleProductBrowser({
                         getStockToneClass(product),
                       )}
                     >
-                      {product.stock} disponibles
+                      {getProductAvailabilityLabel(product)}
                     </span>
                   </div>
 
@@ -251,7 +258,7 @@ export function SaleProductBrowser({
                   >
                     {!product.isActive
                       ? 'Inactivo'
-                      : product.stock === 0
+                      : availability === 0
                         ? 'Agotado'
                         : canAddProduct
                           ? quantityInCart > 0

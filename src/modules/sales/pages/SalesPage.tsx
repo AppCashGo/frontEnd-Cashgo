@@ -7,6 +7,10 @@ import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query
 import { useProductsQuery } from '@/modules/products/hooks/use-products-query'
 import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
+import {
+  canSellProductQuantity,
+  getProductSaleAvailability,
+} from '@/modules/products/utils/product-sale-availability'
 import { RecentSalesPanel } from '@/modules/sales/components/RecentSalesPanel'
 import { OfflineSalesQueuePanel } from '@/modules/sales/components/OfflineSalesQueuePanel'
 import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
@@ -42,8 +46,11 @@ type InventoryFilter = 'ALL' | 'READY' | 'LOW' | 'OUT'
 type PaymentMode = 'FULL' | 'PARTIAL'
 
 function sortProductsForPos(firstProduct: Product, secondProduct: Product) {
+  const firstAvailability = getProductSaleAvailability(firstProduct)
+  const secondAvailability = getProductSaleAvailability(secondProduct)
   const stockPriority =
-    Number(secondProduct.stock > 0) - Number(firstProduct.stock > 0)
+    Number(secondAvailability === null || secondAvailability > 0) -
+    Number(firstAvailability === null || firstAvailability > 0)
 
   if (stockPriority !== 0) {
     return stockPriority
@@ -57,18 +64,19 @@ function filterProductsByInventoryState(
   activeFilter: InventoryFilter,
 ) {
   return products.filter((product) => {
+    const availability = getProductSaleAvailability(product)
     const threshold = Math.max(product.minStock, 5)
 
     if (activeFilter === 'READY') {
-      return product.stock > threshold
+      return availability === null || availability > threshold
     }
 
     if (activeFilter === 'LOW') {
-      return product.stock > 0 && product.stock <= threshold
+      return availability !== null && availability > 0 && availability <= threshold
     }
 
     if (activeFilter === 'OUT') {
-      return product.stock === 0
+      return availability === 0
     }
 
     return true
@@ -186,7 +194,7 @@ function StandardSalesPage() {
     setOfflineConfirmation(null)
 
     const stockMismatchItem = cartItems.find(
-      (item) => item.quantity > item.product.stock,
+      (item) => !canSellProductQuantity(item.product, item.quantity, false),
     )
 
     if (stockMismatchItem) {

@@ -23,6 +23,7 @@ import {
 } from '@/modules/inventory/hooks/use-inventory-query'
 import type { BakeryCostStatus, BakeryDailyProductStatus, InventoryMovement } from '@/modules/inventory/types/inventory'
 import type { Product } from '@/modules/products/types/product'
+import { getProductAvailabilityLabel } from '@/modules/products/utils/product-sale-availability'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import styles from './BakeryDailyOperationsPanel.module.css'
@@ -247,7 +248,7 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
                 return (
                   <button key={product.id} type="button" onClick={() => setRecipeProductId(product.id)}>
                     <span className={currentRecipe ? styles.recipeReadyIcon : styles.recipePendingIcon}>{currentRecipe ? <Wheat aria-hidden="true" /> : <ChefHat aria-hidden="true" />}</span>
-                    <span><strong>{product.name}</strong><small>{currentRecipe ? `${currentRecipe.ingredients.length} insumos · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? 'descuento en cada venta' : `produce ${currentRecipe.yieldQuantity}`}` : `Pendiente · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? 'preparado al momento' : 'producción por cantidades'}`}</small></span>
+                    <span><strong>{product.name}</strong><small>{currentRecipe ? `${currentRecipe.ingredients.length} insumos · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? getProductAvailabilityLabel(product) : `produce ${currentRecipe.yieldQuantity}`}` : `Pendiente · ${product.inventoryBehavior === 'MADE_TO_ORDER' ? 'preparado al momento' : 'producción por cantidades'}`}</small></span>
                     <b>{currentRecipe ? 'Editar' : 'Crear receta'}</b>
                   </button>
                 )

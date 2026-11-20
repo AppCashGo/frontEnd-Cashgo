@@ -26,6 +26,7 @@ import {
   useUpdateProductMutation,
 } from '@/modules/products/hooks/use-products-query'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
+import { getProductAvailabilityLabel } from '@/modules/products/utils/product-sale-availability'
 import {
   useCreateInventoryCategoryMutation,
   useDeleteInventoryCategoryMutation,
@@ -2106,7 +2107,7 @@ export function RetailInventoryWorkspace() {
                     <td data-label={copy.stockColumn}>
                       {product.inventoryBehavior === 'MADE_TO_ORDER' ? (
                         <span className={styles.stockNotApplicable}>
-                          No aplica · al pedir
+                          {getProductAvailabilityLabel(product)}
                         </span>
                       ) : (
                         <label
