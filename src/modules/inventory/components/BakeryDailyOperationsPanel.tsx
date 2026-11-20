@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import {
   AlertTriangle,
   Boxes,
+  CalendarCheck2,
   ChefHat,
   ClipboardList,
   PackageCheck,
@@ -13,15 +14,16 @@ import { BakeryRecipeDrawer } from '@/modules/inventory/components/BakeryRecipeD
 import {
   useProductRecipesQuery,
   useProductionPlanQuery,
+  useBakeryDailySummaryQuery,
   useRegisterInventoryProductionMutation,
   useRegisterInventoryWasteMutation,
 } from '@/modules/inventory/hooks/use-inventory-query'
-import type { InventoryMovement } from '@/modules/inventory/types/inventory'
+import type { BakeryDailyProductStatus, InventoryMovement } from '@/modules/inventory/types/inventory'
 import type { Product } from '@/modules/products/types/product'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './BakeryDailyOperationsPanel.module.css'
 
-type Operation = 'PLAN' | 'PRODUCTION' | 'WASTE' | 'RECIPES'
+type Operation = 'PLAN' | 'PRODUCTION' | 'WASTE' | 'RECIPES' | 'CLOSE'
 
 type Props = {
   movements: InventoryMovement[]
@@ -32,16 +34,39 @@ function isToday(value: string) {
   return new Date(value).toDateString() === new Date().toDateString()
 }
 
+function getBusinessDate() {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date())
+}
+
+function getCloseStatus(status: BakeryDailyProductStatus) {
+  const statuses = {
+    NO_ACTIVITY: { label: 'Sin movimiento', detail: 'No registró producción, ventas ni merma.', className: styles.statusNeutral },
+    BALANCED: { label: 'En equilibrio', detail: 'La producción y las salidas están dentro de un rango saludable.', className: styles.statusBalanced },
+    SELLING_WELL: { label: 'Buena salida', detail: 'Se vendió la mayor parte de lo producido.', className: styles.statusGood },
+    OVERPRODUCTION: { label: 'Revisar producción', detail: 'Quedó más producto del esperado frente a las ventas.', className: styles.statusWarning },
+    WASTE_ALERT: { label: 'Merma alta', detail: 'Conviene revisar cantidades o manipulación del producto.', className: styles.statusDanger },
+    SOLD_FROM_STOCK: { label: 'Venta de inventario previo', detail: 'Hubo ventas sin producción registrada hoy.', className: styles.statusInfo },
+  }
+  return statuses[status]
+}
+
 export function BakeryDailyOperationsPanel({ movements, products }: Props) {
   const [operation, setOperation] = useState<Operation>('PLAN')
   const [quantities, setQuantities] = useState<Record<string, string>>({})
   const [reason, setReason] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
   const [recipeProductId, setRecipeProductId] = useState<string | null>(null)
+  const [closeDate, setCloseDate] = useState(getBusinessDate)
   const productionMutation = useRegisterInventoryProductionMutation()
   const wasteMutation = useRegisterInventoryWasteMutation()
   const recipesQuery = useProductRecipesQuery()
   const planQuery = useProductionPlanQuery(1)
+  const dailySummaryQuery = useBakeryDailySummaryQuery(closeDate)
   const producedProducts = products.filter((product) => product.inventoryBehavior === 'PRODUCED')
   const recipes = recipesQuery.data ?? []
   const recipeProduct = producedProducts.find((product) => product.id === recipeProductId) ?? null
@@ -125,6 +150,7 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
         <button className={operation === 'PRODUCTION' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('PRODUCTION')}><Boxes aria-hidden="true" /> Producción</button>
         <button className={operation === 'WASTE' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('WASTE')}><AlertTriangle aria-hidden="true" /> Merma</button>
         <button className={operation === 'RECIPES' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('RECIPES')}><ClipboardList aria-hidden="true" /> Recetas</button>
+        <button className={operation === 'CLOSE' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('CLOSE')}><CalendarCheck2 aria-hidden="true" /> Cierre diario</button>
       </div>
 
       {operation === 'PLAN' ? (
@@ -184,6 +210,48 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
               })}
             </div>
           )}
+        </div>
+      ) : null}
+
+      {operation === 'CLOSE' ? (
+        <div className={styles.closeWorkspace}>
+          <div className={styles.closeToolbar}>
+            <div><strong>Cierre operativo</strong><span>Compara lo producido, vendido y desperdiciado para ajustar el siguiente día.</span></div>
+            <label><span>Fecha</span><input aria-label="Fecha del cierre diario" max={getBusinessDate()} type="date" value={closeDate} onChange={(event) => setCloseDate(event.target.value)} /></label>
+          </div>
+          {dailySummaryQuery.isLoading ? <p className={styles.empty}>Preparando el cierre del día…</p> : null}
+          {dailySummaryQuery.isError ? <p className={styles.feedback}>No pudimos preparar el cierre. Intenta actualizar la página.</p> : null}
+          {dailySummaryQuery.data ? (
+            <>
+              <div className={styles.closeMetrics}>
+                <article><PackageCheck aria-hidden="true" /><span><small>Producido</small><strong>{dailySummaryQuery.data.totals.produced}</strong></span></article>
+                <article><TrendingUp aria-hidden="true" /><span><small>Vendido</small><strong>{dailySummaryQuery.data.totals.sold}</strong></span></article>
+                <article><AlertTriangle aria-hidden="true" /><span><small>Merma</small><strong>{dailySummaryQuery.data.totals.waste}</strong></span></article>
+                <article><Boxes aria-hidden="true" /><span><small>Balance del día</small><strong>{dailySummaryQuery.data.totals.netDailyFlow > 0 ? '+' : ''}{dailySummaryQuery.data.totals.netDailyFlow}</strong></span></article>
+              </div>
+              {dailySummaryQuery.data.products.some((product) => product.produced || product.sold || product.waste) ? (
+                <div className={styles.closeProductList}>
+                  {dailySummaryQuery.data.products.filter((product) => product.produced || product.sold || product.waste).map((product) => {
+                    const status = getCloseStatus(product.status)
+                    return (
+                      <article key={product.productId}>
+                        <div className={styles.closeProductHeading}><span><strong>{product.name}</strong><small>Existencia final: {product.stock}</small></span><em className={status.className}>{status.label}</em></div>
+                        <div className={styles.closeProductNumbers}><span><small>Producido</small><b>{product.produced}</b></span><span><small>Vendido</small><b>{product.sold}</b></span><span><small>Merma</small><b>{product.waste}</b></span><span><small>Balance</small><b>{product.netDailyFlow > 0 ? '+' : ''}{product.netDailyFlow}</b></span></div>
+                        <p>{status.detail}</p>
+                      </article>
+                    )
+                  })}
+                </div>
+              ) : <div className={styles.readyState}><CalendarCheck2 aria-hidden="true" /><div><strong>Aún no hay actividad para cerrar</strong><span>Cuando registres producción, ventas o merma aparecerá aquí el resumen del día.</span></div></div>}
+              {closeDate === getBusinessDate() ? (
+                <div className={styles.tomorrowCard}>
+                  <span><Sparkles aria-hidden="true" /></span>
+                  <div><strong>Preparación para mañana</strong><p>{suggestedProducts.length ? `${suggestedProducts.length} ${suggestedProducts.length === 1 ? 'producto necesita' : 'productos necesitan'} producción según ventas e inventario. Revisa el Plan sugerido antes de iniciar.` : 'El inventario actual cubre la demanda estimada. No hace falta programar producción adicional por ahora.'}</p></div>
+                  <button type="button" onClick={() => selectOperation('PLAN')}>Ver plan</button>
+                </div>
+              ) : null}
+            </>
+          ) : null}
         </div>
       ) : null}
 

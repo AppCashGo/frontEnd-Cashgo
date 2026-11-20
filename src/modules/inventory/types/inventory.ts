@@ -111,6 +111,40 @@ export type ProductionPlan = {
   }>;
 };
 
+export type BakeryDailyProductStatus =
+  | 'NO_ACTIVITY'
+  | 'BALANCED'
+  | 'SELLING_WELL'
+  | 'OVERPRODUCTION'
+  | 'WASTE_ALERT'
+  | 'SOLD_FROM_STOCK';
+
+export type BakeryDailySummary = {
+  date: string;
+  generatedAt: string;
+  totals: {
+    produced: number;
+    sold: number;
+    returned: number;
+    waste: number;
+    netDailyFlow: number;
+    wasteRate: number;
+  };
+  products: Array<{
+    productId: string;
+    name: string;
+    produced: number;
+    sold: number;
+    returned: number;
+    waste: number;
+    stock: number;
+    netDailyFlow: number;
+    wasteRate: number;
+    salesVsProductionRate: number | null;
+    status: BakeryDailyProductStatus;
+  }>;
+};
+
 export type InventoryCountInput = {
   items: Array<{
     productId: string;

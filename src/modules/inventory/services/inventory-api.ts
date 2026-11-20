@@ -25,6 +25,7 @@ import type {
   PurchaseOrder,
   PurchaseOrderInput,
   ReplenishmentSuggestion,
+  BakeryDailySummary,
 } from "@/modules/inventory/types/inventory";
 import {
   deleteJson,
@@ -275,6 +276,39 @@ export async function getProductionPlan(coverageDays = 1) {
       stock: normalizeNumber(ingredient.stock),
       required: normalizeNumber(ingredient.required),
       missing: normalizeNumber(ingredient.missing),
+    })),
+  };
+}
+
+export async function getBakeryDailySummary(date: string) {
+  const summary = await getJson<BakeryDailySummary>(
+    `/inventory/bakery-daily-summary?date=${encodeURIComponent(date)}`,
+    { accessToken: getAuthAccessToken() },
+  );
+  return {
+    ...summary,
+    totals: {
+      produced: normalizeNumber(summary.totals.produced),
+      sold: normalizeNumber(summary.totals.sold),
+      returned: normalizeNumber(summary.totals.returned),
+      waste: normalizeNumber(summary.totals.waste),
+      netDailyFlow: normalizeNumber(summary.totals.netDailyFlow),
+      wasteRate: normalizeNumber(summary.totals.wasteRate),
+    },
+    products: summary.products.map((product) => ({
+      ...product,
+      productId: normalizeId(product.productId),
+      produced: normalizeNumber(product.produced),
+      sold: normalizeNumber(product.sold),
+      returned: normalizeNumber(product.returned),
+      waste: normalizeNumber(product.waste),
+      stock: normalizeNumber(product.stock),
+      netDailyFlow: normalizeNumber(product.netDailyFlow),
+      wasteRate: normalizeNumber(product.wasteRate),
+      salesVsProductionRate:
+        product.salesVsProductionRate === null
+          ? null
+          : normalizeNumber(product.salesVsProductionRate),
     })),
   };
 }
