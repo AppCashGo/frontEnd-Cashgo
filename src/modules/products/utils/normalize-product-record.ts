@@ -61,6 +61,7 @@ export function normalizeProductRecord(record: ProductApiRecord): Product {
     minStock: record.minStock ?? 0,
     unit: record.unit ?? "UNIT",
     isActive: record.isActive ?? true,
+    isFavorite: record.isFavorite ?? false,
     isVisibleInCatalog: record.isVisibleInCatalog ?? true,
   };
 }

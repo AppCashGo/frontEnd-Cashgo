@@ -10,6 +10,7 @@ import {
   Crown,
   Plus,
   ScanBarcode,
+  Star,
   Trash2,
 } from 'lucide-react'
 import type { CashRegisterDrawerMode } from '@/modules/cash-register/components/CashRegisterSessionDrawer'
@@ -29,7 +30,10 @@ import type {
   ExpenseStatus,
 } from '@/modules/expenses/types/expense'
 import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inventory-query'
-import { useProductsQuery } from '@/modules/products/hooks/use-products-query'
+import {
+  useProductsQuery,
+  useUpdateProductFavoriteMutation,
+} from '@/modules/products/hooks/use-products-query'
 import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
@@ -1126,6 +1130,7 @@ export function RetailSalesWorkspace() {
     barcode?: string
   } | null>(null)
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
+  const [favoritesOnly, setFavoritesOnly] = useState(false)
   const [saleStep, setSaleStep] = useState<RetailStep>('CATALOG')
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
   const [settlement, setSettlement] = useState<RetailSettlement>('PAID')
@@ -1178,6 +1183,7 @@ export function RetailSalesWorkspace() {
   )
 
   const productsQuery = useProductsQuery()
+  const updateFavoriteMutation = useUpdateProductFavoriteMutation()
   const heldSalesQuery = useHeldSalesQuery()
   const createHeldSaleMutation = useCreateHeldSaleMutation()
   const updateHeldSaleMutation = useUpdateHeldSaleMutation()
@@ -1425,12 +1431,14 @@ export function RetailSalesWorkspace() {
       .filter((product) =>
         activeCategoryId ? product.categoryId === activeCategoryId : true,
       )
+      .filter((product) => (favoritesOnly ? product.isFavorite : true))
       .sort((firstProduct, secondProduct) =>
         sortProductsForRetail(firstProduct, secondProduct, sortOption, salesHistory),
       )
   }, [
     activeCategoryId,
     deferredSearchValue,
+    favoritesOnly,
     products,
     salesHistory,
     sortOption,
@@ -1443,7 +1451,11 @@ export function RetailSalesWorkspace() {
 
   useEffect(() => {
     setVisibleProductLimit(PRODUCT_PAGE_SIZE)
-  }, [activeCategoryId, deferredSearchValue, sortOption])
+  }, [activeCategoryId, deferredSearchValue, favoritesOnly, sortOption])
+
+  const favoriteProductCount = products.filter(
+    (product) => product.isActive && product.isFavorite,
+  ).length
 
   const discountTotal = discountOpen ? parseAmountInput(discountAmountInput) : 0
   const cartFinancials = useMemo(
@@ -2055,7 +2067,30 @@ export function RetailSalesWorkspace() {
     void handleCreateCatalogSale()
   }
 
-  async function handleCreateCatalogSale() {
+  async function handleQuickCashSale() {
+    prepareCashRegisterSound()
+
+    if (cartItems.length === 0) return
+
+    if (!currentCashRegister) {
+      beginCashSessionFlow('CATALOG_CHECKOUT')
+      return
+    }
+
+    if (isOnline) {
+      const refreshedSession = await currentCashRegisterQuery.refetch()
+      if (!refreshedSession.data) {
+        beginCashSessionFlow('CATALOG_CHECKOUT')
+        return
+      }
+    }
+
+    void handleCreateCatalogSale({ paymentMethodOverride: 'CASH' })
+  }
+
+  async function handleCreateCatalogSale(
+    options: { paymentMethodOverride?: SalePaymentMethod } = {},
+  ) {
     if (cartItems.length === 0) {
       return
     }
@@ -2063,7 +2098,14 @@ export function RetailSalesWorkspace() {
     clearCheckoutFeedback()
     setOfflineConfirmation(null)
 
-    if (settlement === 'CREDIT' && selectedCustomerId.trim().length === 0) {
+    const effectiveSettlement = options.paymentMethodOverride
+      ? 'PAID'
+      : settlement
+    const effectiveUsesSplitPayments = options.paymentMethodOverride
+      ? false
+      : usesSplitPayments
+
+    if (effectiveSettlement === 'CREDIT' && selectedCustomerId.trim().length === 0) {
       markCheckoutError(
         'Selecciona un cliente antes de registrar una venta a crédito.',
       )
@@ -2071,7 +2113,7 @@ export function RetailSalesWorkspace() {
     }
 
     if (
-      settlement === 'CREDIT' &&
+      effectiveSettlement === 'CREDIT' &&
       creditDueDate &&
       creditDueDate < saleDate
     ) {
@@ -2082,7 +2124,7 @@ export function RetailSalesWorkspace() {
     }
 
     if (
-      settlement === 'CREDIT' &&
+      effectiveSettlement === 'CREDIT' &&
       creditInitialPayment > totalAmount
     ) {
       markCheckoutError(
@@ -2091,14 +2133,16 @@ export function RetailSalesWorkspace() {
       return
     }
 
-    if (settlement === 'CREDIT' && hasInvalidCreditPayment) {
+    if (effectiveSettlement === 'CREDIT' && hasInvalidCreditPayment) {
       markCheckoutError(
         'Completa el monto de cada medio de pago o elimina las líneas vacías.',
       )
       return
     }
 
-    const paidPayments = usesSplitPayments
+    const paidPayments = options.paymentMethodOverride
+      ? [{ method: options.paymentMethodOverride, amount: totalAmount }]
+      : effectiveUsesSplitPayments
       ? splitPaymentRows.map((paymentSplit) => ({
           method: mapRetailPaymentOptionToSaleMethod(paymentSplit.paymentOption),
           amount: parseAmountInput(paymentSplit.amountInput),
@@ -2111,7 +2155,7 @@ export function RetailSalesWorkspace() {
         ]
 
     const salePayments =
-      settlement === 'PAID'
+      effectiveSettlement === 'PAID'
         ? paidPayments
         : creditInitialPayment > 0
           ? creditPaymentRows
@@ -2126,8 +2170,8 @@ export function RetailSalesWorkspace() {
           : []
 
     if (
-      settlement === 'PAID' &&
-      usesSplitPayments &&
+      effectiveSettlement === 'PAID' &&
+      effectiveUsesSplitPayments &&
       paidPayments.some((payment) => payment.amount <= 0)
     ) {
       markCheckoutError('Todos los pagos deben tener un monto mayor a cero.')
@@ -2135,8 +2179,8 @@ export function RetailSalesWorkspace() {
     }
 
     if (
-      settlement === 'PAID' &&
-      usesSplitPayments &&
+      effectiveSettlement === 'PAID' &&
+      effectiveUsesSplitPayments &&
       !areSplitPaymentsBalanced
     ) {
       markCheckoutError(
@@ -2173,7 +2217,7 @@ export function RetailSalesWorkspace() {
         notes: normalizeOptionalText(receiptNote),
         saleDate: toOperationDateTime(saleDate),
         dueDate:
-          settlement === 'CREDIT' && creditDueDate
+          effectiveSettlement === 'CREDIT' && creditDueDate
             ? toDateOnlyRequestDate(creditDueDate)
             : undefined,
         payments: salePayments,
@@ -2728,7 +2772,10 @@ export function RetailSalesWorkspace() {
             <ProductCategoryFilter
               activeCategoryId={activeCategoryId}
               categories={visibleCategories}
+              favoriteCount={favoriteProductCount}
+              favoritesActive={favoritesOnly}
               onChange={setActiveCategoryId}
+              onFavoritesChange={setFavoritesOnly}
             />
 
             <div className={styles.productsGrid}>
@@ -2749,48 +2796,64 @@ export function RetailSalesWorkspace() {
                   canSellProductQuantity(product, 1, allowSaleWithoutStock)
 
                 return (
-                  <button
-                    key={product.id}
-                    className={styles.productCard}
-                    type="button"
-                    disabled={!canSellProduct}
-                    onClick={() => addProduct(product)}
-                  >
-                    {productQuantity > 0 ? (
-                      <span className={styles.productCounter}>
-                        {productQuantity.toString()}
-                      </span>
-                    ) : null}
+                  <article className={styles.productCardShell} key={product.id}>
+                    <button
+                      className={styles.productCard}
+                      type="button"
+                      disabled={!canSellProduct}
+                      onClick={() => addProduct(product)}
+                    >
+                      {productQuantity > 0 ? (
+                        <span className={styles.productCounter}>
+                          {productQuantity.toString()}
+                        </span>
+                      ) : null}
 
-                    <div
-                      className={
-                        productImageUrl
-                          ? `${styles.productPreview} ${styles.productPreviewWithImage}`
-                          : styles.productPreview
+                      <div
+                        className={
+                          productImageUrl
+                            ? `${styles.productPreview} ${styles.productPreviewWithImage}`
+                            : styles.productPreview
+                        }
+                      >
+                        {productImageUrl ? (
+                          <img
+                            alt=""
+                            decoding="async"
+                            loading="lazy"
+                            src={productImageUrl}
+                          />
+                        ) : (
+                          <span className={styles.productPreviewMark}>
+                            {product.name.slice(0, 1).toUpperCase()}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className={styles.productPrice}>
+                        {formatCurrency(product.price)}
+                      </p>
+                      <p className={styles.productName}>{product.name}</p>
+                      <span className={`${styles.stockPill} ${getStockToneClass(product)}`}>
+                        {getProductAvailabilityLabel(product)}
+                      </span>
+                    </button>
+                    <button
+                      aria-label={`${product.isFavorite ? 'Quitar' : 'Agregar'} ${product.name} ${product.isFavorite ? 'de' : 'a'} favoritos`}
+                      className={`${styles.favoriteButton} ${product.isFavorite ? styles.favoriteButtonActive : ''}`}
+                      disabled={updateFavoriteMutation.isPending}
+                      title={product.isFavorite ? 'Quitar de favoritos' : 'Agregar a favoritos'}
+                      type="button"
+                      onClick={() =>
+                        updateFavoriteMutation.mutate({
+                          productId: product.id,
+                          isFavorite: !product.isFavorite,
+                        })
                       }
                     >
-                      {productImageUrl ? (
-                        <img
-                          alt=""
-                          decoding="async"
-                          loading="lazy"
-                          src={productImageUrl}
-                        />
-                      ) : (
-                        <span className={styles.productPreviewMark}>
-                          {product.name.slice(0, 1).toUpperCase()}
-                        </span>
-                      )}
-                    </div>
-
-                    <p className={styles.productPrice}>
-                      {formatCurrency(product.price)}
-                    </p>
-                    <p className={styles.productName}>{product.name}</p>
-                    <span className={`${styles.stockPill} ${getStockToneClass(product)}`}>
-                      {getProductAvailabilityLabel(product)}
-                    </span>
-                  </button>
+                      <Star aria-hidden="true" fill={product.isFavorite ? 'currentColor' : 'none'} />
+                    </button>
+                  </article>
                 )
               })}
             </div>
@@ -2954,6 +3017,16 @@ export function RetailSalesWorkspace() {
                     onClick={() => setHoldSaleModalOpen(true)}
                   >
                     {activeHeldSale ? 'Actualizar espera' : 'Dejar en espera'}
+                  </button>
+                  <button
+                    className={styles.quickCashButton}
+                    disabled={cartItems.length === 0 || createSaleMutation.isPending}
+                    type="button"
+                    onClick={() => void handleQuickCashSale()}
+                  >
+                    <Banknote aria-hidden="true" />
+                    <span>Cobrar efectivo</span>
+                    <strong>{formatCurrency(totalAmount)}</strong>
                   </button>
                   <button
                     className={styles.continueButton}

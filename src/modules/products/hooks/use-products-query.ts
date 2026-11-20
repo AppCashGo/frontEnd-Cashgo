@@ -15,6 +15,7 @@ import {
   getProducts,
   importProducts,
   updateProduct,
+  updateProductFavorite,
   uploadProductImages,
 } from '@/modules/products/services/products-api'
 import type {
@@ -85,6 +86,38 @@ export function useUpdateProductMutation() {
     }) => updateProduct(productId, input),
     onSuccess: async () => {
       await invalidateProductDependencies(queryClient)
+    },
+  })
+}
+
+export function useUpdateProductFavoriteMutation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      productId,
+      isFavorite,
+    }: {
+      productId: string
+      isFavorite: boolean
+    }) => updateProductFavorite(productId, isFavorite),
+    onMutate: async ({ productId, isFavorite }) => {
+      await queryClient.cancelQueries({ queryKey: productsQueryKey })
+      const previousProducts = queryClient.getQueryData<Product[]>(productsQueryKey)
+      queryClient.setQueryData<Product[]>(productsQueryKey, (currentProducts) =>
+        currentProducts?.map((product) =>
+          product.id === productId ? { ...product, isFavorite } : product,
+        ),
+      )
+      return { previousProducts }
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousProducts) {
+        queryClient.setQueryData(productsQueryKey, context.previousProducts)
+      }
+    },
+    onSettled: async () => {
+      await queryClient.invalidateQueries({ queryKey: productsQueryKey })
     },
   })
 }

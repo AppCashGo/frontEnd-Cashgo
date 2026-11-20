@@ -52,6 +52,7 @@ export type Product = {
   minStock: number;
   unit: ProductUnit;
   isActive: boolean;
+  isFavorite?: boolean;
   isVisibleInCatalog: boolean;
   createdAt: string;
   updatedAt: string;

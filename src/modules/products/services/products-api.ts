@@ -64,6 +64,20 @@ export async function updateProduct(
   return normalizeProductRecord(product)
 }
 
+export async function updateProductFavorite(
+  productId: string,
+  isFavorite: boolean,
+) {
+  const product = await patchJson<
+    ProductApiRecord,
+    { isFavorite: boolean }
+  >(`/products/${productId}/favorite`, { isFavorite }, {
+    accessToken: getAuthAccessToken(),
+  })
+
+  return normalizeProductRecord(product)
+}
+
 export async function deleteProduct(productId: string) {
   const product = await deleteJson<ProductApiRecord>(`/products/${productId}`, {
     accessToken: getAuthAccessToken(),
