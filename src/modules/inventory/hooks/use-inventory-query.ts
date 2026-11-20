@@ -15,6 +15,11 @@ import {
   getProductRecipes,
   getProductionPlan,
   upsertProductRecipe,
+  cancelPurchaseOrder,
+  createPurchaseOrder,
+  getPurchaseOrders,
+  getReplenishmentSuggestions,
+  sendPurchaseOrder,
   uploadInventoryPurchaseInvoice,
   updateInventoryCategory,
   updateInventoryProductTaxes,
@@ -27,6 +32,7 @@ import type {
   InventoryPurchaseInput,
   InventoryOperationInput,
   ProductRecipeInput,
+  PurchaseOrderInput,
 } from '@/modules/inventory/types/inventory'
 import { productsQueryKey } from '@/modules/products/hooks/use-products-query'
 import { suppliersQueryKey } from '@/modules/suppliers/hooks/use-suppliers-query'
@@ -36,6 +42,8 @@ export const inventoryLowStockQueryKey = ['inventory', 'low-stock'] as const
 export const inventoryCategoriesQueryKey = ['inventory', 'categories'] as const
 export const productRecipesQueryKey = ['inventory', 'recipes'] as const
 export const productionPlanQueryKey = ['inventory', 'production-plan'] as const
+export const purchaseOrdersQueryKey = ['inventory', 'purchase-orders'] as const
+export const replenishmentSuggestionsQueryKey = ['inventory', 'replenishment-suggestions'] as const
 
 export function useInventoryMovementsQuery() {
   return useQuery({
@@ -69,6 +77,41 @@ export function useProductionPlanQuery(coverageDays = 1) {
   return useQuery({
     queryKey: [...productionPlanQueryKey, coverageDays],
     queryFn: () => getProductionPlan(coverageDays),
+  })
+}
+
+export function usePurchaseOrdersQuery() {
+  return useQuery({ queryKey: purchaseOrdersQueryKey, queryFn: getPurchaseOrders })
+}
+
+export function useReplenishmentSuggestionsQuery() {
+  return useQuery({
+    queryKey: replenishmentSuggestionsQueryKey,
+    queryFn: getReplenishmentSuggestions,
+  })
+}
+
+export function useCreatePurchaseOrderMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: PurchaseOrderInput) => createPurchaseOrder(input),
+    onSuccess: async () => invalidateInventoryDependencies(queryClient),
+  })
+}
+
+export function useSendPurchaseOrderMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: sendPurchaseOrder,
+    onSuccess: async () => invalidateInventoryDependencies(queryClient),
+  })
+}
+
+export function useCancelPurchaseOrderMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: cancelPurchaseOrder,
+    onSuccess: async () => invalidateInventoryDependencies(queryClient),
   })
 }
 
@@ -167,6 +210,8 @@ async function invalidateInventoryDependencies(queryClient: ReturnType<typeof us
     queryClient.invalidateQueries({ queryKey: ['movements'] }),
     queryClient.invalidateQueries({ queryKey: productRecipesQueryKey }),
     queryClient.invalidateQueries({ queryKey: productionPlanQueryKey }),
+    queryClient.invalidateQueries({ queryKey: purchaseOrdersQueryKey }),
+    queryClient.invalidateQueries({ queryKey: replenishmentSuggestionsQueryKey }),
   ])
 }
 

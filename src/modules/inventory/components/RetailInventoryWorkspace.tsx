@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Camera, ClipboardCheck, ScanBarcode } from 'lucide-react'
 import { BakeryDailyOperationsPanel } from '@/modules/inventory/components/BakeryDailyOperationsPanel'
+import { PurchaseOrdersPanel } from '@/modules/inventory/components/PurchaseOrdersPanel'
 import { InventoryCountDrawer } from '@/modules/inventory/components/InventoryCountDrawer'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import {
@@ -1741,6 +1742,8 @@ export function RetailInventoryWorkspace() {
           products={products}
         />
       ) : null}
+
+      <PurchaseOrdersPanel products={products} suppliers={suppliers} />
 
       {isPremiumBannerVisible && lowStockAlerts.length > 0 ? (
         <section className={styles.banner}>

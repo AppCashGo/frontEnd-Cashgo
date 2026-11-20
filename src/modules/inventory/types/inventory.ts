@@ -160,6 +160,7 @@ export type InventoryProductTaxesResult = {
 };
 
 export type InventoryPurchaseInput = {
+  purchaseOrderId?: string;
   productId?: string;
   supplierId: string;
   quantity?: number;
@@ -177,6 +178,60 @@ export type InventoryPurchaseInput = {
   purchaseDate?: string;
   dueDate?: string;
   reason?: string;
+};
+
+export type PurchaseOrderStatus =
+  | 'DRAFT'
+  | 'ORDERED'
+  | 'PARTIALLY_RECEIVED'
+  | 'RECEIVED'
+  | 'CANCELLED';
+
+export type PurchaseOrder = {
+  id: string;
+  supplierId: string;
+  status: PurchaseOrderStatus;
+  reference: string | null;
+  expectedDate: string | null;
+  orderedAt: string | null;
+  receivedAt: string | null;
+  cancelledAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+  supplier: { id: string; name: string };
+  items: Array<{
+    id: string;
+    productId: string;
+    orderedQuantity: number;
+    receivedQuantity: number;
+    unitCost: number;
+    product: Product;
+  }>;
+  purchases: Array<{
+    id: string;
+    total: number;
+    purchaseDate: string;
+    status: ExpenseStatus;
+  }>;
+};
+
+export type PurchaseOrderInput = {
+  supplierId: string;
+  reference?: string;
+  expectedDate?: string;
+  notes?: string;
+  items: Array<{ productId: string; quantity: number; unitCost: number }>;
+};
+
+export type ReplenishmentSuggestion = {
+  productId: string;
+  name: string;
+  unit: Product['unit'];
+  stock: number;
+  unitCost: number;
+  suggestedQuantity: number;
+  reason: 'LOW_STOCK' | 'PRODUCTION_PLAN';
 };
 
 export type InventoryPurchaseResult = {

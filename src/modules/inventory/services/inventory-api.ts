@@ -22,6 +22,9 @@ import type {
   ProductRecipe,
   ProductRecipeInput,
   ProductionPlan,
+  PurchaseOrder,
+  PurchaseOrderInput,
+  ReplenishmentSuggestion,
 } from "@/modules/inventory/types/inventory";
 import {
   deleteJson,
@@ -274,6 +277,100 @@ export async function getProductionPlan(coverageDays = 1) {
       missing: normalizeNumber(ingredient.missing),
     })),
   };
+}
+
+type PurchaseOrderApiRecord = Omit<
+  PurchaseOrder,
+  'id' | 'supplierId' | 'supplier' | 'items' | 'purchases'
+> & {
+  id: number | string;
+  supplierId: number | string;
+  supplier: { id: number | string; name: string };
+  items: Array<{
+    id: number | string;
+    productId: number | string;
+    orderedQuantity: number | string;
+    receivedQuantity: number | string;
+    unitCost: number | string;
+    product: ProductApiRecord;
+  }>;
+  purchases: Array<{
+    id: number | string;
+    total: number | string;
+    purchaseDate: string;
+    status: PurchaseOrder['purchases'][number]['status'];
+  }>;
+};
+
+function normalizePurchaseOrder(record: PurchaseOrderApiRecord): PurchaseOrder {
+  return {
+    ...record,
+    id: normalizeId(record.id),
+    supplierId: normalizeId(record.supplierId),
+    supplier: { ...record.supplier, id: normalizeId(record.supplier.id) },
+    items: record.items.map((item) => ({
+      ...item,
+      id: normalizeId(item.id),
+      productId: normalizeId(item.productId),
+      orderedQuantity: normalizeNumber(item.orderedQuantity),
+      receivedQuantity: normalizeNumber(item.receivedQuantity),
+      unitCost: normalizeNumber(item.unitCost),
+      product: normalizeProductRecord(item.product),
+    })),
+    purchases: record.purchases.map((purchase) => ({
+      ...purchase,
+      id: normalizeId(purchase.id),
+      total: normalizeNumber(purchase.total),
+    })),
+  };
+}
+
+export async function getPurchaseOrders() {
+  const records = await getJson<PurchaseOrderApiRecord[]>('/inventory/purchase-orders', {
+    accessToken: getAuthAccessToken(),
+  });
+  return records.map(normalizePurchaseOrder);
+}
+
+export async function createPurchaseOrder(input: PurchaseOrderInput) {
+  const record = await postJson<PurchaseOrderApiRecord, PurchaseOrderInput>(
+    '/inventory/purchase-orders',
+    input,
+    { accessToken: getAuthAccessToken() },
+  );
+  return normalizePurchaseOrder(record);
+}
+
+export async function sendPurchaseOrder(orderId: string) {
+  const record = await patchJson<PurchaseOrderApiRecord, Record<string, never>>(
+    `/inventory/purchase-orders/${orderId}/send`,
+    {},
+    { accessToken: getAuthAccessToken() },
+  );
+  return normalizePurchaseOrder(record);
+}
+
+export async function cancelPurchaseOrder(orderId: string) {
+  const record = await patchJson<PurchaseOrderApiRecord, Record<string, never>>(
+    `/inventory/purchase-orders/${orderId}/cancel`,
+    {},
+    { accessToken: getAuthAccessToken() },
+  );
+  return normalizePurchaseOrder(record);
+}
+
+export async function getReplenishmentSuggestions() {
+  const suggestions = await getJson<Array<Omit<ReplenishmentSuggestion, 'productId'> & { productId: string | number }>>(
+    '/inventory/replenishment-suggestions',
+    { accessToken: getAuthAccessToken() },
+  );
+  return suggestions.map((suggestion) => ({
+    ...suggestion,
+    productId: normalizeId(suggestion.productId),
+    stock: normalizeNumber(suggestion.stock),
+    unitCost: normalizeNumber(suggestion.unitCost),
+    suggestedQuantity: normalizeNumber(suggestion.suggestedQuantity),
+  }));
 }
 
 export async function applyInventoryCount(input: InventoryCountInput) {
