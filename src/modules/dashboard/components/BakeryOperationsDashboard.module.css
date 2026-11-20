@@ -65,7 +65,7 @@
 
 .metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -119,6 +119,11 @@
 .metricWarning {
   border-color: #f7c5bc !important;
   background: #fff8f6 !important;
+}
+
+.metricPending {
+  border-color: #f6d99b !important;
+  background: #fffaf0 !important;
 }
 
 .contentGrid {
@@ -254,9 +259,132 @@
   font-size: 0.7rem;
 }
 
+.soldPanel {
+  padding: 18px;
+  border: 1px solid #e9e4da;
+  border-radius: 19px;
+  background: rgb(255 255 255 / 84%);
+}
+
+.soldPanel .sectionHeading > a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid #ded5ed;
+  border-radius: 11px;
+  color: #6941c6;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.soldPanel .sectionHeading > a:hover {
+  border-color: #bfa8e7;
+  background: #f8f5ff;
+}
+
+.soldPanel .sectionHeading > a svg {
+  width: 15px;
+}
+
+.soldProducts {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.soldProducts article {
+  display: grid;
+  min-width: 0;
+  gap: 11px;
+  padding: 13px;
+  border: 1px solid #edf0f5;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.soldProducts article > div {
+  display: grid;
+  gap: 3px;
+}
+
+.soldProducts strong {
+  overflow: hidden;
+  color: #273142;
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.soldProducts small {
+  color: #7a8190;
+  font-size: 0.69rem;
+}
+
+.soldProducts b {
+  color: #553494;
+  font-size: 0.8rem;
+}
+
+.soldTrack {
+  display: block;
+  height: 7px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ede9f6;
+}
+
+.soldTrack > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #7f56d9, #9b8afb);
+}
+
+.emptySales {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px dashed #d8cee9;
+  border-radius: 14px;
+  background: #fbf9ff;
+}
+
+.emptySales > svg {
+  width: 21px;
+  color: #6941c6;
+}
+
+.emptySales > span {
+  display: grid;
+  gap: 2px;
+}
+
+.emptySales strong {
+  color: #273142;
+  font-size: 0.84rem;
+}
+
+.emptySales small {
+  color: #667085;
+  font-size: 0.73rem;
+}
+
+.emptySales > a {
+  color: #6941c6;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 @media (max-width: 1050px) {
   .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .contentGrid { grid-template-columns: 1fr; }
+  .soldProducts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 640px) {
@@ -265,4 +393,7 @@
   .primaryAction { width: 100%; }
   .actionGrid { grid-template-columns: 1fr; }
   .actionGrid a { min-height: 92px; }
+  .soldProducts { grid-template-columns: 1fr; }
+  .emptySales { grid-template-columns: auto 1fr; }
+  .emptySales > a { grid-column: 1 / -1; }
 }

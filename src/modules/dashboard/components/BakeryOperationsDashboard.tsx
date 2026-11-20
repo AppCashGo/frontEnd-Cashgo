@@ -1,11 +1,13 @@
 import {
   AlertTriangle,
   ArrowRight,
+  Banknote,
   Boxes,
   CalendarCheck2,
   ChefHat,
   CircleDollarSign,
   CloudOff,
+  PackagePlus,
   PackageSearch,
   ShoppingCart,
   Sparkles,
@@ -19,6 +21,7 @@ import {
   useProductionPlanQuery,
 } from '@/modules/inventory/hooks/use-inventory-query'
 import { useOfflineSales } from '@/modules/sales/hooks/use-offline-sales'
+import { useSalesHistoryQuery } from '@/modules/sales/hooks/use-sales-history-query'
 import { routePaths } from '@/routes/route-paths'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import styles from './BakeryOperationsDashboard.module.css'
@@ -51,13 +54,22 @@ export function BakeryOperationsDashboard({
   revenueToday,
   lowStockCount,
 }: BakeryOperationsDashboardProps) {
-  const dailySummaryQuery = useBakeryDailySummaryQuery(getBusinessDate())
+  const today = getBusinessDate()
+  const dailySummaryQuery = useBakeryDailySummaryQuery(today)
   const productionPlanQuery = useProductionPlanQuery(1)
   const costAnalysisQuery = useBakeryCostAnalysisQuery(7)
+  const salesHistoryQuery = useSalesHistoryQuery({
+    from: today,
+    to: today,
+    status: 'ALL',
+    page: 1,
+    pageSize: 5,
+  })
   const offlineSales = useOfflineSales(businessId, userId)
   const daily = dailySummaryQuery.data
   const plan = productionPlanQuery.data
   const costs = costAnalysisQuery.data
+  const salesSummary = salesHistoryQuery.data?.summary
   const pendingOfflineSales = offlineSales.records.filter(
     (record) => record.status === 'PENDING' || record.status === 'SYNCING',
   )
@@ -88,6 +100,11 @@ export function BakeryOperationsDashboard({
     const cost = costByProduct.get(product.productId)
     return total + product.waste * (cost?.unitCost ?? 0)
   }, 0) ?? 0
+  const soldProducts = [...(daily?.products ?? [])]
+    .filter((product) => product.sold > 0)
+    .sort((firstProduct, secondProduct) => secondProduct.sold - firstProduct.sold)
+    .slice(0, 5)
+  const highestSoldQuantity = soldProducts[0]?.sold ?? 0
   const hasOperationalAlert =
     pendingOfflineSales.length > 0 ||
     suggestedProducts.length > 0 ||
@@ -116,7 +133,17 @@ export function BakeryOperationsDashboard({
         <article>
           <span className={styles.metricIcon}><ShoppingCart /></span>
           <div><small>Ventas de hoy</small><strong>{salesToday}</strong></div>
-          <em>{formatCurrency(revenueToday)} ingresados</em>
+          <em>{formatCurrency(revenueToday)} vendidos</em>
+        </article>
+        <article>
+          <span className={styles.metricIcon}><Banknote /></span>
+          <div><small>Dinero recibido</small><strong>{formatCurrency(salesSummary?.collectedTotal ?? revenueToday)}</strong></div>
+          <em>Pagos registrados durante el día</em>
+        </article>
+        <article className={(salesSummary?.outstandingTotal ?? 0) > 0 ? styles.metricPending : undefined}>
+          <span className={styles.metricIcon}><CircleDollarSign /></span>
+          <div><small>Por cobrar</small><strong>{formatCurrency(salesSummary?.outstandingTotal ?? 0)}</strong></div>
+          <em>Saldo pendiente de las ventas de hoy</em>
         </article>
         <article>
           <span className={styles.metricIcon}><ChefHat /></span>
@@ -196,11 +223,45 @@ export function BakeryOperationsDashboard({
           </div>
           <div className={styles.actionGrid}>
             <Link to={inventoryAction('PRODUCTION')}><ChefHat /><span><strong>Producir</strong><small>Registrar lote del día</small></span></Link>
+            <Link to={`${routePaths.inventory}?mode=purchase`}><PackagePlus /><span><strong>Comprar</strong><small>Registrar insumos recibidos</small></span></Link>
             <Link to={inventoryAction('WASTE')}><AlertTriangle /><span><strong>Merma</strong><small>Reportar pérdidas</small></span></Link>
             <Link to={inventoryAction('PLAN')}><Boxes /><span><strong>Plan sugerido</strong><small>Qué preparar hoy</small></span></Link>
             <Link to={inventoryAction('CLOSE')}><CalendarCheck2 /><span><strong>Cierre diario</strong><small>Comparar resultados</small></span></Link>
+            <Link to={inventoryAction('COSTS')}><CircleDollarSign /><span><strong>Rentabilidad</strong><small>Revisar costos y margen</small></span></Link>
           </div>
         </div>
+      </div>
+
+      <div className={styles.soldPanel}>
+        <div className={styles.sectionHeading}>
+          <div>
+            <p>Salida de productos</p>
+            <h3>Lo que se ha vendido hoy</h3>
+          </div>
+          <Link to={routePaths.sales}>Ver ventas <ArrowRight aria-hidden="true" /></Link>
+        </div>
+        {soldProducts.length > 0 ? (
+          <div className={styles.soldProducts}>
+            {soldProducts.map((product) => (
+              <article key={product.productId}>
+                <div>
+                  <strong>{product.name}</strong>
+                  <small>{product.stock} disponibles ahora</small>
+                </div>
+                <span className={styles.soldTrack}>
+                  <span style={{ width: `${Math.max(8, (product.sold / highestSoldQuantity) * 100)}%` }} />
+                </span>
+                <b>{product.sold} vendidas</b>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptySales}>
+            <ShoppingCart aria-hidden="true" />
+            <span><strong>Aún no hay productos vendidos hoy</strong><small>Cuando registres la primera venta aparecerá aquí.</small></span>
+            <Link to={routePaths.salesNew}>Registrar venta</Link>
+          </div>
+        )}
       </div>
     </section>
   )
