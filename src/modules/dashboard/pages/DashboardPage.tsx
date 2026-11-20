@@ -17,17 +17,20 @@ import { BestSellingProductsPanel } from '@/modules/dashboard/components/BestSel
 import { BusinessSetupChecklist } from '@/modules/dashboard/components/BusinessSetupChecklist'
 import { DashboardMetricCard } from '@/modules/dashboard/components/DashboardMetricCard'
 import { InventoryAlertsPanel } from '@/modules/dashboard/components/InventoryAlertsPanel'
+import { BakeryOperationsDashboard } from '@/modules/dashboard/components/BakeryOperationsDashboard'
 import { useDashboardSummaryQuery } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
 import { routePaths } from '@/routes/route-paths'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import { getActiveBusinessCategory } from '@/modules/auth/utils/get-active-business'
 import styles from './DashboardPage.module.css'
 
 export function DashboardPage() {
   const navigate = useNavigate()
   const user = useAuthSessionStore((state) => state.user)
+  const isBakery = getActiveBusinessCategory(user) === 'bakery_pastry'
   const [globalSearch, setGlobalSearch] = useState('')
   const globalSearchRef = useRef<HTMLInputElement>(null)
   const dashboardSummaryQuery = useDashboardSummaryQuery()
@@ -116,6 +119,16 @@ export function DashboardPage() {
         businessName={user?.businessName}
         summary={summary}
       />
+
+      {isBakery ? (
+        <BakeryOperationsDashboard
+          businessId={user?.businessId}
+          lowStockCount={lowStockAlerts.length}
+          revenueToday={revenueToday}
+          salesToday={salesToday}
+          userId={user?.id}
+        />
+      ) : null}
 
       <section className={styles.heroGrid}>
         <div className={styles.hero}>

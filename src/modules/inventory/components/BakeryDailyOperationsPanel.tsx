@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   Boxes,
@@ -27,6 +28,19 @@ import { formatCurrency } from '@/shared/utils/format-currency'
 import styles from './BakeryDailyOperationsPanel.module.css'
 
 type Operation = 'PLAN' | 'PRODUCTION' | 'WASTE' | 'RECIPES' | 'CLOSE' | 'COSTS'
+
+const operations = new Set<Operation>([
+  'PLAN',
+  'PRODUCTION',
+  'WASTE',
+  'RECIPES',
+  'CLOSE',
+  'COSTS',
+])
+
+function getOperationFromSearch(value: string | null): Operation {
+  return value && operations.has(value as Operation) ? (value as Operation) : 'PLAN'
+}
 
 type Props = {
   movements: InventoryMovement[]
@@ -70,7 +84,9 @@ function getCostStatus(status: BakeryCostStatus) {
 }
 
 export function BakeryDailyOperationsPanel({ movements, products }: Props) {
-  const [operation, setOperation] = useState<Operation>('PLAN')
+  const [searchParams] = useSearchParams()
+  const requestedOperation = getOperationFromSearch(searchParams.get('bakeryTab'))
+  const [operation, setOperation] = useState<Operation>(requestedOperation)
   const [quantities, setQuantities] = useState<Record<string, string>>({})
   const [reason, setReason] = useState('')
   const [feedback, setFeedback] = useState<string | null>(null)
@@ -100,6 +116,10 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
   const isSubmitting = productionMutation.isPending || wasteMutation.isPending
   const plan = planQuery.data
   const suggestedProducts = plan?.products.filter((product) => product.suggestedProduction > 0) ?? []
+
+  useEffect(() => {
+    setOperation(requestedOperation)
+  }, [requestedOperation])
 
   function selectOperation(nextOperation: Operation) {
     setOperation(nextOperation)
