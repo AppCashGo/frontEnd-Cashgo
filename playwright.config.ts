@@ -18,7 +18,8 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "cd ../BackEnd-Cashgo && npm run build && npm run start",
+      command:
+        "cd ../BackEnd-Cashgo && npm run build && node scripts/seed-bakery-demo.js admin@cashgo.test && npm run start",
       env: {
         EMAIL_PROVIDER: "none",
         FRONTEND_URL: frontendUrl,
