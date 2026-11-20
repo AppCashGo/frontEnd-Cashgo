@@ -26,6 +26,7 @@ import type {
   PurchaseOrderInput,
   ReplenishmentSuggestion,
   BakeryDailySummary,
+  BakeryCostAnalysis,
 } from "@/modules/inventory/types/inventory";
 import {
   deleteJson,
@@ -309,6 +310,41 @@ export async function getBakeryDailySummary(date: string) {
         product.salesVsProductionRate === null
           ? null
           : normalizeNumber(product.salesVsProductionRate),
+    })),
+  };
+}
+
+export async function getBakeryCostAnalysis(historyDays = 7) {
+  const analysis = await getJson<BakeryCostAnalysis>(
+    `/inventory/bakery-cost-analysis?historyDays=${historyDays}`,
+    { accessToken: getAuthAccessToken() },
+  );
+  return {
+    ...analysis,
+    historyDays: normalizeNumber(analysis.historyDays),
+    totals: Object.fromEntries(
+      Object.entries(analysis.totals).map(([key, value]) => [
+        key,
+        normalizeNumber(value),
+      ]),
+    ) as BakeryCostAnalysis['totals'],
+    products: analysis.products.map((product) => ({
+      ...product,
+      productId: normalizeId(product.productId),
+      price: normalizeNumber(product.price),
+      registeredUnitCost: normalizeNumber(product.registeredUnitCost),
+      recipeUnitCost:
+        product.recipeUnitCost === null
+          ? null
+          : normalizeNumber(product.recipeUnitCost),
+      unitCost: normalizeNumber(product.unitCost),
+      marginValue: normalizeNumber(product.marginValue),
+      marginPercent: normalizeNumber(product.marginPercent),
+      soldUnits: normalizeNumber(product.soldUnits),
+      estimatedRevenue: normalizeNumber(product.estimatedRevenue),
+      estimatedGrossProfit: normalizeNumber(product.estimatedGrossProfit),
+      wasteUnits: normalizeNumber(product.wasteUnits),
+      estimatedWasteCost: normalizeNumber(product.estimatedWasteCost),
     })),
   };
 }

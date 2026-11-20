@@ -145,6 +145,43 @@ export type BakeryDailySummary = {
   }>;
 };
 
+export type BakeryCostStatus =
+  | 'NO_RECIPE'
+  | 'NO_COST'
+  | 'BELOW_COST'
+  | 'LOW_MARGIN'
+  | 'HEALTHY';
+
+export type BakeryCostAnalysis = {
+  historyDays: number;
+  generatedAt: string;
+  totals: {
+    estimatedRevenue: number;
+    estimatedGrossProfit: number;
+    estimatedWasteCost: number;
+    soldUnits: number;
+    averageMarginPercent: number;
+  };
+  products: Array<{
+    productId: string;
+    name: string;
+    inventoryBehavior: Product['inventoryBehavior'];
+    hasRecipe: boolean;
+    price: number;
+    registeredUnitCost: number;
+    recipeUnitCost: number | null;
+    unitCost: number;
+    marginValue: number;
+    marginPercent: number;
+    soldUnits: number;
+    estimatedRevenue: number;
+    estimatedGrossProfit: number;
+    wasteUnits: number;
+    estimatedWasteCost: number;
+    status: BakeryCostStatus;
+  }>;
+};
+
 export type InventoryCountInput = {
   items: Array<{
     productId: string;

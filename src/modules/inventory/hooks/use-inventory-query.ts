@@ -21,6 +21,7 @@ import {
   getReplenishmentSuggestions,
   sendPurchaseOrder,
   getBakeryDailySummary,
+  getBakeryCostAnalysis,
   uploadInventoryPurchaseInvoice,
   updateInventoryCategory,
   updateInventoryProductTaxes,
@@ -46,6 +47,7 @@ export const productionPlanQueryKey = ['inventory', 'production-plan'] as const
 export const purchaseOrdersQueryKey = ['inventory', 'purchase-orders'] as const
 export const replenishmentSuggestionsQueryKey = ['inventory', 'replenishment-suggestions'] as const
 export const bakeryDailySummaryQueryKey = ['inventory', 'bakery-daily-summary'] as const
+export const bakeryCostAnalysisQueryKey = ['inventory', 'bakery-cost-analysis'] as const
 
 export function useInventoryMovementsQuery() {
   return useQuery({
@@ -87,6 +89,13 @@ export function useBakeryDailySummaryQuery(date: string) {
     queryKey: [...bakeryDailySummaryQueryKey, date],
     queryFn: () => getBakeryDailySummary(date),
     enabled: Boolean(date),
+  })
+}
+
+export function useBakeryCostAnalysisQuery(historyDays = 7) {
+  return useQuery({
+    queryKey: [...bakeryCostAnalysisQueryKey, historyDays],
+    queryFn: () => getBakeryCostAnalysis(historyDays),
   })
 }
 
@@ -223,6 +232,7 @@ async function invalidateInventoryDependencies(queryClient: ReturnType<typeof us
     queryClient.invalidateQueries({ queryKey: purchaseOrdersQueryKey }),
     queryClient.invalidateQueries({ queryKey: replenishmentSuggestionsQueryKey }),
     queryClient.invalidateQueries({ queryKey: bakeryDailySummaryQueryKey }),
+    queryClient.invalidateQueries({ queryKey: bakeryCostAnalysisQueryKey }),
   ])
 }
 

@@ -4,6 +4,7 @@ import {
   Boxes,
   CalendarCheck2,
   ChefHat,
+  CircleDollarSign,
   ClipboardList,
   PackageCheck,
   Sparkles,
@@ -15,15 +16,17 @@ import {
   useProductRecipesQuery,
   useProductionPlanQuery,
   useBakeryDailySummaryQuery,
+  useBakeryCostAnalysisQuery,
   useRegisterInventoryProductionMutation,
   useRegisterInventoryWasteMutation,
 } from '@/modules/inventory/hooks/use-inventory-query'
-import type { BakeryDailyProductStatus, InventoryMovement } from '@/modules/inventory/types/inventory'
+import type { BakeryCostStatus, BakeryDailyProductStatus, InventoryMovement } from '@/modules/inventory/types/inventory'
 import type { Product } from '@/modules/products/types/product'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
+import { formatCurrency } from '@/shared/utils/format-currency'
 import styles from './BakeryDailyOperationsPanel.module.css'
 
-type Operation = 'PLAN' | 'PRODUCTION' | 'WASTE' | 'RECIPES' | 'CLOSE'
+type Operation = 'PLAN' | 'PRODUCTION' | 'WASTE' | 'RECIPES' | 'CLOSE' | 'COSTS'
 
 type Props = {
   movements: InventoryMovement[]
@@ -55,6 +58,17 @@ function getCloseStatus(status: BakeryDailyProductStatus) {
   return statuses[status]
 }
 
+function getCostStatus(status: BakeryCostStatus) {
+  const statuses = {
+    NO_RECIPE: { label: 'Sin receta', detail: 'Configura la receta para calcular el costo real.', className: styles.statusWarning },
+    NO_COST: { label: 'Sin costo', detail: 'Registra un costo para medir la rentabilidad.', className: styles.statusNeutral },
+    BELOW_COST: { label: 'Genera pérdida', detail: 'El precio no alcanza a cubrir el costo estimado.', className: styles.statusDanger },
+    LOW_MARGIN: { label: 'Margen bajo', detail: 'El margen es menor al 30%. Revisa precio o costos.', className: styles.statusWarning },
+    HEALTHY: { label: 'Margen saludable', detail: 'El precio cubre el costo con un margen adecuado.', className: styles.statusGood },
+  }
+  return statuses[status]
+}
+
 export function BakeryDailyOperationsPanel({ movements, products }: Props) {
   const [operation, setOperation] = useState<Operation>('PLAN')
   const [quantities, setQuantities] = useState<Record<string, string>>({})
@@ -62,11 +76,13 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const [recipeProductId, setRecipeProductId] = useState<string | null>(null)
   const [closeDate, setCloseDate] = useState(getBusinessDate)
+  const [costHistoryDays, setCostHistoryDays] = useState(7)
   const productionMutation = useRegisterInventoryProductionMutation()
   const wasteMutation = useRegisterInventoryWasteMutation()
   const recipesQuery = useProductRecipesQuery()
   const planQuery = useProductionPlanQuery(1)
   const dailySummaryQuery = useBakeryDailySummaryQuery(closeDate)
+  const costAnalysisQuery = useBakeryCostAnalysisQuery(costHistoryDays)
   const producedProducts = products.filter((product) => product.inventoryBehavior === 'PRODUCED')
   const recipes = recipesQuery.data ?? []
   const recipeProduct = producedProducts.find((product) => product.id === recipeProductId) ?? null
@@ -151,6 +167,7 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
         <button className={operation === 'WASTE' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('WASTE')}><AlertTriangle aria-hidden="true" /> Merma</button>
         <button className={operation === 'RECIPES' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('RECIPES')}><ClipboardList aria-hidden="true" /> Recetas</button>
         <button className={operation === 'CLOSE' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('CLOSE')}><CalendarCheck2 aria-hidden="true" /> Cierre diario</button>
+        <button className={operation === 'COSTS' ? styles.activeTab : undefined} type="button" onClick={() => selectOperation('COSTS')}><CircleDollarSign aria-hidden="true" /> Rentabilidad</button>
       </div>
 
       {operation === 'PLAN' ? (
@@ -250,6 +267,42 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
                   <button type="button" onClick={() => selectOperation('PLAN')}>Ver plan</button>
                 </div>
               ) : null}
+            </>
+          ) : null}
+        </div>
+      ) : null}
+
+      {operation === 'COSTS' ? (
+        <div className={styles.costWorkspace}>
+          <div className={styles.costToolbar}>
+            <div><strong>Costos y margen estimado</strong><span>Usa el costo de la receta cuando existe; para los demás productos toma el costo registrado.</span></div>
+            <div className={styles.periodButtons} aria-label="Periodo de rentabilidad"><button className={costHistoryDays === 7 ? styles.activePeriod : undefined} type="button" onClick={() => setCostHistoryDays(7)}>7 días</button><button className={costHistoryDays === 30 ? styles.activePeriod : undefined} type="button" onClick={() => setCostHistoryDays(30)}>30 días</button></div>
+          </div>
+          {costAnalysisQuery.isLoading ? <p className={styles.empty}>Calculando costos y márgenes…</p> : null}
+          {costAnalysisQuery.isError ? <p className={styles.feedback}>No pudimos calcular la rentabilidad. Intenta actualizar la página.</p> : null}
+          {costAnalysisQuery.data ? (
+            <>
+              <div className={styles.costMetrics}>
+                <article><span><small>Ventas estimadas</small><strong>{formatCurrency(costAnalysisQuery.data.totals.estimatedRevenue)}</strong></span></article>
+                <article><span><small>Utilidad bruta estimada</small><strong>{formatCurrency(costAnalysisQuery.data.totals.estimatedGrossProfit)}</strong></span></article>
+                <article><span><small>Margen promedio</small><strong>{costAnalysisQuery.data.totals.averageMarginPercent}%</strong></span></article>
+                <article><span><small>Costo de merma</small><strong>{formatCurrency(costAnalysisQuery.data.totals.estimatedWasteCost)}</strong></span></article>
+              </div>
+              <div className={styles.costProductList}>
+                {costAnalysisQuery.data.products.filter((product) => product.price > 0).map((product) => {
+                  const status = getCostStatus(product.status)
+                  return (
+                    <article key={product.productId}>
+                      <div className={styles.costProductHeading}><span><strong>{product.name}</strong><small>{product.recipeUnitCost !== null ? 'Costo calculado desde receta' : 'Costo registrado en el producto'}</small></span><em className={status.className}>{status.label}</em></div>
+                      <div className={styles.costNumbers}><span><small>Precio</small><b>{formatCurrency(product.price)}</b></span><span><small>Costo unitario</small><b>{formatCurrency(product.unitCost)}</b></span><span><small>Margen</small><b>{product.marginPercent}%</b></span></div>
+                      <div className={styles.costActivity}><span>{product.soldUnits} vendidos</span><span>{formatCurrency(product.estimatedGrossProfit)} de utilidad estimada</span>{product.wasteUnits > 0 ? <span>{formatCurrency(product.estimatedWasteCost)} en merma</span> : null}</div>
+                      <p>{status.detail}</p>
+                      {product.status === 'NO_RECIPE' ? <button type="button" onClick={() => setRecipeProductId(product.productId)}>Configurar receta</button> : null}
+                    </article>
+                  )
+                })}
+              </div>
+              <p className={styles.costDisclaimer}>Valores estimados antes de gastos fijos, impuestos y descuentos. Sirven para comparar productos y tomar decisiones de precio.</p>
             </>
           ) : null}
         </div>

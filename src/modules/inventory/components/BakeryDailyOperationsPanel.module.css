@@ -12,11 +12,11 @@
 .summary svg { grid-row: span 2; width: 1.1rem; color: #bc6a2d; }
 .summary strong { color: #9a4c1b; font-size: 1.12rem; }
 .summary small { color: #8a6c58; font-size: .68rem; }
-.tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: .3rem; padding: .3rem; border-radius: 1rem; background: #f1f3f6; }
+.tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: .3rem; padding: .3rem; border-radius: 1rem; background: #f1f3f6; }
 .tabs button { display: inline-flex; align-items: center; justify-content: center; gap: .4rem; border: 0; border-radius: .75rem; padding: .7rem .45rem; background: transparent; color: #667085; font: inherit; font-size: .82rem; font-weight: 800; cursor: pointer; }
 .tabs button svg { width: 1rem; }
 .tabs .activeTab { background: #fff; color: #4d3ac4; box-shadow: 0 2px 7px rgb(16 24 40 / .11); }
-.planWorkspace, .recipeWorkspace, .operationWorkspace, .closeWorkspace { display: grid; gap: .9rem; }
+.planWorkspace, .recipeWorkspace, .operationWorkspace, .closeWorkspace, .costWorkspace { display: grid; gap: .9rem; }
 .sectionIntro { display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
 .sectionIntro > div { display: grid; gap: .2rem; }
 .sectionIntro strong { color: #202939; }
@@ -100,5 +100,31 @@
 .tomorrowCard svg { width: 1.1rem; }
 .tomorrowCard p { margin: .16rem 0 0; color: #6b7280; font-size: .75rem; line-height: 1.4; }
 .tomorrowCard button { border: 1px solid #cfc4ff; border-radius: .7rem; padding: .55rem .7rem; background: #fff; color: #5943c5; font: inherit; font-size: .72rem; font-weight: 850; cursor: pointer; }
+.costToolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.costToolbar > div:first-child { display: grid; gap: .2rem; }
+.costToolbar > div:first-child span { color: #7b8494; font-size: .78rem; }
+.periodButtons { display: flex; gap: .25rem; padding: .25rem; border-radius: .75rem; background: #f1f3f6; }
+.periodButtons button { border: 0; border-radius: .55rem; padding: .48rem .62rem; background: transparent; color: #667085; font: inherit; font-size: .7rem; font-weight: 850; cursor: pointer; }
+.periodButtons .activePeriod { background: #fff; color: #5a45c7; box-shadow: 0 1px 4px rgb(16 24 40 / .12); }
+.costMetrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .55rem; }
+.costMetrics article { padding: .75rem; border: 1px solid #e4e8ef; border-radius: .9rem; background: linear-gradient(145deg, #fff, #faf9ff); }
+.costMetrics span { display: grid; gap: .18rem; }
+.costMetrics small { color: #7b8494; font-size: .65rem; }
+.costMetrics strong { color: #202939; font-size: 1rem; }
+.costProductList { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: .65rem; }
+.costProductList > article { display: grid; gap: .65rem; padding: .8rem; border: 1px solid #e4e8ef; border-radius: 1rem; background: #fff; }
+.costProductHeading { display: flex; align-items: flex-start; justify-content: space-between; gap: .65rem; }
+.costProductHeading > span { display: grid; gap: .14rem; }
+.costProductHeading small { color: #7b8494; font-size: .67rem; }
+.costProductHeading em { padding: .25rem .45rem; border-radius: 999px; font-size: .62rem; font-style: normal; font-weight: 850; white-space: nowrap; }
+.costNumbers { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .35rem; }
+.costNumbers span { display: grid; gap: .1rem; padding: .45rem; border-radius: .65rem; background: #f6f7f9; }
+.costNumbers small { color: #7b8494; font-size: .61rem; }
+.costNumbers b { color: #273142; font-size: .82rem; }
+.costActivity { display: flex; flex-wrap: wrap; gap: .35rem; }
+.costActivity span { padding: .25rem .4rem; border-radius: .5rem; background: #f7f5ff; color: #5a45c7; font-size: .62rem; font-weight: 750; }
+.costProductList p, .costDisclaimer { margin: 0; color: #667085; font-size: .71rem; line-height: 1.4; }
+.costProductList > article > button { justify-self: start; border: 1px solid #d9d1ff; border-radius: .65rem; padding: .48rem .62rem; background: #f7f5ff; color: #5a45c7; font: inherit; font-size: .68rem; font-weight: 850; cursor: pointer; }
+.costDisclaimer { padding: .65rem .75rem; border-radius: .75rem; background: #f6f7f9; }
 @media (min-width: 850px) { .heading { grid-template-columns: 1fr auto; align-items: start; } .summary { min-width: 20rem; } }
-@media (max-width: 720px) { .tabs { grid-template-columns: 1fr 1fr; } .sectionIntro, .closeToolbar { align-items: stretch; flex-direction: column; } .summary { grid-template-columns: 1fr; } .closeMetrics { grid-template-columns: 1fr 1fr; } .tomorrowCard { grid-template-columns: auto 1fr; } .tomorrowCard button { grid-column: 1 / -1; } }
+@media (max-width: 720px) { .tabs { grid-template-columns: 1fr 1fr; } .sectionIntro, .closeToolbar, .costToolbar { align-items: stretch; flex-direction: column; } .summary { grid-template-columns: 1fr; } .closeMetrics, .costMetrics { grid-template-columns: 1fr 1fr; } .tomorrowCard { grid-template-columns: auto 1fr; } .tomorrowCard button { grid-column: 1 / -1; } }
