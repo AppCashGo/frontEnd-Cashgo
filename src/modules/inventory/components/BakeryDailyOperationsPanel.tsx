@@ -193,7 +193,7 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
       {operation === 'PLAN' ? (
         <div className={styles.planWorkspace}>
           <div className={styles.sectionIntro}>
-            <div><strong>Necesidad estimada para hoy</strong><span>Promedio calculado con las ventas de los últimos {plan?.historyDays ?? 7} días y el inventario actual.</span></div>
+            <div><strong>Necesidad estimada para hoy</strong><span>Pronóstico inteligente con {plan?.historyDays ?? 28} días de historia, días de semana comparables, merma, pedidos pendientes y stock de seguridad.</span></div>
             <button disabled={!suggestedProducts.length} type="button" onClick={usePlanSuggestions}>Usar cantidades sugeridas</button>
           </div>
           {planQuery.isLoading ? <p className={styles.empty}>Calculando el plan de producción…</p> : null}
@@ -202,15 +202,22 @@ export function BakeryDailyOperationsPanel({ movements, products }: Props) {
             <div className={styles.readyState}><PackageCheck aria-hidden="true" /><div><strong>Inventario suficiente</strong><span>Con las ventas recientes no hace falta producir más unidades por ahora.</span></div></div>
           ) : null}
           <div className={styles.planGrid}>
-            {suggestedProducts.map((product) => (
+            {(plan?.products ?? []).map((product) => (
               <article className={styles.planCard} key={product.productId}>
-                <div className={styles.planCardTop}><span>{product.hasRecipe ? <Wheat aria-hidden="true" /> : <AlertTriangle aria-hidden="true" />}</span><small>{product.hasRecipe ? 'Receta configurada' : 'Sin receta'}</small></div>
+                <div className={styles.planCardTop}><span>{product.hasRecipe ? <Wheat aria-hidden="true" /> : <AlertTriangle aria-hidden="true" />}</span><small>{product.confidence === 'HIGH' ? 'Confianza alta' : product.confidence === 'MEDIUM' ? 'Confianza media' : 'Poca historia'}</small></div>
                 <strong>{product.name}</strong>
                 <div className={styles.planNumbers}>
                   <span><small>Stock</small><b>{product.stock}</b></span>
-                  <span><small>Venta diaria</small><b>{product.averageDailySales}</b></span>
+                  <span><small>Demanda prevista</small><b>{product.forecastDemand}</b></span>
                   <span className={styles.suggestion}><small>Producir</small><b>{product.suggestedProduction}</b></span>
                 </div>
+                <div className={styles.planBreakdown}>
+                  <span><small>Mismo día</small><b>{product.weekdayAverageDailySales}</b></span>
+                  <span><small>Seguridad</small><b>+{product.safetyStock}</b></span>
+                  <span><small>Merma</small><b>+{product.wasteBuffer}</b></span>
+                  <span><small>Pedidos</small><b>+{product.pendingDemand}</b></span>
+                </div>
+                <p className={styles.planExplanation}>{product.comparableDays} días comparables · promedio general {product.generalAverageDailySales}/día{product.hasRecipe ? '' : ' · configura la receta para descontar insumos'}</p>
               </article>
             ))}
           </div>

@@ -90,6 +90,8 @@ export type ProductRecipeInput = {
 export type ProductionPlan = {
   historyDays: number;
   coverageDays: number;
+  targetDate: string;
+  method: 'WEEKDAY_WEIGHTED';
   generatedAt: string;
   products: Array<{
     productId: string;
@@ -97,9 +99,20 @@ export type ProductionPlan = {
     stock: number;
     soldUnits: number;
     averageDailySales: number;
+    generalAverageDailySales: number;
+    weekdayAverageDailySales: number;
+    forecastDemand: number;
+    comparableDays: number;
+    historicalWasteUnits: number;
+    wasteRatePercent: number;
+    wasteBuffer: number;
+    safetyStock: number;
+    pendingDemand: number;
     targetStock: number;
     suggestedProduction: number;
     hasRecipe: boolean;
+    confidence: 'LOW' | 'MEDIUM' | 'HIGH';
+    strategy: 'WEEKDAY_WEIGHTED' | 'GENERAL_AVERAGE';
   }>;
   ingredients: Array<{
     productId: string;

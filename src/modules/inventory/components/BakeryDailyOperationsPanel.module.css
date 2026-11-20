@@ -34,6 +34,11 @@
 .planNumbers small { color: #7b8494; font-size: .63rem; }
 .planNumbers b { font-size: .95rem; }
 .planNumbers .suggestion { background: #ece9ff; color: #513dbd; }
+.planBreakdown { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .3rem; }
+.planBreakdown span { display: grid; gap: .1rem; padding: .4rem; border: 1px solid #edf0f4; border-radius: .6rem; background: #fbfcfd; }
+.planBreakdown small { color: #7b8494; font-size: .58rem; }
+.planBreakdown b { color: #394154; font-size: .78rem; }
+.planExplanation { margin: 0; color: #7b8494; font-size: .67rem; line-height: 1.4; }
 .readyState { display: flex; gap: .7rem; align-items: center; padding: .9rem; border: 1px solid #bfe8d1; border-radius: 1rem; background: #f1fbf5; color: #27754a; }
 .readyState svg { width: 1.3rem; }
 .readyState div { display: grid; gap: .14rem; }
