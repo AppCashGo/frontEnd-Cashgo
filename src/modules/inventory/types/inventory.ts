@@ -61,6 +61,54 @@ export type InventoryOperationInput = {
 export type InventoryOperationResult = {
   affectedProducts: number;
   totalUnits: number;
+  ingredientsConsumed?: number;
+  ingredientUnitsConsumed?: number;
+};
+
+export type ProductRecipeIngredient = {
+  id: string;
+  productId: string;
+  quantity: number;
+  product: Product;
+};
+
+export type ProductRecipe = {
+  id: string;
+  productId: string;
+  yieldQuantity: number;
+  product: Product;
+  ingredients: ProductRecipeIngredient[];
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ProductRecipeInput = {
+  yieldQuantity: number;
+  ingredients: Array<{ productId: string; quantity: number }>;
+};
+
+export type ProductionPlan = {
+  historyDays: number;
+  coverageDays: number;
+  generatedAt: string;
+  products: Array<{
+    productId: string;
+    name: string;
+    stock: number;
+    soldUnits: number;
+    averageDailySales: number;
+    targetStock: number;
+    suggestedProduction: number;
+    hasRecipe: boolean;
+  }>;
+  ingredients: Array<{
+    productId: string;
+    name: string;
+    unit: Product['unit'];
+    stock: number;
+    required: number;
+    missing: number;
+  }>;
 };
 
 export type InventoryCountInput = {

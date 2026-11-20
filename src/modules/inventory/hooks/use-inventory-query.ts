@@ -11,6 +11,10 @@ import {
   registerInventoryPurchase,
   registerInventoryProduction,
   registerInventoryWaste,
+  deleteProductRecipe,
+  getProductRecipes,
+  getProductionPlan,
+  upsertProductRecipe,
   uploadInventoryPurchaseInvoice,
   updateInventoryCategory,
   updateInventoryProductTaxes,
@@ -22,6 +26,7 @@ import type {
   InventoryProductTaxesInput,
   InventoryPurchaseInput,
   InventoryOperationInput,
+  ProductRecipeInput,
 } from '@/modules/inventory/types/inventory'
 import { productsQueryKey } from '@/modules/products/hooks/use-products-query'
 import { suppliersQueryKey } from '@/modules/suppliers/hooks/use-suppliers-query'
@@ -29,6 +34,8 @@ import { suppliersQueryKey } from '@/modules/suppliers/hooks/use-suppliers-query
 export const inventoryMovementsQueryKey = ['inventory', 'movements'] as const
 export const inventoryLowStockQueryKey = ['inventory', 'low-stock'] as const
 export const inventoryCategoriesQueryKey = ['inventory', 'categories'] as const
+export const productRecipesQueryKey = ['inventory', 'recipes'] as const
+export const productionPlanQueryKey = ['inventory', 'production-plan'] as const
 
 export function useInventoryMovementsQuery() {
   return useQuery({
@@ -48,6 +55,37 @@ export function useInventoryCategoriesQuery() {
   return useQuery({
     queryKey: inventoryCategoriesQueryKey,
     queryFn: getInventoryCategories,
+  })
+}
+
+export function useProductRecipesQuery() {
+  return useQuery({
+    queryKey: productRecipesQueryKey,
+    queryFn: getProductRecipes,
+  })
+}
+
+export function useProductionPlanQuery(coverageDays = 1) {
+  return useQuery({
+    queryKey: [...productionPlanQueryKey, coverageDays],
+    queryFn: () => getProductionPlan(coverageDays),
+  })
+}
+
+export function useUpsertProductRecipeMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ productId, input }: { productId: string; input: ProductRecipeInput }) =>
+      upsertProductRecipe(productId, input),
+    onSuccess: async () => invalidateInventoryDependencies(queryClient),
+  })
+}
+
+export function useDeleteProductRecipeMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: deleteProductRecipe,
+    onSuccess: async () => invalidateInventoryDependencies(queryClient),
   })
 }
 
@@ -127,6 +165,8 @@ async function invalidateInventoryDependencies(queryClient: ReturnType<typeof us
     queryClient.invalidateQueries({ queryKey: ['reports'] }),
     queryClient.invalidateQueries({ queryKey: ['cash-register'] }),
     queryClient.invalidateQueries({ queryKey: ['movements'] }),
+    queryClient.invalidateQueries({ queryKey: productRecipesQueryKey }),
+    queryClient.invalidateQueries({ queryKey: productionPlanQueryKey }),
   ])
 }
 

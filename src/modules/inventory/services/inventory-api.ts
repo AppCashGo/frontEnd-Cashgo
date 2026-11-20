@@ -19,6 +19,9 @@ import type {
   InventoryReferenceType,
   InventoryOperationInput,
   InventoryOperationResult,
+  ProductRecipe,
+  ProductRecipeInput,
+  ProductionPlan,
 } from "@/modules/inventory/types/inventory";
 import {
   deleteJson,
@@ -27,6 +30,7 @@ import {
   patchFormData,
   patchJson,
   postJson,
+  putJson,
 } from "@/shared/services/api-client";
 import { getAuthAccessToken } from "@/shared/services/auth-session";
 import { normalizeId, normalizeOptionalId } from "@/shared/utils/normalize-id";
@@ -185,6 +189,91 @@ export function registerInventoryWaste(input: InventoryOperationInput) {
     input,
     { accessToken: getAuthAccessToken() },
   );
+}
+
+type ProductRecipeApiRecord = Omit<
+  ProductRecipe,
+  "id" | "productId" | "yieldQuantity" | "product" | "ingredients"
+> & {
+  id: number | string;
+  productId: number | string;
+  yieldQuantity: number | string;
+  product: ProductApiRecord;
+  ingredients: Array<{
+    id: number | string;
+    productId: number | string;
+    quantity: number | string;
+    product: ProductApiRecord;
+  }>;
+};
+
+function normalizeProductRecipe(record: ProductRecipeApiRecord): ProductRecipe {
+  return {
+    ...record,
+    id: normalizeId(record.id),
+    productId: normalizeId(record.productId),
+    yieldQuantity: normalizeNumber(record.yieldQuantity),
+    product: normalizeProductRecord(record.product),
+    ingredients: record.ingredients.map((ingredient) => ({
+      ...ingredient,
+      id: normalizeId(ingredient.id),
+      productId: normalizeId(ingredient.productId),
+      quantity: normalizeNumber(ingredient.quantity),
+      product: normalizeProductRecord(ingredient.product),
+    })),
+  };
+}
+
+export async function getProductRecipes() {
+  const recipes = await getJson<ProductRecipeApiRecord[]>("/inventory/recipes", {
+    accessToken: getAuthAccessToken(),
+  });
+  return recipes.map(normalizeProductRecipe);
+}
+
+export async function upsertProductRecipe(
+  productId: string,
+  input: ProductRecipeInput,
+) {
+  const recipe = await putJson<ProductRecipeApiRecord, ProductRecipeInput>(
+    `/inventory/recipes/${productId}`,
+    input,
+    { accessToken: getAuthAccessToken() },
+  );
+  return normalizeProductRecipe(recipe);
+}
+
+export function deleteProductRecipe(productId: string) {
+  return deleteJson<{ productId: number | string; deleted: boolean }>(
+    `/inventory/recipes/${productId}`,
+    { accessToken: getAuthAccessToken() },
+  );
+}
+
+export async function getProductionPlan(coverageDays = 1) {
+  const plan = await getJson<ProductionPlan>(
+    `/inventory/production-plan?coverageDays=${coverageDays}`,
+    { accessToken: getAuthAccessToken() },
+  );
+  return {
+    ...plan,
+    products: plan.products.map((product) => ({
+      ...product,
+      productId: normalizeId(product.productId),
+      stock: normalizeNumber(product.stock),
+      soldUnits: normalizeNumber(product.soldUnits),
+      averageDailySales: normalizeNumber(product.averageDailySales),
+      targetStock: normalizeNumber(product.targetStock),
+      suggestedProduction: normalizeNumber(product.suggestedProduction),
+    })),
+    ingredients: plan.ingredients.map((ingredient) => ({
+      ...ingredient,
+      productId: normalizeId(ingredient.productId),
+      stock: normalizeNumber(ingredient.stock),
+      required: normalizeNumber(ingredient.required),
+      missing: normalizeNumber(ingredient.missing),
+    })),
+  };
 }
 
 export async function applyInventoryCount(input: InventoryCountInput) {
