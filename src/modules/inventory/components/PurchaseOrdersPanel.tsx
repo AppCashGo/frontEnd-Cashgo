@@ -3,12 +3,15 @@ import {
   ArrowRight,
   CalendarClock,
   CheckCircle2,
+  Clock3,
   ClipboardPlus,
   PackageCheck,
   PackageOpen,
   Plus,
   Send,
+  ShieldCheck,
   ShoppingBasket,
+  TrendingUp,
   Trash2,
   Truck,
   XCircle,
@@ -40,6 +43,18 @@ const statusLabels: Record<PurchaseOrderStatus, string> = {
   CANCELLED: 'Cancelada',
 }
 
+const reasonLabels = {
+  LOW_STOCK: 'Stock por debajo del mínimo',
+  PRODUCTION_PLAN: 'Necesario para producir',
+  SALES_VELOCITY: 'Consumo más rápido de lo habitual',
+} as const
+
+const urgencyLabels = {
+  CRITICAL: 'Crítico',
+  HIGH: 'Alta prioridad',
+  MEDIUM: 'Planificar',
+} as const
+
 function createItem(productId = '', quantity = '', unitCost = ''): DraftItem {
   return { key: crypto.randomUUID(), productId, quantity, unitCost }
 }
@@ -63,20 +78,22 @@ export function PurchaseOrdersPanel({ products, suppliers }: Props) {
   const [feedback, setFeedback] = useState<string | null>(null)
   const orders = ordersQuery.data ?? []
   const suggestions = suggestionsQuery.data ?? []
+  const actionableSuggestions = suggestions.filter((suggestion) => suggestion.suggestedQuantity > 0)
   const purchasableProducts = useMemo(
     () => products.filter((product) => product.isActive && product.inventoryBehavior === 'PURCHASED' && product.productType !== 'VARIANT_PARENT'),
     [products],
   )
   const receiveOrder = orders.find((order) => order.id === receiveOrderId) ?? null
   const activeOrders = orders.filter((order) => !['RECEIVED', 'CANCELLED'].includes(order.status))
+  const suggestedInvestment = actionableSuggestions.reduce((total, suggestion) => total + suggestion.estimatedCost, 0)
 
   function openCreate(useSuggestions = false) {
     setSupplierId('')
     setReference('')
     setExpectedDate('')
     setItems(
-      useSuggestions && suggestions.length
-        ? suggestions.map((suggestion) => createItem(suggestion.productId, String(suggestion.suggestedQuantity), String(suggestion.unitCost)))
+      useSuggestions && actionableSuggestions.length
+        ? actionableSuggestions.map((suggestion) => createItem(suggestion.productId, String(suggestion.suggestedQuantity), String(suggestion.unitCost)))
         : [createItem()],
     )
     setFeedback(null)
@@ -152,13 +169,38 @@ export function PurchaseOrdersPanel({ products, suppliers }: Props) {
       <div className={styles.metrics}>
         <span><ShoppingBasket aria-hidden="true" /><b>{activeOrders.length}</b><small>órdenes activas</small></span>
         <span><PackageOpen aria-hidden="true" /><b>{orders.filter((order) => order.status === 'PARTIALLY_RECEIVED').length}</b><small>recepciones parciales</small></span>
-        <span><CalendarClock aria-hidden="true" /><b>{suggestions.length}</b><small>productos por reponer</small></span>
+        <span><CalendarClock aria-hidden="true" /><b>{actionableSuggestions.length}</b><small>productos por reponer</small></span>
       </div>
 
       {suggestions.length ? (
-        <div className={styles.suggestionBanner}>
-          <div><ClipboardPlus aria-hidden="true" /><span><strong>Reposición sugerida disponible</strong><small>{suggestions.length} productos necesitan compra por stock bajo o por el plan de producción.</small></span></div>
-          <button type="button" onClick={() => openCreate(true)}>Crear desde sugerencias <ArrowRight aria-hidden="true" /></button>
+        <div className={styles.replenishmentPlan}>
+          <div className={styles.suggestionBanner}>
+            <div><ClipboardPlus aria-hidden="true" /><span><strong>{actionableSuggestions.length ? `Compra sugerida para los próximos ${suggestions[0]?.coverageDays ?? 7} días` : 'La reposición ya está cubierta'}</strong><small>{actionableSuggestions.length ? `${actionableSuggestions.length} productos · inversión estimada ${formatCurrency(suggestedInvestment)} · cantidades editables antes de crear la orden.` : 'Los productos con stock bajo ya tienen unidades suficientes en órdenes activas.'}</small></span></div>
+            {actionableSuggestions.length ? <button type="button" onClick={() => openCreate(true)}>Crear orden sugerida <ArrowRight aria-hidden="true" /></button> : null}
+          </div>
+          <div className={styles.suggestionGrid}>
+            {suggestions.map((suggestion) => (
+              <article className={styles.suggestionCard} key={suggestion.productId}>
+                <div className={styles.suggestionCardTop}>
+                  <span className={suggestion.coverageStatus === 'COVERED_BY_ORDER' ? styles.covered : styles[suggestion.urgency.toLowerCase()]}>{suggestion.coverageStatus === 'COVERED_BY_ORDER' ? 'Ya pedido' : urgencyLabels[suggestion.urgency]}</span>
+                  <small>{reasonLabels[suggestion.reason]}</small>
+                </div>
+                <strong>{suggestion.name}</strong>
+                <div className={styles.suggestionNumbers}>
+                  <span><small>Stock</small><b>{suggestion.stock}</b></span>
+                  <span><small>Uso diario</small><b>{suggestion.averageDailyUsage}</b></span>
+                  <span><small>Cobertura</small><b>{suggestion.daysOfStock === null ? 'Sin consumo' : `${suggestion.daysOfStock} días`}</b></span>
+                  <span className={styles.buyQuantity}><small>{suggestion.coverageStatus === 'COVERED_BY_ORDER' ? 'Compra adicional' : 'Comprar'}</small><b>{suggestion.suggestedQuantity}</b></span>
+                </div>
+                <div className={styles.suggestionDetail}>
+                  <span><TrendingUp aria-hidden="true" /> Meta de stock <b>{suggestion.targetStock}</b></span>
+                  <span><ShieldCheck aria-hidden="true" /> Seguridad <b>{suggestion.safetyStock}</b></span>
+                  <span><Clock3 aria-hidden="true" /> Ya pedido <b>{suggestion.pendingPurchaseQuantity}</b></span>
+                </div>
+                <footer><span>Costo estimado</span><strong>{formatCurrency(suggestion.estimatedCost)}</strong></footer>
+              </article>
+            ))}
+          </div>
         </div>
       ) : null}
 

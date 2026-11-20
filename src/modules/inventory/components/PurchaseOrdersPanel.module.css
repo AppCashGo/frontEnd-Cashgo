@@ -22,6 +22,29 @@
 .suggestionBanner small { color: #886c4c; }
 .suggestionBanner button { display: inline-flex; align-items: center; gap: .35rem; border: 0; background: transparent; color: #995a13; font: inherit; font-size: .78rem; font-weight: 900; cursor: pointer; }
 .suggestionBanner button svg { width: .95rem; }
+.replenishmentPlan { display: grid; gap: .65rem; }
+.suggestionGrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .65rem; }
+.suggestionCard { display: grid; gap: .65rem; min-width: 0; padding: .85rem; border: 1px solid #e1e7ef; border-radius: 1rem; background: linear-gradient(145deg, #fff 55%, #f8faff); box-shadow: 0 .55rem 1.4rem rgb(31 45 69 / .05); }
+.suggestionCard > strong { overflow: hidden; color: #172033; font-size: .9rem; text-overflow: ellipsis; white-space: nowrap; }
+.suggestionCardTop { display: flex; align-items: center; justify-content: space-between; gap: .45rem; }
+.suggestionCardTop > span { border-radius: 999px; padding: .24rem .48rem; font-size: .62rem; font-weight: 900; }
+.suggestionCardTop > small { overflow: hidden; color: #7a8495; font-size: .64rem; text-overflow: ellipsis; white-space: nowrap; }
+.critical { background: #fee8e7; color: #b42318; }
+.high { background: #fff1d9; color: #a05a0b; }
+.medium { background: #e9f1ff; color: #285ea8; }
+.covered { background: #e6f7ee; color: #24764a; }
+.suggestionNumbers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; }
+.suggestionNumbers > span { display: grid; gap: .15rem; min-width: 0; padding: .48rem; border-radius: .68rem; background: #f4f6f9; }
+.suggestionNumbers small { color: #7c8798; font-size: .59rem; line-height: 1.15; }
+.suggestionNumbers b { overflow: hidden; color: #273247; font-size: .8rem; text-overflow: ellipsis; white-space: nowrap; }
+.suggestionNumbers .buyQuantity { background: #eee9ff; }
+.suggestionNumbers .buyQuantity b { color: #5b35c9; font-size: 1rem; }
+.suggestionDetail { display: grid; gap: .3rem; padding-top: .15rem; }
+.suggestionDetail span { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .35rem; color: #667085; font-size: .66rem; }
+.suggestionDetail svg { width: .78rem; color: #5671a0; }
+.suggestionDetail b { color: #344054; }
+.suggestionCard footer { display: flex; align-items: center; justify-content: space-between; gap: .5rem; padding-top: .55rem; border-top: 1px solid #e7ebf1; color: #7a8495; font-size: .68rem; }
+.suggestionCard footer strong { color: #172033; font-size: .8rem; }
 .orderList { display: grid; gap: .55rem; }
 .orderList article { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: .75rem; padding: .72rem; border: 1px solid #e3e8ef; border-radius: .9rem; }
 .orderIcon { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: .72rem; background: #edf3ff; color: #3d6db0; }
@@ -53,4 +76,5 @@
 .receiveList label { display: grid; grid-template-columns: 1fr 6rem; align-items: center; gap: .7rem; padding: .7rem; border: 1px solid #e2e7ee; border-radius: .85rem; }
 .receiveList label > span { display: grid; gap: .15rem; }.receiveList small { color: #7b8494; }
 .receiveNotice { display: flex; gap: .6rem; padding: .75rem; border-radius: .8rem; background: #eef5ff; color: #41648e; font-size: .82rem; line-height: 1.4; }.receiveNotice svg { flex: 0 0 auto; width: 1.1rem; }
-@media (max-width: 760px) { .heading, .suggestionBanner { align-items: stretch; flex-direction: column; }.heading > button { width: 100%; }.metrics { grid-template-columns: 1fr; }.orderList article { grid-template-columns: auto 1fr; }.total, .actions { grid-column: 2; }.formGrid { grid-template-columns: 1fr; }.fullField { grid-column: auto; }.line { grid-template-columns: 1.7rem 1fr 2.35rem; }.line label:nth-of-type(2), .line label:nth-of-type(3) { grid-column: 2 / 3; } }
+@media (max-width: 1050px) { .suggestionGrid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 760px) { .heading, .suggestionBanner { align-items: stretch; flex-direction: column; }.heading > button { width: 100%; }.metrics, .suggestionGrid { grid-template-columns: 1fr; }.orderList article { grid-template-columns: auto 1fr; }.total, .actions { grid-column: 2; }.formGrid { grid-template-columns: 1fr; }.fullField { grid-column: auto; }.line { grid-template-columns: 1.7rem 1fr 2.35rem; }.line label:nth-of-type(2), .line label:nth-of-type(3) { grid-column: 2 / 3; } }

@@ -315,7 +315,17 @@ export type ReplenishmentSuggestion = {
   stock: number;
   unitCost: number;
   suggestedQuantity: number;
-  reason: 'LOW_STOCK' | 'PRODUCTION_PLAN';
+  reason: 'LOW_STOCK' | 'PRODUCTION_PLAN' | 'SALES_VELOCITY';
+  historyDays: number;
+  coverageDays: number;
+  averageDailyUsage: number;
+  daysOfStock: number | null;
+  targetStock: number;
+  safetyStock: number;
+  pendingPurchaseQuantity: number;
+  estimatedCost: number;
+  urgency: 'CRITICAL' | 'HIGH' | 'MEDIUM';
+  coverageStatus: 'ORDER_REQUIRED' | 'COVERED_BY_ORDER';
 };
 
 export type InventoryPurchaseResult = {

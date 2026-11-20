@@ -449,6 +449,14 @@ export async function getReplenishmentSuggestions() {
     stock: normalizeNumber(suggestion.stock),
     unitCost: normalizeNumber(suggestion.unitCost),
     suggestedQuantity: normalizeNumber(suggestion.suggestedQuantity),
+    historyDays: normalizeNumber(suggestion.historyDays),
+    coverageDays: normalizeNumber(suggestion.coverageDays),
+    averageDailyUsage: normalizeNumber(suggestion.averageDailyUsage),
+    daysOfStock: suggestion.daysOfStock === null ? null : normalizeNumber(suggestion.daysOfStock),
+    targetStock: normalizeNumber(suggestion.targetStock),
+    safetyStock: normalizeNumber(suggestion.safetyStock),
+    pendingPurchaseQuantity: normalizeNumber(suggestion.pendingPurchaseQuantity),
+    estimatedCost: normalizeNumber(suggestion.estimatedCost),
   }));
 }
 
