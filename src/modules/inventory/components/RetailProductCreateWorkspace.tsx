@@ -1,7 +1,7 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Camera, ScanBarcode } from "lucide-react";
+import { Camera, CircleHelp, Plus, Save, ScanBarcode, Trash2 } from "lucide-react";
 import {
   type ChangeEvent,
   type DragEvent,
@@ -36,6 +36,7 @@ import {
 import { getInventoryCopy } from "@/modules/inventory/i18n/inventory-copy";
 import { resolveProductImageUrl } from "@/modules/products/utils/resolve-product-image-url";
 import { ModalShell } from "@/shared/components/ui/ModalShell";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import { SideDrawer } from "@/shared/components/ui/SideDrawer";
 import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
@@ -385,20 +386,12 @@ function ConfirmSwitchDrawer({
       </div>
 
       <div className={styles.confirmActions}>
-        <button
-          className={styles.confirmPrimary}
-          type="button"
-          onClick={onConfirm}
-        >
+        <AppButton variant="warning" onClick={onConfirm}>
           {confirmLabel}
-        </button>
-        <button
-          className={styles.confirmSecondary}
-          type="button"
-          onClick={onCancel}
-        >
+        </AppButton>
+        <AppButton variant="secondary" onClick={onCancel}>
           {cancelLabel}
-        </button>
+        </AppButton>
       </div>
     </ModalShell>
   );
@@ -579,14 +572,16 @@ function CategoryCreateDrawer({
       closeLabel="Cerrar"
       confirmClose
       footer={
-        <button
+        <AppButton
           className={styles.categoryDrawerSubmit}
-          disabled={isSubmitting}
-          type="button"
+          fullWidth
+          isLoading={isSubmitting}
+          loadingLabel="Creando categoría…"
+          startIcon={<Plus aria-hidden="true" />}
           onClick={onSubmit}
         >
           {copy.createCategorySubmit}
-        </button>
+        </AppButton>
       }
       footerClassName={styles.categoryDrawerFooter}
       isOpen
@@ -1406,12 +1401,6 @@ export function RetailProductCreateWorkspace({
         ? copy.variantsTitle
         : copy.createProductTitle;
 
-  const isMutationPending =
-    isSubmitting ||
-    createProductMutation.isPending ||
-    updateProductMutation.isPending ||
-    deleteProductMutation.isPending;
-
   return (
     <>
       {confirmationDialog}
@@ -1523,14 +1512,15 @@ export function RetailProductCreateWorkspace({
                       type="text"
                       {...register("barcode")}
                     />
-                    <button
+                    <AppButton
                       className={styles.scanBarcodeButton}
-                      type="button"
+                      size="sm"
+                      startIcon={<Camera aria-hidden="true" />}
+                      variant="outline"
                       onClick={() => setBarcodeScannerTarget({ type: "product" })}
                     >
-                      <Camera aria-hidden="true" />
-                      <span>Escanear</span>
-                    </button>
+                      Escanear
+                    </AppButton>
                   </span>
                   <small className={styles.barcodeHelp}>
                     También puedes usar un lector USB o Bluetooth y escanear directamente en este campo.
@@ -1762,9 +1752,8 @@ export function RetailProductCreateWorkspace({
                   </div>
 
                   <div className={styles.variantsActions}>
-                    <button
-                      className={styles.variantPrimaryButton}
-                      type="button"
+                    <AppButton
+                      startIcon={<Plus aria-hidden="true" />}
                       onClick={() =>
                         appendVariant({
                           name: "",
@@ -1778,13 +1767,13 @@ export function RetailProductCreateWorkspace({
                       }
                     >
                       {copy.addVariant}
-                    </button>
-                    <button
-                      className={styles.variantSecondaryButton}
-                      type="button"
+                    </AppButton>
+                    <AppButton
+                      startIcon={<CircleHelp aria-hidden="true" />}
+                      variant="secondary"
                     >
                       {copy.variantsHelp}
-                    </button>
+                    </AppButton>
                   </div>
 
                   <div className={styles.variantRows}>
@@ -1799,13 +1788,15 @@ export function RetailProductCreateWorkspace({
                             <strong>
                               {copy.variantLabel} {index + 1}
                             </strong>
-                            <button
+                            <AppButton
                               className={styles.variantRemoveButton}
-                              type="button"
+                              size="sm"
+                              startIcon={<Trash2 aria-hidden="true" />}
+                              variant="ghost"
                               onClick={() => removeVariant(index)}
                             >
                               {copy.removeVariant}
-                            </button>
+                            </AppButton>
                           </div>
 
                           <div className={styles.variantGrid}>
@@ -1850,16 +1841,17 @@ export function RetailProductCreateWorkspace({
                                   type="text"
                                   {...register(`variants.${index}.barcode` as const)}
                                 />
-                                <button
+                                <AppButton
                                   aria-label={`Escanear código de la variante ${index + 1}`}
                                   className={styles.scanBarcodeButtonCompact}
-                                  type="button"
+                                  iconOnly
+                                  size="sm"
+                                  startIcon={<ScanBarcode aria-hidden="true" />}
+                                  variant="outline"
                                   onClick={() =>
                                     setBarcodeScannerTarget({ type: "variant", index })
                                   }
-                                >
-                                  <ScanBarcode aria-hidden="true" />
-                                </button>
+                                />
                               </span>
                               {errors.variants?.[index]?.barcode ? (
                                 <p className={styles.error}>
@@ -2093,25 +2085,30 @@ export function RetailProductCreateWorkspace({
 
           <footer className={styles.footer}>
             {isEditMode ? (
-              <button
+              <AppButton
                 className={styles.deleteButton}
-                disabled={isMutationPending}
-                type="button"
+                isLoading={deleteProductMutation.isPending}
+                loadingLabel="Eliminando…"
+                startIcon={<Trash2 aria-hidden="true" />}
+                variant="danger"
                 onClick={() => {
                   void handleDeleteProduct();
                 }}
               >
                 {copy.deleteProduct}
-              </button>
+              </AppButton>
             ) : null}
 
-            <button
+            <AppButton
               className={styles.submitButton}
-              disabled={isMutationPending}
+              disabled={deleteProductMutation.isPending}
+              isLoading={isSubmitting || createProductMutation.isPending || updateProductMutation.isPending}
+              loadingLabel={isEditMode ? "Guardando cambios…" : "Creando producto…"}
+              startIcon={<Save aria-hidden="true" />}
               type="submit"
             >
               {isEditMode ? copy.saveProductChanges : copy.createProduct}
-            </button>
+            </AppButton>
           </footer>
         </form>
       </div>

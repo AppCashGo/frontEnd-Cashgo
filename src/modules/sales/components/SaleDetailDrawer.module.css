@@ -1,7 +1,7 @@
 .content {
   display: grid;
   gap: 20px;
-  color: #202838;
+  color: var(--ui-text);
 }
 .drawerTitleIcon,
 .sectionTitle svg {
@@ -12,8 +12,8 @@
   place-items: center;
   width: 2.5rem;
   height: 2.5rem;
-  border-radius: 0.8rem;
-  background: #e8f7ef;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-success-soft);
 }
 .drawerTitleIcon svg {
   width: 1.25rem;
@@ -30,16 +30,16 @@
 }
 .state,
 .muted {
-  color: #68758d;
+  color: var(--ui-text-secondary);
 }
 .error {
   display: grid;
   gap: 6px;
   padding: 16px;
-  border: 1px solid #fecaca;
-  border-radius: 14px;
-  background: #fff1f2;
-  color: #991b1b;
+  border: 1px solid color-mix(in srgb, var(--ui-danger) 24%, white);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger-hover);
 }
 .headingRow,
 .paymentRow,
@@ -79,9 +79,9 @@
 .section,
 .paymentForm {
   padding: 18px;
-  border: 1px solid #dde4ef;
-  border-radius: 18px;
-  background: #fff;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
 }
 .personCard {
   display: flex;
@@ -140,16 +140,7 @@
   gap: 10px;
 }
 .correctPaymentButton {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 9px;
-  border: 1px solid #cbd5e1;
-  border-radius: 9px;
-  background: #fff;
-  color: #2854b8;
-  font-size: 12px;
-  font-weight: 750;
+  color: var(--ui-primary);
 }
 .correctPaymentButton svg {
   width: 14px;
@@ -160,42 +151,21 @@
   gap: 12px;
   margin: 0 0 14px;
   padding: 14px;
-  border: 1px solid #cdd9ea;
-  border-radius: 14px;
-  background: #f8fafc;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface-subtle);
 }
 .paymentCorrectionForm label {
   display: grid;
   gap: 6px;
 }
-.paymentCorrectionForm input,
-.paymentCorrectionForm select {
-  min-height: 42px;
-  padding: 0 11px;
-  border: 1px solid #cad3e1;
-  border-radius: 10px;
-  background: #fff;
-}
 .paymentCorrectionForm > small {
-  color: #68758d;
+  color: var(--ui-text-secondary);
 }
 .paymentCorrectionActions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-}
-.paymentCorrectionActions button {
-  min-height: 38px;
-  padding: 0 12px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #fff;
-  font-weight: 750;
-}
-.paymentCorrectionActions button:last-child {
-  border-color: #193249;
-  background: #193249;
-  color: #fff;
 }
 .totals {
   display: grid;
@@ -214,7 +184,7 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
-  background: #f8fafc;
+  background: var(--ui-surface-subtle);
 }
 .paymentForm h3,
 .formActions {
@@ -224,14 +194,6 @@
   display: grid;
   gap: 7px;
 }
-.paymentForm input,
-.paymentForm select {
-  min-height: 44px;
-  border: 1px solid #cad3e1;
-  border-radius: 12px;
-  padding: 0 12px;
-  background: #fff;
-}
 .formActions,
 .actions {
   display: flex;
@@ -239,8 +201,6 @@
   justify-content: flex-end;
   gap: 10px;
 }
-.formActions button,
-.actions button,
 .actions a {
   display: inline-flex;
   align-items: center;
@@ -248,27 +208,17 @@
   gap: 8px;
   min-height: 42px;
   padding: 0 14px;
-  border: 1px solid #ccd5e2;
-  border-radius: 12px;
-  background: #fff;
-  color: #222b3b;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
   font-weight: 750;
   text-decoration: none;
 }
 .actions svg {
   width: 17px;
 }
-.actions .editSaleAction {
-  border-color: #87a9df;
-  background: #edf4ff;
-  color: #174fae;
-}
-.actions .primaryAction,
-.formActions button:last-child {
-  border-color: #193249;
-  background: #193249;
-  color: #fff;
-}
+.actions .editSaleAction { color: var(--ui-primary); }
 .feedback {
   margin: 0;
   padding: 12px 14px;
@@ -282,18 +232,7 @@
 }
 
 .convertToCreditButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
   width: 100%;
-  min-height: 42px;
-  padding: 0 12px;
-  border: 1px solid #f0b6ad;
-  border-radius: 11px;
-  background: #fff8f7;
-  color: #a43a2d;
-  font-weight: 750;
 }
 
 .convertToCreditButton svg {

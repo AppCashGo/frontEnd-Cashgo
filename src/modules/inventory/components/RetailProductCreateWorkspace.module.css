@@ -731,39 +731,12 @@
   background: linear-gradient(180deg, rgba(248, 250, 252, 0) 0%, #f8fafc 38%);
 }
 
-.submitButton,
-.deleteButton,
-.variantPrimaryButton,
-.variantSecondaryButton,
-.confirmPrimary,
-.confirmSecondary {
-  min-height: 3.45rem;
-  border-radius: 0.95rem;
-  font-size: 1rem;
-  font-weight: 700;
-  padding: 0.9rem 1.4rem;
-}
-
 .submitButton {
   min-width: 10.75rem;
-  border: none;
-  background: #1f2937;
-  color: #ffffff;
-}
-
-.submitButton:disabled,
-.deleteButton:disabled,
-.variantPrimaryButton:disabled {
-  background: #cfd7e3;
-  color: #7e8da1;
-  cursor: not-allowed;
 }
 
 .deleteButton {
   min-width: 11rem;
-  border: 1px solid #ef4444;
-  background: #fff4f3;
-  color: #ef4444;
 }
 
 .variantLayout {
@@ -818,18 +791,6 @@
   gap: 0.75rem;
 }
 
-.variantPrimaryButton {
-  border: none;
-  background: #6b7280;
-  color: #ffffff;
-}
-
-.variantSecondaryButton {
-  border: 1px solid #1f2a37;
-  background: #ffffff;
-  color: #1f2a37;
-}
-
 .variantRows {
   display: grid;
   gap: 0.9rem;
@@ -861,13 +822,7 @@
 }
 
 .variantRemoveButton {
-  min-height: 2.35rem;
-  border: 1px solid #f2b8b5;
-  border-radius: 0.75rem;
-  background: #fff4f3;
-  color: #c2413a;
-  font-weight: 800;
-  padding: 0.45rem 0.75rem;
+  color: var(--ui-danger);
 }
 
 .variantGrid {
@@ -1012,19 +967,6 @@
 
 .categoryDrawerSubmit {
   width: 100%;
-  min-height: 3.6rem;
-  border: 0;
-  border-radius: 0.95rem;
-  background: #1f2937;
-  color: #ffffff;
-  font-size: 1rem;
-  font-weight: 800;
-}
-
-.categoryDrawerSubmit:disabled {
-  background: #cfd7e3;
-  color: #7e8da1;
-  cursor: not-allowed;
 }
 
 .confirmBackdrop {
@@ -1091,18 +1033,6 @@
   display: grid;
   gap: 0.9rem;
   margin-top: auto;
-}
-
-.confirmPrimary {
-  border: 1px solid #ef4444;
-  background: #fff1f0;
-  color: #ef4444;
-}
-
-.confirmSecondary {
-  border: 1px solid #1f2a37;
-  background: #ffffff;
-  color: #1f2a37;
 }
 
 .imagePreviewBackdrop {
@@ -1330,17 +1260,7 @@
 
 .scanBarcodeButton,
 .scanBarcodeButtonCompact {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.85rem;
-  padding: 0 1rem;
-  border: 1px solid #2d67dc;
-  border-radius: 0.75rem;
-  background: #eef4ff;
-  color: #1f56be;
-  font-weight: 800;
+  min-height: var(--ui-control-height);
 }
 
 .scanBarcodeButton svg,
@@ -1350,8 +1270,7 @@
 }
 
 .scanBarcodeButtonCompact {
-  width: 2.85rem;
-  padding: 0;
+  width: var(--ui-control-height);
 }
 
 .barcodeHelp {

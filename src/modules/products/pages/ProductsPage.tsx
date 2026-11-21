@@ -1,6 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { ChevronLeft, ChevronRight, ClipboardCheck, ImageIcon, MoreVertical, Plus, Search, Upload } from 'lucide-react'
+import { BadgeDollarSign, ChevronLeft, ChevronRight, ClipboardCheck, ImageIcon, MoreVertical, Package, Plus, Search, Tags, Upload } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { RetailProductCreateWorkspace, type RetailProductCreateWorkspaceTab } from '@/modules/inventory/components/RetailProductCreateWorkspace'
 import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inventory-query'
@@ -165,9 +165,9 @@ export function ProductsPage() {
         </>}
       >
         <section className={styles.metrics} aria-label="Resumen del catálogo">
-          <article className={styles.metricCard}><span>Total de productos</span><strong>{products.length.toLocaleString('es-CO')}</strong></article>
-          <article className={styles.metricCard}><span>Categorías activas</span><strong>{categories.filter((category) => category.isVisibleInCatalog).length}</strong></article>
-          <article className={styles.metricCard}><span>Valor de venta total</span><strong>{formatCurrency(totalSaleValue)}</strong></article>
+          <article className={styles.metricCard}><span className={styles.metricIcon}><Package aria-hidden="true" /></span><div><span>Total de productos</span><strong>{products.length.toLocaleString('es-CO')}</strong></div></article>
+          <article className={styles.metricCard}><span className={styles.metricIcon}><Tags aria-hidden="true" /></span><div><span>Categorías activas</span><strong>{categories.filter((category) => category.isVisibleInCatalog).length}</strong></div></article>
+          <article className={styles.metricCard}><span className={styles.metricIcon}><BadgeDollarSign aria-hidden="true" /></span><div><span>Valor de venta total</span><strong>{formatCurrency(totalSaleValue)}</strong></div></article>
         </section>
 
         <section className={styles.catalogCard}>

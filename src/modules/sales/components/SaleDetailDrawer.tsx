@@ -29,6 +29,7 @@ import {
 } from '@/modules/sales/services/sales-api'
 import { routePaths } from '@/routes/route-paths'
 import { AppDrawer } from '@/shared/components/ui/AppDrawer'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import {
   COLLECTED_PAYMENT_METHOD_OPTIONS,
@@ -453,13 +454,15 @@ export function SaleDetailDrawer({
                       <div className={styles.paymentAmountActions}>
                         <strong>{formatCurrency(payment.amount)}</strong>
                         {canCorrectPayments && sale.status !== 'CANCELLED' ? (
-                          <button
+                          <AppButton
                             className={styles.correctPaymentButton}
-                            type="button"
+                            size="sm"
+                            startIcon={<Pencil aria-hidden="true" />}
+                            variant="ghost"
                             onClick={() => startPaymentMethodCorrection(payment)}
                           >
-                            <Pencil aria-hidden="true" /> Corregir
-                          </button>
+                            Corregir
+                          </AppButton>
                         ) : null}
                       </div>
                     </div>
@@ -499,16 +502,17 @@ export function SaleDetailDrawer({
                           Solo se puede corregir mientras la caja de esta venta continúe abierta.
                         </small>
                         <div className={styles.paymentCorrectionActions}>
-                          <button
+                          <AppButton
                             disabled={paymentMethodMutation.isPending}
-                            type="button"
+                            size="sm"
+                            variant="secondary"
                             onClick={() => setCorrectionPaymentKey(null)}
                           >
                             Cancelar
-                          </button>
-                          <button disabled={paymentMethodMutation.isPending} type="submit">
-                            {paymentMethodMutation.isPending ? 'Guardando…' : 'Guardar corrección'}
-                          </button>
+                          </AppButton>
+                          <AppButton isLoading={paymentMethodMutation.isPending} loadingLabel="Guardando…" size="sm" startIcon={<Pencil aria-hidden="true" />} type="submit">
+                            Guardar corrección
+                          </AppButton>
                         </div>
                       </form>
                     ) : null}
@@ -521,17 +525,18 @@ export function SaleDetailDrawer({
               {canConvertToCredit ? (
                 <div className={styles.creditCorrectionBlock}>
                   {!isCreditCorrectionOpen ? (
-                    <button
+                    <AppButton
                       className={styles.convertToCreditButton}
-                      type="button"
+                      startIcon={<Undo2 aria-hidden="true" />}
+                      variant="warning"
                       onClick={() => {
                         setCorrectionPaymentKey(null)
                         setCreditCorrectionOpen(true)
                         setFeedback(null)
                       }}
                     >
-                      <Undo2 aria-hidden="true" /> El cliente no pagó · Cambiar a crédito
-                    </button>
+                      El cliente no pagó · Cambiar a crédito
+                    </AppButton>
                   ) : (
                     <form
                       className={styles.creditCorrectionForm}
@@ -579,24 +584,26 @@ export function SaleDetailDrawer({
                         abierta.
                       </p>
                       <div className={styles.paymentCorrectionActions}>
-                        <button
+                        <AppButton
                           disabled={creditCorrectionMutation.isPending}
-                          type="button"
+                          size="sm"
+                          variant="secondary"
                           onClick={() => setCreditCorrectionOpen(false)}
                         >
                           Cancelar
-                        </button>
-                        <button
+                        </AppButton>
+                        <AppButton
                           disabled={
-                            creditCorrectionMutation.isPending ||
                             creditCorrectionReason.trim().length < 3
                           }
+                          isLoading={creditCorrectionMutation.isPending}
+                          loadingLabel="Aplicando corrección…"
+                          size="sm"
+                          startIcon={<Undo2 aria-hidden="true" />}
                           type="submit"
                         >
-                          {creditCorrectionMutation.isPending
-                            ? 'Aplicando corrección…'
-                            : 'Confirmar venta a crédito'}
-                        </button>
+                          Confirmar venta a crédito
+                        </AppButton>
                       </div>
                     </form>
                   )}
@@ -632,8 +639,8 @@ export function SaleDetailDrawer({
                 <input value={reference} onChange={(event) => setReference(event.target.value)} />
               </label>
               <div className={styles.formActions}>
-                <button type="button" onClick={() => setPaymentOpen(false)}>Cancelar</button>
-                <button disabled={paymentMutation.isPending} type="submit">{paymentMutation.isPending ? 'Registrando…' : 'Guardar abono'}</button>
+                <AppButton variant="secondary" onClick={() => setPaymentOpen(false)}>Cancelar</AppButton>
+                <AppButton isLoading={paymentMutation.isPending} loadingLabel="Registrando abono…" startIcon={<WalletCards aria-hidden="true" />} type="submit">Guardar abono</AppButton>
               </div>
             </form>
           ) : null}
@@ -647,18 +654,19 @@ export function SaleDetailDrawer({
 
           <div className={styles.actions}>
             {canEditSale ? (
-              <button
+              <AppButton
                 className={styles.editSaleAction}
-                type="button"
+                startIcon={<Pencil aria-hidden="true" />}
+                variant="outline"
                 onClick={() => setSaleEditorOpen(true)}
               >
-                <Pencil /> Editar venta
-              </button>
+                Editar venta
+              </AppButton>
             ) : null}
-            <button disabled={activeAction !== null} type="button" onClick={() => void handleDocument('print')}><Printer /> Imprimir</button>
-            <button disabled={activeAction !== null} type="button" onClick={() => void handleDocument('download')}><Download /> Descargar</button>
-            {sale.customer ? <button disabled={activeAction !== null} type="button" onClick={() => void handleDocument('share')}><MessageCircle /> Compartir</button> : null}
-            {balance > 0 && sale.accountReceivable ? <button className={styles.primaryAction} type="button" onClick={() => setPaymentOpen(true)}><WalletCards /> Registrar abono</button> : null}
+            <AppButton disabled={activeAction !== null} startIcon={<Printer aria-hidden="true" />} variant="secondary" onClick={() => void handleDocument('print')}>Imprimir</AppButton>
+            <AppButton disabled={activeAction !== null} startIcon={<Download aria-hidden="true" />} variant="secondary" onClick={() => void handleDocument('download')}>Descargar</AppButton>
+            {sale.customer ? <AppButton disabled={activeAction !== null} startIcon={<MessageCircle aria-hidden="true" />} variant="secondary" onClick={() => void handleDocument('share')}>Compartir</AppButton> : null}
+            {balance > 0 && sale.accountReceivable ? <AppButton startIcon={<WalletCards aria-hidden="true" />} onClick={() => setPaymentOpen(true)}>Registrar abono</AppButton> : null}
             {sale.invoice ? <Link to={routePaths.billing}><ReceiptText /> {sale.invoice.documentNumber}</Link> : null}
           </div>
         </div>

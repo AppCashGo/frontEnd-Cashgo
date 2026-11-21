@@ -1,13 +1,18 @@
-.body { gap: 1.75rem; background: #f7f9fc; }
+.body { gap: 1.75rem; background: var(--ui-canvas); }
 .headerButton { gap: .55rem; min-width: 10.5rem; cursor: pointer; }
 .metrics { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 1rem; }
-.metricCard { display: grid; gap: .65rem; min-width: 0; padding: 1.25rem 1.35rem; border: 1px solid #dce3ec; border-radius: .85rem; background: #fff; box-shadow: 0 .35rem 1rem rgba(15,23,42,.025); }
-.metricCard span { color: #4b5565; font-size: .78rem; font-weight: 850; letter-spacing: .055em; text-transform: uppercase; }
-.metricCard strong { overflow: hidden; color: #102033; font-size: clamp(1.75rem,3vw,2.35rem); font-weight: 900; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
-.catalogCard { min-width: 0; overflow: visible; border: 1px solid #d8e0ea; border-radius: 1rem; background: #fff; box-shadow: 0 .8rem 2rem rgba(15,23,42,.03); }
+.metricCard { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .9rem; min-width: 0; padding: 1.25rem 1.35rem; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface); box-shadow: var(--ui-shadow-xs); }
+.metricCard > div { display: grid; gap: .65rem; min-width: 0; }
+.metricCard > div > span { color: var(--ui-text-secondary); font-size: .78rem; font-weight: 850; letter-spacing: .055em; text-transform: uppercase; }
+.metricCard strong { overflow: hidden; color: var(--ui-text); font-size: clamp(1.45rem,2.2vw,2rem); font-weight: 900; line-height: 1; text-overflow: ellipsis; white-space: nowrap; }
+.metricIcon { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: var(--ui-radius-md); background: var(--ui-primary-soft); color: var(--ui-primary); }
+.metricIcon svg { width: 1.35rem; height: 1.35rem; }
+.catalogCard { min-width: 0; overflow: visible; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface); box-shadow: var(--ui-shadow-sm); }
 .filters { display: grid; grid-template-columns: minmax(15rem,1fr) minmax(11rem,13rem) minmax(10rem,11rem); gap: .85rem; padding: 1rem 1.1rem; border-bottom: 1px solid #e3e8ef; }
-.searchField,.selectField { min-height: 2.85rem; display: flex; align-items: center; gap: .6rem; padding: 0 .85rem; border: 1px solid #bcc8d8; border-radius: .7rem; background: #fff; color: #4f5d70; transition: border-color 160ms ease,box-shadow 160ms ease; }
-.searchField:focus-within,.selectField:focus-within { border-color: #1f5fd1; box-shadow: 0 0 0 3px rgba(31,95,209,.12); }
+.searchField,.selectField { min-height: var(--ui-control-height); display: flex; align-items: center; gap: .6rem; padding: 0 .85rem; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-text-secondary); transition: border-color var(--ui-transition),box-shadow var(--ui-transition); }
+.searchField:focus-within,.selectField:focus-within { border-color: var(--ui-primary); box-shadow: var(--ui-focus-ring); }
+.selectField { padding: 0; border: 0; background: transparent; }
+.selectField:focus-within { border-color: transparent; box-shadow: none; }
 .searchField input,.selectField select { width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; color: #243247; font: inherit; }
 .selectField select { cursor: pointer; }
 .tableScroller { min-width: 0; overflow-x: auto; }
