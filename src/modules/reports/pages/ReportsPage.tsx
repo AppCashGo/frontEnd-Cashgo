@@ -1,4 +1,18 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import {
+  Banknote,
+  BarChart3,
+  CircleDollarSign,
+  ReceiptText,
+  RotateCcw,
+  ShoppingBag,
+  TrendingDown,
+  TrendingUp,
+  UserRoundCheck,
+  UsersRound,
+  WalletCards,
+} from 'lucide-react'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { ReportsChartCard } from '@/modules/reports/components/ReportsChartCard'
@@ -680,6 +694,7 @@ export function ReportsPage() {
               type="button"
               onClick={() => setRetailTab('sales')}
             >
+              <BarChart3 size={17} />
               {copy.tabs.sales}
             </button>
             <button
@@ -691,6 +706,7 @@ export function ReportsPage() {
               type="button"
               onClick={() => setRetailTab('expenses')}
             >
+              <ReceiptText size={17} />
               {copy.tabs.expenses}
             </button>
             <button
@@ -702,6 +718,7 @@ export function ReportsPage() {
               type="button"
               onClick={() => setRetailTab('employees')}
             >
+              <UsersRound size={17} />
               {copy.tabs.employees}
             </button>
           </div>
@@ -783,9 +800,14 @@ export function ReportsPage() {
             </div>
             <div className={retailPageStyles.salesSummaryGrid}>
               <article className={retailPageStyles.salesSummaryCardFeatured}>
-                <p className={retailPageStyles.salesSummaryLabel}>
-                  {copy.sales.totalRevenue}
-                </p>
+                <div className={retailPageStyles.salesSummaryHeader}>
+                  <span className={retailPageStyles.salesSummaryIcon}>
+                    <Banknote size={20} />
+                  </span>
+                  <p className={retailPageStyles.salesSummaryLabel}>
+                    {copy.sales.totalRevenue}
+                  </p>
+                </div>
                 <div className={retailPageStyles.salesSummaryValueRow}>
                   <p className={retailPageStyles.salesSummaryValue}>
                     {formatRetailCurrency(totalRevenue, languageCode)}
@@ -800,9 +822,14 @@ export function ReportsPage() {
               </article>
 
               <article className={retailPageStyles.salesSummaryCard}>
-                <p className={retailPageStyles.salesSummaryLabel}>
-                  {copy.sales.grossProfit}
-                </p>
+                <div className={retailPageStyles.salesSummaryHeader}>
+                  <span className={retailPageStyles.salesSummaryIcon}>
+                    <TrendingUp size={20} />
+                  </span>
+                  <p className={retailPageStyles.salesSummaryLabel}>
+                    {copy.sales.grossProfit}
+                  </p>
+                </div>
                 <div className={retailPageStyles.salesSummaryValueRow}>
                   <p className={retailPageStyles.salesSummaryValue}>
                     {formatRetailCurrency(grossProfit, languageCode)}
@@ -921,21 +948,25 @@ export function ReportsPage() {
           <>
             <div className={retailPageStyles.summaryGrid}>
               <RetailStatCard
+                icon={<TrendingDown size={18} />}
                 label={copy.expenses.totalExpenses}
                 value={formatReportCurrency(totalExpenses, languageCode)}
                 hint={copy.common.compareHint}
               />
               <RetailStatCard
+                icon={<ReceiptText size={18} />}
                 label={copy.expenses.averageExpense}
                 value={formatReportCurrency(expensesReport.averageExpense, languageCode)}
                 hint={`${expensesReport.categories.length.toString()} ${copy.common.countSuffix}`}
               />
               <RetailStatCard
+                icon={<CircleDollarSign size={18} />}
                 label={copy.expenses.highestExpense}
                 value={formatReportCurrency(expensesReport.highestExpense, languageCode)}
                 hint={copy.common.compareHint}
               />
               <RetailStatCard
+                icon={<WalletCards size={18} />}
                 label={copy.expenses.netCashflow}
                 value={formatReportCurrency(netCashflow, languageCode)}
                 hint={
@@ -1054,21 +1085,25 @@ export function ReportsPage() {
           <>
             <div className={retailPageStyles.summaryGrid}>
               <RetailStatCard
+                icon={<Banknote size={18} />}
                 label={copy.employees.teamSales}
                 value={formatReportCurrency(employeesReport.totalSales, languageCode)}
                 hint={copy.common.compareHint}
               />
               <RetailStatCard
+                icon={<ShoppingBag size={18} />}
                 label={copy.employees.salesCount}
                 value={employeesReport.salesCount.toString()}
                 hint={`${employeesReport.employeeCount.toString()} ${languageCode === 'en' ? 'employees' : 'empleados'}`}
               />
               <RetailStatCard
+                icon={<UserRoundCheck size={18} />}
                 label={copy.employees.averageTicket}
                 value={formatReportCurrency(employeesReport.averageTicket, languageCode)}
                 hint={copy.common.compareHint}
               />
               <RetailStatCard
+                icon={<ReceiptText size={18} />}
                 label={copy.employees.expenses}
                 value={formatReportCurrency(
                   employeesReport.totalExpensesRegistered,
@@ -1280,15 +1315,16 @@ export function ReportsPage() {
               'No pudimos cargar el tablero estadístico en este momento. Intenta otra vez.',
             )}
           </p>
-          <button
-            className={styles.feedbackButton}
+          <AppButton
+            startIcon={<RotateCcw size={17} />}
             type="button"
+            variant="danger"
             onClick={() => {
               void reportsOverviewQuery.refetch()
             }}
           >
             Reintentar
-          </button>
+          </AppButton>
         </SurfaceCard>
       ) : null}
 

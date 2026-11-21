@@ -1,4 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { CalendarCheck2, RotateCcw, SlidersHorizontal } from 'lucide-react'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import type { ReportRangePreset } from '@/modules/reports/types/report'
 import styles from './ReportsDateFilters.module.css'
 
@@ -89,25 +91,32 @@ export function ReportsDateFilters({
         </label>
 
         <div className={styles.actions}>
-          <button className={styles.primaryAction} disabled={isRefreshing} type="submit">
-            {isRefreshing ? 'Actualizando...' : 'Aplicar filtros'}
-          </button>
-          <button
-            className={styles.secondaryAction}
+          <AppButton
+            isLoading={isRefreshing}
+            loadingLabel="Actualizando..."
+            startIcon={<SlidersHorizontal size={17} />}
+            type="submit"
+          >
+            Aplicar filtros
+          </AppButton>
+          <AppButton
             disabled={isRefreshing}
+            startIcon={<RotateCcw size={17} />}
             type="button"
+            variant="secondary"
             onClick={onRefresh}
           >
             Refrescar
-          </button>
-          <button
-            className={styles.secondaryAction}
+          </AppButton>
+          <AppButton
             disabled={isRefreshing}
+            startIcon={<CalendarCheck2 size={17} />}
             type="button"
+            variant="outline"
             onClick={onClear}
           >
             Limpiar
-          </button>
+          </AppButton>
         </div>
       </form>
     </section>

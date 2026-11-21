@@ -3,6 +3,7 @@ import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/Cas
 import { getQuotesCopy } from "@/modules/quotes/i18n/quotes-copy";
 import type { QuotationDetail } from "@/modules/quotes/types/quotation";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import styles from "./QuotationCreatedDrawer.module.css";
 
 type QuotationCreatedDrawerProps = {
@@ -58,30 +59,33 @@ export function QuotationCreatedDrawer({
             <span>{copy.receiptDescription}</span>
 
             <div className={styles.receiptActions}>
-              <button
+              <AppButton
                 disabled={isActionDisabled}
+                startIcon={<Printer size={18} strokeWidth={2.4} />}
                 type="button"
+                variant="outline"
                 onClick={onPrint}
               >
-                <Printer size={18} strokeWidth={2.4} />
                 {copy.printReceipt}
-              </button>
-              <button
+              </AppButton>
+              <AppButton
                 disabled={isActionDisabled}
+                startIcon={<Download size={18} strokeWidth={2.4} />}
                 type="button"
+                variant="secondary"
                 onClick={onDownload}
               >
-                <Download size={18} strokeWidth={2.4} />
                 {copy.downloadReceipt}
-              </button>
-              <button
+              </AppButton>
+              <AppButton
                 disabled={isActionDisabled}
+                startIcon={<Share2 size={18} strokeWidth={2.4} />}
                 type="button"
+                variant="success"
                 onClick={onShare}
               >
-                <Share2 size={18} strokeWidth={2.4} />
                 {copy.shareReceipt}
-              </button>
+              </AppButton>
             </div>
           </section>
         </>

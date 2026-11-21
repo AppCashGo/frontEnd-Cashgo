@@ -14,7 +14,8 @@
   padding: 1rem;
   border: 1px solid rgba(192, 204, 218, 0.92);
   border-radius: 1rem;
-  background: #ffffff;
+  background: linear-gradient(145deg, #f8fbff, #ffffff);
+  box-shadow: var(--shadow-sm, 0 0.45rem 1.2rem rgba(15, 23, 42, 0.05));
 }
 
 .summaryLabel,
@@ -45,6 +46,14 @@
   background: #ffffff;
   color: #607084;
   font-weight: 800;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease,
+    transform 160ms ease;
+}
+
+.segmentButton:hover {
+  border-color: #94a3b8;
+  transform: translateY(-1px);
 }
 
 .segmentButtonActive {
@@ -77,6 +86,14 @@
   font: inherit;
 }
 
+.input:focus,
+.select:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #2563eb);
+  box-shadow: 0 0 0 0.22rem color-mix(in srgb, var(--color-primary, #2563eb) 15%, transparent);
+}
+
 .textarea {
   min-height: 6rem;
   resize: vertical;
@@ -101,6 +118,13 @@
   background: #ffffff;
   color: #1f2937;
   font-weight: 700;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.paymentButton:hover {
+  border-color: #94a3b8;
+  transform: translateY(-1px);
 }
 
 .paymentButtonActive {

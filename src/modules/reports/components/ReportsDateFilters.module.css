@@ -75,6 +75,10 @@
   font: inherit;
 }
 
+.input:hover {
+  border-color: #b9c2d0;
+}
+
 .input:focus {
   outline: none;
   border-color: #f1d625;
@@ -84,33 +88,6 @@
 .actions {
   display: grid;
   gap: 0.75rem;
-}
-
-.primaryAction,
-.secondaryAction {
-  min-height: 3rem;
-  border-radius: 999px;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primaryAction {
-  border: none;
-  background: #232838;
-  color: #ffffff;
-}
-
-.secondaryAction {
-  border: 1px solid #d5d9e5;
-  background: #ffffff;
-  color: #445066;
-}
-
-.primaryAction:disabled,
-.secondaryAction:disabled {
-  cursor: not-allowed;
-  opacity: 0.72;
 }
 
 @media (min-width: 900px) {

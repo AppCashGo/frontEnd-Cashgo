@@ -167,6 +167,25 @@
   border: 1px solid rgba(192, 204, 218, 0.9);
   border-radius: 1rem;
   background: #ffffff;
+  box-shadow: 0 0.75rem 1.8rem rgba(15, 23, 42, 0.04);
+}
+
+.summaryCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.summaryIcon {
+  width: 2.15rem;
+  height: 2.15rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border-radius: 0.7rem;
+  background: #edf8f4;
+  color: #137a5a;
 }
 
 .summaryLabel {

@@ -140,19 +140,6 @@
   line-height: 1.6;
 }
 
-.feedbackButton {
-  width: fit-content;
-  min-height: 2.8rem;
-  padding: 0 1rem;
-  border: none;
-  border-radius: 999px;
-  background: #dc2626;
-  color: #fff;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
 @media (min-width: 768px) {
   .hero {
     grid-template-columns: minmax(0, 1.25fr) minmax(16rem, 0.75fr);

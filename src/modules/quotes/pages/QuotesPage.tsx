@@ -1,4 +1,5 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { Eye, Plus } from "lucide-react";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ConvertQuotationDrawer } from "@/modules/quotes/components/ConvertQuotationDrawer";
@@ -33,6 +34,7 @@ import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query
 import { routePaths } from "@/routes/route-paths";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
 import { RetailPremiumBanner } from "@/shared/components/retail/RetailPremiumBanner";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
 import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
@@ -369,13 +371,13 @@ export function QuotesPage() {
           </div>
 
           <div className={styles.heroActions}>
-            <button
-              className={retailStyles.buttonDark}
+            <AppButton
+              startIcon={<Plus size={18} strokeWidth={2.5} />}
               type="button"
               onClick={openCreatePage}
             >
               {copy.createButton}
-            </button>
+            </AppButton>
           </div>
         </section>
 
@@ -511,16 +513,18 @@ export function QuotesPage() {
                         </div>
                       </td>
                       <td>
-                        <button
-                          className={styles.actionButton}
+                        <AppButton
+                          size="sm"
+                          startIcon={<Eye size={16} strokeWidth={2.4} />}
                           type="button"
+                          variant="ghost"
                           onClick={() => {
                             clearActionError();
                             setSelectedQuotationId(quotation.id);
                           }}
                         >
                           {copy.view}
-                        </button>
+                        </AppButton>
                       </td>
                     </tr>
                   ))

@@ -7,6 +7,7 @@ import {
   Percent,
   Printer,
   ReceiptText,
+  Trash2,
   UserRound,
   UsersRound,
 } from "lucide-react";
@@ -19,6 +20,7 @@ import {
 } from "@/modules/quotes/utils/quotation-utils";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import styles from "./QuotationDetailDrawer.module.css";
 
 type QuotationDetailDrawerProps = {
@@ -99,41 +101,52 @@ export function QuotationDetailDrawer({
         quotation ? (
           <DrawerActionFooter layout="stack">
             <div className={styles.documentActions}>
-              <button disabled={isWorking} type="button" onClick={() => void onPrint()}>
-                <Printer size={18} strokeWidth={2.4} />
-                {copy.detailPrint}
-              </button>
-              <button
+              <AppButton
                 disabled={isWorking}
+                startIcon={<Printer size={18} strokeWidth={2.4} />}
                 type="button"
+                variant="outline"
+                onClick={() => void onPrint()}
+              >
+                {copy.detailPrint}
+              </AppButton>
+              <AppButton
+                disabled={isWorking}
+                startIcon={<Download size={18} strokeWidth={2.4} />}
+                type="button"
+                variant="secondary"
                 onClick={() => void onDownload()}
               >
-                <Download size={18} strokeWidth={2.4} />
                 {copy.detailDownload}
-              </button>
+              </AppButton>
             </div>
 
             {quotation.canConvert ? (
-              <button
+              <AppButton
                 className={styles.convertButton}
                 disabled={isWorking}
+                fullWidth
+                startIcon={<ReceiptText size={17} strokeWidth={2.4} />}
                 type="button"
+                variant="success"
                 onClick={onConvert}
               >
-                <ReceiptText size={17} strokeWidth={2.4} />
                 {copy.detailConvert}
-              </button>
+              </AppButton>
             ) : null}
 
             {canDelete ? (
-              <button
+              <AppButton
                 className={styles.deleteButton}
                 disabled={isWorking}
+                fullWidth
+                startIcon={<Trash2 size={17} strokeWidth={2.4} />}
                 type="button"
+                variant="danger"
                 onClick={() => void onDelete()}
               >
                 {copy.detailDelete}
-              </button>
+              </AppButton>
             ) : null}
           </DrawerActionFooter>
         ) : undefined

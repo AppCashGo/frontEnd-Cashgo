@@ -1,4 +1,6 @@
+import { ArrowRight, X } from "lucide-react";
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -18,7 +20,6 @@ import {
   formatQuotationDate,
 } from "@/modules/quotes/utils/quotation-utils";
 import type { CustomerSummary } from "@/modules/customers/types/customer";
-import retailStyles from "@/shared/components/retail/RetailUI.module.css";
 import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
@@ -148,22 +149,25 @@ export function ConvertQuotationDrawer({
       description={copy.convertDescription}
       footer={
         <DrawerActionFooter layout="inline">
-          <button
-            className={retailStyles.buttonOutline}
+          <AppButton
             disabled={isSubmitting}
+            startIcon={<X size={17} />}
             type="button"
+            variant="outline"
             onClick={handleClose}
           >
             {copy.cancelAction}
-          </button>
-          <button
-            className={retailStyles.buttonDark}
+          </AppButton>
+          <AppButton
             disabled={isSubmitting || !quotation}
+            endIcon={<ArrowRight size={17} />}
             form={formId}
+            isLoading={isSubmitting}
+            loadingLabel={copy.convertSubmitLoading}
             type="submit"
           >
-            {isSubmitting ? copy.convertSubmitLoading : copy.convertSubmit}
-          </button>
+            {copy.convertSubmit}
+          </AppButton>
         </DrawerActionFooter>
       }
       isOpen={isOpen}

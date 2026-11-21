@@ -21,8 +21,10 @@
 .itemsBlock {
   display: grid;
   gap: 0.85rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: var(--radius-lg, 1rem);
+  background: var(--color-surface, #ffffff);
 }
 
 .infoBlock,
@@ -67,6 +69,14 @@
   line-height: 1.1;
 }
 
+.headerBlock {
+  background: linear-gradient(145deg, #f8fbff, #ffffff);
+}
+
+.metricsBlock {
+  background: linear-gradient(145deg, #f0fdf7, #ffffff);
+}
+
 .metricRow,
 .metaRow {
   display: grid;
@@ -99,8 +109,7 @@
 }
 
 .itemsBlock {
-  border-bottom: 0;
-  padding-bottom: 0;
+  padding-bottom: 1rem;
 }
 
 .itemsList {
@@ -170,47 +179,12 @@
   gap: 0.7rem;
 }
 
-.documentActions button,
-.convertButton {
-  min-height: 2.65rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border-radius: 0.5rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.documentActions button {
-  border: 1px solid #1f2937;
-  background: #ffffff;
-  color: #1f2937;
-}
-
 .convertButton {
   width: 100%;
-  border: 1px solid #15a46a;
-  background: #dff9ec;
-  color: #0b8751;
 }
 
 .deleteButton {
-  justify-self: center;
-  border: 0;
-  background: transparent;
-  color: #1f2937;
-  font-size: 0.86rem;
-  font-weight: 900;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.documentActions button:disabled,
-.convertButton:disabled,
-.deleteButton:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
+  width: 100%;
 }
 
 @media (max-width: 420px) {

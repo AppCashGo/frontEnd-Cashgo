@@ -103,15 +103,6 @@
   color: #445264;
 }
 
-.actionButton {
-  border: 0;
-  background: transparent;
-  color: #1f2a37;
-  font-weight: 800;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 .loadingCell {
   padding: 2rem 1rem !important;
   color: #607084;
