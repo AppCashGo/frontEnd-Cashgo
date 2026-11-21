@@ -29,10 +29,6 @@
   line-height: 1.7;
 }
 
-.secondaryButton,
-.primaryButton,
-.removeButton,
-.quantityButton,
 .paymentModeButton,
 .paymentModeButtonActive {
   display: inline-flex;
@@ -48,7 +44,6 @@
     color 0.2s ease;
 }
 
-.secondaryButton,
 .paymentModeButton {
   min-height: 2.9rem;
   padding: 0.72rem 1rem;
@@ -67,29 +62,9 @@
   color: var(--color-accent-dark);
 }
 
-.primaryButton {
-  min-height: 3.15rem;
-  padding: 0.82rem 1rem;
-  border-radius: 999px;
-  background: linear-gradient(135deg, var(--color-accent), #d78943);
-  color: #fffdf8;
-}
-
-.secondaryButton:hover,
-.primaryButton:hover,
-.removeButton:hover,
-.quantityButton:hover,
 .paymentModeButton:hover,
 .paymentModeButtonActive:hover {
   transform: translateY(-1px);
-}
-
-.secondaryButton:disabled,
-.primaryButton:disabled,
-.quantityButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-  transform: none;
 }
 
 .statusRow {
@@ -203,9 +178,7 @@
 }
 
 .removeButton {
-  padding: 0;
-  background: transparent;
-  color: #8c3023;
+  color: var(--ui-danger);
 }
 
 .cartItemFooter {
@@ -223,12 +196,7 @@
 }
 
 .quantityButton {
-  width: 2.35rem;
-  height: 2.35rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  border-color: var(--color-border);
-  color: var(--color-ink);
+  flex: 0 0 auto;
 }
 
 .quantityInput {

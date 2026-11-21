@@ -6,6 +6,7 @@ import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store
 import { downloadSaleReceipt } from '@/modules/sales/services/sales-api'
 import type { SaleReceipt } from '@/modules/sales/types/sale'
 import { routePaths } from '@/routes/route-paths'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { normalizeWhatsAppPhone } from '@/shared/utils/normalize-whatsapp-phone'
@@ -68,13 +69,13 @@ export function SaleCompletionActions({
   return (
     <div className={styles.wrapper}>
       <div className={styles.secondary}>
-        <button disabled={activeAction !== null} type="button" onClick={() => void run('print')}><Printer /> Imprimir</button>
-        <button disabled={activeAction !== null} type="button" onClick={() => void run('download')}><Download /> Descargar</button>
-        {sale.customer ? <button disabled={activeAction !== null} type="button" onClick={() => void run('share')}><MessageCircle /> Compartir</button> : null}
-        {onCorrectSale ? <button type="button" onClick={onCorrectSale}><Undo2 /> Corregir o devolver</button> : null}
+        <AppButton disabled={activeAction !== null && activeAction !== 'print'} isLoading={activeAction === 'print'} loadingLabel="Preparando…" startIcon={<Printer aria-hidden="true" />} variant="secondary" onClick={() => void run('print')}>Imprimir</AppButton>
+        <AppButton disabled={activeAction !== null && activeAction !== 'download'} isLoading={activeAction === 'download'} loadingLabel="Descargando…" startIcon={<Download aria-hidden="true" />} variant="secondary" onClick={() => void run('download')}>Descargar</AppButton>
+        {sale.customer ? <AppButton disabled={activeAction !== null && activeAction !== 'share'} isLoading={activeAction === 'share'} loadingLabel="Compartiendo…" startIcon={<MessageCircle aria-hidden="true" />} variant="secondary" onClick={() => void run('share')}>Compartir</AppButton> : null}
+        {onCorrectSale ? <AppButton startIcon={<Undo2 aria-hidden="true" />} variant="warning" onClick={onCorrectSale}>Corregir o devolver</AppButton> : null}
       </div>
       <div className={styles.primary}>
-        <button type="button" onClick={onRegisterAnother}><RotateCcw /> Registrar otra venta</button>
+        <AppButton startIcon={<RotateCcw aria-hidden="true" />} onClick={onRegisterAnother}>Registrar otra venta</AppButton>
         <Link to={routePaths.sales}>Volver al resumen de ventas</Link>
       </div>
       {feedback ? <p role="alert">{feedback}</p> : null}

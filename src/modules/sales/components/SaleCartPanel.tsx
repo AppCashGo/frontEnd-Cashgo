@@ -1,4 +1,5 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { Minus, Plus, ShoppingCart, Trash2 } from 'lucide-react'
 import type { CashRegisterSession } from '@/modules/cash-register/types/cash-register'
 import { getPaymentMethodLabel } from '@/modules/cash-register/utils/format-cash-register'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
@@ -9,6 +10,7 @@ import type {
   SaleReceipt,
 } from '@/modules/sales/types/sale'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { SaleQuantityInput } from '@/modules/sales/components/SaleQuantityInput'
 import { SaleCompletionActions } from '@/modules/sales/components/SaleCompletionActions'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -126,14 +128,14 @@ export function SaleCartPanel({
           </p>
         </div>
 
-        <button
-          className={styles.secondaryButton}
+        <AppButton
           disabled={cartItems.length === 0 || isSubmitting}
-          type="button"
+          startIcon={<Trash2 aria-hidden="true" />}
+          variant="secondary"
           onClick={onClearCart}
         >
           Limpiar carrito
-        </button>
+        </AppButton>
       </div>
 
       <div className={styles.statusRow}>
@@ -200,13 +202,15 @@ export function SaleCartPanel({
                   <div className={styles.cartItemCopy}>
                     <div className={styles.cartItemHeading}>
                       <h3 className={styles.cartItemName}>{item.product.name}</h3>
-                      <button
+                      <AppButton
                         className={styles.removeButton}
-                        type="button"
+                        size="sm"
+                        startIcon={<Trash2 aria-hidden="true" />}
+                        variant="ghost"
                         onClick={() => onRemoveProduct(item.product.id)}
                       >
                         Quitar
-                      </button>
+                      </AppButton>
                     </div>
 
                     <p className={styles.cartItemMeta}>
@@ -216,13 +220,15 @@ export function SaleCartPanel({
 
                   <div className={styles.cartItemFooter}>
                     <div className={styles.quantityControls}>
-                      <button
+                      <AppButton
+                        aria-label={`Disminuir cantidad de ${item.product.name}`}
                         className={styles.quantityButton}
-                        type="button"
+                        iconOnly
+                        size="sm"
+                        startIcon={<Minus aria-hidden="true" />}
+                        variant="secondary"
                         onClick={() => onDecreaseQuantity(item.product.id)}
-                      >
-                        -
-                      </button>
+                      />
                       <SaleQuantityInput
                         className={styles.quantityInput}
                         max={availability ?? undefined}
@@ -232,14 +238,16 @@ export function SaleCartPanel({
                           onQuantityChange(item.product.id, quantity)
                         }
                       />
-                      <button
+                      <AppButton
+                        aria-label={`Aumentar cantidad de ${item.product.name}`}
                         className={styles.quantityButton}
                         disabled={!canIncreaseQuantity}
-                        type="button"
+                        iconOnly
+                        size="sm"
+                        startIcon={<Plus aria-hidden="true" />}
+                        variant="secondary"
                         onClick={() => onIncreaseQuantity(item.product.id)}
-                      >
-                        +
-                      </button>
+                      />
                     </div>
 
                     <strong className={styles.lineTotal}>
@@ -481,18 +489,20 @@ export function SaleCartPanel({
               </div>
             </div>
 
-            <button
-              className={styles.primaryButton}
+            <AppButton
               disabled={
                 cartItems.length === 0 ||
-                isSubmitting ||
                 (requiresCustomer && !selectedCustomer)
               }
-              type="button"
+              fullWidth
+              isLoading={isSubmitting}
+              loadingLabel="Registrando venta…"
+              size="lg"
+              startIcon={<ShoppingCart aria-hidden="true" />}
               onClick={onFinalizeSale}
             >
-              {isSubmitting ? 'Registrando venta...' : 'Registrar venta'}
-            </button>
+              Registrar venta
+            </AppButton>
           </div>
         </>
       )}

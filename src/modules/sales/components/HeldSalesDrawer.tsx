@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
+import { CirclePause, Play, Trash2 } from 'lucide-react'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
 import type { HeldSale } from '@/modules/sales/types/held-sale'
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { AppButton } from '@/shared/components/ui/AppButton'
+import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './HeldSalesDrawer.module.css'
@@ -118,12 +121,12 @@ export function HoldSaleModal({
         {errorMessage ? <p className={styles.error}>{errorMessage}</p> : null}
 
         <div className={styles.modalActions}>
-          <button className={styles.secondaryButton} disabled={isSaving} type="button" onClick={onClose}>
+          <AppButton disabled={isSaving} variant="secondary" onClick={onClose}>
             Cancelar
-          </button>
-          <button className={styles.primaryButton} disabled={isSaving} type="submit">
-            {isSaving ? 'Guardando…' : isEditing ? 'Actualizar espera' : 'Guardar y liberar carrito'}
-          </button>
+          </AppButton>
+          <AppButton isLoading={isSaving} loadingLabel="Guardando cuenta…" startIcon={<CirclePause aria-hidden="true" />} type="submit">
+            {isEditing ? 'Actualizar espera' : 'Guardar y liberar carrito'}
+          </AppButton>
         </div>
       </form>
     </ModalShell>
@@ -163,8 +166,24 @@ export function HeldSalesDrawer({
   onResume,
   onCancel,
 }: HeldSalesDrawerProps) {
+  const { confirm, confirmationDialog } = useConfirmDialog()
+
+  async function handleCancel(heldSale: HeldSale) {
+    const shouldCancel = await confirm({
+      title: `Cancelar ${heldSale.code}`,
+      description: 'La cuenta se eliminará de la espera y sus productos quedarán liberados. Esta acción no registra una venta.',
+      confirmLabel: 'Cancelar cuenta',
+      cancelLabel: 'Conservar cuenta',
+      tone: 'danger',
+    })
+
+    if (shouldCancel) await onCancel(heldSale)
+  }
+
   return (
-    <SideDrawer
+    <>
+      {confirmationDialog}
+      <SideDrawer
       bodyClassName={styles.drawerBody}
       description="Recupera una canasta, modifícala o llévala al cobro."
       isOpen={isOpen}
@@ -208,26 +227,24 @@ export function HeldSalesDrawer({
                 ) : null}
               </div>
               <div className={styles.cardActions}>
-                <button className={styles.primaryButton} type="button" onClick={() => onResume(heldSale)}>
+                <AppButton startIcon={<Play aria-hidden="true" />} onClick={() => onResume(heldSale)}>
                   Retomar y cobrar
-                </button>
-                <button
-                  className={styles.dangerButton}
-                  disabled={cancellingId === heldSale.id}
-                  type="button"
-                  onClick={() => {
-                    if (window.confirm(`¿Cancelar ${heldSale.code} y liberar sus productos?`)) {
-                      void onCancel(heldSale)
-                    }
-                  }}
+                </AppButton>
+                <AppButton
+                  isLoading={cancellingId === heldSale.id}
+                  loadingLabel="Liberando…"
+                  startIcon={<Trash2 aria-hidden="true" />}
+                  variant="danger"
+                  onClick={() => void handleCancel(heldSale)}
                 >
-                  {cancellingId === heldSale.id ? 'Liberando…' : 'Cancelar'}
-                </button>
+                  Cancelar
+                </AppButton>
               </div>
             </article>
           ))}
         </div>
       )}
-    </SideDrawer>
+      </SideDrawer>
+    </>
   )
 }

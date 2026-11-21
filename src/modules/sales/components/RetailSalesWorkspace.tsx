@@ -82,6 +82,7 @@ import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import {
   getTodayDateInput,
@@ -926,13 +927,14 @@ function ChangeCalculatorModal({
               value={amountTenderedInput}
               onChange={(event) => onAmountTenderedChange(event.target.value)}
             />
-            <button
+            <AppButton
               className={styles.changeExactButton}
-              type="button"
+              size="sm"
+              variant="secondary"
               onClick={handleExactPayment}
             >
               Exacto
-            </button>
+            </AppButton>
           </span>
         </label>
 
@@ -956,22 +958,18 @@ function ChangeCalculatorModal({
       </div>
 
       <div className={styles.changeModalActions}>
-        <button
-          className={styles.changeCancelButton}
-          type="button"
-          onClick={onClose}
-        >
+        <AppButton variant="secondary" onClick={onClose}>
           Cancelar
-        </button>
-        <button
-          className={styles.changeConfirmButton}
+        </AppButton>
+        <AppButton
           disabled={!canConfirm}
-          type="button"
+          isLoading={isSubmitting}
+          loadingLabel="Confirmando pago…"
+          startIcon={<CheckCircle aria-hidden="true" />}
           onClick={onConfirm}
         >
-          {isSubmitting ? 'Confirmando...' : 'Confirmar Pago'}
-          <CheckCircle size={18} aria-hidden="true" />
-        </button>
+          Confirmar pago
+        </AppButton>
       </div>
     </ModalShell>
   )
