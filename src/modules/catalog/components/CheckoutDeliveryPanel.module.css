@@ -5,14 +5,6 @@
 
 .backButton {
   justify-self: start;
-  border: 0;
-  background: transparent;
-  color: #3157dc;
-  padding: 0;
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 900;
-  cursor: pointer;
 }
 
 .sectionHeading {
@@ -49,6 +41,20 @@
   padding: 0.7rem;
   text-align: left;
   cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.methodButton:hover,
+.activeMethod:hover {
+  border-color: #8196b2;
+  transform: translateY(-1px);
+}
+
+.methodButton:focus-visible,
+.activeMethod:focus-visible {
+  outline: 3px solid rgba(49, 87, 220, 0.18);
+  outline-offset: 2px;
 }
 
 .activeMethod {
@@ -113,6 +119,13 @@
   border: 1px solid #cbd6e3;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.fields label > input:focus,
+.iconInput:focus-within {
+  outline: none;
+  border-color: #3157dc;
+  box-shadow: 0 0 0 3px rgba(49, 87, 220, 0.11);
 }
 
 .fields label > input {
@@ -189,7 +202,7 @@
   gap: 0.55rem;
 }
 
-.saveAddress > input[type="checkbox"] { width: 18px; height: 18px; }
+.saveAddress > input[type="checkbox"] { width: 18px; height: 18px; accent-color: #3157dc; }
 .saveAddress > input:not([type="checkbox"]) { min-width: 0; flex: 1; }
 
 .fullField small {
@@ -201,7 +214,10 @@
   display: grid;
   gap: 0.4rem;
   border-top: 1px solid #dce4ed;
-  padding-top: 0.8rem;
+  padding: 0.9rem;
+  border: 1px solid #dce4ed;
+  border-radius: 0.85rem;
+  background: #f8fafc;
 }
 
 .totals span {
@@ -224,23 +240,6 @@
 
 .totalRow strong {
   font-size: 1.25rem;
-}
-
-.continueButton {
-  min-height: 50px;
-  border: 0;
-  border-radius: 9px;
-  background: #172332;
-  color: #ffffff;
-  font: inherit;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.continueButton:disabled {
-  background: #d8dee7;
-  color: #738198;
-  cursor: not-allowed;
 }
 
 .notice,

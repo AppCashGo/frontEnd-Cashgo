@@ -1,4 +1,6 @@
 import {
+  ArrowLeft,
+  ArrowRight,
   Banknote,
   MapPin,
   MessageSquareText,
@@ -8,6 +10,7 @@ import {
   QrCode,
 } from "lucide-react";
 import type { ReactNode } from "react";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import type {
   CatalogCheckoutDetails,
 } from "../hooks/use-catalog-checkout-store";
@@ -63,9 +66,16 @@ export function CheckoutDeliveryPanel({
 
   return (
     <div className={styles.panel}>
-      <button className={styles.backButton} onClick={onBack} type="button">
-        ← Revisar productos
-      </button>
+      <AppButton
+        className={styles.backButton}
+        size="sm"
+        startIcon={<ArrowLeft aria-hidden="true" size={16} />}
+        type="button"
+        variant="link"
+        onClick={onBack}
+      >
+        Revisar productos
+      </AppButton>
       <div className={styles.sectionHeading}>
         <strong>¿Cómo quieres recibir tu compra?</strong>
         <span>Selecciona una opción para calcular el total.</span>
@@ -259,14 +269,17 @@ export function CheckoutDeliveryPanel({
         </p>
       ) : null}
 
-      <button
-        className={styles.continueButton}
+      <AppButton
         disabled={!canContinue || isSubmitting}
+        endIcon={<ArrowRight aria-hidden="true" size={17} />}
+        fullWidth
+        isLoading={isSubmitting}
+        loadingLabel="Creando pedido…"
         onClick={onContinue}
         type="button"
       >
-        {isSubmitting ? "Creando pedido…" : "Crear pedido"}
-      </button>
+        Crear pedido
+      </AppButton>
     </div>
   );
 }

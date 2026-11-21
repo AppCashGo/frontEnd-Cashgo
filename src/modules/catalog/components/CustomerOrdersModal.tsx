@@ -19,6 +19,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import { getApiErrorMessage } from "@/shared/services/api-client";
 import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import {
@@ -218,12 +219,25 @@ export function CustomerOrdersModal({
             <h2>Mis pedidos</h2>
           </div>
           <div className={styles.headerActions}>
-            <button aria-label="Actualizar pedidos" disabled={isLoading} onClick={() => void loadOrders()} type="button">
-              <RefreshCw aria-hidden="true" />
-            </button>
-            <button aria-label="Cerrar pedidos" onClick={onClose} type="button">
-              <X aria-hidden="true" />
-            </button>
+            <AppButton
+              aria-label="Actualizar pedidos"
+              iconOnly
+              isLoading={isLoading}
+              size="sm"
+              startIcon={<RefreshCw aria-hidden="true" />}
+              type="button"
+              variant="muted"
+              onClick={() => void loadOrders()}
+            />
+            <AppButton
+              aria-label="Cerrar pedidos"
+              iconOnly
+              size="sm"
+              startIcon={<X aria-hidden="true" />}
+              type="button"
+              variant="ghost"
+              onClick={onClose}
+            />
           </div>
         </header>
 
@@ -347,11 +361,15 @@ function OrderCard({
         (order.paymentStatus === "PENDING" || order.paymentStatus === "FAILED") &&
         order.status !== "CANCELLED" &&
         order.status !== "DELIVERED" ? (
-          <button disabled={isPaying} onClick={onPay} type="button">
-            {isPaying
-              ? "Abriendo pago…"
-              : `Pagar con ${provider === "WOMPI" ? "Wompi" : provider}`}
-          </button>
+          <AppButton
+            isLoading={isPaying}
+            loadingLabel="Abriendo pago…"
+            size="sm"
+            onClick={onPay}
+            type="button"
+          >
+            {`Pagar con ${provider === "WOMPI" ? "Wompi" : provider}`}
+          </AppButton>
         ) : null}
       </div>
       {manualPayment.enabled &&
@@ -382,10 +400,15 @@ function OrderCard({
           onReview={onReview}
         />
       ) : null}
-      <button className={styles.reorderButton} onClick={onReorder} type="button">
-        <Repeat2 aria-hidden="true" />
+      <AppButton
+        fullWidth
+        startIcon={<Repeat2 aria-hidden="true" />}
+        type="button"
+        variant="outline"
+        onClick={onReorder}
+      >
         Volver a comprar
-      </button>
+      </AppButton>
     </article>
   );
 }
@@ -467,9 +490,14 @@ function OrderReview({
               : "Califica el servicio y los productos que recibiste."}
           </small>
         </span>
-        <button type="button" onClick={() => setIsOpen((value) => !value)}>
+        <AppButton
+          size="sm"
+          type="button"
+          variant="warning"
+          onClick={() => setIsOpen((value) => !value)}
+        >
           {isOpen ? "Cerrar" : hasReview || saved ? "Editar" : "Calificar"}
-        </button>
+        </AppButton>
       </div>
 
       {isOpen ? (
@@ -522,14 +550,17 @@ function OrderReview({
             </div>
           ))}
 
-          <button
-            className={styles.saveReviewButton}
+          <AppButton
             disabled={!isComplete || isReviewing}
+            fullWidth
+            isLoading={isReviewing}
+            loadingLabel="Guardando calificación…"
             type="button"
+            variant="success"
             onClick={() => void handleSubmit()}
           >
-            {isReviewing ? "Guardando calificación…" : "Guardar calificación"}
-          </button>
+            Guardar calificación
+          </AppButton>
         </div>
       ) : null}
     </section>
@@ -670,14 +701,16 @@ function ManualPaymentForm({
               onChange={(event) => setProof(event.target.files?.[0] ?? null)}
             />
           </label>
-          <button
-            className={styles.reportPaymentButton}
+          <AppButton
             disabled={!proof || isReporting}
+            fullWidth
+            isLoading={isReporting}
+            loadingLabel="Enviando comprobante…"
             type="button"
             onClick={() => proof && onReport(proof)}
           >
-            {isReporting ? "Enviando comprobante…" : "Reportar pago"}
-          </button>
+            Reportar pago
+          </AppButton>
         </div>
       </div>
       {isQrExpanded && qrUrl ? (
