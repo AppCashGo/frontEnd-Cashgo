@@ -83,6 +83,11 @@
   cursor: pointer;
 }
 
+.closeButton:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.18);
+  outline-offset: 2px;
+}
+
 .content {
   min-width: 0;
 }
@@ -91,37 +96,6 @@
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-}
-
-.button {
-  min-height: 2.85rem;
-  padding: 0.75rem 1.1rem;
-  border-radius: 0.85rem;
-  font-weight: 850;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.button:disabled {
-  cursor: not-allowed;
-  opacity: 0.62;
-}
-
-.cancelButton {
-  border: 1px solid rgba(192, 204, 218, 0.96);
-  background: #ffffff;
-  color: #1f2a37;
-}
-
-.confirmButton {
-  border: 1px solid var(--ui-primary);
-  background: var(--ui-primary);
-  color: #ffffff;
-}
-
-.confirmButtonDanger {
-  border-color: var(--ui-danger);
-  background: var(--ui-danger);
 }
 
 @media (max-width: 520px) {
@@ -133,7 +107,7 @@
     display: grid;
   }
 
-  .button {
+  .actions > * {
     width: 100%;
   }
 }

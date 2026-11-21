@@ -6,6 +6,7 @@ import {
   X,
 } from 'lucide-react'
 import {
+  type CSSProperties,
   type PropsWithChildren,
   useCallback,
   useEffect,
@@ -20,6 +21,7 @@ import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './ToastProvider.module.css'
 
 type ToastRecord = Required<Pick<ToastInput, 'message' | 'tone' | 'title'>> & {
+  duration: number
   id: string
 }
 
@@ -78,7 +80,10 @@ export function ToastProvider({ children }: PropsWithChildren) {
     (toast: ToastInput) => {
       const tone = toast.tone ?? 'info'
       const id = createToastId()
+      const duration =
+        toast.duration ?? (tone === 'error' ? ERROR_DURATION : DEFAULT_DURATION)
       const nextToast: ToastRecord = {
+        duration,
         id,
         message: toast.message,
         title: toast.title ?? getDefaultTitle(tone),
@@ -88,9 +93,6 @@ export function ToastProvider({ children }: PropsWithChildren) {
       setToasts((currentToasts) =>
         [nextToast, ...currentToasts].slice(0, MAX_VISIBLE_TOASTS),
       )
-
-      const duration =
-        toast.duration ?? (tone === 'error' ? ERROR_DURATION : DEFAULT_DURATION)
 
       if (duration > 0) {
         timersRef.current.set(
@@ -180,11 +182,19 @@ export function ToastProvider({ children }: PropsWithChildren) {
   return (
     <ToastContext.Provider value={toastApi}>
       {children}
-      <div aria-live="polite" className={styles.viewport} role="status">
+      <div aria-label="Notificaciones" className={styles.viewport}>
         {toasts.map((toast) => (
           <article
+            aria-atomic="true"
+            aria-live={toast.tone === 'error' ? 'assertive' : 'polite'}
             className={joinClassNames(styles.toast, styles[toast.tone])}
             key={toast.id}
+            role={toast.tone === 'error' ? 'alert' : 'status'}
+            style={
+              {
+                '--toast-duration': `${toast.duration}ms`,
+              } as CSSProperties
+            }
           >
             <span className={styles.icon}>{getToastIcon(toast.tone)}</span>
             <div className={styles.content}>
@@ -199,6 +209,9 @@ export function ToastProvider({ children }: PropsWithChildren) {
             >
               <X size={16} strokeWidth={2.4} />
             </button>
+            {toast.duration > 0 ? (
+              <span aria-hidden="true" className={styles.progress} />
+            ) : null}
           </article>
         ))}
       </div>

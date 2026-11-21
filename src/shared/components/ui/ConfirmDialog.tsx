@@ -1,5 +1,6 @@
-import { AlertTriangle, HelpCircle, X } from "lucide-react";
+import { AlertTriangle, Check, HelpCircle, Trash2, X } from "lucide-react";
 import type { ReactNode } from "react";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import { ModalShell } from "@/shared/components/ui/ModalShell";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import styles from "./ConfirmDialog.module.css";
@@ -81,26 +82,39 @@ export function ConfirmDialog({
         {children ? <div className={styles.content}>{children}</div> : null}
 
         <div className={styles.actions}>
-          <button
-            className={joinClassNames(styles.button, styles.cancelButton)}
+          <AppButton
             disabled={isSubmitting}
+            startIcon={<X aria-hidden="true" size={17} />}
             type="button"
+            variant="outline"
             onClick={onCancel}
           >
             {cancelLabel}
-          </button>
-          <button
-            className={joinClassNames(
-              styles.button,
-              styles.confirmButton,
-              tone === "danger" && styles.confirmButtonDanger,
-            )}
-            disabled={isSubmitting}
+          </AppButton>
+          <AppButton
+            isLoading={isSubmitting}
+            loadingLabel={submittingLabel}
+            startIcon={
+              tone === "danger" ? (
+                <Trash2 aria-hidden="true" size={17} />
+              ) : tone === "warning" ? (
+                <AlertTriangle aria-hidden="true" size={17} />
+              ) : (
+                <Check aria-hidden="true" size={17} />
+              )
+            }
             type="button"
+            variant={
+              tone === "danger"
+                ? "danger"
+                : tone === "warning"
+                  ? "warning"
+                  : "primary"
+            }
             onClick={onConfirm}
           >
-            {isSubmitting ? submittingLabel : confirmLabel}
-          </button>
+            {confirmLabel}
+          </AppButton>
         </div>
       </div>
     </ModalShell>

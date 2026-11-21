@@ -344,10 +344,14 @@
 .emptyIcon {
   width: 4.5rem;
   height: 4.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
-  background: radial-gradient(circle at 68% 34%, #ffffff 0, #ffffff 1rem, transparent 1.05rem),
-    linear-gradient(180deg, #ffe46a 0%, #ffcd1e 100%);
-  box-shadow: 0 1rem 2rem rgba(255, 208, 43, 0.2);
+  border: 1px solid rgba(79, 70, 229, 0.12);
+  background: linear-gradient(145deg, #f5f3ff, #eef4ff);
+  color: #5548d9;
+  box-shadow: 0 1rem 2rem rgba(79, 70, 229, 0.12);
 }
 
 .emptyTitle {
@@ -363,6 +367,10 @@
   color: #5f6d80;
   font-size: 0.95rem;
   line-height: 1.55;
+}
+
+.emptyAction {
+  margin-top: 0.25rem;
 }
 
 .tabs {
