@@ -6,6 +6,7 @@ import type {
   SupplierSummary,
 } from '@/modules/suppliers/types/supplier'
 import { AvatarUploadField } from '@/shared/components/ui/AvatarUploadField'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { useImageUploadPreview } from '@/shared/hooks/use-image-upload-preview'
 import styles from './RetailSupplierDrawer.module.css'
 
@@ -189,19 +190,15 @@ export function RetailSupplierDrawer({
           </p>
         ) : null}
 
-        <button
-          className={styles.primaryButton}
-          disabled={isSubmitting}
+        <AppButton
+          fullWidth
+          isLoading={isSubmitting}
+          loadingLabel={supplier ? 'Guardando proveedor…' : 'Creando proveedor…'}
+          startIcon={<Truck aria-hidden="true" />}
           type="submit"
         >
-          {isSubmitting
-            ? supplier
-              ? 'Guardando proveedor...'
-              : 'Creando proveedor...'
-            : supplier
-              ? 'Guardar cambios'
-              : 'Crear proveedor'}
-        </button>
+          {supplier ? 'Guardar cambios' : 'Crear proveedor'}
+        </AppButton>
       </form>
     </SideDrawer>
   )

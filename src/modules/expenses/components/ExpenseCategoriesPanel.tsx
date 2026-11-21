@@ -10,6 +10,8 @@ import type {
   ExpenseCategoryInput,
 } from '@/modules/expenses/types/expense'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { AppButton } from '@/shared/components/ui/AppButton'
+import { Plus } from 'lucide-react'
 import { ApiError } from '@/shared/services/api-client'
 import { getExpenseCategoryLabel } from '@/modules/expenses/utils/expense-category-label'
 import styles from './ExpenseCategoriesPanel.module.css'
@@ -162,9 +164,9 @@ export function ExpenseCategoriesPanel({
           <div className={styles.errorBanner}>{errors.root.message}</div>
         ) : null}
 
-        <button className={styles.primaryButton} disabled={isSubmitting} type="submit">
-          {isSubmitting ? 'Creando...' : 'Crear categoría'}
-        </button>
+        <AppButton fullWidth isLoading={isSubmitting} loadingLabel="Creando categoría…" startIcon={<Plus aria-hidden="true" />} type="submit">
+          Crear categoría
+        </AppButton>
       </form>
       </div>
     </SideDrawer>

@@ -29,6 +29,7 @@ import {
 } from '@/modules/expenses/utils/format-expense'
 import { getExpenseCategoryLabel } from '@/modules/expenses/utils/expense-category-label'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { ApiError } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './ExpenseFormPanel.module.css'
@@ -146,27 +147,22 @@ export function ExpenseFormPanel({
       description={isEditing ? 'Actualiza la información del gasto operativo.' : 'Registra un gasto operativo del negocio.'}
       footer={
         <div className={styles.footer}>
-          <button
-            className={styles.cancelButton}
+          <AppButton
             disabled={isSubmitting}
-            type="button"
+            variant="secondary"
             onClick={onClose}
           >
             Cancelar
-          </button>
-          <button
-            className={styles.primaryButton}
-            disabled={isSubmitting}
+          </AppButton>
+          <AppButton
             form="expense-drawer-form"
+            isLoading={isSubmitting}
+            loadingLabel="Guardando gasto…"
+            startIcon={<Save aria-hidden="true" />}
             type="submit"
           >
-            <Save aria-hidden="true" size={16} />
-            {isSubmitting
-              ? 'Guardando...'
-              : isEditing
-                ? 'Guardar cambios'
-                : 'Crear gasto'}
-          </button>
+            {isEditing ? 'Guardar cambios' : 'Crear gasto'}
+          </AppButton>
         </div>
       }
       isCloseDisabled={isSubmitting}
@@ -191,15 +187,17 @@ export function ExpenseFormPanel({
                 proveedor y descontar de caja el valor realmente pagado.
               </small>
             </span>
-            <button
-              type="button"
+            <AppButton
+              size="sm"
+              startIcon={<PackagePlus aria-hidden="true" />}
+              variant="success"
               onClick={() => {
                 onClose()
                 onOpenInventoryPurchase()
               }}
             >
               Registrar compra de mercancía
-            </button>
+            </AppButton>
           </div>
         ) : null}
 

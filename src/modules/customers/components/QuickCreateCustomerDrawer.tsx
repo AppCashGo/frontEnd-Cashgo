@@ -6,6 +6,7 @@ import type { CustomerSummary } from '@/modules/customers/types/customer'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './QuickCreateCustomerDrawer.module.css'
 
@@ -190,22 +191,22 @@ export function QuickCreateCustomerDrawer({
       }
       footer={
         <DrawerActionFooter>
-          <button
-            className={styles.secondaryButton}
+          <AppButton
             disabled={createCustomerMutation.isPending}
-            type="button"
+            variant="secondary"
             onClick={onClose}
           >
             Cancelar
-          </button>
-          <button
-            className={styles.primaryButton}
-            disabled={createCustomerMutation.isPending}
+          </AppButton>
+          <AppButton
             form="quick-create-customer-form"
+            isLoading={createCustomerMutation.isPending}
+            loadingLabel="Creando cliente…"
+            startIcon={<UserPlus aria-hidden="true" />}
             type="submit"
           >
-            {createCustomerMutation.isPending ? 'Creando…' : 'Crear y seleccionar'}
-          </button>
+            Crear y seleccionar
+          </AppButton>
         </DrawerActionFooter>
       }
       onClose={onClose}

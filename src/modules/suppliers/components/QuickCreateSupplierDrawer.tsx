@@ -5,6 +5,7 @@ import type { SupplierSummary } from '@/modules/suppliers/types/supplier'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './QuickCreateSupplierDrawer.module.css'
 
@@ -171,24 +172,22 @@ export function QuickCreateSupplierDrawer({
       }
       footer={
         <DrawerActionFooter>
-          <button
-            className={styles.secondaryButton}
+          <AppButton
             disabled={createSupplierMutation.isPending}
-            type="button"
+            variant="secondary"
             onClick={onClose}
           >
             Cancelar
-          </button>
-          <button
-            className={styles.primaryButton}
-            disabled={createSupplierMutation.isPending}
+          </AppButton>
+          <AppButton
             form="quick-create-supplier-form"
+            isLoading={createSupplierMutation.isPending}
+            loadingLabel="Creando proveedor…"
+            startIcon={<Truck aria-hidden="true" />}
             type="submit"
           >
-            {createSupplierMutation.isPending
-              ? 'Creando…'
-              : 'Crear y seleccionar'}
-          </button>
+            Crear y seleccionar
+          </AppButton>
         </DrawerActionFooter>
       }
       onClose={onClose}

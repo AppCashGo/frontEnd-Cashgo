@@ -4,7 +4,7 @@
 
 .drawerBody {
   padding: 1.1rem 1.5rem 1.5rem;
-  border-top: 1px solid #e1e6ef;
+  border-top: 1px solid var(--ui-border-subtle);
 }
 
 .closeButton {
@@ -29,7 +29,7 @@
 
 .title {
   margin: 0;
-  color: #1f2534;
+  color: var(--ui-text);
   font-size: 1.06rem;
   font-weight: 700;
 }
@@ -37,7 +37,7 @@
 .description,
 .formDescription {
   margin: 0.45rem 0 0;
-  color: #667085;
+  color: var(--ui-text-secondary);
   line-height: 1.55;
 }
 
@@ -51,21 +51,21 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  border: 1px solid #eceff5;
-  border-radius: 1rem;
+  border: 1px solid var(--ui-border-subtle);
+  border-radius: var(--ui-radius-lg);
   padding: 0.9rem 1rem;
-  background: #fbfcff;
+  background: var(--ui-surface-subtle);
 }
 
 .categoryName {
   margin: 0;
-  color: #1f2534;
+  color: var(--ui-text);
   font-weight: 700;
 }
 
 .categoryMeta {
   margin: 0.2rem 0 0;
-  color: #77829b;
+  color: var(--ui-text-tertiary);
   font-size: 0.82rem;
 }
 
@@ -81,7 +81,7 @@
 .form {
   display: grid;
   gap: 0.85rem;
-  border-top: 1px solid #edf0f6;
+  border-top: 1px solid var(--ui-border-subtle);
   padding-top: 1rem;
 }
 
@@ -92,7 +92,7 @@
 
 .formTitle {
   margin: 0;
-  color: #1f2534;
+  color: var(--ui-text);
   font-weight: 700;
 }
 
@@ -107,36 +107,28 @@
 }
 
 .label {
-  color: #5a657d;
+  color: var(--ui-text-secondary);
   font-size: 0.82rem;
   font-weight: 600;
 }
 
 .input,
-.colorInput {
-  width: 100%;
-  border: 1px solid #d8dcea;
-  background: #fbfcff;
-  color: #1f2534;
-  border-radius: 1rem;
-  font: inherit;
-}
+.colorInput { width: 100%; }
 
 .input {
-  min-height: 2.95rem;
-  padding: 0.8rem 0.95rem;
+  min-height: var(--ui-control-height);
 }
 
 .colorInput {
-  min-height: 2.95rem;
+  min-height: var(--ui-control-height);
   padding: 0.35rem;
 }
 
 .input:focus,
 .colorInput:focus {
   outline: none;
-  border-color: #f1d625;
-  box-shadow: 0 0 0 3px rgba(241, 214, 37, 0.22);
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
 }
 
 .errorMessage {
@@ -151,22 +143,6 @@
   color: #b42318;
   padding: 0.8rem 0.95rem;
   line-height: 1.5;
-}
-
-.primaryButton {
-  border: none;
-  background: #075acb;
-  color: #ffffff;
-  border-radius: 999px;
-  padding: 0.78rem 1.05rem;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.primaryButton:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
 }
 
 @media (min-width: 720px) {
