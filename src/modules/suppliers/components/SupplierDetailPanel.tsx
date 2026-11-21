@@ -1,5 +1,7 @@
 import type { SupplierDetail } from '@/modules/suppliers/types/supplier'
+import { Pencil, RefreshCw } from 'lucide-react'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
@@ -59,13 +61,15 @@ export function SupplierDetailPanel({
               {supplier.purchaseCount > 0 ? 'Abastecimiento activo' : 'Sin historial'}
             </span>
             {onEdit ? (
-              <button
-                className={styles.editButton}
+              <AppButton
+                size="sm"
+                startIcon={<Pencil aria-hidden="true" size={16} />}
                 type="button"
+                variant="secondary"
                 onClick={() => onEdit(supplier)}
               >
                 Editar
-              </button>
+              </AppButton>
             ) : null}
           </div>
         ) : null}
@@ -75,9 +79,15 @@ export function SupplierDetailPanel({
         <div className={styles.feedbackCard} role="alert">
           <p className={styles.feedbackTitle}>No pudimos cargar el proveedor</p>
           <p className={styles.feedbackDescription}>{errorMessage}</p>
-          <button className={styles.feedbackButton} type="button" onClick={onRetry}>
+          <AppButton
+            size="sm"
+            startIcon={<RefreshCw aria-hidden="true" size={16} />}
+            type="button"
+            variant="danger"
+            onClick={onRetry}
+          >
             Reintentar
-          </button>
+          </AppButton>
         </div>
       ) : null}
 
@@ -114,7 +124,7 @@ export function SupplierDetailPanel({
             </div>
 
             <div className={styles.summaryCard}>
-              <span className={styles.summaryLabel}>Reposicion promedio</span>
+              <span className={styles.summaryLabel}>Reposición promedio</span>
               <strong className={styles.summaryValue}>
                 {formatCurrency(averageRestock)}
               </strong>
@@ -133,24 +143,24 @@ export function SupplierDetailPanel({
             </div>
 
             <div className={styles.detailBlock}>
-              <span className={styles.detailLabel}>Telefono</span>
+              <span className={styles.detailLabel}>Teléfono</span>
               <strong className={styles.detailValue}>
                 {supplier.phone ?? 'No registrado'}
               </strong>
             </div>
 
             <div className={styles.detailBlock}>
-              <span className={styles.detailLabel}>Numero de reposiciones</span>
+              <span className={styles.detailLabel}>Número de reposiciones</span>
               <strong className={styles.detailValue}>
                 {supplier.purchaseCount.toString()}
               </strong>
             </div>
 
             <div className={styles.detailBlock}>
-              <span className={styles.detailLabel}>Ultimo abastecimiento</span>
+              <span className={styles.detailLabel}>Último abastecimiento</span>
               <strong className={styles.detailValue}>
                 {supplier.lastPurchaseAt
-                  ? formatDate(supplier.lastPurchaseAt)
+                  ? formatDate(supplier.lastPurchaseAt, 'es-CO')
                   : 'Sin historial'}
               </strong>
             </div>
@@ -158,14 +168,14 @@ export function SupplierDetailPanel({
             <div className={styles.detailBlock}>
               <span className={styles.detailLabel}>Creado</span>
               <strong className={styles.detailValue}>
-                {formatDate(supplier.createdAt)}
+                {formatDate(supplier.createdAt, 'es-CO')}
               </strong>
             </div>
 
             <div className={styles.detailBlock}>
               <span className={styles.detailLabel}>Actualizado</span>
               <strong className={styles.detailValue}>
-                {formatDate(supplier.updatedAt)}
+                {formatDate(supplier.updatedAt, 'es-CO')}
               </strong>
             </div>
           </div>

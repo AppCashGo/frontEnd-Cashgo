@@ -12,6 +12,25 @@
   flex-wrap: wrap;
 }
 
+.headingGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.headerIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-success-soft);
+  color: var(--ui-success);
+}
+
 .eyebrow {
   margin: 0 0 0.35rem;
   font-size: 0.76rem;

@@ -87,22 +87,6 @@
   justify-content: flex-end;
 }
 
-.editButton {
-  min-height: 2.25rem;
-  border: 1px solid #cbd5e1;
-  border-radius: 999px;
-  padding: 0.45rem 0.8rem;
-  background: #ffffff;
-  color: #172635;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.editButton:hover {
-  border-color: #94a3b8;
-  background: #f8fafc;
-}
-
 .loadingState,
 .emptyState,
 .feedbackCard {
@@ -138,18 +122,6 @@
   margin: 0;
   color: #667085;
   line-height: 1.55;
-}
-
-.feedbackButton {
-  justify-self: start;
-  border: none;
-  border-radius: 999px;
-  background: #b42346;
-  color: #ffffff;
-  padding: 0.72rem 0.95rem;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
 }
 
 .summaryGrid {

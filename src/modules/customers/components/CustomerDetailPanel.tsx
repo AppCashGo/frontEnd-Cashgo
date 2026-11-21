@@ -1,4 +1,6 @@
 import type { CustomerDetail } from '@/modules/customers/types/customer'
+import { RefreshCw, UserRound } from 'lucide-react'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
@@ -22,11 +24,16 @@ export function CustomerDetailPanel({
   return (
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Customer profile</p>
-          <h3 className={styles.title}>
-            {customer?.name ?? selectedCustomerName ?? 'Select a customer'}
-          </h3>
+        <div className={styles.headingGroup}>
+          <span className={styles.headerIcon} aria-hidden="true">
+            <UserRound size={20} />
+          </span>
+          <div>
+            <p className={styles.eyebrow}>Perfil del cliente</p>
+            <h3 className={styles.title}>
+              {customer?.name ?? selectedCustomerName ?? 'Selecciona un cliente'}
+            </h3>
+          </div>
         </div>
 
         {customer ? (
@@ -35,36 +42,42 @@ export function CustomerDetailPanel({
               customer.balance > 0 ? styles.balancePillAlert : styles.balancePill
             }
           >
-            {customer.balance > 0 ? 'Outstanding' : 'Up to date'}
+            {customer.balance > 0 ? 'Saldo pendiente' : 'Al día'}
           </span>
         ) : null}
       </div>
 
       {errorMessage ? (
         <div className={styles.feedbackCard} role="alert">
-          <p className={styles.feedbackTitle}>Unable to load the customer profile</p>
+          <p className={styles.feedbackTitle}>No pudimos cargar el cliente</p>
           <p className={styles.feedbackDescription}>{errorMessage}</p>
-          <button className={styles.feedbackButton} type="button" onClick={onRetry}>
-            Retry
-          </button>
+          <AppButton
+            size="sm"
+            startIcon={<RefreshCw aria-hidden="true" size={16} />}
+            type="button"
+            variant="danger"
+            onClick={onRetry}
+          >
+            Reintentar
+          </AppButton>
         </div>
       ) : null}
 
       {isLoading ? (
         <div className={styles.loadingState}>
-          <p className={styles.loadingTitle}>Loading customer profile...</p>
+          <p className={styles.loadingTitle}>Cargando cliente...</p>
           <p className={styles.loadingDescription}>
-            Bringing in purchase history, contact details and balance data.
+            Consultando compras, datos de contacto y saldo pendiente.
           </p>
         </div>
       ) : null}
 
       {!isLoading && !errorMessage && !customer ? (
         <div className={styles.emptyState}>
-          <p className={styles.emptyTitle}>Choose a customer to inspect the record</p>
+          <p className={styles.emptyTitle}>Elige un cliente para ver el detalle</p>
           <p className={styles.emptyDescription}>
-            Select someone from the directory to reveal CRM context and recent
-            purchase activity.
+            Selecciona una persona del directorio para consultar su contacto,
+            cartera y actividad de compra reciente.
           </p>
         </div>
       ) : null}
@@ -72,59 +85,59 @@ export function CustomerDetailPanel({
       {!isLoading && !errorMessage && customer ? (
         <>
           <div className={styles.balanceCard}>
-            <span className={styles.balanceLabel}>Outstanding balance</span>
+            <span className={styles.balanceLabel}>Saldo pendiente</span>
             <strong className={styles.balanceValue}>
               {formatCurrency(customer.balance)}
             </strong>
             <p className={styles.balanceHint}>
               {customer.balance > 0
-                ? 'This customer currently has an unpaid balance to follow up on.'
-                : 'This customer has no pending balance right now.'}
+                ? 'Este cliente tiene un saldo pendiente que requiere seguimiento.'
+                : 'Este cliente no tiene cuentas pendientes actualmente.'}
             </p>
           </div>
 
           <div className={styles.detailsGrid}>
             <div className={styles.detailBlock}>
-              <span className={styles.detailLabel}>Email</span>
+              <span className={styles.detailLabel}>Correo electrónico</span>
               <strong className={styles.detailValue}>
-                {customer.email ?? 'Not registered'}
+                {customer.email ?? 'No registrado'}
               </strong>
             </div>
 
             <div className={styles.detailBlock}>
-              <span className={styles.detailLabel}>Phone</span>
+              <span className={styles.detailLabel}>Teléfono</span>
               <strong className={styles.detailValue}>
-                {customer.phone ?? 'Not registered'}
+                {customer.phone ?? 'No registrado'}
               </strong>
             </div>
 
             <div className={styles.detailBlock}>
-              <span className={styles.detailLabel}>Purchase count</span>
+              <span className={styles.detailLabel}>Número de compras</span>
               <strong className={styles.detailValue}>
                 {customer.purchaseCount.toString()}
               </strong>
             </div>
 
             <div className={styles.detailBlock}>
-              <span className={styles.detailLabel}>Last purchase</span>
+              <span className={styles.detailLabel}>Última compra</span>
               <strong className={styles.detailValue}>
                 {customer.lastPurchaseAt
-                  ? formatDate(customer.lastPurchaseAt)
-                  : 'No purchases yet'}
+                  ? formatDate(customer.lastPurchaseAt, 'es-CO')
+                  : 'Sin compras registradas'}
               </strong>
             </div>
 
             <div className={styles.detailBlock}>
-              <span className={styles.detailLabel}>Created</span>
+              <span className={styles.detailLabel}>Creado</span>
               <strong className={styles.detailValue}>
-                {formatDate(customer.createdAt)}
+                {formatDate(customer.createdAt, 'es-CO')}
               </strong>
             </div>
 
             <div className={styles.detailBlock}>
-              <span className={styles.detailLabel}>Updated</span>
+              <span className={styles.detailLabel}>Actualizado</span>
               <strong className={styles.detailValue}>
-                {formatDate(customer.updatedAt)}
+                {formatDate(customer.updatedAt, 'es-CO')}
               </strong>
             </div>
           </div>

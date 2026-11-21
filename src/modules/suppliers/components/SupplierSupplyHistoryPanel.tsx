@@ -1,6 +1,17 @@
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { useMemo, useState } from 'react'
 import {
+  Ban,
+  Download,
+  FileCheck2,
+  Pencil,
+  ReceiptText,
+  RotateCcw,
+  Save,
+  WalletCards,
+  X,
+} from 'lucide-react'
+import {
   useCurrentCashRegisterQuery,
   useReserveSummaryQuery,
 } from '@/modules/cash-register/hooks/use-cash-register-query'
@@ -19,6 +30,7 @@ import type {
   SupplierSupplyHistoryItem,
 } from '@/modules/suppliers/types/supplier'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDateTime } from '@/shared/utils/format-date-time'
@@ -113,6 +125,8 @@ export function SupplierSupplyHistoryPanel({
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const reserveSummaryQuery = useReserveSummaryQuery()
   const isEnglish = languageCode === 'en'
+  const formatLocalizedDateTime = (value: string) =>
+    formatDateTime(value, isEnglish ? 'en-US' : 'es-CO')
   const [paymentDraft, setPaymentDraft] = useState<PaymentDraft | null>(null)
   const [cancellationDraft, setCancellationDraft] = useState<{
     purchaseId: string
@@ -196,19 +210,24 @@ export function SupplierSupplyHistoryPanel({
   return (
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>
-            {isEnglish ? 'Accounts payable' : 'Cuentas por pagar'}
-          </p>
-          <h3 className={styles.title}>
-            {supplierName
-              ? isEnglish
-                ? `${supplierName}'s purchase history`
-                : `Compras registradas a ${supplierName}`
-              : isEnglish
-                ? 'Purchase history'
-                : 'Compras registradas'}
-          </h3>
+        <div className={styles.headingGroup}>
+          <span className={styles.headerIcon} aria-hidden="true">
+            <ReceiptText size={20} />
+          </span>
+          <div>
+            <p className={styles.eyebrow}>
+              {isEnglish ? 'Accounts payable' : 'Cuentas por pagar'}
+            </p>
+            <h3 className={styles.title}>
+              {supplierName
+                ? isEnglish
+                  ? `${supplierName}'s purchase history`
+                  : `Compras registradas a ${supplierName}`
+                : isEnglish
+                  ? 'Purchase history'
+                  : 'Compras registradas'}
+            </h3>
+          </div>
         </div>
 
         <span className={styles.countPill}>
@@ -325,7 +344,7 @@ export function SupplierSupplyHistoryPanel({
                       {isEnglish ? 'Payment movement' : 'Movimiento de abono'} #
                       {paymentHistory.length - paymentIndex}
                     </p>
-                    <span>{formatDateTime(payment.paymentDate)}</span>
+                    <span>{formatLocalizedDateTime(payment.paymentDate)}</span>
                   </div>
                   <strong>{formatCurrency(payment.amount)}</strong>
                 </div>
@@ -466,9 +485,9 @@ export function SupplierSupplyHistoryPanel({
                         `${isEnglish ? 'Purchase' : 'Compra'} ${purchase.purchaseId}`}
                     </p>
                     <p className={styles.purchaseDate}>
-                      {formatDateTime(purchase.purchaseDate)}
+                      {formatLocalizedDateTime(purchase.purchaseDate)}
                       {purchase.dueDate
-                        ? ` · ${isEnglish ? 'Due' : 'Vence'} ${formatDateTime(purchase.dueDate)}`
+                        ? ` · ${isEnglish ? 'Due' : 'Vence'} ${formatLocalizedDateTime(purchase.dueDate)}`
                         : ''}
                     </p>
                   </div>
@@ -550,7 +569,7 @@ export function SupplierSupplyHistoryPanel({
                             : isEnglish
                               ? 'Open register'
                               : 'Caja abierta'}{' '}
-                          · {formatDateTime(payment.paymentDate)}
+                          · {formatLocalizedDateTime(payment.paymentDate)}
                         </span>
                         <strong>{formatCurrency(payment.amount)}</strong>
                       </div>
@@ -567,14 +586,17 @@ export function SupplierSupplyHistoryPanel({
                       <div key={purchaseReturn.id}>
                         <span>
                           {purchaseReturn.creditNumber} ·{' '}
-                          {formatDateTime(purchaseReturn.returnDate)}
+                          {formatLocalizedDateTime(purchaseReturn.returnDate)}
                         </span>
                         <strong>
                           -{formatCurrency(purchaseReturn.amount)}
                         </strong>
                         {onDownloadCreditNote ? (
-                          <button
+                          <AppButton
+                            size="sm"
+                            startIcon={<Download aria-hidden="true" size={15} />}
                             type="button"
+                            variant="link"
                             onClick={() =>
                               onDownloadCreditNote(
                                 purchase.purchaseId,
@@ -583,7 +605,7 @@ export function SupplierSupplyHistoryPanel({
                             }
                           >
                             {isEnglish ? 'Download' : 'Descargar'}
-                          </button>
+                          </AppButton>
                         ) : null}
                       </div>
                     ))}
@@ -634,43 +656,55 @@ export function SupplierSupplyHistoryPanel({
                           : 'Sin motivo registrado.')}
                     </span>
                     {purchase.cancelledAt ? (
-                      <small>{formatDateTime(purchase.cancelledAt)}</small>
+                      <small>{formatLocalizedDateTime(purchase.cancelledAt)}</small>
                     ) : null}
                   </div>
                 ) : null}
 
                 <div className={styles.purchaseActions}>
                   {onDownloadReceipt ? (
-                    <button
+                    <AppButton
+                      size="sm"
+                      startIcon={<Download aria-hidden="true" size={16} />}
                       type="button"
+                      variant="secondary"
                       onClick={() => onDownloadReceipt(purchase.purchaseId)}
                     >
                       {isEnglish ? 'Download receipt' : 'Descargar comprobante'}
-                    </button>
+                    </AppButton>
                   ) : null}
                   {purchase.status === 'PENDING' && onRegisterPayment ? (
-                    <button
+                    <AppButton
+                      size="sm"
+                      startIcon={<WalletCards aria-hidden="true" size={16} />}
                       type="button"
+                      variant="success"
                       onClick={() => startPayment(purchase)}
                     >
                       {isEnglish ? 'Register payment' : 'Registrar abono'}
-                    </button>
+                    </AppButton>
                   ) : null}
                   {purchase.status !== 'CANCELLED' &&
                   purchase.returns.length === 0 &&
                   onUpdatePurchase ? (
-                    <button
+                    <AppButton
+                      size="sm"
+                      startIcon={<Pencil aria-hidden="true" size={16} />}
                       type="button"
+                      variant="secondary"
                       onClick={() => startEditing(purchase)}
                     >
                       {isEnglish ? 'Edit purchase' : 'Editar compra'}
-                    </button>
+                    </AppButton>
                   ) : null}
                   {purchase.status !== 'CANCELLED' &&
                   purchase.items.some((item) => item.availableToReturn > 0) &&
                   onCreateReturn ? (
-                    <button
+                    <AppButton
+                      size="sm"
+                      startIcon={<RotateCcw aria-hidden="true" size={16} />}
                       type="button"
+                      variant="warning"
                       onClick={() => {
                         setPaymentDraft(null)
                         setCancellationDraft(null)
@@ -688,12 +722,14 @@ export function SupplierSupplyHistoryPanel({
                       }}
                     >
                       {isEnglish ? 'Return products' : 'Devolver productos'}
-                    </button>
+                    </AppButton>
                   ) : null}
                   {purchase.status !== 'CANCELLED' && onCancelPurchase ? (
-                    <button
-                      className={styles.cancelPurchaseButton}
+                    <AppButton
+                      size="sm"
+                      startIcon={<Ban aria-hidden="true" size={16} />}
                       type="button"
+                      variant="danger"
                       onClick={() => {
                         setPaymentDraft(null)
                         setEditDraft(null)
@@ -704,7 +740,7 @@ export function SupplierSupplyHistoryPanel({
                       }}
                     >
                       {isEnglish ? 'Cancel purchase' : 'Anular compra'}
-                    </button>
+                    </AppButton>
                   ) : null}
                 </div>
 
@@ -907,10 +943,16 @@ export function SupplierSupplyHistoryPanel({
                         : 'Por seguridad no se agregan ni eliminan productos aquí. Puedes corregir la cantidad y el costo de cada producto original.'}
                     </div>
                     <div className={styles.paymentFormActions}>
-                      <button type="button" onClick={() => setEditDraft(null)}>
+                      <AppButton
+                        size="sm"
+                        startIcon={<X aria-hidden="true" size={16} />}
+                        type="button"
+                        variant="secondary"
+                        onClick={() => setEditDraft(null)}
+                      >
                         {isEnglish ? 'Cancel' : 'Cancelar'}
-                      </button>
-                      <button
+                      </AppButton>
+                      <AppButton
                         disabled={
                           editingPurchaseId !== null ||
                           hasInvalidEditedItem ||
@@ -921,7 +963,12 @@ export function SupplierSupplyHistoryPanel({
                               editDraft.dueDate < editDraft.purchaseDate,
                           )
                         }
+                        isLoading={editingPurchaseId === purchase.purchaseId}
+                        loadingLabel={isEnglish ? 'Saving...' : 'Guardando...'}
+                        size="sm"
+                        startIcon={<Save aria-hidden="true" size={16} />}
                         type="button"
+                        variant="primary"
                         onClick={async () => {
                           try {
                             await onUpdatePurchase?.(purchase.purchaseId, {
@@ -951,14 +998,8 @@ export function SupplierSupplyHistoryPanel({
                           }
                         }}
                       >
-                        {editingPurchaseId === purchase.purchaseId
-                          ? isEnglish
-                            ? 'Saving...'
-                            : 'Guardando...'
-                          : isEnglish
-                            ? 'Save correction'
-                            : 'Guardar corrección'}
-                      </button>
+                        {isEnglish ? 'Save correction' : 'Guardar corrección'}
+                      </AppButton>
                     </div>
                   </div>
                 ) : null}
@@ -1073,13 +1114,16 @@ export function SupplierSupplyHistoryPanel({
                       />
                     </label>
                     <div className={styles.paymentFormActions}>
-                      <button
+                      <AppButton
+                        size="sm"
+                        startIcon={<X aria-hidden="true" size={16} />}
                         type="button"
+                        variant="secondary"
                         onClick={() => setReturnDraft(null)}
                       >
                         {isEnglish ? 'Go back' : 'Volver'}
-                      </button>
-                      <button
+                      </AppButton>
+                      <AppButton
                         disabled={
                           returningPurchaseId !== null ||
                           returnAmount <= 0 ||
@@ -1096,7 +1140,12 @@ export function SupplierSupplyHistoryPanel({
                             )
                           })
                         }
+                        isLoading={returningPurchaseId === purchase.purchaseId}
+                        loadingLabel={isEnglish ? 'Saving...' : 'Guardando...'}
+                        size="sm"
+                        startIcon={<FileCheck2 aria-hidden="true" size={16} />}
                         type="button"
+                        variant="warning"
                         onClick={() => {
                           onCreateReturn?.(purchase.purchaseId, {
                             items: purchase.items
@@ -1119,14 +1168,8 @@ export function SupplierSupplyHistoryPanel({
                           setReturnDraft(null)
                         }}
                       >
-                        {returningPurchaseId === purchase.purchaseId
-                          ? isEnglish
-                            ? 'Saving...'
-                            : 'Guardando...'
-                          : isEnglish
-                            ? 'Create credit note'
-                            : 'Crear nota crédito'}
-                      </button>
+                        {isEnglish ? 'Create credit note' : 'Crear nota crédito'}
+                      </AppButton>
                     </div>
                   </div>
                 ) : null}
@@ -1162,19 +1205,26 @@ export function SupplierSupplyHistoryPanel({
                       />
                     </label>
                     <div className={styles.paymentFormActions}>
-                      <button
+                      <AppButton
+                        size="sm"
+                        startIcon={<X aria-hidden="true" size={16} />}
                         type="button"
+                        variant="secondary"
                         onClick={() => setCancellationDraft(null)}
                       >
                         {isEnglish ? 'Go back' : 'Volver'}
-                      </button>
-                      <button
-                        className={styles.confirmCancellationButton}
+                      </AppButton>
+                      <AppButton
                         disabled={
                           cancellingPurchaseId !== null ||
                           cancellationDraft.reason.trim().length < 3
                         }
+                        isLoading={cancellingPurchaseId === purchase.purchaseId}
+                        loadingLabel={isEnglish ? 'Cancelling...' : 'Anulando...'}
+                        size="sm"
+                        startIcon={<Ban aria-hidden="true" size={16} />}
                         type="button"
+                        variant="danger"
                         onClick={() => {
                           onCancelPurchase?.(
                             purchase.purchaseId,
@@ -1183,14 +1233,8 @@ export function SupplierSupplyHistoryPanel({
                           setCancellationDraft(null)
                         }}
                       >
-                        {cancellingPurchaseId === purchase.purchaseId
-                          ? isEnglish
-                            ? 'Cancelling...'
-                            : 'Anulando...'
-                          : isEnglish
-                            ? 'Confirm cancellation'
-                            : 'Confirmar anulación'}
-                      </button>
+                        {isEnglish ? 'Confirm cancellation' : 'Confirmar anulación'}
+                      </AppButton>
                     </div>
                   </div>
                 ) : null}
@@ -1314,19 +1358,27 @@ export function SupplierSupplyHistoryPanel({
                       </div>
                     ) : null}
                     <div className={styles.paymentFormActions}>
-                      <button
+                      <AppButton
+                        size="sm"
+                        startIcon={<X aria-hidden="true" size={16} />}
                         type="button"
+                        variant="secondary"
                         onClick={() => setPaymentDraft(null)}
                       >
                         {isEnglish ? 'Cancel' : 'Cancelar'}
-                      </button>
-                      <button
+                      </AppButton>
+                      <AppButton
                         disabled={
                           payingPurchaseId !== null ||
                           Number(paymentDraft.amount) <= 0 ||
                           Number(paymentDraft.amount) > purchase.balance
                         }
+                        isLoading={payingPurchaseId === purchase.purchaseId}
+                        loadingLabel={isEnglish ? 'Saving...' : 'Guardando...'}
+                        size="sm"
+                        startIcon={<WalletCards aria-hidden="true" size={16} />}
                         type="button"
+                        variant="success"
                         onClick={() => {
                           onRegisterPayment?.(purchase.purchaseId, {
                             amount: Number(paymentDraft.amount),
@@ -1341,14 +1393,8 @@ export function SupplierSupplyHistoryPanel({
                           setPaymentDraft(null)
                         }}
                       >
-                        {payingPurchaseId === purchase.purchaseId
-                          ? isEnglish
-                            ? 'Saving...'
-                            : 'Guardando...'
-                          : isEnglish
-                            ? 'Save payment'
-                            : 'Guardar abono'}
-                      </button>
+                        {isEnglish ? 'Save payment' : 'Guardar abono'}
+                      </AppButton>
                     </div>
                   </div>
                 ) : null}

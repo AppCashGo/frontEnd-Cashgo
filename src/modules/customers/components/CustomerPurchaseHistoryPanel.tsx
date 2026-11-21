@@ -1,4 +1,5 @@
 import type { CustomerPurchaseHistoryItem } from '@/modules/customers/types/customer'
+import { ShoppingBag } from 'lucide-react'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDateTime } from '@/shared/utils/format-date-time'
@@ -18,13 +19,18 @@ export function CustomerPurchaseHistoryPanel({
   return (
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Historial de compras</p>
-          <h3 className={styles.title}>
-            {customerName
-              ? `Compras recientes de ${customerName}`
-              : 'Compras recientes'}
-          </h3>
+        <div className={styles.headingGroup}>
+          <span className={styles.headerIcon} aria-hidden="true">
+            <ShoppingBag size={20} />
+          </span>
+          <div>
+            <p className={styles.eyebrow}>Historial de compras</p>
+            <h3 className={styles.title}>
+              {customerName
+                ? `Compras recientes de ${customerName}`
+                : 'Compras recientes'}
+            </h3>
+          </div>
         </div>
 
         <span className={styles.countPill}>
