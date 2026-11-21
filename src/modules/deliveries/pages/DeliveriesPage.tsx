@@ -1,5 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from 'react'
+import { CheckCircle2, Plus, Truck, X } from 'lucide-react'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
 import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inventory-query'
@@ -26,6 +27,7 @@ import {
 import { useCreateSaleMutation } from '@/modules/sales/hooks/use-create-sale-mutation'
 import type { SalePaymentMethod } from '@/modules/sales/types/sale'
 import { AppIcon } from '@/shared/components/icons/AppIcon'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { getSharedPaymentMethodLabel } from '@/shared/payments/payment-methods'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
@@ -43,15 +45,15 @@ const boardColumns: Array<{
 }> = [
   {
     value: 'PREPARING',
-    label: 'En preparacion',
+    label: 'En preparación',
     emptyTitle: 'Sin pedidos',
-    emptyDescription: 'Aqui se listaran los pedidos en preparacion',
+    emptyDescription: 'Aquí se listarán los pedidos en preparación',
   },
   {
     value: 'ON_ROUTE',
-    label: 'Ordenes en reparto',
-    emptyTitle: 'Sin ordenes',
-    emptyDescription: 'Aqui se listaran las ordenes en reparto',
+    label: 'Órdenes en reparto',
+    emptyTitle: 'Sin órdenes',
+    emptyDescription: 'Aquí se listarán las órdenes en reparto',
   },
 ]
 
@@ -548,33 +550,43 @@ export function DeliveriesPage() {
 
         <div className={styles.cardActions}>
           {order.status === 'PREPARING' || order.status === 'NEW' ? (
-            <button
+            <AppButton
+              size="sm"
+              startIcon={<Truck aria-hidden="true" size={16} />}
               type="button"
+              variant="primary"
               onClick={() => handleUpdateOrderStatus(order.id, 'ON_ROUTE')}
             >
               Mover a reparto
-            </button>
+            </AppButton>
           ) : null}
           {order.status === 'ON_ROUTE' ? (
-            <button
+            <AppButton
               type="button"
               disabled={createSaleMutation.isPending || updateDeliveryOrderMutation.isPending}
+              isLoading={createSaleMutation.isPending || updateDeliveryOrderMutation.isPending}
+              loadingLabel="Archivando..."
+              size="sm"
+              startIcon={<CheckCircle2 aria-hidden="true" size={16} />}
+              variant="success"
               onClick={() => {
                 void handleDeliverOrder(order)
               }}
             >
               Archivar orden
-            </button>
+            </AppButton>
           ) : null}
           {order.status !== 'DELIVERED' ? (
-            <button
-              className={styles.dangerTextButton}
+            <AppButton
               type="button"
               disabled={updateDeliveryOrderMutation.isPending}
+              size="sm"
+              startIcon={<X aria-hidden="true" size={16} />}
+              variant="danger"
               onClick={() => handleUpdateOrderStatus(order.id, 'CANCELLED')}
             >
               Cancelar
-            </button>
+            </AppButton>
           ) : null}
         </div>
       </article>
@@ -925,13 +937,14 @@ export function DeliveriesPage() {
     <div className={styles.page}>
       <header className={styles.header}>
         <h2>Domicilios</h2>
-        <button
-          className={styles.createDeliveryButton}
+        <AppButton
+          size="lg"
+          startIcon={<Plus aria-hidden="true" size={19} />}
           type="button"
           onClick={handleStartNewDelivery}
         >
           Crear nuevo domicilio
-        </button>
+        </AppButton>
       </header>
 
       {feedbackMessage ? (

@@ -1,5 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Download, Printer, ReceiptText, WalletCards } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
@@ -22,7 +23,7 @@ import {
   formatBillingDateTime,
 } from "@/modules/billing/utils/format-billing";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
-import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import { resolveApiAssetUrl } from "@/shared/services/api-client";
 import styles from "./BillingDocumentDrawer.module.css";
 
@@ -164,20 +165,21 @@ export function BillingDocumentDrawer({
         ) : (
           <>
             <div className={styles.actions}>
-              <button
-                className={retailStyles.buttonOutline}
+              <AppButton
+                startIcon={<Printer aria-hidden="true" size={17} />}
                 type="button"
+                variant="secondary"
                 onClick={() => void onPrintReceipt()}
               >
                 {copy.printReceipt}
-              </button>
-              <button
-                className={retailStyles.buttonDark}
+              </AppButton>
+              <AppButton
+                startIcon={<Download aria-hidden="true" size={17} />}
                 type="button"
                 onClick={() => void onDownloadReceipt()}
               >
                 {copy.downloadReceipt}
-              </button>
+              </AppButton>
             </div>
 
             <section className={styles.section}>
@@ -312,14 +314,16 @@ export function BillingDocumentDrawer({
                           )}
                         </span>
                       </div>
-                      <button
-                        className={retailStyles.buttonOutline}
+                      <AppButton
                         disabled={isSubmitting}
+                        size="sm"
+                        startIcon={<ReceiptText aria-hidden="true" size={16} />}
                         type="button"
+                        variant="secondary"
                         onClick={() => void onDownloadCreditNote(creditNote.id)}
                       >
                         {copy.downloadCreditNote}
-                      </button>
+                      </AppButton>
                     </article>
                   ))}
                 </div>
@@ -574,13 +578,16 @@ export function BillingDocumentDrawer({
                     <div className={styles.errorBanner}>{errors.root.message}</div>
                   ) : null}
 
-                  <button
-                    className={retailStyles.buttonDark}
+                  <AppButton
                     disabled={isSubmitting}
+                    isLoading={isSubmitting}
+                    loadingLabel={copy.saving}
+                    startIcon={<WalletCards aria-hidden="true" size={17} />}
                     type="submit"
+                    variant="success"
                   >
-                    {isSubmitting ? copy.saving : copy.collectButton}
-                  </button>
+                    {copy.collectButton}
+                  </AppButton>
                 </form>
               </section>
             ) : null}

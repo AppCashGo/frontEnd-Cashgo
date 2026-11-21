@@ -1,5 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Save, X } from "lucide-react";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
@@ -10,7 +11,7 @@ import type {
 } from "@/modules/billing/types/billing";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
 import { getBillingCopy } from "@/modules/billing/i18n/billing-copy";
-import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
 import styles from "./BillingFormDrawer.module.css";
 
@@ -165,22 +166,25 @@ export function BillingConfigurationDrawer({
       description={copy.configDescription}
       footer={
         <DrawerActionFooter>
-          <button
-            className={retailStyles.buttonOutline}
+          <AppButton
             disabled={isSubmitting}
+            startIcon={<X aria-hidden="true" size={17} />}
             type="button"
+            variant="secondary"
             onClick={onClose}
           >
             {languageCode === "en" ? "Cancel" : "Cancelar"}
-          </button>
-          <button
-            className={retailStyles.buttonDark}
+          </AppButton>
+          <AppButton
             disabled={isSubmitting}
             form={formId}
+            isLoading={isSubmitting}
+            loadingLabel={copy.saving}
+            startIcon={<Save aria-hidden="true" size={17} />}
             type="submit"
           >
-            {isSubmitting ? copy.saving : copy.configSave}
-          </button>
+            {copy.configSave}
+          </AppButton>
         </DrawerActionFooter>
       }
       isOpen={isOpen}

@@ -1,6 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Search } from "lucide-react";
+import { ReceiptText, Search, X } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { useForm } from "react-hook-form";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
@@ -19,7 +19,7 @@ import {
   formatBillingDateTime,
 } from "@/modules/billing/utils/format-billing";
 import type { AppLanguageCode } from "@/shared/i18n/app-dictionary";
-import retailStyles from "@/shared/components/retail/RetailUI.module.css";
+import { AppButton } from "@/shared/components/ui/AppButton";
 import { DrawerActionFooter } from "@/shared/components/ui/DrawerActionFooter";
 import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
 import styles from "./BillingFormDrawer.module.css";
@@ -116,22 +116,25 @@ export function CreateBillingInvoiceDrawer({
       description={copy.createInvoiceDescription}
       footer={
         <DrawerActionFooter>
-          <button
-            className={retailStyles.buttonOutline}
+          <AppButton
             disabled={isSubmitting}
+            startIcon={<X aria-hidden="true" size={17} />}
             type="button"
+            variant="secondary"
             onClick={handleClose}
           >
             {languageCode === "en" ? "Cancel" : "Cancelar"}
-          </button>
-          <button
-            className={retailStyles.buttonDark}
+          </AppButton>
+          <AppButton
             disabled={isSubmitting}
             form={formId}
+            isLoading={isSubmitting}
+            loadingLabel={copy.saving}
+            startIcon={<ReceiptText aria-hidden="true" size={17} />}
             type="submit"
           >
-            {isSubmitting ? copy.saving : copy.createInvoiceSubmit}
-          </button>
+            {copy.createInvoiceSubmit}
+          </AppButton>
         </DrawerActionFooter>
       }
       isOpen={isOpen}
