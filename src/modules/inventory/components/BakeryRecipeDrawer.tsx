@@ -7,6 +7,7 @@ import {
 import type { ProductRecipe } from '@/modules/inventory/types/inventory'
 import type { Product } from '@/modules/products/types/product'
 import { AppDrawer } from '@/shared/components/ui/AppDrawer'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './BakeryRecipeDrawer.module.css'
@@ -121,13 +122,13 @@ export function BakeryRecipeDrawer({ isOpen, onClose, product, products, recipe 
       footer={
         <div className={styles.footer}>
           {recipe ? (
-            <button className={styles.deleteButton} disabled={deleteMutation.isPending} type="button" onClick={() => void deleteRecipe()}>
-              <Trash2 aria-hidden="true" /> Eliminar receta
-            </button>
+            <AppButton isLoading={deleteMutation.isPending} loadingLabel="Eliminando…" startIcon={<Trash2 aria-hidden="true" />} variant="danger" onClick={() => void deleteRecipe()}>
+              Eliminar receta
+            </AppButton>
           ) : <span />}
-          <button className={styles.saveButton} disabled={upsertMutation.isPending} type="button" onClick={() => void saveRecipe()}>
-            <Save aria-hidden="true" /> {upsertMutation.isPending ? 'Guardando…' : 'Guardar receta'}
-          </button>
+          <AppButton isLoading={upsertMutation.isPending} loadingLabel="Guardando receta…" startIcon={<Save aria-hidden="true" />} onClick={() => void saveRecipe()}>
+            Guardar receta
+          </AppButton>
         </div>
       }
       onClose={onClose}
@@ -150,9 +151,9 @@ export function BakeryRecipeDrawer({ isOpen, onClose, product, products, recipe 
 
       <div className={styles.sectionHeading}>
         <div><strong>Insumos necesarios</strong><span>{ingredients.length} configurados</span></div>
-        <button type="button" onClick={() => setIngredients((current) => [...current, createDraft()])}>
-          <Plus aria-hidden="true" /> Agregar insumo
-        </button>
+        <AppButton size="sm" startIcon={<Plus aria-hidden="true" />} variant="secondary" onClick={() => setIngredients((current) => [...current, createDraft()])}>
+          Agregar insumo
+        </AppButton>
       </div>
 
       <div className={styles.ingredients}>

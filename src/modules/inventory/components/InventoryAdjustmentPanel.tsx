@@ -1,4 +1,5 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { PackagePlus } from 'lucide-react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import {
@@ -11,6 +12,7 @@ import type {
 } from '@/modules/inventory/types/inventory'
 import type { Product } from '@/modules/products/types/product'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './InventoryAdjustmentPanel.module.css'
 
@@ -238,13 +240,16 @@ export function InventoryAdjustmentPanel({
           </div>
         ) : null}
 
-        <button
-          className={styles.primaryButton}
+        <AppButton
           disabled={isDisabled}
+          fullWidth
+          isLoading={isSubmitting}
+          loadingLabel="Guardando movimiento…"
+          startIcon={<PackagePlus aria-hidden="true" />}
           type="submit"
         >
-          {isSubmitting ? 'Saving movement...' : 'Save movement'}
-        </button>
+          Guardar movimiento
+        </AppButton>
       </form>
     </SurfaceCard>
   )

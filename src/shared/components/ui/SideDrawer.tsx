@@ -40,7 +40,7 @@ export function SideDrawer({
   closeButtonClassName,
   closeButtonPlacement = "end",
   closeContent,
-  closeLabel = "Close",
+  closeLabel = "Cerrar panel",
   confirmClose = false,
   confirmCloseDescription =
     "Si sales ahora, la información que estás registrando no se guardará.",

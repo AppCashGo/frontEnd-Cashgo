@@ -1,4 +1,4 @@
-import { Camera, Check, ClipboardList, ScanBarcode, Search, TriangleAlert } from 'lucide-react'
+import { ArrowLeft, Camera, Check, ClipboardCheck, ClipboardList, LogOut, ScanBarcode, Search, TriangleAlert } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BarcodeScannerModal } from '@/shared/barcode/BarcodeScannerModal'
 import { normalizeBarcode } from '@/shared/barcode/normalize-barcode'
@@ -10,6 +10,7 @@ import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './InventoryCountDrawer.module.css'
 
@@ -214,31 +215,31 @@ export function InventoryCountDrawer({
 
   const footer = step === 'COUNT' ? (
     <div className={styles.footerActions}>
-      <button className={styles.secondaryButton} type="button" onClick={onClose}>
+      <AppButton startIcon={<LogOut aria-hidden="true" />} variant="secondary" onClick={onClose}>
         Guardar y salir
-      </button>
-      <button
-        className={styles.primaryButton}
+      </AppButton>
+      <AppButton
         disabled={countedProducts.length === 0}
-        type="button"
+        startIcon={<ClipboardCheck aria-hidden="true" />}
         onClick={() => setStep('REVIEW')}
       >
         Revisar {countedProducts.length > 0 ? `(${countedProducts.length})` : ''}
-      </button>
+      </AppButton>
     </div>
   ) : (
     <div className={styles.footerActions}>
-      <button className={styles.secondaryButton} type="button" onClick={() => setStep('COUNT')}>
+      <AppButton startIcon={<ArrowLeft aria-hidden="true" />} variant="secondary" onClick={() => setStep('COUNT')}>
         Volver al conteo
-      </button>
-      <button
-        className={styles.primaryButton}
-        disabled={applyCountMutation.isPending}
-        type="button"
+      </AppButton>
+      <AppButton
+        isLoading={applyCountMutation.isPending}
+        loadingLabel="Aplicando diferencias…"
+        startIcon={<Check aria-hidden="true" />}
+        variant="success"
         onClick={() => void applyCount()}
       >
-        {applyCountMutation.isPending ? 'Aplicando…' : 'Aplicar diferencias'}
-      </button>
+        Aplicar diferencias
+      </AppButton>
     </div>
   )
 
@@ -285,10 +286,9 @@ export function InventoryCountDrawer({
                   onChange={(event) => setSearch(event.target.value)}
                 />
               </label>
-              <button className={styles.scanButton} type="button" onClick={() => setScannerOpen(true)}>
-                <Camera aria-hidden="true" />
+              <AppButton className={styles.scanButton} size="sm" startIcon={<Camera aria-hidden="true" />} variant="outline" onClick={() => setScannerOpen(true)}>
                 Escanear
-              </button>
+              </AppButton>
               <SearchableSelect value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
                 <option value="">Todas las categorías</option>
                 {categories.map((category) => (
@@ -345,13 +345,15 @@ export function InventoryCountDrawer({
                         }}
                       />
                     </label>
-                    <button
+                    <AppButton
                       className={styles.sameButton}
-                      type="button"
+                      size="sm"
+                      startIcon={<Check aria-hidden="true" />}
+                      variant="secondary"
                       onClick={() => updateCount(product.id, String(product.stock))}
                     >
-                      <Check aria-hidden="true" /> Igual
-                    </button>
+                      Igual
+                    </AppButton>
                     {difference !== null ? (
                       <span className={difference === 0 ? styles.differenceOk : difference > 0 ? styles.differencePositive : styles.differenceNegative}>
                         {getDifferenceLabel(difference)}
