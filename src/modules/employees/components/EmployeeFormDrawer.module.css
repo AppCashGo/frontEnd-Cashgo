@@ -30,32 +30,6 @@
   line-height: 1.65;
 }
 
-.secondaryButton,
-.primaryButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 2.9rem;
-  padding: 0 1rem;
-  border-radius: 999px;
-  font: inherit;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.secondaryButton {
-  border: 1px solid var(--color-border);
-  background: rgba(255, 255, 255, 0.72);
-  color: var(--color-ink);
-}
-
-.primaryButton {
-  border: none;
-  background: var(--ui-primary);
-  color: #ffffff;
-  box-shadow: 0 0.5rem 1.1rem rgba(37, 99, 235, 0.18);
-}
-
 .statusBanner,
 .confirmCard,
 .permissionsCard,

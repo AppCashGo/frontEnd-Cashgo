@@ -8,11 +8,13 @@ import {
   DollarSign,
   PackageCheck,
   ReceiptText,
+  Save,
   Settings2,
   ShieldCheck,
   UserCheck,
   UsersRound,
   UtensilsCrossed,
+  UserPlus,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -30,6 +32,7 @@ import type {
 } from '@/modules/employees/types/employee'
 import type { AssignableUserRole } from '@/shared/constants/user-roles'
 import { AvatarUploadField } from '@/shared/components/ui/AvatarUploadField'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
@@ -277,52 +280,13 @@ function EmployeePermissionsModal({
       ),
     [preset],
   )
-  const [selectedPermissions, setSelectedPermissions] = useState<Set<string>>(
-    () => new Set(allPermissionKeys),
-  )
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     () => getInitialExpandedGroups(preset),
   )
 
   useEffect(() => {
-    setSelectedPermissions(new Set(allPermissionKeys))
     setExpandedGroups(getInitialExpandedGroups(preset))
-  }, [allPermissionKeys, preset])
-
-  function togglePermission(permissionKey: string) {
-    setSelectedPermissions((currentPermissions) => {
-      const nextPermissions = new Set(currentPermissions)
-
-      if (nextPermissions.has(permissionKey)) {
-        nextPermissions.delete(permissionKey)
-      } else {
-        nextPermissions.add(permissionKey)
-      }
-
-      return nextPermissions
-    })
-  }
-
-  function toggleGroup(group: EmployeePermissionGroup) {
-    const groupPermissionKeys = group.permissions.map((permission) => permission.key)
-    const isGroupSelected = groupPermissionKeys.every((permissionKey) =>
-      selectedPermissions.has(permissionKey),
-    )
-
-    setSelectedPermissions((currentPermissions) => {
-      const nextPermissions = new Set(currentPermissions)
-
-      for (const permissionKey of groupPermissionKeys) {
-        if (isGroupSelected) {
-          nextPermissions.delete(permissionKey)
-        } else {
-          nextPermissions.add(permissionKey)
-        }
-      }
-
-      return nextPermissions
-    })
-  }
+  }, [preset])
 
   function toggleExpandedGroup(groupId: string) {
     setExpandedGroups((currentGroups) => {
@@ -358,15 +322,15 @@ function EmployeePermissionsModal({
               Permisos de {roleLabel.toLowerCase()}
             </h3>
             <p className={styles.modalDescription}>
-              Define claramente qué puede consultar y administrar esta persona.
+              Consulta lo que podrá hacer esta persona con el rol seleccionado.
             </p>
           </div>
         </div>
 
         <div className={styles.permissionsSummary}>
           <div>
-            <strong>{selectedPermissions.size}</strong>
-            <span>permisos activos</span>
+            <strong>{allPermissionKeys.length}</strong>
+            <span>permisos incluidos</span>
           </div>
           <span className={styles.roleBadge}>{roleLabel}</span>
         </div>
@@ -374,13 +338,6 @@ function EmployeePermissionsModal({
         <div className={styles.permissionsList}>
           {preset.permissionGroups.map((group) => {
             const isExpanded = expandedGroups.has(group.id)
-            const groupPermissionKeys = group.permissions.map(
-              (permission) => permission.key,
-            )
-            const isGroupSelected = groupPermissionKeys.every((permissionKey) =>
-              selectedPermissions.has(permissionKey),
-            )
-
             return (
               <article
                 className={`${styles.permissionGroupCard} ${
@@ -389,22 +346,12 @@ function EmployeePermissionsModal({
                 key={group.id}
               >
                 <div className={styles.permissionGroupHeader}>
-                  <button
-                    aria-label={
-                      isGroupSelected
-                        ? `Quitar ${getGroupLabel(group)}`
-                        : `Activar ${getGroupLabel(group)}`
-                    }
-                    className={
-                      isGroupSelected
-                        ? styles.permissionCheckActive
-                        : styles.permissionCheck
-                    }
-                    type="button"
-                    onClick={() => toggleGroup(group)}
+                  <span
+                    aria-hidden="true"
+                    className={styles.permissionCheckActive}
                   >
-                    {isGroupSelected ? <Check /> : null}
-                  </button>
+                    <Check />
+                  </span>
                   <button
                     className={styles.permissionGroupToggle}
                     aria-controls={`permission-group-${group.id}`}
@@ -435,35 +382,17 @@ function EmployeePermissionsModal({
                     className={styles.permissionItems}
                     id={`permission-group-${group.id}`}
                   >
-                    {group.permissions.map((permission) => {
-                      const isPermissionSelected = selectedPermissions.has(
-                        permission.key,
-                      )
-
-                      return (
-                        <button
-                          className={`${styles.permissionItem} ${
-                            isPermissionSelected
-                              ? styles.permissionItemSelected
-                              : ''
-                          }`}
+                    {group.permissions.map((permission) => (
+                        <div
+                          className={`${styles.permissionItem} ${styles.permissionItemSelected}`}
                           key={permission.key}
-                          type="button"
-                          onClick={() => togglePermission(permission.key)}
                         >
-                          <span
-                            className={
-                              isPermissionSelected
-                                ? styles.permissionItemCheckActive
-                                : styles.permissionItemCheck
-                            }
-                          >
-                            {isPermissionSelected ? <Check /> : null}
+                          <span className={styles.permissionItemCheckActive}>
+                            <Check />
                           </span>
                           <span>{getPermissionLabel(permission)}</span>
-                        </button>
-                      )
-                    })}
+                        </div>
+                    ))}
                   </div>
                 ) : null}
               </article>
@@ -472,11 +401,15 @@ function EmployeePermissionsModal({
         </div>
 
         <div className={styles.permissionsFooter}>
-          <span>Los permisos seleccionados quedarán asociados a este rol.</span>
-          <button className={styles.modalPrimaryButton} type="button" onClick={onClose}>
-            <ShieldCheck aria-hidden="true" />
-            Guardar permisos
-          </button>
+          <span>Estos permisos se asignan automáticamente al elegir este rol.</span>
+          <AppButton
+            fullWidth
+            startIcon={<ShieldCheck aria-hidden="true" size={18} />}
+            type="button"
+            onClick={onClose}
+          >
+            Entendido
+          </AppButton>
         </div>
     </ModalShell>
   )
@@ -631,20 +564,24 @@ export function RetailEmployeeDrawer({
         closeContent={<ArrowLeft />}
         closeLabel="Volver"
         footer={
-          <button
-            className={styles.submitButton}
+          <AppButton
+            fullWidth
             disabled={isSubmitting}
             form={formId}
+            isLoading={isSubmitting}
+            loadingLabel={isEditing ? 'Guardando...' : 'Creando...'}
+            size="lg"
+            startIcon={
+              isEditing ? (
+                <Save aria-hidden="true" size={19} />
+              ) : (
+                <UserPlus aria-hidden="true" size={19} />
+              )
+            }
             type="submit"
           >
-            {isSubmitting
-              ? isEditing
-                ? 'Guardando...'
-                : 'Creando...'
-              : isEditing
-                ? 'Guardar empleado'
-                : 'Crear empleado'}
-          </button>
+            {isEditing ? 'Guardar empleado' : 'Crear empleado'}
+          </AppButton>
         }
         footerClassName={styles.drawerFooter}
         isOpen={isOpen}

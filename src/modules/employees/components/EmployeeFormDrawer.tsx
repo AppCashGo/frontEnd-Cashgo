@@ -1,5 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
+import { RotateCcw, Save, UserPlus } from 'lucide-react'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import {
@@ -13,6 +14,7 @@ import type {
   EmployeeUpdateInput,
 } from '@/modules/employees/types/employee'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import {
   assignableUserRoles,
   type AssignableUserRole,
@@ -150,18 +152,20 @@ export function EmployeeFormDrawer({
             {isEditing ? employee.name : 'Invita a un nuevo miembro del equipo'}
           </h3>
           <p className={styles.description}>
-            Configura quien es esta persona, como entra al sistema y que
+            Configura quién es esta persona, cómo entra al sistema y qué
             permisos encajan mejor con su rol.
           </p>
         </div>
 
-        <button
-          className={styles.secondaryButton}
+        <AppButton
+          size="sm"
+          startIcon={<RotateCcw aria-hidden="true" size={16} />}
           type="button"
+          variant="secondary"
           onClick={onStartCreate}
         >
           {isEditing ? 'Crear otro' : 'Limpiar formulario'}
-        </button>
+        </AppButton>
       </div>
 
       {statusMeta && employee ? (
@@ -204,7 +208,7 @@ export function EmployeeFormDrawer({
         <div className={styles.inlineFields}>
           <div className={styles.field}>
             <label className={styles.label} htmlFor="employee-phone">
-              Telefono de acceso
+              Teléfono de acceso
             </label>
             <input
               aria-describedby={errors.phone ? 'employee-phone-error' : undefined}
@@ -268,10 +272,10 @@ export function EmployeeFormDrawer({
         </div>
 
         <div className={styles.confirmCard}>
-          <p className={styles.confirmTitle}>Confirma la configuracion</p>
+          <p className={styles.confirmTitle}>Confirma la configuración</p>
           <p className={styles.confirmDescription}>
-            Esta persona usara{' '}
-            <strong>{watch('phone') || 'el telefono configurado'}</strong>{' '}
+            Esta persona usará{' '}
+            <strong>{watch('phone') || 'el teléfono configurado'}</strong>{' '}
             para recibir un código de verificación e ingresar. Verifícalo antes de guardar.
           </p>
         </div>
@@ -323,23 +327,25 @@ export function EmployeeFormDrawer({
         <div className={styles.footer}>
           <p className={styles.helperText}>
             {isEditing
-              ? 'Usa esta edicion para mantener actualizado el equipo.'
-              : 'Los nuevos empleados apareceran en la lista apenas guardes.'}
+              ? 'Usa esta edición para mantener actualizado el equipo.'
+              : 'Los nuevos empleados aparecerán en la lista apenas guardes.'}
           </p>
 
-          <button
-            className={styles.primaryButton}
+          <AppButton
             disabled={isSubmitting}
+            isLoading={isSubmitting}
+            loadingLabel={isEditing ? 'Guardando empleado...' : 'Creando empleado...'}
+            startIcon={
+              isEditing ? (
+                <Save aria-hidden="true" size={17} />
+              ) : (
+                <UserPlus aria-hidden="true" size={17} />
+              )
+            }
             type="submit"
           >
-            {isSubmitting
-              ? isEditing
-                ? 'Guardando empleado...'
-                : 'Creando empleado...'
-              : isEditing
-                ? 'Guardar empleado'
-                : 'Crear empleado'}
-          </button>
+            {isEditing ? 'Guardar empleado' : 'Crear empleado'}
+          </AppButton>
         </div>
       </form>
     </SurfaceCard>
