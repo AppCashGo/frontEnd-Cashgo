@@ -8,16 +8,16 @@
   display: flex;
   width: 100%;
   min-width: 0;
-  min-height: inherit;
+  min-height: var(--ui-control-height);
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0;
-  border: 0;
-  border-radius: inherit;
+  padding: 0.65rem var(--ui-control-padding);
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
   outline: none;
   appearance: none;
-  background: transparent;
+  background: var(--ui-surface);
   background-image: none !important;
   color: inherit;
   cursor: pointer;
@@ -26,14 +26,31 @@
   text-align: left;
 }
 
+.trigger:hover:not(:disabled) {
+  border-color: var(--ui-border-strong);
+  background: var(--ui-surface-raised);
+}
+
+.trigger[aria-expanded="true"] {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
+}
+
+.trigger[aria-invalid="true"] {
+  border-color: var(--ui-danger);
+  box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
+}
+
 .trigger:focus-visible {
-  outline: 3px solid rgba(49, 94, 251, 0.3);
-  outline-offset: 2px;
+  outline: none;
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
 }
 
 .trigger:disabled {
   cursor: not-allowed;
   opacity: 0.64;
+  background: var(--ui-surface-muted);
 }
 
 .value {
@@ -77,9 +94,9 @@
   display: grid;
   gap: 0.6rem;
   padding: 0.65rem;
-  border: 1px solid rgba(184, 196, 214, 0.78);
+  border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius-lg);
-  background: var(--ui-surface-raised);
+  background: var(--ui-surface-overlay);
   box-shadow: var(--ui-shadow-lg);
   backdrop-filter: blur(18px);
   animation: menuEnter 140ms cubic-bezier(0.2, 0, 0, 1);
@@ -117,6 +134,7 @@
   display: grid;
   max-height: min(19rem, 46vh);
   gap: 0.18rem;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -124,6 +142,7 @@
 .option {
   display: flex;
   width: 100%;
+  min-width: 0;
   min-height: 2.65rem;
   align-items: center;
   justify-content: space-between;
@@ -143,6 +162,10 @@
   outline: none;
   background: var(--ui-primary-soft);
   color: var(--ui-primary-strong);
+}
+
+.option:active:not(:disabled) {
+  transform: scale(0.992);
 }
 
 .optionSelected {

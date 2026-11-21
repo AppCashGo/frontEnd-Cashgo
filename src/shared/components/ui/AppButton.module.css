@@ -35,26 +35,26 @@
 }
 
 .sm {
-  min-height: 2.25rem;
+  min-height: var(--ui-control-height-sm);
   padding: 0.55rem 0.8rem;
   font-size: 0.86rem;
 }
 
 .md {
-  min-height: 2.75rem;
+  min-height: var(--ui-control-height);
   padding: 0.75rem 1.05rem;
   font-size: 0.94rem;
 }
 
 .lg {
-  min-height: 3.25rem;
+  min-height: var(--ui-control-height-lg);
   padding: 0.9rem 1.35rem;
   font-size: 1rem;
 }
 
 .primary {
   background: var(--ui-primary);
-  color: #ffffff;
+  color: var(--ui-text-on-color);
 }
 
 .primary:hover:not(:disabled) {
@@ -67,29 +67,48 @@
   color: var(--ui-text);
 }
 
+.secondary:hover:not(:disabled),
+.outline:hover:not(:disabled) {
+  border-color: var(--ui-primary);
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
+}
+
 .success {
   background: var(--ui-success);
-  color: #ffffff;
+  color: var(--ui-text-on-color);
+}
+
+.success:hover:not(:disabled) {
+  background: var(--ui-success-hover);
 }
 
 .danger {
   background: var(--ui-danger);
-  color: #ffffff;
+  color: var(--ui-text-on-color);
+}
+
+.danger:hover:not(:disabled) {
+  background: var(--ui-danger-hover);
 }
 
 .warning {
-  background: #ffd84d;
-  color: #1f2a37;
+  background: var(--ui-warning-soft);
+  color: var(--ui-warning-hover);
 }
 
 .muted {
-  background: #e6edf5;
-  color: #718096;
+  background: var(--ui-surface-muted);
+  color: var(--ui-text-secondary);
 }
 
 .ghost {
   background: transparent;
-  color: #1f2a37;
+  color: var(--ui-text);
+}
+
+.ghost:hover:not(:disabled) {
+  background: var(--ui-surface-muted);
 }
 
 .link {
@@ -98,7 +117,7 @@
   border: 0;
   border-radius: 0;
   background: transparent;
-  color: #1f2a37;
+  color: var(--ui-primary);
   text-decoration: underline;
 }
 

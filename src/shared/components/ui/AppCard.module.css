@@ -5,7 +5,7 @@
 }
 
 .default {
-  border-color: rgba(192, 204, 218, 0.9);
+  border-color: var(--ui-border);
 }
 
 .flat {
@@ -14,7 +14,7 @@
 }
 
 .outline {
-  border-color: rgba(148, 163, 184, 0.72);
+  border-color: var(--ui-border-strong);
   box-shadow: none;
 }
 
@@ -31,21 +31,21 @@
 }
 
 .interactive:hover {
-  border-color: rgba(49, 94, 251, 0.38);
+  border-color: rgba(29, 95, 167, 0.38);
   box-shadow: var(--ui-shadow-md);
   transform: translateY(-2px);
 }
 
 .smRadius {
-  border-radius: 0.5rem;
+  border-radius: var(--ui-radius-sm);
 }
 
 .mdRadius {
-  border-radius: 0.9rem;
+  border-radius: var(--ui-radius-md);
 }
 
 .lgRadius {
-  border-radius: 1rem;
+  border-radius: var(--ui-radius-lg);
 }
 
 .nonePadding {
@@ -85,20 +85,20 @@
 }
 
 .eyebrow {
-  color: #607084;
+  color: var(--ui-primary);
   font-size: 0.78rem;
   font-weight: 900;
   text-transform: uppercase;
 }
 
 .title {
-  color: #1f2a37;
+  color: var(--ui-text);
   font-size: 1.05rem;
   font-weight: 900;
 }
 
 .description {
-  color: #5f6d80;
+  color: var(--ui-text-secondary);
   font-size: 0.92rem;
   line-height: 1.5;
 }
@@ -118,7 +118,7 @@
 .footer {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid rgba(226, 232, 240, 0.95);
+  border-top: 1px solid var(--ui-border-subtle);
 }
 
 @media (max-width: 640px) {
