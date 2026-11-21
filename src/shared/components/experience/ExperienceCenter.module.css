@@ -5,6 +5,12 @@
   z-index: 44;
   display: grid;
   gap: 0.65rem;
+  padding: 0.4rem;
+  border: 1px solid rgba(203, 213, 225, 0.82);
+  border-radius: 1.3rem;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 1rem 2.6rem rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(16px);
 }
 
 .drawerTitleIcon {
@@ -32,9 +38,14 @@
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 1rem;
   color: #ffffff;
-  box-shadow: 0 0.9rem 2rem rgba(15, 23, 42, 0.2);
+  box-shadow: 0 0.45rem 1rem rgba(15, 23, 42, 0.14);
   cursor: pointer;
   transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.launcher:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.22);
+  outline-offset: 3px;
 }
 
 .launcher:hover {
@@ -106,21 +117,7 @@
   font-weight: 950;
 }
 
-.activityHeader button {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  min-height: 2.5rem;
-  padding: 0 0.8rem;
-  border: 1px solid #bfdbfe;
-  border-radius: 0.75rem;
-  background: #ffffff;
-  color: #1d4ed8;
-  font-weight: 850;
-  cursor: pointer;
-}
-
-.activityHeader button svg {
+.activityHeader svg {
   width: 1rem;
   height: 1rem;
 }
@@ -171,13 +168,8 @@
   line-height: 1.5;
 }
 
-.activityItem button {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #2563eb;
-  font-weight: 900;
-  cursor: pointer;
+.activityAction {
+  width: fit-content;
 }
 
 .warning .activityIcon {
@@ -327,23 +319,7 @@
 }
 
 .answerAction {
-  display: inline-flex;
   width: fit-content;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 2.65rem;
-  padding: 0 0.9rem;
-  border: 0;
-  border-radius: 0.8rem;
-  background: #eaf2ff;
-  color: #1d4ed8;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.answerAction svg {
-  width: 1rem;
-  height: 1rem;
 }
 
 .assistantForm {
@@ -369,26 +345,35 @@
   box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.12);
 }
 
-.assistantForm button {
-  display: inline-grid;
-  width: 3rem;
-  height: 3rem;
-  place-items: center;
-  border: 0;
-  border-radius: 0.85rem;
-  background: #2563eb;
-  color: #ffffff;
-  cursor: pointer;
-}
-
-.assistantForm button:disabled {
-  background: #cbd5e1;
-  cursor: not-allowed;
-}
-
-.assistantForm button svg {
+.assistantForm svg {
   width: 1.1rem;
   height: 1.1rem;
+}
+
+@media (min-width: 641px) {
+  .launcher::after {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 0.75rem);
+    padding: 0.48rem 0.7rem;
+    border-radius: 0.65rem;
+    background: #172033;
+    color: #ffffff;
+    content: attr(data-label);
+    font-size: 0.74rem;
+    font-weight: 800;
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(0.35rem, -50%);
+    transition: opacity 150ms ease, transform 150ms ease;
+    white-space: nowrap;
+  }
+
+  .launcher:hover::after,
+  .launcher:focus-visible::after {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
 }
 
 @media (max-width: 640px) {
@@ -396,6 +381,9 @@
     right: max(0.75rem, var(--safe-area-right));
     bottom: max(0.8rem, var(--safe-area-bottom));
     display: flex;
+    gap: 0.4rem;
+    padding: 0.35rem;
+    border-radius: 1.15rem;
   }
 
   .launcher {

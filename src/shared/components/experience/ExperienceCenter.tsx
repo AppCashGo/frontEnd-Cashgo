@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   Bell,
   Bot,
   Boxes,
@@ -18,6 +19,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { useDashboardSummaryQuery } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
 import { routePaths } from '@/routes/route-paths'
 import { AppDrawer } from '@/shared/components/ui/AppDrawer'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './ExperienceCenter.module.css'
 
@@ -221,6 +223,7 @@ export function ExperienceCenter() {
       <div className={styles.launchers}>
         <button
           aria-label="Registrar una nueva venta"
+          data-label="Nueva venta"
           className={joinClassNames(styles.launcher, styles.saleLauncher)}
           type="button"
           onClick={() => navigate(routePaths.salesNew)}
@@ -228,7 +231,9 @@ export function ExperienceCenter() {
           <ShoppingCart aria-hidden="true" />
         </button>
         <button
+          aria-expanded={activeView === 'activity'}
           aria-label="Abrir centro de actividad"
+          data-label="Actividad"
           className={joinClassNames(styles.launcher, styles.activityLauncher)}
           type="button"
           onClick={() => setActiveView('activity')}
@@ -237,7 +242,9 @@ export function ExperienceCenter() {
           {priorityCount > 0 ? <span>{Math.min(priorityCount, 9)}</span> : null}
         </button>
         <button
+          aria-expanded={activeView === 'assistant'}
           aria-label="Abrir asistente de ayuda"
+          data-label="Asistente"
           className={joinClassNames(styles.launcher, styles.helpLauncher)}
           type="button"
           onClick={() => setActiveView('assistant')}
@@ -263,14 +270,17 @@ export function ExperienceCenter() {
             <span>Acciones pendientes</span>
             <strong>{priorityCount}</strong>
           </div>
-          <button
-            disabled={summaryQuery.isFetching}
+          <AppButton
+            isLoading={summaryQuery.isFetching}
+            loadingLabel="Actualizando"
+            size="sm"
+            startIcon={<RefreshCw aria-hidden="true" />}
             type="button"
+            variant="secondary"
             onClick={() => void summaryQuery.refetch()}
           >
-            <RefreshCw aria-hidden="true" />
-            {summaryQuery.isFetching ? 'Actualizando' : 'Actualizar'}
-          </button>
+            Actualizar
+          </AppButton>
         </div>
 
         {summaryQuery.isError ? (
@@ -289,9 +299,16 @@ export function ExperienceCenter() {
                 <div>
                   <strong>{item.title}</strong>
                   <p>{item.description}</p>
-                  <button type="button" onClick={() => navigateFromCenter(item.path)}>
+                  <AppButton
+                    className={styles.activityAction}
+                    endIcon={<ArrowRight aria-hidden="true" size={15} />}
+                    size="sm"
+                    type="button"
+                    variant="link"
+                    onClick={() => navigateFromCenter(item.path)}
+                  >
                     {item.actionLabel}
-                  </button>
+                  </AppButton>
                 </div>
               </article>
             ))}
@@ -317,9 +334,13 @@ export function ExperienceCenter() {
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
             />
-            <button aria-label="Enviar pregunta" disabled={!question.trim()} type="submit">
-              <Send aria-hidden="true" />
-            </button>
+            <AppButton
+              aria-label="Enviar pregunta"
+              disabled={!question.trim()}
+              iconOnly
+              startIcon={<Send aria-hidden="true" />}
+              type="submit"
+            />
           </form>
         }
         onClose={() => setActiveView(null)}
@@ -350,10 +371,15 @@ export function ExperienceCenter() {
         </div>
 
         {lastAnswer ? (
-          <button className={styles.answerAction} type="button" onClick={() => navigateFromCenter(lastAnswer.path)}>
-            {lastAnswer.path === routePaths.inventory ? <Boxes aria-hidden="true" /> : <WalletCards aria-hidden="true" />}
+          <AppButton
+            className={styles.answerAction}
+            startIcon={lastAnswer.path === routePaths.inventory ? <Boxes aria-hidden="true" /> : <WalletCards aria-hidden="true" />}
+            type="button"
+            variant="secondary"
+            onClick={() => navigateFromCenter(lastAnswer.path)}
+          >
             {lastAnswer.actionLabel}
-          </button>
+          </AppButton>
         ) : null}
       </AppDrawer>
     </>

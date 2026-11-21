@@ -52,7 +52,7 @@
 
 @media (max-width: 760px) {
   .main {
-    padding: 0.75rem;
+    padding: 0.75rem 0.75rem calc(5.5rem + env(safe-area-inset-bottom));
   }
 }
 
