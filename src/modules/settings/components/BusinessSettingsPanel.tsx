@@ -1,6 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ChevronDown, ChevronUp, Upload } from 'lucide-react'
+import { Building2, ChevronDown, ChevronUp, Save, Upload } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { BusinessCategoryPickerModal } from '@/shared/components/business/BusinessCategoryPickerModal'
@@ -13,6 +13,8 @@ import type {
   BusinessSettings,
 } from '@/modules/settings/types/settings'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { AppButton } from '@/shared/components/ui/AppButton'
+import { SettingsAccordionHeading } from './SettingsAccordionHeading'
 import { businessCategoryOptions } from '@/shared/constants/business-categories'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { formatDate } from '@/shared/utils/format-date'
@@ -181,7 +183,11 @@ export function BusinessSettingsPanel({
         }}
       >
         <summary className={styles.retailAccordionSummary}>
-          <h3 className={styles.retailAccordionTitle}>Datos del negocio</h3>
+          <SettingsAccordionHeading
+            description="Identidad, contacto, ubicación y logo"
+            icon={<Building2 />}
+            title="Datos del negocio"
+          />
           {isRetailAccordionOpen ? (
             <ChevronUp aria-hidden="true" className={styles.retailAccordionIcon} />
           ) : (
@@ -371,13 +377,15 @@ export function BusinessSettingsPanel({
               </label>
 
               <div className={styles.retailButtonField}>
-                <button
-                  className={styles.retailSubmitButton}
+                <AppButton
                   disabled={isSubmitDisabled}
+                  isLoading={isSubmitting}
+                  loadingLabel="Guardando cambios..."
+                  startIcon={<Save aria-hidden="true" size={17} />}
                   type="submit"
                 >
-                  {isSubmitting ? 'Guardando cambios...' : 'Guardar cambios'}
-                </button>
+                  Guardar cambios
+                </AppButton>
               </div>
             </div>
 
@@ -594,15 +602,15 @@ export function BusinessSettingsPanel({
                 : 'Los cambios se guardan sobre el perfil global del negocio y ajustan la experiencia visible del sistema.'}
             </p>
 
-            <button className={styles.primaryButton} disabled={isDisabled} type="submit">
-              {isSubmitting
-                ? businessSettings
-                  ? 'Guardando perfil...'
-                  : 'Creando perfil...'
-                : businessSettings
-                  ? 'Guardar perfil del negocio'
-                  : 'Crear perfil del negocio'}
-            </button>
+            <AppButton
+              disabled={isDisabled}
+              isLoading={isSubmitting}
+              loadingLabel={businessSettings ? 'Guardando perfil...' : 'Creando perfil...'}
+              startIcon={<Save aria-hidden="true" size={17} />}
+              type="submit"
+            >
+              {businessSettings ? 'Guardar perfil del negocio' : 'Crear perfil del negocio'}
+            </AppButton>
           </div>
         </form>
       </SurfaceCard>

@@ -7,7 +7,9 @@ import {
   ChevronRight,
   ChevronUp,
   PackageCheck,
+  BadgePercent,
   Search,
+  Save,
   SlidersVertical,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -31,6 +33,8 @@ import type {
 } from '@/modules/settings/types/settings'
 import { supportedCurrencies } from '@/modules/settings/types/settings'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
+import { AppButton } from '@/shared/components/ui/AppButton'
+import { SettingsAccordionHeading } from './SettingsAccordionHeading'
 import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
@@ -337,7 +341,11 @@ function RetailTaxSettingsPanel({
         onToggle={(event) => setAccordionOpen(event.currentTarget.open)}
       >
         <summary className={styles.retailAccordionSummary}>
-          <h3 className={styles.retailAccordionTitle}>Impuestos</h3>
+          <SettingsAccordionHeading
+            description="Impuesto base y reglas especiales por producto"
+            icon={<BadgePercent />}
+            title="Impuestos"
+          />
           {isAccordionOpen ? (
             <ChevronUp aria-hidden="true" className={styles.accordionIcon} />
           ) : (
@@ -828,9 +836,15 @@ export function TaxSettingsPanel({
             across the operational workspace.
           </p>
 
-          <button className={styles.primaryButton} disabled={isDisabled} type="submit">
-            {isSubmitting ? 'Saving taxes...' : 'Save tax settings'}
-          </button>
+          <AppButton
+            disabled={isDisabled}
+            isLoading={isSubmitting}
+            loadingLabel="Saving taxes..."
+            startIcon={<Save aria-hidden="true" size={17} />}
+            type="submit"
+          >
+            Save tax settings
+          </AppButton>
         </div>
       </form>
     </SurfaceCard>

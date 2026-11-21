@@ -28,6 +28,7 @@ import {
   extractCatalogSlug,
 } from "@/modules/settings/utils/virtual-catalog";
 import styles from "./VirtualCatalogSettingsPanel.module.css";
+import { SettingsAccordionHeading } from "./SettingsAccordionHeading";
 
 type VirtualCatalogSettingsPanelProps = {
   businessSettings: BusinessSettings | null;
@@ -418,7 +419,11 @@ export function VirtualCatalogSettingsPanel({
         type="button"
         onClick={() => setIsOpen((currentValue) => !currentValue)}
       >
-        <span className={styles.accordionTitle}>Catálogo virtual</span>
+        <SettingsAccordionHeading
+          description="Pedidos, horarios, domicilios y medios de pago"
+          icon={<Store />}
+          title="Catálogo virtual"
+        />
         {isOpen ? <ChevronUp /> : <ChevronDown />}
       </button>
 

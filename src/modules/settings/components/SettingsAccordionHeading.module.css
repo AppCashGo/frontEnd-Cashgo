@@ -1,0 +1,52 @@
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  min-width: 0;
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.55rem;
+  height: 2.55rem;
+  flex: 0 0 auto;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.copy {
+  display: grid;
+  gap: 0.16rem;
+  min-width: 0;
+  text-align: left;
+}
+
+.copy strong {
+  color: var(--ui-text);
+  font-size: 0.96rem;
+  font-weight: 850;
+}
+
+.copy small {
+  overflow: hidden;
+  color: var(--ui-text-secondary);
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .copy small {
+    white-space: normal;
+  }
+}

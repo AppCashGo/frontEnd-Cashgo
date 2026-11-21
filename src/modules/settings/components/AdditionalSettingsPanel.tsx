@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Trash2, Volume2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Settings2, Trash2, Volume2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type {
   BusinessAdditionalSettingsInput,
@@ -6,6 +6,7 @@ import type {
 } from "@/modules/settings/types/settings";
 import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
+import { SettingsAccordionHeading } from "./SettingsAccordionHeading";
 import styles from "./AdditionalSettingsPanel.module.css";
 
 type AdditionalSettingsPanelProps = {
@@ -124,9 +125,11 @@ export function AdditionalSettingsPanel({
           type="button"
           onClick={() => setIsOpen((currentValue) => !currentValue)}
         >
-          <span className={styles.accordionTitle}>
-            Configuraciones adicionales
-          </span>
+          <SettingsAccordionHeading
+            description="Sonidos, preferencias y acciones del negocio"
+            icon={<Settings2 />}
+            title="Configuraciones adicionales"
+          />
           {isOpen ? <ChevronUp /> : <ChevronDown />}
         </button>
 

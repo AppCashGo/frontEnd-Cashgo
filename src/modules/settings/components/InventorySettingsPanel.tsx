@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ChevronUp,
   PackageMinus,
+  Save,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type {
@@ -11,6 +12,8 @@ import type {
   BusinessSettings,
 } from "@/modules/settings/types/settings";
 import { useToast } from "@/shared/hooks/use-toast";
+import { AppButton } from "@/shared/components/ui/AppButton";
+import { SettingsAccordionHeading } from "./SettingsAccordionHeading";
 import styles from "./InventorySettingsPanel.module.css";
 
 type InventorySettingsPanelProps = {
@@ -103,7 +106,11 @@ export function InventorySettingsPanel({
         type="button"
         onClick={() => setIsOpen((currentValue) => !currentValue)}
       >
-        <span className={styles.accordionTitle}>Inventario</span>
+        <SettingsAccordionHeading
+          description="Alertas, existencias y cálculo de costos"
+          icon={<PackageMinus />}
+          title="Inventario"
+        />
         {isOpen ? <ChevronUp /> : <ChevronDown />}
       </button>
 
@@ -237,16 +244,18 @@ export function InventorySettingsPanel({
           </label>
 
           <div className={styles.footer}>
-            <button
-              className={styles.saveButton}
+            <AppButton
               disabled={!canSave}
+              isLoading={isSubmitting}
+              loadingLabel="Guardando..."
+              startIcon={<Save aria-hidden="true" size={17} />}
               type="button"
               onClick={() => {
                 void handleSave();
               }}
             >
-              {isSubmitting ? "Guardando..." : "Guardar cambios"}
-            </button>
+              Guardar cambios
+            </AppButton>
           </div>
         </div>
       ) : null}

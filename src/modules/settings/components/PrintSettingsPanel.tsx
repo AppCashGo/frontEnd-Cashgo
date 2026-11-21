@@ -1,11 +1,13 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { type FormEvent, useEffect, useState } from 'react'
+import { Printer, Save } from 'lucide-react'
 import type {
   BusinessPrintSettingsInput,
   BusinessSettings,
   PrintTicketWidth,
 } from '@/modules/settings/types/settings'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './PrintSettingsPanel.module.css'
@@ -193,21 +195,24 @@ export function PrintSettingsPanel({
           ) : null}
 
           <div className={styles.actions}>
-            <button
-              className={styles.secondaryButton}
+            <AppButton
               disabled={isSubmitting}
+              startIcon={<Printer aria-hidden="true" size={17} />}
               type="button"
+              variant="secondary"
               onClick={handlePrintTest}
             >
               Imprimir prueba
-            </button>
-            <button
-              className={styles.primaryButton}
+            </AppButton>
+            <AppButton
               disabled={isSubmitting}
+              isLoading={isSubmitting}
+              loadingLabel="Guardando..."
+              startIcon={<Save aria-hidden="true" size={17} />}
               type="submit"
             >
-              {isSubmitting ? 'Guardando...' : 'Guardar formato'}
-            </button>
+              Guardar formato
+            </AppButton>
           </div>
         </div>
 

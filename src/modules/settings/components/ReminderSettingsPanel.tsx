@@ -3,6 +3,7 @@ import {
   ChevronDown,
   ChevronUp,
   AlarmClock,
+  Save,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import type {
@@ -10,6 +11,8 @@ import type {
   BusinessSettings,
 } from "@/modules/settings/types/settings";
 import { useToast } from "@/shared/hooks/use-toast";
+import { AppButton } from "@/shared/components/ui/AppButton";
+import { SettingsAccordionHeading } from "./SettingsAccordionHeading";
 import styles from "./ReminderSettingsPanel.module.css";
 
 type ReminderSettingsPanelProps = {
@@ -114,7 +117,11 @@ export function ReminderSettingsPanel({
         type="button"
         onClick={() => setIsOpen((currentValue) => !currentValue)}
       >
-        <span className={styles.accordionTitle}>Recordatorios</span>
+        <SettingsAccordionHeading
+          description="Apertura de caja y seguimiento automático de cartera"
+          icon={<AlarmClock />}
+          title="Recordatorios"
+        />
         {isOpen ? <ChevronUp /> : <ChevronDown />}
       </button>
 
@@ -238,20 +245,22 @@ export function ReminderSettingsPanel({
                 fecha de vencimiento y correo registrado. Al pagar, los envíos
                 se detienen automáticamente.
               </p>
-              <button
-                className={styles.saveButton}
+              <AppButton
                 disabled={
                   isDisabled ||
                   Boolean(errorMessage) ||
                   !automationHasChanges
                 }
+                isLoading={isSubmitting}
+                loadingLabel="Guardando..."
+                startIcon={<Save aria-hidden="true" size={17} />}
                 type="button"
                 onClick={() => {
                   void handleAutomationSubmit();
                 }}
               >
-                {isSubmitting ? "Guardando..." : "Guardar programación"}
-              </button>
+                Guardar programación
+              </AppButton>
             </div>
           </div>
         </div>
