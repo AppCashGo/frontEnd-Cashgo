@@ -2134,30 +2134,7 @@ export function RetailSalesWorkspace() {
     void handleCreateCatalogSale()
   }
 
-  async function handleQuickCashSale() {
-    prepareCashRegisterSound()
-
-    if (cartItems.length === 0) return
-
-    if (!currentCashRegister) {
-      beginCashSessionFlow('CATALOG_CHECKOUT')
-      return
-    }
-
-    if (isOnline) {
-      const refreshedSession = await currentCashRegisterQuery.refetch()
-      if (!refreshedSession.data) {
-        beginCashSessionFlow('CATALOG_CHECKOUT')
-        return
-      }
-    }
-
-    void handleCreateCatalogSale({ paymentMethodOverride: 'CASH' })
-  }
-
-  async function handleCreateCatalogSale(
-    options: { paymentMethodOverride?: SalePaymentMethod } = {},
-  ) {
+  async function handleCreateCatalogSale() {
     if (cartItems.length === 0) {
       return
     }
@@ -2165,12 +2142,8 @@ export function RetailSalesWorkspace() {
     clearCheckoutFeedback()
     setOfflineConfirmation(null)
 
-    const effectiveSettlement = options.paymentMethodOverride
-      ? 'PAID'
-      : settlement
-    const effectiveUsesSplitPayments = options.paymentMethodOverride
-      ? false
-      : usesSplitPayments
+    const effectiveSettlement = settlement
+    const effectiveUsesSplitPayments = usesSplitPayments
 
     if (effectiveSettlement === 'CREDIT' && selectedCustomerId.trim().length === 0) {
       markCheckoutError(
@@ -2207,9 +2180,7 @@ export function RetailSalesWorkspace() {
       return
     }
 
-    const paidPayments = options.paymentMethodOverride
-      ? [{ method: options.paymentMethodOverride, amount: totalAmount }]
-      : effectiveUsesSplitPayments
+    const paidPayments = effectiveUsesSplitPayments
       ? splitPaymentRows.map((paymentSplit) => ({
           method: mapRetailPaymentOptionToSaleMethod(paymentSplit.paymentOption),
           amount: parseAmountInput(paymentSplit.amountInput),
@@ -3167,16 +3138,6 @@ export function RetailSalesWorkspace() {
                   >
                     <Pause aria-hidden="true" />
                     <span>{activeHeldSale ? 'Actualizar' : 'Espera'}</span>
-                  </button>
-                  <button
-                    className={styles.quickCashButton}
-                    disabled={cartItems.length === 0 || createSaleMutation.isPending}
-                    type="button"
-                    onClick={() => void handleQuickCashSale()}
-                  >
-                    <Banknote aria-hidden="true" />
-                    <span>Efectivo</span>
-                    <strong>{formatCurrency(totalAmount)}</strong>
                   </button>
                   <button
                     className={styles.continueButton}
