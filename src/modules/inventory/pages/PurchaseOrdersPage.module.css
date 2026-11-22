@@ -1,0 +1,70 @@
+.body {
+  gap: 1.25rem;
+}
+
+.backButton {
+  gap: 0.55rem;
+  text-decoration: none;
+}
+
+.backButton svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.feedback,
+.loading {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 5.5rem;
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow-xs);
+}
+
+.feedback > svg {
+  flex: 0 0 auto;
+  color: var(--ui-danger);
+}
+
+.feedback > div,
+.loading > div {
+  display: grid;
+  flex: 1;
+  gap: 0.25rem;
+}
+
+.feedback strong,
+.loading strong {
+  color: var(--ui-text);
+}
+
+.feedback span,
+.loading span {
+  color: var(--ui-text-secondary);
+  font-size: 0.88rem;
+}
+
+.spinner {
+  width: 1.45rem;
+  height: 1.45rem;
+  flex: 0 0 auto;
+  border: 3px solid var(--ui-border);
+  border-top-color: var(--ui-primary);
+  border-radius: 50%;
+  animation: spin 750ms linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .feedback {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}

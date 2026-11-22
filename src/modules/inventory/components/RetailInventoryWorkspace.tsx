@@ -7,9 +7,8 @@ import type { PaymentFundSource } from '@/modules/cash-register/types/cash-regis
 import type { KeyboardEvent, ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Camera, ClipboardCheck, ScanBarcode } from 'lucide-react'
+import { Camera, ClipboardCheck, ScanBarcode, Truck } from 'lucide-react'
 import { BakeryDailyOperationsPanel } from '@/modules/inventory/components/BakeryDailyOperationsPanel'
-import { PurchaseOrdersPanel } from '@/modules/inventory/components/PurchaseOrdersPanel'
 import { InventoryCountDrawer } from '@/modules/inventory/components/InventoryCountDrawer'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import {
@@ -1660,6 +1659,16 @@ export function RetailInventoryWorkspace() {
             <button
               className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
               type="button"
+              onClick={() => navigate(routePaths.inventoryPurchaseOrders)}
+            >
+              <Truck aria-hidden="true" />
+              <span>Órdenes de compra</span>
+            </button>
+          ) : null}
+          {canManageInventory ? (
+            <button
+              className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
+              type="button"
               onClick={() => setInventoryCountOpen(true)}
             >
               <ClipboardCheck aria-hidden="true" />
@@ -1747,8 +1756,6 @@ export function RetailInventoryWorkspace() {
           products={products}
         />
       ) : null}
-
-      {canManageInventory ? <PurchaseOrdersPanel products={products} suppliers={suppliers} /> : null}
 
       {isPremiumBannerVisible && lowStockAlerts.length > 0 ? (
         <section className={styles.banner}>

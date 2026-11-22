@@ -17,6 +17,7 @@ const AuthPage = lazy(routePageLoaders.auth);
 const DashboardPage = lazy(routePageLoaders.dashboard);
 const ProductsPage = lazy(routePageLoaders.products);
 const InventoryPage = lazy(routePageLoaders.inventory);
+const PurchaseOrdersPage = lazy(routePageLoaders.inventoryPurchaseOrders);
 const SalesOverviewPage = lazy(routePageLoaders.salesOverview);
 const SalesPage = lazy(routePageLoaders.salesRegister);
 const DeliveriesPage = lazy(routePageLoaders.deliveries);
@@ -133,6 +134,15 @@ export const appRouter = createBrowserRouter([
               <InventoryPage />,
               "Cargando inventario",
               "Preparando movimientos, filtros y controles de ajuste.",
+            ),
+          },
+          {
+            path: `${routeSegments.inventory}/purchase-orders`,
+            element: withModuleRouteSuspense(
+              routeSegments.inventory,
+              <PurchaseOrdersPage />,
+              "Cargando órdenes de compra",
+              "Preparando proveedores, sugerencias y pedidos activos.",
             ),
           },
           {

@@ -17,6 +17,10 @@ export const routePageLoaders = {
     import("@/modules/inventory/pages/InventoryPage").then((module) => ({
       default: module.InventoryPage,
     })),
+  inventoryPurchaseOrders: () =>
+    import("@/modules/inventory/pages/PurchaseOrdersPage").then((module) => ({
+      default: module.PurchaseOrdersPage,
+    })),
   salesOverview: () =>
     import("@/modules/sales/pages/SalesOverviewPage").then((module) => ({
       default: module.SalesOverviewPage,
@@ -102,6 +106,7 @@ const routePreloaders = new Map<string, RoutePageLoader>([
   [routePaths.dashboard, routePageLoaders.dashboard],
   [routePaths.products, routePageLoaders.products],
   [routePaths.inventory, routePageLoaders.inventory],
+  [routePaths.inventoryPurchaseOrders, routePageLoaders.inventoryPurchaseOrders],
   [routePaths.sales, routePageLoaders.salesOverview],
   [routePaths.salesNew, routePageLoaders.salesRegister],
   [routePaths.deliveries, routePageLoaders.deliveries],

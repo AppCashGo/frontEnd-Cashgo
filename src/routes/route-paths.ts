@@ -36,6 +36,7 @@ export const routePaths = {
   money: `/${routeSegments.money}`,
   products: `/${routeSegments.products}`,
   inventory: `/${routeSegments.inventory}`,
+  inventoryPurchaseOrders: `/${routeSegments.inventory}/purchase-orders`,
   sales: `/${routeSegments.sales}`,
   salesNew: `/${routeSegments.sales}/new`,
   movements: `/${routeSegments.movements}`,
