@@ -2,9 +2,9 @@ import {
   ArrowRight,
   Bell,
   Bot,
-  Boxes,
   CheckCircle2,
   CircleHelp,
+  LoaderCircle,
   MessageCircleMore,
   PackagePlus,
   RefreshCw,
@@ -12,7 +12,6 @@ import {
   ShoppingCart,
   TriangleAlert,
   UserRoundPlus,
-  WalletCards,
 } from 'lucide-react'
 import { type FormEvent, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -20,7 +19,9 @@ import { useDashboardSummaryQuery } from '@/modules/dashboard/hooks/use-dashboar
 import { routePaths } from '@/routes/route-paths'
 import { AppDrawer } from '@/shared/components/ui/AppDrawer'
 import { AppButton } from '@/shared/components/ui/AppButton'
+import { getApiErrorMessage } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
+import { sendAssistantMessage } from './assistant-api'
 import styles from './ExperienceCenter.module.css'
 
 type CenterView = 'activity' | 'assistant' | null
@@ -41,76 +42,19 @@ type AssistantMessage = {
   text: string
 }
 
-type AssistantAnswer = {
-  actionLabel: string
-  path: string
-  text: string
-}
-
 const initialMessages: AssistantMessage[] = [
   {
     id: 'welcome',
     role: 'assistant',
-    text: 'Hola. Puedo orientarte para vender, controlar inventario, revisar caja, gestionar cartera o registrar compras.',
+    text: 'Hola. Puedo consultar los productos y el inventario real de este negocio. Pregúntame por existencias, precios o productos agotados.',
   },
 ]
 
 const quickQuestions = [
-  'Registrar una venta',
-  'Revisar inventario',
-  'Controlar caja',
-  'Cobrar una deuda',
+  '¿Qué productos están agotados?',
+  '¿Cuáles tienen stock bajo?',
+  '¿Cuánta comida para perro hay?',
 ]
-
-function getAssistantAnswer(question: string): AssistantAnswer {
-  const normalizedQuestion = question.toLocaleLowerCase('es')
-
-  if (/venta|vender|factura|cobrar una compra/.test(normalizedQuestion)) {
-    return {
-      actionLabel: 'Ir a nueva venta',
-      path: routePaths.salesNew,
-      text: 'Abre Nueva venta, busca o escanea los productos, confirma las cantidades y elige el medio de pago. Puedes dejar una venta suspendida si el cliente aún no termina.',
-    }
-  }
-
-  if (/inventario|stock|producto|agot/.test(normalizedQuestion)) {
-    return {
-      actionLabel: 'Revisar inventario',
-      path: routePaths.inventory,
-      text: 'En Inventario puedes revisar existencias, alertas, compras, conteos físicos, producción y mermas desde un mismo lugar.',
-    }
-  }
-
-  if (/caja|turno|arqueo|efectivo/.test(normalizedQuestion)) {
-    return {
-      actionLabel: 'Abrir control de caja',
-      path: routePaths.money,
-      text: 'En Caja puedes abrir el turno, registrar entradas o salidas, revisar medios de pago y comparar el efectivo esperado con el contado.',
-    }
-  }
-
-  if (/cartera|deuda|cliente|crédito|credito/.test(normalizedQuestion)) {
-    return {
-      actionLabel: 'Ir a clientes y cartera',
-      path: routePaths.customers,
-      text: 'Abre Clientes para consultar saldos, registrar abonos, acuerdos de pago y compartir recordatorios o estados de cuenta.',
-    }
-  }
-
-  if (/compra|proveedor|abaste|reponer/.test(normalizedQuestion)) {
-    return {
-      actionLabel: 'Ir a proveedores',
-      path: routePaths.suppliers,
-      text: 'Desde Proveedores puedes registrar compras, pagos parciales, devoluciones y consultar el historial de abastecimiento.',
-    }
-  }
-
-  return {
-    actionLabel: 'Abrir centro de ayuda',
-    path: routePaths.help,
-    text: 'Todavía no tengo una respuesta específica para esa consulta. El centro de ayuda reúne las guías disponibles y los accesos a cada módulo.',
-  }
-}
 
 export function ExperienceCenter() {
   const navigate = useNavigate()
@@ -118,7 +62,7 @@ export function ExperienceCenter() {
   const [activeView, setActiveView] = useState<CenterView>(null)
   const [question, setQuestion] = useState('')
   const [messages, setMessages] = useState<AssistantMessage[]>(initialMessages)
-  const [lastAnswer, setLastAnswer] = useState<AssistantAnswer | null>(null)
+  const [isAssistantThinking, setAssistantThinking] = useState(false)
   const summaryQuery = useDashboardSummaryQuery()
   const summary = summaryQuery.data
 
@@ -199,24 +143,56 @@ export function ExperienceCenter() {
     navigate(path)
   }
 
-  function askAssistant(rawQuestion: string) {
+  async function askAssistant(rawQuestion: string) {
     const trimmedQuestion = rawQuestion.trim()
-    if (!trimmedQuestion) return
+    if (!trimmedQuestion || isAssistantThinking) return
 
-    const answer = getAssistantAnswer(trimmedQuestion)
     const timestamp = Date.now()
+    const history = messages
+      .filter((message) => message.id !== 'welcome')
+      .slice(-10)
+      .map((message) => ({ role: message.role, content: message.text }))
+
     setMessages((currentMessages) => [
       ...currentMessages,
       { id: `user-${timestamp}`, role: 'user', text: trimmedQuestion },
-      { id: `assistant-${timestamp}`, role: 'assistant', text: answer.text },
     ])
-    setLastAnswer(answer)
     setQuestion('')
+    setAssistantThinking(true)
+
+    try {
+      const response = await sendAssistantMessage({
+        message: trimmedQuestion,
+        history,
+      })
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `assistant-${timestamp}`,
+          role: 'assistant',
+          text: response.message,
+        },
+      ])
+    } catch (error) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `assistant-error-${timestamp}`,
+          role: 'assistant',
+          text: getApiErrorMessage(
+            error,
+            'No pude consultar la información en este momento. Intenta nuevamente.',
+          ),
+        },
+      ])
+    } finally {
+      setAssistantThinking(false)
+    }
   }
 
   function submitQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    askAssistant(question)
+    void askAssistant(question)
   }
 
   return (
@@ -320,7 +296,7 @@ export function ExperienceCenter() {
       </AppDrawer>
 
       <AppDrawer
-        description="Orientación rápida y accesos directos a los procesos de CashGo."
+        description="Consulta productos e inventario con información real de tu negocio."
         isOpen={activeView === 'assistant'}
         size="md"
         title="Asistente CashGo"
@@ -333,14 +309,17 @@ export function ExperienceCenter() {
           <form className={styles.assistantForm} onSubmit={submitQuestion}>
             <input
               aria-label="Escribe tu pregunta"
-              placeholder="Ej: ¿Cómo registro una compra?"
+              disabled={isAssistantThinking}
+              placeholder="Ej: ¿Cuánta comida para perro hay?"
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
             />
             <AppButton
               aria-label="Enviar pregunta"
-              disabled={!question.trim()}
+              disabled={!question.trim() || isAssistantThinking}
               iconOnly
+              isLoading={isAssistantThinking}
+              loadingLabel="Consultando"
               startIcon={<Send aria-hidden="true" />}
               type="submit"
             />
@@ -352,13 +331,18 @@ export function ExperienceCenter() {
           <span><CircleHelp aria-hidden="true" /></span>
           <div>
             <strong>Ayuda contextual</strong>
-            <p>No modifica información ni ejecuta acciones sin tu intervención.</p>
+            <p>Consulta datos reales. No modifica información sin confirmación.</p>
           </div>
         </div>
 
         <div className={styles.quickQuestions}>
           {quickQuestions.map((quickQuestion) => (
-            <button key={quickQuestion} type="button" onClick={() => askAssistant(quickQuestion)}>
+            <button
+              disabled={isAssistantThinking}
+              key={quickQuestion}
+              type="button"
+              onClick={() => void askAssistant(quickQuestion)}
+            >
               {quickQuestion}
             </button>
           ))}
@@ -371,19 +355,16 @@ export function ExperienceCenter() {
               <p>{message.text}</p>
             </div>
           ))}
+          {isAssistantThinking ? (
+            <div className={joinClassNames(styles.message, styles.assistant)}>
+              <Bot aria-hidden="true" />
+              <p className={styles.thinkingMessage}>
+                <LoaderCircle aria-hidden="true" />
+                Consultando tu negocio…
+              </p>
+            </div>
+          ) : null}
         </div>
-
-        {lastAnswer ? (
-          <AppButton
-            className={styles.answerAction}
-            startIcon={lastAnswer.path === routePaths.inventory ? <Boxes aria-hidden="true" /> : <WalletCards aria-hidden="true" />}
-            type="button"
-            variant="secondary"
-            onClick={() => navigateFromCenter(lastAnswer.path)}
-          >
-            {lastAnswer.actionLabel}
-          </AppButton>
-        ) : null}
       </AppDrawer>
     </>
   )
