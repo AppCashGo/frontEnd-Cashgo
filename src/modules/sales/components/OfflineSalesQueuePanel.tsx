@@ -26,13 +26,17 @@ export function OfflineSalesQueuePanel({
   onRetry,
   onSynchronize,
 }: OfflineSalesQueuePanelProps) {
-  if (records.length === 0 && isOnline) return null
-
   const pendingCount = records.filter(
     (record) => record.status === 'PENDING' || record.status === 'SYNCING',
   ).length
   const failedCount = records.filter((record) => record.status === 'FAILED').length
-  const visibleRecords = records.slice(0, 6)
+  const activeRecords = records.filter((record) => record.status !== 'SYNCED')
+
+  // Synchronized sales already live in the sales history. Keeping them in the
+  // operational queue consumes valuable POS height and can hide checkout actions.
+  if (isOnline && activeRecords.length === 0) return null
+
+  const visibleRecords = activeRecords.slice(0, 6)
 
   return (
     <section className={styles.panel} aria-label="Ventas sin conexión">

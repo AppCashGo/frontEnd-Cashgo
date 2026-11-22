@@ -2665,6 +2665,7 @@ export function RetailSalesWorkspace() {
   return (
     <>
       <RetailPageLayout
+        bodyClassName={styles.salesBody}
         bodyVariant="flush"
         title="Nueva venta"
         actions={
@@ -2758,25 +2759,27 @@ export function RetailSalesWorkspace() {
           </>
         }
       >
-        <OfflineSalesQueuePanel
-          isOnline={isOnline}
-          isSyncing={offlineSales.isSyncing}
-          records={offlineSales.records}
-          onRetry={(id) => void offlineSales.retry(id)}
-          onSynchronize={() => void offlineSales.synchronize()}
-        />
+        <div className={styles.salesNotices}>
+          <OfflineSalesQueuePanel
+            isOnline={isOnline}
+            isSyncing={offlineSales.isSyncing}
+            records={offlineSales.records}
+            onRetry={(id) => void offlineSales.retry(id)}
+            onSynchronize={() => void offlineSales.synchronize()}
+          />
 
-        {offlineConfirmation ? (
-          <div className={styles.feedbackBanner} role="status">
-            {offlineConfirmation}
-          </div>
-        ) : null}
+          {offlineConfirmation ? (
+            <div className={styles.feedbackBanner} role="status">
+              {offlineConfirmation}
+            </div>
+          ) : null}
 
-        {checkoutErrorMessage ? (
-          <div className={styles.feedbackBanner} role="alert">
-            {checkoutErrorMessage}
-          </div>
-        ) : null}
+          {checkoutErrorMessage ? (
+            <div className={styles.feedbackBanner} role="alert">
+              {checkoutErrorMessage}
+            </div>
+          ) : null}
+        </div>
 
         <div
           className={

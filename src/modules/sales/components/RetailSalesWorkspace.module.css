@@ -119,6 +119,11 @@
   line-height: 1.5;
 }
 
+.salesNotices {
+  display: grid;
+  gap: 1rem;
+}
+
 .workspace {
   display: grid;
   gap: 1rem;
@@ -2433,6 +2438,13 @@
 }
 
 @media (min-width: 1100px) {
+  .salesBody {
+    grid-template-rows: auto minmax(0, 1fr);
+    height: calc(100dvh - 6.35rem - 30px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .workspace {
     --sales-layout-header-height: 6.35rem;
     --sales-body-offset: 30px;
@@ -2448,7 +2460,7 @@
     grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.48fr);
     gap: 0;
     align-items: stretch;
-    height: var(--sales-workspace-height);
+    height: auto;
     min-height: 0;
     gap: 20px;
   }
@@ -3372,7 +3384,7 @@
     );
     grid-template-columns: minmax(0, 1fr) minmax(24rem, 30rem);
     gap: clamp(1rem, 1.65vw, 1.4rem);
-    height: var(--sales-workspace-height);
+    height: auto;
     min-height: 0;
   }
 
@@ -3385,7 +3397,7 @@
 
   .checkoutColumn {
     position: sticky;
-    top: calc(var(--sales-layout-header-height) + var(--sales-body-offset));
+    top: 0;
     align-self: stretch;
     height: 100%;
     padding: 0 0 1rem;
