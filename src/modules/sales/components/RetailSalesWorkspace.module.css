@@ -3139,13 +3139,17 @@
 
 .catalogPanelFooter {
   display: grid;
-  grid-template-columns: minmax(8.5rem, auto) minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(6.5rem, 0.8fr) minmax(0, 1.2fr) minmax(7.5rem, 1fr);
   gap: 0.75rem;
 }
 
 .holdButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   min-height: 3.35rem;
-  padding: 0 1rem;
+  padding: 0 0.8rem;
   border: 1px solid rgba(37, 117, 83, 0.42);
   border-radius: 0.95rem;
   background: #effbf4;
@@ -3153,6 +3157,13 @@
   font: inherit;
   font-weight: 850;
   cursor: pointer;
+}
+
+.holdButton svg,
+.continueButton svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
 }
 
 .holdButton:hover:not(:disabled) {
@@ -3189,6 +3200,12 @@
   white-space: nowrap;
 }
 
+.quickCashButton span,
+.holdButton span,
+.continueButton span {
+  white-space: nowrap;
+}
+
 .quickCashButton:hover:not(:disabled) {
   background: #15803d;
 }
@@ -3205,6 +3222,12 @@
   background: var(--sales-tertiary, #0f172a);
   color: #ffffff;
   box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.18);
+}
+
+.catalogPanelFooter .continueButton {
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0 0.8rem;
 }
 
 .continueButton:not(:disabled):hover,

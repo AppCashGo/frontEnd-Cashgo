@@ -191,6 +191,7 @@ export function ExperienceCenter() {
   }, [summary])
 
   const priorityCount = activityItems.filter((item) => item.tone !== 'success').length
+  const isSalesWorkspace = location.pathname === routePaths.salesNew
 
   function navigateFromCenter(path: string) {
     setActiveView(null)
@@ -220,38 +221,40 @@ export function ExperienceCenter() {
 
   return (
     <>
-      <div className={styles.launchers}>
-        <button
-          aria-label="Registrar una nueva venta"
-          data-label="Nueva venta"
-          className={joinClassNames(styles.launcher, styles.saleLauncher)}
-          type="button"
-          onClick={() => navigate(routePaths.salesNew)}
-        >
-          <ShoppingCart aria-hidden="true" />
-        </button>
-        <button
-          aria-expanded={activeView === 'activity'}
-          aria-label="Abrir centro de actividad"
-          data-label="Actividad"
-          className={joinClassNames(styles.launcher, styles.activityLauncher)}
-          type="button"
-          onClick={() => setActiveView('activity')}
-        >
-          <Bell aria-hidden="true" />
-          {priorityCount > 0 ? <span>{Math.min(priorityCount, 9)}</span> : null}
-        </button>
-        <button
-          aria-expanded={activeView === 'assistant'}
-          aria-label="Abrir asistente de ayuda"
-          data-label="Asistente"
-          className={joinClassNames(styles.launcher, styles.helpLauncher)}
-          type="button"
-          onClick={() => setActiveView('assistant')}
-        >
-          <MessageCircleMore aria-hidden="true" />
-        </button>
-      </div>
+      {!isSalesWorkspace ? (
+        <div className={styles.launchers}>
+          <button
+            aria-label="Registrar una nueva venta"
+            data-label="Nueva venta"
+            className={joinClassNames(styles.launcher, styles.saleLauncher)}
+            type="button"
+            onClick={() => navigate(routePaths.salesNew)}
+          >
+            <ShoppingCart aria-hidden="true" />
+          </button>
+          <button
+            aria-expanded={activeView === 'activity'}
+            aria-label="Abrir centro de actividad"
+            data-label="Actividad"
+            className={joinClassNames(styles.launcher, styles.activityLauncher)}
+            type="button"
+            onClick={() => setActiveView('activity')}
+          >
+            <Bell aria-hidden="true" />
+            {priorityCount > 0 ? <span>{Math.min(priorityCount, 9)}</span> : null}
+          </button>
+          <button
+            aria-expanded={activeView === 'assistant'}
+            aria-label="Abrir asistente de ayuda"
+            data-label="Asistente"
+            className={joinClassNames(styles.launcher, styles.helpLauncher)}
+            type="button"
+            onClick={() => setActiveView('assistant')}
+          >
+            <MessageCircleMore aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
 
       <AppDrawer
         description="Prioridades calculadas con la información actual de tu negocio."

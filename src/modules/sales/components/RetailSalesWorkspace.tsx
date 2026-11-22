@@ -8,8 +8,10 @@ import {
   CheckCircle,
   CheckCircle2,
   Camera,
+  CreditCard,
   Crown,
   Layers3,
+  Pause,
   Plus,
   ScanBarcode,
   ShoppingCart,
@@ -3163,7 +3165,8 @@ export function RetailSalesWorkspace() {
                     type="button"
                     onClick={() => setHoldSaleModalOpen(true)}
                   >
-                    {activeHeldSale ? 'Actualizar espera' : 'Dejar en espera'}
+                    <Pause aria-hidden="true" />
+                    <span>{activeHeldSale ? 'Actualizar' : 'Espera'}</span>
                   </button>
                   <button
                     className={styles.quickCashButton}
@@ -3172,7 +3175,7 @@ export function RetailSalesWorkspace() {
                     onClick={() => void handleQuickCashSale()}
                   >
                     <Banknote aria-hidden="true" />
-                    <span>Cobrar efectivo</span>
+                    <span>Efectivo</span>
                     <strong>{formatCurrency(totalAmount)}</strong>
                   </button>
                   <button
@@ -3181,9 +3184,8 @@ export function RetailSalesWorkspace() {
                     type="button"
                     onClick={() => setSaleStep('PAYMENT')}
                   >
-                    <span className={styles.continueBadge}>{totalItems.toString()}</span>
-                    <span className={styles.continueText}>Continuar</span>
-                    <strong>{formatCurrency(totalAmount)}</strong>
+                    <CreditCard aria-hidden="true" />
+                    <span>Otros pagos</span>
                   </button>
                 </div>
               </section>
