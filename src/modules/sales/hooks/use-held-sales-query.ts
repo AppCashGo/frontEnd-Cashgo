@@ -4,6 +4,7 @@ import {
   cancelHeldSale,
   createHeldSale,
   getHeldSales,
+  registerHeldSaleShortages,
   updateHeldSale,
 } from '@/modules/sales/services/held-sales-api'
 import type { SaveHeldSaleInput } from '@/modules/sales/types/held-sale'
@@ -41,4 +42,21 @@ export function useUpdateHeldSaleMutation() {
 export function useCancelHeldSaleMutation() {
   const invalidate = useInvalidateHeldSales()
   return useMutation({ mutationFn: cancelHeldSale, onSuccess: invalidate })
+}
+
+export function useRegisterHeldSaleShortagesMutation() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: registerHeldSaleShortages,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: heldSalesQueryKey }),
+        queryClient.invalidateQueries({ queryKey: productsQueryKey }),
+        queryClient.invalidateQueries({ queryKey: ['inventory'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: ['reports'] }),
+        queryClient.invalidateQueries({ queryKey: ['movements'] }),
+      ])
+    },
+  })
 }

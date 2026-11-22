@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { CirclePause, Play, Trash2 } from 'lucide-react'
+import { CirclePause, ClipboardCheck, Play, Trash2, TriangleAlert } from 'lucide-react'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
 import type { HeldSale } from '@/modules/sales/types/held-sale'
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
@@ -138,9 +138,12 @@ type HeldSalesDrawerProps = {
   heldSales: HeldSale[]
   isLoading: boolean
   cancellingId: string | null
+  registeringShortagesId: string | null
+  canRegisterShortages: boolean
   onClose: () => void
   onResume: (heldSale: HeldSale) => void
   onCancel: (heldSale: HeldSale) => Promise<void>
+  onRegisterShortages: (heldSale: HeldSale) => Promise<void>
 }
 
 function formatElapsed(value: string) {
@@ -162,11 +165,15 @@ export function HeldSalesDrawer({
   heldSales,
   isLoading,
   cancellingId,
+  registeringShortagesId,
+  canRegisterShortages,
   onClose,
   onResume,
   onCancel,
+  onRegisterShortages,
 }: HeldSalesDrawerProps) {
   const { confirm, confirmationDialog } = useConfirmDialog()
+  const [actionError, setActionError] = useState<string | null>(null)
 
   async function handleCancel(heldSale: HeldSale) {
     const shouldCancel = await confirm({
@@ -180,12 +187,31 @@ export function HeldSalesDrawer({
     if (shouldCancel) await onCancel(heldSale)
   }
 
+  async function handleRegisterShortages(heldSale: HeldSale) {
+    const missingUnits = heldSale.items.reduce((sum, item) => sum + item.quantity, 0)
+    const shouldRegister = await confirm({
+      title: 'Registrar faltantes de inventario',
+      description: `Se descontarán ${missingUnits} unidades del inventario y la cuenta ${heldSale.code} quedará cerrada. Se guardará el historial, pero no se creará una venta, ingreso, utilidad ni movimiento de caja.`,
+      confirmLabel: 'Registrar faltantes',
+      cancelLabel: 'Volver',
+      tone: 'danger',
+    })
+    if (!shouldRegister) return
+
+    try {
+      setActionError(null)
+      await onRegisterShortages(heldSale)
+    } catch (error) {
+      setActionError(getErrorMessage(error, 'No pudimos registrar los faltantes de inventario.'))
+    }
+  }
+
   return (
     <>
       {confirmationDialog}
       <SideDrawer
       bodyClassName={styles.drawerBody}
-      description="Recupera una canasta, modifícala o llévala al cobro."
+      description="Retoma una venta o convierte un conteo de faltantes en un ajuste de inventario."
       isOpen={isOpen}
       panelClassName={styles.drawer}
       title={`Cuentas en espera (${heldSales.length})`}
@@ -200,6 +226,12 @@ export function HeldSalesDrawer({
         </div>
       ) : (
         <div className={styles.list}>
+          {actionError ? (
+            <div className={styles.actionError} role="alert">
+              <TriangleAlert aria-hidden="true" />
+              <span>{actionError}</span>
+            </div>
+          ) : null}
           {heldSales.map((heldSale) => (
             <article className={styles.card} key={heldSale.id}>
               <div className={styles.cardHeader}>
@@ -240,6 +272,26 @@ export function HeldSalesDrawer({
                   Cancelar
                 </AppButton>
               </div>
+              {canRegisterShortages ? (
+                <div className={styles.inventoryAction}>
+                  <div>
+                    <ClipboardCheck aria-hidden="true" />
+                    <span>
+                      <strong>¿Este registro corresponde a un conteo?</strong>
+                      <small>Guárdalo como faltante sin afectar ventas ni contabilidad.</small>
+                    </span>
+                  </div>
+                  <AppButton
+                    isLoading={registeringShortagesId === heldSale.id}
+                    loadingLabel="Registrando faltantes…"
+                    startIcon={<ClipboardCheck aria-hidden="true" />}
+                    variant="outline"
+                    onClick={() => void handleRegisterShortages(heldSale)}
+                  >
+                    Registrar como faltantes
+                  </AppButton>
+                </div>
+              ) : null}
             </article>
           ))}
         </div>

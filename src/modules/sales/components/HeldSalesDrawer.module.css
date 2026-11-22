@@ -21,4 +21,12 @@
 .field { display: grid; gap: 8px; color: var(--ui-text); font-weight: 750; }
 .field input, .field textarea { width: 100%; box-sizing: border-box; }
 .error { margin: 0; padding: 11px 13px; border-radius: var(--ui-radius-md); background: var(--ui-danger-soft); color: var(--ui-danger-hover); font-weight: 700; }
+.actionError { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--ui-danger) 28%, transparent); border-radius: var(--ui-radius-md); background: var(--ui-danger-soft); color: var(--ui-danger-hover); font-weight: 700; }
+.actionError svg { flex: 0 0 auto; width: 19px; height: 19px; }
+.inventoryAction { display: grid; gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--ui-border); }
+.inventoryAction > div { display: flex; gap: 10px; align-items: flex-start; color: var(--ui-text-secondary); }
+.inventoryAction > div > svg { flex: 0 0 auto; width: 20px; height: 20px; color: var(--ui-warning); }
+.inventoryAction span { display: grid; gap: 3px; }
+.inventoryAction strong { color: var(--ui-text); font-size: 14px; }
+.inventoryAction small { line-height: 1.4; }
 @media (max-width: 600px) { .cardActions, .modalActions { flex-direction: column; } .cardHeader { flex-direction: column; } .form { padding: 24px 18px; } }

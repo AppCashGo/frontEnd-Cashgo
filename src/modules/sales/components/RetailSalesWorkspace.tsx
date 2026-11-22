@@ -22,7 +22,7 @@ import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-c
 import { QuickCreateCustomerDrawer } from '@/modules/customers/components/QuickCreateCustomerDrawer'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
-import { getActiveBusiness } from '@/modules/auth/utils/get-active-business'
+import { getActiveBusiness, getActiveBusinessRole } from '@/modules/auth/utils/get-active-business'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
 import {
   useCreateExpenseMutation,
@@ -64,6 +64,7 @@ import {
   useCancelHeldSaleMutation,
   useCreateHeldSaleMutation,
   useHeldSalesQuery,
+  useRegisterHeldSaleShortagesMutation,
   useUpdateHeldSaleMutation,
 } from '@/modules/sales/hooks/use-held-sales-query'
 import type { HeldSale } from '@/modules/sales/types/held-sale'
@@ -101,6 +102,7 @@ import {
   getSharedPaymentMethodLabel,
 } from '@/shared/payments/payment-methods'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { isTeamManagementRole } from '@/shared/constants/user-roles'
 import styles from './RetailSalesWorkspace.module.css'
 
 type RetailStep = 'CATALOG' | 'PAYMENT'
@@ -1127,6 +1129,7 @@ export function RetailSalesWorkspace() {
   const navigate = useNavigate()
   const authUser = useAuthSessionStore((state) => state.user)
   const activeBusiness = getActiveBusiness(authUser)
+  const canRegisterInventoryShortages = isTeamManagementRole(getActiveBusinessRole(authUser))
   const isOnline = useNetworkStatus()
   const offlineSales = useOfflineSales(activeBusiness?.id, authUser?.id)
   const cartPersistenceKey =
@@ -1207,6 +1210,7 @@ export function RetailSalesWorkspace() {
   const createHeldSaleMutation = useCreateHeldSaleMutation()
   const updateHeldSaleMutation = useUpdateHeldSaleMutation()
   const cancelHeldSaleMutation = useCancelHeldSaleMutation()
+  const registerHeldSaleShortagesMutation = useRegisterHeldSaleShortagesMutation()
   const customersQuery = useCustomersQuery()
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const createSaleMutation = useCreateSaleMutation()
@@ -1872,6 +1876,14 @@ export function RetailSalesWorkspace() {
       resetPaymentStep()
       setActiveHeldSaleId(null)
       setSaleStep('CATALOG')
+    }
+  }
+
+  async function handleRegisterHeldSaleShortages(heldSale: HeldSale) {
+    await registerHeldSaleShortagesMutation.mutateAsync(heldSale.id)
+    if (activeHeldSaleId === heldSale.id) {
+      clearCart()
+      setActiveHeldSaleId(null)
     }
   }
 
@@ -3674,9 +3686,15 @@ export function RetailSalesWorkspace() {
       />
 
       <HeldSalesDrawer
+        canRegisterShortages={canRegisterInventoryShortages}
         cancellingId={
           cancelHeldSaleMutation.isPending
             ? (cancelHeldSaleMutation.variables ?? null)
+            : null
+        }
+        registeringShortagesId={
+          registerHeldSaleShortagesMutation.isPending
+            ? (registerHeldSaleShortagesMutation.variables ?? null)
             : null
         }
         heldSales={heldSales}
@@ -3685,6 +3703,7 @@ export function RetailSalesWorkspace() {
         onCancel={handleCancelHeldSale}
         onClose={() => setHeldSalesOpen(false)}
         onResume={handleResumeHeldSale}
+        onRegisterShortages={handleRegisterHeldSaleShortages}
       />
 
       <HoldSaleModal

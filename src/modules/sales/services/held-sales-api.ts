@@ -98,3 +98,20 @@ export async function cancelHeldSale(id: string) {
   )
   return normalizeHeldSale(record)
 }
+
+export type HeldSaleShortageResult = {
+  heldSaleId: number
+  code: string | null
+  adjustedProducts: number
+  missingUnits: number
+  estimatedCost: number
+  accountingImpact: 0
+}
+
+export async function registerHeldSaleShortages(id: string) {
+  return postJson<HeldSaleShortageResult, Record<string, never>>(
+    `/held-sales/${id}/register-shortages`,
+    {},
+    { accessToken: getAuthAccessToken() },
+  )
+}
