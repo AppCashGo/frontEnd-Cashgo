@@ -9,6 +9,19 @@ export type AssistantActionKind =
   | 'CREATE_PRODUCT'
   | 'UPDATE_PRODUCT'
   | 'DELETE_PRODUCT'
+  | 'CREATE_SALE'
+  | 'HOLD_SALE'
+
+export type AssistantProductPreview = {
+  id: number
+  name: string
+  price: number
+  stock: number
+  imageUrl: string | null
+  category: string | null
+  quantity?: number
+  lineTotal?: number
+}
 
 export type AssistantPendingAction = {
   token: string
@@ -21,6 +34,7 @@ export type AssistantPendingAction = {
     label: string
     value: string
   }>
+  products?: AssistantProductPreview[]
 }
 
 type AssistantChatInput = {
@@ -32,11 +46,12 @@ export type AssistantChatResponse = {
   message: string
   model: string
   action?: AssistantPendingAction
+  products?: AssistantProductPreview[]
 }
 
 export type ConfirmAssistantActionResponse = {
   message: string
-  productId: number
+  resourceId: number
   action: AssistantActionKind
 }
 

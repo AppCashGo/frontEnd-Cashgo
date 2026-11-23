@@ -5,8 +5,10 @@ import {
   Check,
   CheckCircle2,
   CircleHelp,
+  Clock3,
   LoaderCircle,
   MessageCircleMore,
+  Package,
   PackagePlus,
   Pencil,
   RefreshCw,
@@ -21,14 +23,17 @@ import { useQueryClient } from '@tanstack/react-query'
 import { type FormEvent, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDashboardSummaryQuery } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
+import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
 import { routePaths } from '@/routes/route-paths'
 import { AppDrawer } from '@/shared/components/ui/AppDrawer'
 import { AppButton } from '@/shared/components/ui/AppButton'
 import { getApiErrorMessage } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
+import { formatCurrency } from '@/shared/utils/format-currency'
 import {
   confirmAssistantAction,
   sendAssistantMessage,
+  type AssistantProductPreview,
   type AssistantPendingAction,
 } from './assistant-api'
 import styles from './ExperienceCenter.module.css'
@@ -52,6 +57,47 @@ type AssistantMessage = {
   action?: AssistantPendingAction & {
     status: 'cancelled' | 'completed' | 'executing' | 'pending'
   }
+  products?: AssistantProductPreview[]
+}
+
+function cleanAssistantText(text: string) {
+  return text.replace(/\*\*/g, '')
+}
+
+function ProductPreviewList({ products }: { products: AssistantProductPreview[] }) {
+  return (
+    <div className={styles.productPreviews}>
+      {products.map((product) => {
+        const imageUrl = resolveProductImageUrl(
+          product.imageUrl ? [product.imageUrl] : null,
+        )
+        return (
+          <article className={styles.productPreview} key={product.id}>
+            <div className={styles.productPreviewImage}>
+              {imageUrl ? (
+                <img alt="" src={imageUrl} />
+              ) : (
+                <Package aria-hidden="true" />
+              )}
+            </div>
+            <div className={styles.productPreviewContent}>
+              <strong>{product.name}</strong>
+              <span>
+                {product.quantity
+                  ? `${product.quantity} × ${formatCurrency(product.price)}`
+                  : formatCurrency(product.price)}
+              </span>
+              <small>
+                {product.quantity
+                  ? `Subtotal ${formatCurrency(product.lineTotal ?? product.price * product.quantity)}`
+                  : `${product.stock} disponibles`}
+              </small>
+            </div>
+          </article>
+        )
+      })}
+    </div>
+  )
 }
 
 const initialMessages: AssistantMessage[] = [
@@ -187,6 +233,7 @@ export function ExperienceCenter() {
           action: response.action
             ? { ...response.action, status: 'pending' }
             : undefined,
+          products: response.products,
         },
       ])
     } catch (error) {
@@ -282,6 +329,12 @@ export function ExperienceCenter() {
     }
     if (action.kind === 'UPDATE_PRODUCT') {
       return <Pencil aria-hidden="true" />
+    }
+    if (action.kind === 'CREATE_SALE') {
+      return <ShoppingCart aria-hidden="true" />
+    }
+    if (action.kind === 'HOLD_SALE') {
+      return <Clock3 aria-hidden="true" />
     }
     return <Trash2 aria-hidden="true" />
   }
@@ -449,8 +502,11 @@ export function ExperienceCenter() {
             <div className={styles.messageGroup} key={message.id}>
               <div className={joinClassNames(styles.message, styles[message.role])}>
                 {message.role === 'assistant' ? <Bot aria-hidden="true" /> : null}
-                <p>{message.text}</p>
+                <p>{cleanAssistantText(message.text)}</p>
               </div>
+              {message.products?.length ? (
+                <ProductPreviewList products={message.products} />
+              ) : null}
               {message.action ? (
                 <article
                   className={joinClassNames(
@@ -473,6 +529,9 @@ export function ExperienceCenter() {
                       </div>
                     ))}
                   </dl>
+                  {message.action.products?.length ? (
+                    <ProductPreviewList products={message.action.products} />
+                  ) : null}
                   {message.action.status === 'pending' || message.action.status === 'executing' ? (
                     <footer>
                       <AppButton
