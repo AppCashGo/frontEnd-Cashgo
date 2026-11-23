@@ -1,16 +1,11 @@
-import { postJson } from '@/shared/services/api-client'
+import { postFormData, postJson } from '@/shared/services/api-client'
 
 export type AssistantApiMessage = {
   role: 'assistant' | 'user'
   content: string
 }
 
-export type AssistantActionKind =
-  | 'CREATE_PRODUCT'
-  | 'UPDATE_PRODUCT'
-  | 'DELETE_PRODUCT'
-  | 'CREATE_SALE'
-  | 'HOLD_SALE'
+export type AssistantActionKind = 'CREATE_PRODUCT' | 'UPDATE_PRODUCT' | 'DELETE_PRODUCT' | 'CREATE_SALE' | 'HOLD_SALE' | 'CREATE_PURCHASE'
 
 export type AssistantProductPreview = {
   id: number
@@ -56,15 +51,15 @@ export type ConfirmAssistantActionResponse = {
 }
 
 export function sendAssistantMessage(input: AssistantChatInput) {
-  return postJson<AssistantChatResponse, AssistantChatInput>(
-    '/assistant/chat',
-    input,
-  )
+  return postJson<AssistantChatResponse, AssistantChatInput>('/assistant/chat', input)
+}
+
+export function analyzePurchaseInvoice(file: File) {
+  const body = new FormData()
+  body.append('file', file)
+  return postFormData<AssistantChatResponse>('/assistant/purchase-invoices/analyze', body)
 }
 
 export function confirmAssistantAction(token: string) {
-  return postJson<
-    ConfirmAssistantActionResponse,
-    { token: string }
-  >('/assistant/actions/confirm', { token })
+  return postJson<ConfirmAssistantActionResponse, { token: string }>('/assistant/actions/confirm', { token })
 }

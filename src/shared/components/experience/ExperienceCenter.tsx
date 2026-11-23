@@ -2,6 +2,7 @@ import {
   ArrowRight,
   Bell,
   Bot,
+  Camera,
   Check,
   CheckCircle2,
   CircleHelp,
@@ -12,6 +13,7 @@ import {
   PackagePlus,
   Pencil,
   RefreshCw,
+  ReceiptText,
   Send,
   ShoppingCart,
   Trash2,
@@ -20,7 +22,7 @@ import {
   X,
 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
-import { type FormEvent, useMemo, useState } from 'react'
+import { type ChangeEvent, type FormEvent, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDashboardSummaryQuery } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
@@ -30,12 +32,7 @@ import { AppButton } from '@/shared/components/ui/AppButton'
 import { getApiErrorMessage } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import { formatCurrency } from '@/shared/utils/format-currency'
-import {
-  confirmAssistantAction,
-  sendAssistantMessage,
-  type AssistantProductPreview,
-  type AssistantPendingAction,
-} from './assistant-api'
+import { confirmAssistantAction, analyzePurchaseInvoice, sendAssistantMessage, type AssistantProductPreview, type AssistantPendingAction } from './assistant-api'
 import styles from './ExperienceCenter.module.css'
 
 type CenterView = 'activity' | 'assistant' | null
@@ -58,40 +55,30 @@ type AssistantMessage = {
     status: 'cancelled' | 'completed' | 'executing' | 'pending'
   }
   products?: AssistantProductPreview[]
+  attachment?: {
+    name: string
+    previewUrl: string
+  }
 }
 
 function cleanAssistantText(text: string) {
   return text.replace(/\*\*/g, '')
 }
 
-function ProductPreviewList({ products }: { products: AssistantProductPreview[] }) {
+function ProductPreviewList({ products, mode = 'sale' }: { products: AssistantProductPreview[]; mode?: 'purchase' | 'sale' }) {
   return (
     <div className={styles.productPreviews}>
       {products.map((product) => {
-        const imageUrl = resolveProductImageUrl(
-          product.imageUrl ? [product.imageUrl] : null,
-        )
+        const imageUrl = resolveProductImageUrl(product.imageUrl ? [product.imageUrl] : null)
         return (
           <article className={styles.productPreview} key={product.id}>
-            <div className={styles.productPreviewImage}>
-              {imageUrl ? (
-                <img alt="" src={imageUrl} />
-              ) : (
-                <Package aria-hidden="true" />
-              )}
-            </div>
+            <div className={styles.productPreviewImage}>{imageUrl ? <img alt="" src={imageUrl} /> : <Package aria-hidden="true" />}</div>
             <div className={styles.productPreviewContent}>
               <strong>{product.name}</strong>
               <span>
-                {product.quantity
-                  ? `${product.quantity} × ${formatCurrency(product.price)}`
-                  : formatCurrency(product.price)}
+                {product.quantity ? `${product.quantity} × ${formatCurrency(product.price)}${mode === 'purchase' ? ' costo unitario' : ''}` : formatCurrency(product.price)}
               </span>
-              <small>
-                {product.quantity
-                  ? `Subtotal ${formatCurrency(product.lineTotal ?? product.price * product.quantity)}`
-                  : `${product.stock} disponibles`}
-              </small>
+              <small>{product.quantity ? `Subtotal ${formatCurrency(product.lineTotal ?? product.price * product.quantity)}` : `${product.stock} disponibles`}</small>
             </div>
           </article>
         )
@@ -104,15 +91,20 @@ const initialMessages: AssistantMessage[] = [
   {
     id: 'welcome',
     role: 'assistant',
-    text: 'Hola. Puedo consultar tu inventario y ayudarte a crear, editar o eliminar productos. Antes de modificar información siempre te pediré confirmación.',
+    text: 'Hola. Puedo consultar tu inventario, preparar ventas y registrar compras leyendo una foto de la factura. Antes de modificar información siempre te pediré confirmación.',
   },
 ]
 
-const quickQuestions = [
-  '¿Qué productos están agotados?',
-  '¿Cuáles tienen stock bajo?',
-  '¿Cuánta comida para perro hay?',
-]
+const quickQuestions = ['¿Qué productos están agotados?', '¿Cuáles tienen stock bajo?', '¿Cuánta comida para perro hay?']
+
+function readImagePreview(file: File) {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
 
 export function ExperienceCenter() {
   const queryClient = useQueryClient()
@@ -122,6 +114,8 @@ export function ExperienceCenter() {
   const [question, setQuestion] = useState('')
   const [messages, setMessages] = useState<AssistantMessage[]>(initialMessages)
   const [isAssistantThinking, setAssistantThinking] = useState(false)
+  const [isAnalyzingInvoice, setAnalyzingInvoice] = useState(false)
+  const invoiceInputRef = useRef<HTMLInputElement>(null)
   const summaryQuery = useDashboardSummaryQuery()
   const summary = summaryQuery.data
 
@@ -212,10 +206,7 @@ export function ExperienceCenter() {
       .slice(-10)
       .map((message) => ({ role: message.role, content: message.text }))
 
-    setMessages((currentMessages) => [
-      ...currentMessages,
-      { id: `user-${timestamp}`, role: 'user', text: trimmedQuestion },
-    ])
+    setMessages((currentMessages) => [...currentMessages, { id: `user-${timestamp}`, role: 'user', text: trimmedQuestion }])
     setQuestion('')
     setAssistantThinking(true)
 
@@ -230,9 +221,7 @@ export function ExperienceCenter() {
           id: `assistant-${timestamp}`,
           role: 'assistant',
           text: response.message,
-          action: response.action
-            ? { ...response.action, status: 'pending' }
-            : undefined,
+          action: response.action ? { ...response.action, status: 'pending' } : undefined,
           products: response.products,
         },
       ])
@@ -242,13 +231,79 @@ export function ExperienceCenter() {
         {
           id: `assistant-error-${timestamp}`,
           role: 'assistant',
-          text: getApiErrorMessage(
-            error,
-            'No pude consultar la información en este momento. Intenta nuevamente.',
-          ),
+          text: getApiErrorMessage(error, 'No pude consultar la información en este momento. Intenta nuevamente.'),
         },
       ])
     } finally {
+      setAssistantThinking(false)
+    }
+  }
+
+  async function handleInvoiceSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file || isAssistantThinking) return
+
+    const timestamp = Date.now()
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `assistant-invoice-error-${timestamp}`,
+          role: 'assistant',
+          text: 'La factura debe ser una foto JPG, PNG o WEBP.',
+        },
+      ])
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `assistant-invoice-error-${timestamp}`,
+          role: 'assistant',
+          text: 'La foto de la factura debe pesar máximo 5 MB.',
+        },
+      ])
+      return
+    }
+
+    setAssistantThinking(true)
+    setAnalyzingInvoice(true)
+    try {
+      const previewUrl = await readImagePreview(file)
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `user-invoice-${timestamp}`,
+          role: 'user',
+          text: 'Registrar esta factura de compra',
+          attachment: { name: file.name, previewUrl },
+        },
+      ])
+
+      const response = await analyzePurchaseInvoice(file)
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `assistant-invoice-${timestamp}`,
+          role: 'assistant',
+          text: response.message,
+          action: response.action ? { ...response.action, status: 'pending' } : undefined,
+          products: response.products,
+        },
+      ])
+    } catch (error) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `assistant-invoice-error-${timestamp}`,
+          role: 'assistant',
+          text: getApiErrorMessage(error, 'No pude leer la factura. Toma una foto completa y nítida e intenta nuevamente.'),
+        },
+      ])
+    } finally {
+      setAnalyzingInvoice(false)
       setAssistantThinking(false)
     }
   }
@@ -299,10 +354,7 @@ export function ExperienceCenter() {
         {
           id: `assistant-action-error-${Date.now()}`,
           role: 'assistant',
-          text: getApiErrorMessage(
-            error,
-            'No pude completar el cambio. Revisa los datos e intenta nuevamente.',
-          ),
+          text: getApiErrorMessage(error, 'No pude completar el cambio. Revisa los datos e intenta nuevamente.'),
         },
       ])
     } finally {
@@ -335,6 +387,9 @@ export function ExperienceCenter() {
     }
     if (action.kind === 'HOLD_SALE') {
       return <Clock3 aria-hidden="true" />
+    }
+    if (action.kind === 'CREATE_PURCHASE') {
+      return <ReceiptText aria-hidden="true" />
     }
     return <Trash2 aria-hidden="true" />
   }
@@ -445,7 +500,7 @@ export function ExperienceCenter() {
       </AppDrawer>
 
       <AppDrawer
-        description="Consulta y administra productos con información real de tu negocio."
+        description="Consulta productos, prepara ventas y registra compras desde una foto."
         isOpen={activeView === 'assistant'}
         size="md"
         title="Asistente CashGo"
@@ -456,6 +511,23 @@ export function ExperienceCenter() {
         }
         footer={
           <form className={styles.assistantForm} onSubmit={submitQuestion}>
+            <input
+              ref={invoiceInputRef}
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="Seleccionar foto de factura"
+              className={styles.hiddenFileInput}
+              type="file"
+              onChange={(event) => void handleInvoiceSelected(event)}
+            />
+            <AppButton
+              aria-label="Escanear factura de compra"
+              disabled={isAssistantThinking}
+              iconOnly
+              startIcon={<Camera aria-hidden="true" />}
+              type="button"
+              variant="secondary"
+              onClick={() => invoiceInputRef.current?.click()}
+            />
             <input
               aria-label="Escribe tu pregunta"
               disabled={isAssistantThinking}
@@ -477,7 +549,9 @@ export function ExperienceCenter() {
         onClose={() => setActiveView(null)}
       >
         <div className={styles.assistantStatus}>
-          <span><CircleHelp aria-hidden="true" /></span>
+          <span>
+            <CircleHelp aria-hidden="true" />
+          </span>
           <div>
             <strong>Asistente con confirmación</strong>
             <p>Consulta datos y prepara cambios. Nada se modifica hasta que confirmes.</p>
@@ -485,13 +559,12 @@ export function ExperienceCenter() {
         </div>
 
         <div className={styles.quickQuestions}>
+          <button className={styles.invoiceQuickAction} disabled={isAssistantThinking} type="button" onClick={() => invoiceInputRef.current?.click()}>
+            <Camera aria-hidden="true" />
+            Registrar compra con foto
+          </button>
           {quickQuestions.map((quickQuestion) => (
-            <button
-              disabled={isAssistantThinking}
-              key={quickQuestion}
-              type="button"
-              onClick={() => void askAssistant(quickQuestion)}
-            >
+            <button disabled={isAssistantThinking} key={quickQuestion} type="button" onClick={() => void askAssistant(quickQuestion)}>
               {quickQuestion}
             </button>
           ))}
@@ -504,16 +577,18 @@ export function ExperienceCenter() {
                 {message.role === 'assistant' ? <Bot aria-hidden="true" /> : null}
                 <p>{cleanAssistantText(message.text)}</p>
               </div>
-              {message.products?.length ? (
-                <ProductPreviewList products={message.products} />
+              {message.attachment ? (
+                <figure className={styles.invoiceAttachment}>
+                  <img alt={`Factura ${message.attachment.name}`} src={message.attachment.previewUrl} />
+                  <figcaption>
+                    <ReceiptText aria-hidden="true" />
+                    <span>{message.attachment.name}</span>
+                  </figcaption>
+                </figure>
               ) : null}
+              {message.products?.length ? <ProductPreviewList products={message.products} /> : null}
               {message.action ? (
-                <article
-                  className={joinClassNames(
-                    styles.actionCard,
-                    message.action.tone === 'danger' ? styles.actionDanger : undefined,
-                  )}
-                >
+                <article className={joinClassNames(styles.actionCard, message.action.tone === 'danger' ? styles.actionDanger : undefined)}>
                   <header>
                     <span>{getActionIcon(message.action)}</span>
                     <div>
@@ -530,7 +605,7 @@ export function ExperienceCenter() {
                     ))}
                   </dl>
                   {message.action.products?.length ? (
-                    <ProductPreviewList products={message.action.products} />
+                    <ProductPreviewList mode={message.action.kind === 'CREATE_PURCHASE' ? 'purchase' : 'sale'} products={message.action.products} />
                   ) : null}
                   {message.action.status === 'pending' || message.action.status === 'executing' ? (
                     <footer>
@@ -548,39 +623,18 @@ export function ExperienceCenter() {
                         isLoading={message.action.status === 'executing'}
                         loadingLabel="Procesando"
                         size="sm"
-                        startIcon={
-                          message.action.tone === 'danger' ? (
-                            <Trash2 aria-hidden="true" />
-                          ) : (
-                            <Check aria-hidden="true" />
-                          )
-                        }
+                        startIcon={message.action.tone === 'danger' ? <Trash2 aria-hidden="true" /> : <Check aria-hidden="true" />}
                         type="button"
                         variant={message.action.tone === 'danger' ? 'danger' : 'primary'}
-                        onClick={() =>
-                          void confirmAction(message.id, message.action?.token ?? '')
-                        }
+                        onClick={() => void confirmAction(message.id, message.action?.token ?? '')}
                       >
                         {message.action.confirmLabel}
                       </AppButton>
                     </footer>
                   ) : (
-                    <div
-                      className={joinClassNames(
-                        styles.actionStatus,
-                        message.action.status === 'completed'
-                          ? styles.actionCompleted
-                          : styles.actionCancelled,
-                      )}
-                    >
-                      {message.action.status === 'completed' ? (
-                        <CheckCircle2 aria-hidden="true" />
-                      ) : (
-                        <X aria-hidden="true" />
-                      )}
-                      {message.action.status === 'completed'
-                        ? 'Cambio realizado'
-                        : 'Acción cancelada'}
+                    <div className={joinClassNames(styles.actionStatus, message.action.status === 'completed' ? styles.actionCompleted : styles.actionCancelled)}>
+                      {message.action.status === 'completed' ? <CheckCircle2 aria-hidden="true" /> : <X aria-hidden="true" />}
+                      {message.action.status === 'completed' ? 'Cambio realizado' : 'Acción cancelada'}
                     </div>
                   )}
                 </article>
@@ -592,7 +646,7 @@ export function ExperienceCenter() {
               <Bot aria-hidden="true" />
               <p className={styles.thinkingMessage}>
                 <LoaderCircle aria-hidden="true" />
-                Consultando tu negocio…
+                {isAnalyzingInvoice ? 'Leyendo la factura y buscando productos…' : 'Consultando tu negocio…'}
               </p>
             </div>
           ) : null}
