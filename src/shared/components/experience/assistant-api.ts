@@ -5,7 +5,14 @@ export type AssistantApiMessage = {
   content: string
 }
 
-export type AssistantActionKind = 'CREATE_PRODUCT' | 'UPDATE_PRODUCT' | 'DELETE_PRODUCT' | 'CREATE_SALE' | 'HOLD_SALE' | 'CREATE_PURCHASE'
+export type AssistantActionKind =
+  | 'CREATE_PRODUCT'
+  | 'UPDATE_PRODUCT'
+  | 'DELETE_PRODUCT'
+  | 'CREATE_SALE'
+  | 'HOLD_SALE'
+  | 'CREATE_PURCHASE'
+  | 'COMPLETE_HELD_SALE'
 
 export type AssistantProductPreview = {
   id: number

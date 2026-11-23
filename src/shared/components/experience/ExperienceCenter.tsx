@@ -382,7 +382,10 @@ export function ExperienceCenter() {
     if (action.kind === 'UPDATE_PRODUCT') {
       return <Pencil aria-hidden="true" />
     }
-    if (action.kind === 'CREATE_SALE') {
+    if (
+      action.kind === 'CREATE_SALE' ||
+      action.kind === 'COMPLETE_HELD_SALE'
+    ) {
       return <ShoppingCart aria-hidden="true" />
     }
     if (action.kind === 'HOLD_SALE') {
