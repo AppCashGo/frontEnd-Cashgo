@@ -2,17 +2,22 @@ import {
   ArrowRight,
   Bell,
   Bot,
+  Check,
   CheckCircle2,
   CircleHelp,
   LoaderCircle,
   MessageCircleMore,
   PackagePlus,
+  Pencil,
   RefreshCw,
   Send,
   ShoppingCart,
+  Trash2,
   TriangleAlert,
   UserRoundPlus,
+  X,
 } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { type FormEvent, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDashboardSummaryQuery } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
@@ -21,7 +26,11 @@ import { AppDrawer } from '@/shared/components/ui/AppDrawer'
 import { AppButton } from '@/shared/components/ui/AppButton'
 import { getApiErrorMessage } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
-import { sendAssistantMessage } from './assistant-api'
+import {
+  confirmAssistantAction,
+  sendAssistantMessage,
+  type AssistantPendingAction,
+} from './assistant-api'
 import styles from './ExperienceCenter.module.css'
 
 type CenterView = 'activity' | 'assistant' | null
@@ -40,13 +49,16 @@ type AssistantMessage = {
   id: string
   role: 'assistant' | 'user'
   text: string
+  action?: AssistantPendingAction & {
+    status: 'cancelled' | 'completed' | 'executing' | 'pending'
+  }
 }
 
 const initialMessages: AssistantMessage[] = [
   {
     id: 'welcome',
     role: 'assistant',
-    text: 'Hola. Puedo consultar los productos y el inventario real de este negocio. Pregúntame por existencias, precios o productos agotados.',
+    text: 'Hola. Puedo consultar tu inventario y ayudarte a crear, editar o eliminar productos. Antes de modificar información siempre te pediré confirmación.',
   },
 ]
 
@@ -57,6 +69,7 @@ const quickQuestions = [
 ]
 
 export function ExperienceCenter() {
+  const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
   const [activeView, setActiveView] = useState<CenterView>(null)
@@ -171,6 +184,9 @@ export function ExperienceCenter() {
           id: `assistant-${timestamp}`,
           role: 'assistant',
           text: response.message,
+          action: response.action
+            ? { ...response.action, status: 'pending' }
+            : undefined,
         },
       ])
     } catch (error) {
@@ -188,6 +204,86 @@ export function ExperienceCenter() {
     } finally {
       setAssistantThinking(false)
     }
+  }
+
+  async function confirmAction(messageId: string, token: string) {
+    if (isAssistantThinking) return
+
+    setAssistantThinking(true)
+    setMessages((currentMessages) =>
+      currentMessages.map((message) =>
+        message.id === messageId && message.action
+          ? {
+              ...message,
+              action: { ...message.action, status: 'executing' },
+            }
+          : message,
+      ),
+    )
+
+    try {
+      const response = await confirmAssistantAction(token)
+      setMessages((currentMessages) => [
+        ...currentMessages.map((message) =>
+          message.id === messageId && message.action
+            ? {
+                ...message,
+                action: { ...message.action, status: 'completed' as const },
+              }
+            : message,
+        ),
+        {
+          id: `assistant-confirmed-${Date.now()}`,
+          role: 'assistant',
+          text: response.message,
+        },
+      ])
+      await queryClient.invalidateQueries()
+    } catch (error) {
+      setMessages((currentMessages) => [
+        ...currentMessages.map((message) =>
+          message.id === messageId && message.action
+            ? {
+                ...message,
+                action: { ...message.action, status: 'pending' as const },
+              }
+            : message,
+        ),
+        {
+          id: `assistant-action-error-${Date.now()}`,
+          role: 'assistant',
+          text: getApiErrorMessage(
+            error,
+            'No pude completar el cambio. Revisa los datos e intenta nuevamente.',
+          ),
+        },
+      ])
+    } finally {
+      setAssistantThinking(false)
+    }
+  }
+
+  function cancelAction(messageId: string) {
+    setMessages((currentMessages) =>
+      currentMessages.map((message) =>
+        message.id === messageId && message.action
+          ? {
+              ...message,
+              action: { ...message.action, status: 'cancelled' },
+            }
+          : message,
+      ),
+    )
+  }
+
+  function getActionIcon(action: AssistantPendingAction) {
+    if (action.kind === 'CREATE_PRODUCT') {
+      return <PackagePlus aria-hidden="true" />
+    }
+    if (action.kind === 'UPDATE_PRODUCT') {
+      return <Pencil aria-hidden="true" />
+    }
+    return <Trash2 aria-hidden="true" />
   }
 
   function submitQuestion(event: FormEvent<HTMLFormElement>) {
@@ -296,7 +392,7 @@ export function ExperienceCenter() {
       </AppDrawer>
 
       <AppDrawer
-        description="Consulta productos e inventario con información real de tu negocio."
+        description="Consulta y administra productos con información real de tu negocio."
         isOpen={activeView === 'assistant'}
         size="md"
         title="Asistente CashGo"
@@ -330,8 +426,8 @@ export function ExperienceCenter() {
         <div className={styles.assistantStatus}>
           <span><CircleHelp aria-hidden="true" /></span>
           <div>
-            <strong>Ayuda contextual</strong>
-            <p>Consulta datos reales. No modifica información sin confirmación.</p>
+            <strong>Asistente con confirmación</strong>
+            <p>Consulta datos y prepara cambios. Nada se modifica hasta que confirmes.</p>
           </div>
         </div>
 
@@ -350,9 +446,86 @@ export function ExperienceCenter() {
 
         <div className={styles.conversation} aria-live="polite">
           {messages.map((message) => (
-            <div className={joinClassNames(styles.message, styles[message.role])} key={message.id}>
-              {message.role === 'assistant' ? <Bot aria-hidden="true" /> : null}
-              <p>{message.text}</p>
+            <div className={styles.messageGroup} key={message.id}>
+              <div className={joinClassNames(styles.message, styles[message.role])}>
+                {message.role === 'assistant' ? <Bot aria-hidden="true" /> : null}
+                <p>{message.text}</p>
+              </div>
+              {message.action ? (
+                <article
+                  className={joinClassNames(
+                    styles.actionCard,
+                    message.action.tone === 'danger' ? styles.actionDanger : undefined,
+                  )}
+                >
+                  <header>
+                    <span>{getActionIcon(message.action)}</span>
+                    <div>
+                      <strong>{message.action.title}</strong>
+                      <p>{message.action.description}</p>
+                    </div>
+                  </header>
+                  <dl>
+                    {message.action.details.map((detail) => (
+                      <div key={detail.label}>
+                        <dt>{detail.label}</dt>
+                        <dd>{detail.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  {message.action.status === 'pending' || message.action.status === 'executing' ? (
+                    <footer>
+                      <AppButton
+                        disabled={message.action.status === 'executing'}
+                        size="sm"
+                        startIcon={<X aria-hidden="true" />}
+                        type="button"
+                        variant="secondary"
+                        onClick={() => cancelAction(message.id)}
+                      >
+                        Cancelar
+                      </AppButton>
+                      <AppButton
+                        isLoading={message.action.status === 'executing'}
+                        loadingLabel="Procesando"
+                        size="sm"
+                        startIcon={
+                          message.action.tone === 'danger' ? (
+                            <Trash2 aria-hidden="true" />
+                          ) : (
+                            <Check aria-hidden="true" />
+                          )
+                        }
+                        type="button"
+                        variant={message.action.tone === 'danger' ? 'danger' : 'primary'}
+                        onClick={() =>
+                          void confirmAction(message.id, message.action?.token ?? '')
+                        }
+                      >
+                        {message.action.confirmLabel}
+                      </AppButton>
+                    </footer>
+                  ) : (
+                    <div
+                      className={joinClassNames(
+                        styles.actionStatus,
+                        message.action.status === 'completed'
+                          ? styles.actionCompleted
+                          : styles.actionCancelled,
+                      )}
+                    >
+                      {message.action.status === 'completed' ? (
+                        <CheckCircle2 aria-hidden="true" />
+                      ) : (
+                        <X aria-hidden="true" />
+                      )}
+                      {message.action.status === 'completed'
+                        ? 'Cambio realizado'
+                        : 'Acción cancelada'}
+                    </div>
+                  )}
+                </article>
+              ) : null}
             </div>
           ))}
           {isAssistantThinking ? (

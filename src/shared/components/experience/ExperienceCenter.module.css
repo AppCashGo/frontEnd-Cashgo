@@ -286,6 +286,11 @@
   padding: 0.2rem;
 }
 
+.messageGroup {
+  display: grid;
+  gap: 0.65rem;
+}
+
 .message {
   display: flex;
   align-items: flex-start;
@@ -347,6 +352,137 @@
 
 .answerAction {
   width: fit-content;
+}
+
+.actionCard {
+  display: grid;
+  gap: 0.85rem;
+  margin-left: 2.35rem;
+  padding: 1rem;
+  border: 1px solid #bfdbfe;
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #ffffff, #f8fbff);
+  box-shadow: 0 0.6rem 1.4rem rgba(37, 99, 235, 0.08);
+}
+
+.actionCard header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem;
+  align-items: flex-start;
+}
+
+.actionCard header > span {
+  display: inline-grid;
+  width: 2.3rem;
+  height: 2.3rem;
+  place-items: center;
+  border-radius: 0.7rem;
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.actionCard header svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.actionCard header strong {
+  color: #172033;
+  font-size: 0.9rem;
+}
+
+.actionCard header p {
+  margin: 0.2rem 0 0;
+  color: #64748b;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.actionCard dl {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  background: #ffffff;
+}
+
+.actionCard dl > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.7rem;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.actionCard dl > div:last-child {
+  border-bottom: 0;
+}
+
+.actionCard dt,
+.actionCard dd {
+  margin: 0;
+  font-size: 0.77rem;
+}
+
+.actionCard dt {
+  color: #64748b;
+}
+
+.actionCard dd {
+  color: #172033;
+  font-weight: 850;
+  text-align: right;
+}
+
+.actionCard footer {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 0.55rem;
+}
+
+.actionCard footer button {
+  width: 100%;
+}
+
+.actionDanger {
+  border-color: #fecaca;
+  background: linear-gradient(145deg, #ffffff, #fff7f7);
+  box-shadow: 0 0.6rem 1.4rem rgba(220, 38, 38, 0.07);
+}
+
+.actionDanger header > span {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.actionStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.35rem;
+  border-radius: 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.actionStatus svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.actionCompleted {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.actionCancelled {
+  background: #f1f5f9;
+  color: #64748b;
 }
 
 .assistantForm {
@@ -417,5 +553,9 @@
     width: 3rem;
     height: 3rem;
     border-radius: 0.9rem;
+  }
+
+  .actionCard {
+    margin-left: 0;
   }
 }

@@ -5,14 +5,39 @@ export type AssistantApiMessage = {
   content: string
 }
 
+export type AssistantActionKind =
+  | 'CREATE_PRODUCT'
+  | 'UPDATE_PRODUCT'
+  | 'DELETE_PRODUCT'
+
+export type AssistantPendingAction = {
+  token: string
+  kind: AssistantActionKind
+  title: string
+  description: string
+  confirmLabel: string
+  tone: 'danger' | 'primary'
+  details: Array<{
+    label: string
+    value: string
+  }>
+}
+
 type AssistantChatInput = {
   message: string
   history: AssistantApiMessage[]
 }
 
-type AssistantChatResponse = {
+export type AssistantChatResponse = {
   message: string
   model: string
+  action?: AssistantPendingAction
+}
+
+export type ConfirmAssistantActionResponse = {
+  message: string
+  productId: number
+  action: AssistantActionKind
 }
 
 export function sendAssistantMessage(input: AssistantChatInput) {
@@ -20,4 +45,11 @@ export function sendAssistantMessage(input: AssistantChatInput) {
     '/assistant/chat',
     input,
   )
+}
+
+export function confirmAssistantAction(token: string) {
+  return postJson<
+    ConfirmAssistantActionResponse,
+    { token: string }
+  >('/assistant/actions/confirm', { token })
 }
