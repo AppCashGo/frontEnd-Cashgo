@@ -28,6 +28,27 @@
   height: 1.3rem;
 }
 
+.assistantPanel {
+  width: min(100vw, 35rem);
+}
+
+.assistantBody {
+  gap: 0;
+  padding: 1rem 1.1rem 1.25rem;
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+
+.assistantFooter {
+  padding: 0.8rem 1.1rem max(0.9rem, env(safe-area-inset-bottom));
+}
+
+.assistantIntro {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
 .launcher {
   position: relative;
   display: inline-grid;
@@ -254,10 +275,12 @@
 .quickQuestions {
   display: flex;
   flex-wrap: wrap;
+  max-width: 100%;
   gap: 0.45rem;
 }
 
 .quickQuestions button {
+  flex: 0 0 auto;
   min-height: 2.15rem;
   padding: 0.4rem 0.7rem;
   border: 1px solid #dbe3ee;
@@ -297,13 +320,20 @@
 .conversation {
   display: grid;
   gap: 0.75rem;
-  min-height: 13rem;
-  align-content: end;
+  min-width: 0;
+  min-height: 100%;
+  align-content: start;
   padding: 0.2rem;
+}
+
+.conversationEnd {
+  width: 100%;
+  height: 0.1rem;
 }
 
 .messageGroup {
   display: grid;
+  min-width: 0;
   gap: 0.65rem;
 }
 
@@ -351,16 +381,18 @@
 
 .productPreviews {
   display: grid;
+  min-width: 0;
   gap: 0.55rem;
   margin-left: 2.35rem;
 }
 
 .productPreview {
   display: grid;
-  grid-template-columns: 3.35rem minmax(0, 1fr);
+  grid-template-columns: 3rem minmax(0, 1fr);
   gap: 0.7rem;
   align-items: center;
-  padding: 0.65rem;
+  min-width: 0;
+  padding: 0.6rem 0.7rem;
   border: 1px solid #e2e8f0;
   border-radius: 0.85rem;
   background: #ffffff;
@@ -369,8 +401,8 @@
 
 .productPreviewImage {
   display: grid;
-  width: 3.35rem;
-  height: 3.35rem;
+  width: 3rem;
+  height: 3rem;
   place-items: center;
   overflow: hidden;
   border-radius: 0.7rem;
@@ -396,11 +428,14 @@
 }
 
 .productPreviewContent strong {
+  display: -webkit-box;
   overflow: hidden;
   color: #172033;
   font-size: 0.8rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .productPreviewContent span {
@@ -418,6 +453,7 @@
   display: flex;
   align-items: flex-start;
   gap: 0.55rem;
+  min-width: 0;
   max-width: 92%;
 }
 
@@ -432,6 +468,8 @@
 }
 
 .message p {
+  min-width: 0;
+  max-width: calc(100% - 2.35rem);
   margin: 0;
   padding: 0.75rem 0.85rem;
   border-radius: 0.3rem 0.9rem 0.9rem;
@@ -439,6 +477,7 @@
   color: #334155;
   font-size: 0.86rem;
   line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
 .thinkingMessage {
@@ -468,6 +507,7 @@
 }
 
 .user p {
+  max-width: 100%;
   border-radius: 0.9rem 0.3rem 0.9rem 0.9rem;
   background: #2563eb;
   color: #ffffff;
@@ -624,6 +664,7 @@
 }
 
 .assistantForm input {
+  min-width: 0;
   min-height: 3rem;
   border: 1px solid #cbd5e1;
   border-radius: 0.85rem;
@@ -672,7 +713,29 @@
   }
 }
 
+@media (min-width: 521px) {
+  .productPreviews {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .actionCard .productPreviews {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 640px) {
+  .assistantPanel {
+    width: 100vw;
+  }
+
+  .assistantBody {
+    padding: 0.85rem 0.85rem 1rem;
+  }
+
+  .assistantFooter {
+    padding: 0.7rem 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  }
+
   .launchers {
     right: max(0.75rem, var(--safe-area-right));
     bottom: max(0.8rem, var(--safe-area-bottom));
@@ -690,9 +753,62 @@
 
   .actionCard {
     margin-left: 0;
+    padding: 0.85rem;
   }
 
   .productPreviews {
     margin-left: 0;
+  }
+
+  .productPreview {
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    gap: 0.6rem;
+    padding: 0.55rem 0.6rem;
+  }
+
+  .productPreviewImage {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .message {
+    max-width: 100%;
+  }
+
+  .message p {
+    padding: 0.68rem 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  .assistantForm {
+    gap: 0.45rem;
+  }
+
+  .assistantForm input {
+    padding-inline: 0.75rem;
+    font-size: 0.82rem;
+  }
+
+  .actionCard footer {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 390px) {
+  .drawerTitleIcon {
+    width: 2.35rem;
+    height: 2.35rem;
+  }
+
+  .assistantBody {
+    padding-inline: 0.7rem;
+  }
+
+  .assistantFooter {
+    padding-inline: 0.65rem;
+  }
+
+  .assistantForm {
+    grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
   }
 }

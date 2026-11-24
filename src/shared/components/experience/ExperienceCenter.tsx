@@ -22,7 +22,7 @@ import {
   X,
 } from 'lucide-react'
 import { useQueryClient } from '@tanstack/react-query'
-import { type ChangeEvent, type FormEvent, useMemo, useRef, useState } from 'react'
+import { type ChangeEvent, type FormEvent, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useDashboardSummaryQuery } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
@@ -116,8 +116,20 @@ export function ExperienceCenter() {
   const [isAssistantThinking, setAssistantThinking] = useState(false)
   const [isAnalyzingInvoice, setAnalyzingInvoice] = useState(false)
   const invoiceInputRef = useRef<HTMLInputElement>(null)
+  const conversationEndRef = useRef<HTMLDivElement>(null)
   const summaryQuery = useDashboardSummaryQuery()
   const summary = summaryQuery.data
+  const hasAssistantConversation = messages.length > 1
+
+  useEffect(() => {
+    if (activeView !== 'assistant') return
+    if (!hasAssistantConversation && !isAssistantThinking) return
+
+    conversationEndRef.current?.scrollIntoView({
+      behavior: isAssistantThinking ? 'smooth' : 'auto',
+      block: 'end',
+    })
+  }, [activeView, hasAssistantConversation, isAssistantThinking, messages])
 
   const activityItems = useMemo<ActivityItem[]>(() => {
     if (!summary) return []
@@ -503,8 +515,11 @@ export function ExperienceCenter() {
       </AppDrawer>
 
       <AppDrawer
+        bodyClassName={styles.assistantBody}
         description="Consulta productos, prepara ventas y registra compras desde una foto."
+        footerClassName={styles.assistantFooter}
         isOpen={activeView === 'assistant'}
+        panelClassName={styles.assistantPanel}
         size="md"
         title="Asistente CashGo"
         titleAccessory={
@@ -551,27 +566,31 @@ export function ExperienceCenter() {
         }
         onClose={() => setActiveView(null)}
       >
-        <div className={styles.assistantStatus}>
-          <span>
-            <CircleHelp aria-hidden="true" />
-          </span>
-          <div>
-            <strong>Asistente con confirmación</strong>
-            <p>Consulta datos y prepara cambios. Nada se modifica hasta que confirmes.</p>
-          </div>
-        </div>
+        {!hasAssistantConversation ? (
+          <div className={styles.assistantIntro}>
+            <div className={styles.assistantStatus}>
+              <span>
+                <CircleHelp aria-hidden="true" />
+              </span>
+              <div>
+                <strong>Asistente con confirmación</strong>
+                <p>Consulta datos y prepara cambios. Nada se modifica hasta que confirmes.</p>
+              </div>
+            </div>
 
-        <div className={styles.quickQuestions}>
-          <button className={styles.invoiceQuickAction} disabled={isAssistantThinking} type="button" onClick={() => invoiceInputRef.current?.click()}>
-            <Camera aria-hidden="true" />
-            Registrar compra con foto
-          </button>
-          {quickQuestions.map((quickQuestion) => (
-            <button disabled={isAssistantThinking} key={quickQuestion} type="button" onClick={() => void askAssistant(quickQuestion)}>
-              {quickQuestion}
-            </button>
-          ))}
-        </div>
+            <div className={styles.quickQuestions}>
+              <button className={styles.invoiceQuickAction} disabled={isAssistantThinking} type="button" onClick={() => invoiceInputRef.current?.click()}>
+                <Camera aria-hidden="true" />
+                Registrar compra con foto
+              </button>
+              {quickQuestions.map((quickQuestion) => (
+                <button disabled={isAssistantThinking} key={quickQuestion} type="button" onClick={() => void askAssistant(quickQuestion)}>
+                  {quickQuestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div className={styles.conversation} aria-live="polite">
           {messages.map((message) => (
@@ -653,6 +672,7 @@ export function ExperienceCenter() {
               </p>
             </div>
           ) : null}
+          <div aria-hidden="true" className={styles.conversationEnd} ref={conversationEndRef} />
         </div>
       </AppDrawer>
     </>
