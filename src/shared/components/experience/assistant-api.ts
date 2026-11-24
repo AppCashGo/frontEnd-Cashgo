@@ -14,6 +14,15 @@ export type AssistantActionKind =
   | 'CREATE_PURCHASE'
   | 'COMPLETE_HELD_SALE'
   | 'REGISTER_RECEIVABLE_PAYMENT'
+  | 'CREATE_CUSTOMER'
+  | 'UPDATE_CUSTOMER'
+  | 'DELETE_CUSTOMER'
+  | 'CREATE_SUPPLIER'
+  | 'UPDATE_SUPPLIER'
+  | 'CREATE_EMPLOYEE'
+  | 'CREATE_USER'
+  | 'UPDATE_TEAM_MEMBER'
+  | 'DELETE_TEAM_MEMBER'
 
 export type AssistantProductPreview = {
   id: number

@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   CircleHelp,
   Clock3,
+  ContactRound,
   HandCoins,
   LoaderCircle,
   MessageCircleMore,
@@ -19,6 +20,8 @@ import {
   ShoppingCart,
   Trash2,
   TriangleAlert,
+  Truck,
+  UserCog,
   UserRoundPlus,
   X,
 } from 'lucide-react'
@@ -409,6 +412,25 @@ export function ExperienceCenter() {
     }
     if (action.kind === 'REGISTER_RECEIVABLE_PAYMENT') {
       return <HandCoins aria-hidden="true" />
+    }
+    if (
+      action.kind === 'CREATE_CUSTOMER' ||
+      action.kind === 'UPDATE_CUSTOMER'
+    ) {
+      return <ContactRound aria-hidden="true" />
+    }
+    if (
+      action.kind === 'CREATE_SUPPLIER' ||
+      action.kind === 'UPDATE_SUPPLIER'
+    ) {
+      return <Truck aria-hidden="true" />
+    }
+    if (
+      action.kind === 'CREATE_EMPLOYEE' ||
+      action.kind === 'CREATE_USER' ||
+      action.kind === 'UPDATE_TEAM_MEMBER'
+    ) {
+      return <UserCog aria-hidden="true" />
     }
     return <Trash2 aria-hidden="true" />
   }
