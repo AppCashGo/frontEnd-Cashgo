@@ -78,6 +78,13 @@ export function analyzePurchaseInvoice(file: File) {
   return postFormData<AssistantChatResponse>('/assistant/purchase-invoices/analyze', body)
 }
 
+export function analyzeProductPhoto(file: File, instructions: string) {
+  const body = new FormData()
+  body.append('file', file)
+  body.append('instructions', instructions)
+  return postFormData<AssistantChatResponse>('/assistant/product-photos/analyze', body)
+}
+
 export function confirmAssistantAction(token: string) {
   return postJson<ConfirmAssistantActionResponse, { token: string }>('/assistant/actions/confirm', { token })
 }

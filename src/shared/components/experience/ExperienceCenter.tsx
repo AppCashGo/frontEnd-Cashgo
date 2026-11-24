@@ -36,7 +36,7 @@ import { AppButton } from '@/shared/components/ui/AppButton'
 import { getApiErrorMessage } from '@/shared/services/api-client'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import { formatCurrency } from '@/shared/utils/format-currency'
-import { confirmAssistantAction, analyzePurchaseInvoice, sendAssistantMessage, type AssistantProductPreview, type AssistantPendingAction } from './assistant-api'
+import { confirmAssistantAction, analyzeProductPhoto, analyzePurchaseInvoice, sendAssistantMessage, type AssistantProductPreview, type AssistantPendingAction } from './assistant-api'
 import styles from './ExperienceCenter.module.css'
 
 type CenterView = 'activity' | 'assistant' | null
@@ -119,7 +119,10 @@ export function ExperienceCenter() {
   const [messages, setMessages] = useState<AssistantMessage[]>(initialMessages)
   const [isAssistantThinking, setAssistantThinking] = useState(false)
   const [isAnalyzingInvoice, setAnalyzingInvoice] = useState(false)
+  const [isAnalyzingProduct, setAnalyzingProduct] = useState(false)
+  const [isCameraMenuOpen, setCameraMenuOpen] = useState(false)
   const invoiceInputRef = useRef<HTMLInputElement>(null)
+  const productPhotoInputRef = useRef<HTMLInputElement>(null)
   const conversationEndRef = useRef<HTMLDivElement>(null)
   const summaryQuery = useDashboardSummaryQuery()
   const summary = summaryQuery.data
@@ -320,6 +323,69 @@ export function ExperienceCenter() {
       ])
     } finally {
       setAnalyzingInvoice(false)
+      setAssistantThinking(false)
+    }
+  }
+
+  async function handleProductPhotoSelected(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    setCameraMenuOpen(false)
+    if (!file || isAssistantThinking) return
+
+    const timestamp = Date.now()
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        { id: `assistant-product-photo-error-${timestamp}`, role: 'assistant', text: 'La foto del producto debe ser JPG, PNG o WEBP.' },
+      ])
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        { id: `assistant-product-photo-error-${timestamp}`, role: 'assistant', text: 'La foto del producto debe pesar máximo 5 MB.' },
+      ])
+      return
+    }
+
+    const instructions = question.trim()
+    setQuestion('')
+    setAssistantThinking(true)
+    setAnalyzingProduct(true)
+    try {
+      const previewUrl = await readImagePreview(file)
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `user-product-photo-${timestamp}`,
+          role: 'user',
+          text: instructions || 'Crear producto desde esta foto',
+          attachment: { name: file.name, previewUrl },
+        },
+      ])
+      const response = await analyzeProductPhoto(file, instructions)
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `assistant-product-photo-${timestamp}`,
+          role: 'assistant',
+          text: response.message,
+          action: response.action ? { ...response.action, status: 'pending' } : undefined,
+          products: response.products,
+        },
+      ])
+    } catch (error) {
+      setMessages((currentMessages) => [
+        ...currentMessages,
+        {
+          id: `assistant-product-photo-error-${timestamp}`,
+          role: 'assistant',
+          text: getApiErrorMessage(error, 'No pude analizar la foto del producto. Toma una foto frontal y vuelve a intentarlo.'),
+        },
+      ])
+    } finally {
+      setAnalyzingProduct(false)
       setAssistantThinking(false)
     }
   }
@@ -566,15 +632,38 @@ export function ExperienceCenter() {
               type="file"
               onChange={(event) => void handleInvoiceSelected(event)}
             />
-            <AppButton
-              aria-label="Escanear factura de compra"
-              disabled={isAssistantThinking}
-              iconOnly
-              startIcon={<Camera aria-hidden="true" />}
-              type="button"
-              variant="secondary"
-              onClick={() => invoiceInputRef.current?.click()}
+            <input
+              ref={productPhotoInputRef}
+              accept="image/jpeg,image/png,image/webp"
+              aria-label="Seleccionar foto de producto"
+              className={styles.hiddenFileInput}
+              type="file"
+              onChange={(event) => void handleProductPhotoSelected(event)}
             />
+            <div className={styles.cameraMenuAnchor}>
+              <AppButton
+                aria-expanded={isCameraMenuOpen}
+                aria-label="Adjuntar una foto"
+                disabled={isAssistantThinking}
+                iconOnly
+                startIcon={<Camera aria-hidden="true" />}
+                type="button"
+                variant="secondary"
+                onClick={() => setCameraMenuOpen((isOpen) => !isOpen)}
+              />
+              {isCameraMenuOpen ? (
+                <div className={styles.cameraMenu} role="menu">
+                  <button role="menuitem" type="button" onClick={() => productPhotoInputRef.current?.click()}>
+                    <PackagePlus aria-hidden="true" />
+                    <span><strong>Foto de producto</strong><small>Crear producto con imagen</small></span>
+                  </button>
+                  <button role="menuitem" type="button" onClick={() => invoiceInputRef.current?.click()}>
+                    <ReceiptText aria-hidden="true" />
+                    <span><strong>Factura de compra</strong><small>Registrar compra e inventario</small></span>
+                  </button>
+                </div>
+              ) : null}
+            </div>
             <input
               aria-label="Escribe tu pregunta"
               disabled={isAssistantThinking}
@@ -608,6 +697,10 @@ export function ExperienceCenter() {
             </div>
 
             <div className={styles.quickQuestions}>
+              <button className={styles.invoiceQuickAction} disabled={isAssistantThinking} type="button" onClick={() => productPhotoInputRef.current?.click()}>
+                <PackagePlus aria-hidden="true" />
+                Crear producto con foto
+              </button>
               <button className={styles.invoiceQuickAction} disabled={isAssistantThinking} type="button" onClick={() => invoiceInputRef.current?.click()}>
                 <Camera aria-hidden="true" />
                 Registrar compra con foto
@@ -697,7 +790,7 @@ export function ExperienceCenter() {
               <Bot aria-hidden="true" />
               <p className={styles.thinkingMessage}>
                 <LoaderCircle aria-hidden="true" />
-                {isAnalyzingInvoice ? 'Leyendo la factura y buscando productos…' : 'Consultando tu negocio…'}
+                {isAnalyzingProduct ? 'Analizando la foto del producto…' : isAnalyzingInvoice ? 'Leyendo la factura y buscando productos…' : 'Consultando tu negocio…'}
               </p>
             </div>
           ) : null}
