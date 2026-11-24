@@ -13,6 +13,7 @@ export type AssistantActionKind =
   | 'HOLD_SALE'
   | 'CREATE_PURCHASE'
   | 'COMPLETE_HELD_SALE'
+  | 'REGISTER_RECEIVABLE_PAYMENT'
 
 export type AssistantProductPreview = {
   id: number

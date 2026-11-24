@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   CircleHelp,
   Clock3,
+  HandCoins,
   LoaderCircle,
   MessageCircleMore,
   Package,
@@ -405,6 +406,9 @@ export function ExperienceCenter() {
     }
     if (action.kind === 'CREATE_PURCHASE') {
       return <ReceiptText aria-hidden="true" />
+    }
+    if (action.kind === 'REGISTER_RECEIVABLE_PAYMENT') {
+      return <HandCoins aria-hidden="true" />
     }
     return <Trash2 aria-hidden="true" />
   }
