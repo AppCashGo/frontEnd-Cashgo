@@ -23,6 +23,7 @@ export type AssistantActionKind =
   | 'CREATE_USER'
   | 'UPDATE_TEAM_MEMBER'
   | 'DELETE_TEAM_MEMBER'
+  | 'TRANSFER_CASH_BALANCE'
 
 export type AssistantProductPreview = {
   id: number

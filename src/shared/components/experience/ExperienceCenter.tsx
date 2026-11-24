@@ -413,6 +413,9 @@ export function ExperienceCenter() {
     if (action.kind === 'REGISTER_RECEIVABLE_PAYMENT') {
       return <HandCoins aria-hidden="true" />
     }
+    if (action.kind === 'TRANSFER_CASH_BALANCE') {
+      return <RefreshCw aria-hidden="true" />
+    }
     if (
       action.kind === 'CREATE_CUSTOMER' ||
       action.kind === 'UPDATE_CUSTOMER'
