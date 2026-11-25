@@ -14,6 +14,16 @@ import { RouteErrorBoundary } from "@/shared/components/states/RouteErrorBoundar
 import { routePageLoaders } from "@/routes/route-page-loaders";
 
 const AuthPage = lazy(routePageLoaders.auth);
+const PlatformAdminPage = lazy(() =>
+  import("@/modules/platform-admin/PlatformAdminPage").then((module) => ({
+    default: module.PlatformAdminPage,
+  })),
+);
+const OwnerInvitationPage = lazy(() =>
+  import("@/modules/platform-admin/OwnerInvitationPage").then((module) => ({
+    default: module.OwnerInvitationPage,
+  })),
+);
 const DashboardPage = lazy(routePageLoaders.dashboard);
 const ProductsPage = lazy(routePageLoaders.products);
 const InventoryPage = lazy(routePageLoaders.inventory);
@@ -65,6 +75,11 @@ function withModuleRouteSuspense(
 
 export const appRouter = createBrowserRouter([
   {
+    path: routePaths.ownerInvitation,
+    errorElement: <RouteErrorBoundary />,
+    element: withRouteSuspense(<OwnerInvitationPage />, "Cargando invitación", "Verificando acceso de propietario."),
+  },
+  {
     path: `${routePaths.catalogPublic}/:slug`,
     errorElement: <RouteErrorBoundary />,
     element: withRouteSuspense(
@@ -100,6 +115,14 @@ export const appRouter = createBrowserRouter([
     element: <ProtectedRoute />,
     errorElement: <RouteErrorBoundary />,
     children: [
+      {
+        path: routePaths.platformAdmin,
+        element: withRouteSuspense(
+          <PlatformAdminPage />,
+          "Cargando administración",
+          "Preparando la gestión comercial de CashGo.",
+        ),
+      },
       {
         path: "/",
         element: <MainLayout />,

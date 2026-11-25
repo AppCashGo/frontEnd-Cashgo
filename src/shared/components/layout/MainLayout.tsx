@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
+import { useBusinessPlan } from "@/modules/auth/hooks/use-business-plan";
 import {
   getActiveBusinessCategory,
   getActiveBusinessRole,
@@ -23,6 +24,7 @@ export function MainLayout() {
   const location = useLocation();
   const { languageCode } = useAppTranslation();
   const user = useAuthSessionStore((state) => state.user);
+  const plan = useBusinessPlan().data?.plan;
   const activeBusinessCategory = getActiveBusinessCategory(user);
   const activeBusinessRole = getActiveBusinessRole(user);
   const navigationPreset = useBusinessNavigationPreset();
@@ -63,6 +65,10 @@ export function MainLayout() {
       />
     );
   }
+
+  const moduleAllowed = !plan || !currentModule ||
+    !["billing", "quotes", "reports", "deliveries"].includes(currentModule.segment) ||
+    plan.modules.some((module) => module === currentModule.segment);
 
   return (
     <div
@@ -105,13 +111,23 @@ export function MainLayout() {
               isRetailPreset && styles.mainInnerRetail,
             )}
           >
-            <Outlet />
+            {plan?.blocked ? (
+              <section role="status">
+                <h1>{plan.blocked === "suspended" ? "Empresa suspendida" : "Plan vencido"}</h1>
+                <p>Contacta a administración de CashGo para reactivar el acceso a esta empresa.</p>
+              </section>
+            ) : moduleAllowed ? <Outlet /> : (
+              <section role="status">
+                <h1>Módulo fuera del plan</h1>
+                <p>Contacta a administración de CashGo para habilitarlo.</p>
+              </section>
+            )}
           </div>
         </main>
       </div>
 
-      <ExperienceCenter />
-      <OfflineSalesSyncManager />
+      {!plan?.blocked ? <ExperienceCenter assistantEnabled={!plan || plan.modules.includes("assistant")} /> : null}
+      {!plan?.blocked ? <OfflineSalesSyncManager /> : null}
     </div>
   );
 }

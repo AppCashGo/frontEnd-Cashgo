@@ -1,5 +1,7 @@
 export const routeSegments = {
   auth: "auth",
+  platformAdmin: "platform-admin",
+  ownerInvitation: "invitacion-propietario",
   catalogPublic: "catalogo",
   quotePublic: "quote",
   dashboard: "dashboard",
@@ -24,6 +26,8 @@ export const routeSegments = {
 
 export const routePaths = {
   auth: `/${routeSegments.auth}`,
+  platformAdmin: `/${routeSegments.platformAdmin}`,
+  ownerInvitation: `/${routeSegments.ownerInvitation}`,
   catalogPublic: `/${routeSegments.catalogPublic}`,
   quotePublic: `/${routeSegments.quotePublic}`,
   dashboard: `/${routeSegments.dashboard}`,

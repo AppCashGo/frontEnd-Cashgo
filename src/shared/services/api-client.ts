@@ -75,6 +75,12 @@ export type ApiSuccess<TData> =
 const DEVELOPMENT_API_URL = "http://localhost:3000/api";
 const PRODUCTION_API_URL = "/api";
 const LOCAL_API_HOSTS = ["localhost", "127.0.0.1"];
+const businessPlanErrorCodes = new Set([
+  "BUSINESS_SUSPENDED",
+  "BUSINESS_PLAN_EXPIRED",
+  "BUSINESS_MODULE_UNAVAILABLE",
+  "BUSINESS_USER_LIMIT",
+]);
 
 function getApiBaseUrl() {
   const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
@@ -161,13 +167,15 @@ async function toApiError(error: unknown, handleGlobalAuthFailure = true) {
     extractErrorMessage(payload) ??
     axiosError.response?.statusText ??
     axiosError.message;
+  const code = extractErrorCode(payload);
   const userMessage =
-    status === 401 && !handleGlobalAuthFailure && rawMessage
+    rawMessage && ((status === 401 && !handleGlobalAuthFailure) ||
+      (status === 403 && code && businessPlanErrorCodes.has(code)))
       ? rawMessage
       : getApiErrorUserMessage(kind, rawMessage);
 
   return new ApiError(userMessage, status, payload, {
-    code: extractErrorCode(payload),
+    code,
     fieldErrors: extractFieldErrors(payload),
     isNetworkError: !axiosError.response,
     kind,

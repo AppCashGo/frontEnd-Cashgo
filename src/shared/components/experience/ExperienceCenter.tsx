@@ -110,7 +110,7 @@ function readImagePreview(file: File) {
   })
 }
 
-export function ExperienceCenter() {
+export function ExperienceCenter({ assistantEnabled = true }: { assistantEnabled?: boolean }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
   const location = useLocation()
@@ -533,7 +533,7 @@ export function ExperienceCenter() {
             <Bell aria-hidden="true" />
             {priorityCount > 0 ? <span>{Math.min(priorityCount, 9)}</span> : null}
           </button>
-          <button
+          {assistantEnabled ? <button
             aria-expanded={activeView === 'assistant'}
             aria-label="Abrir asistente de ayuda"
             data-label="Asistente"
@@ -542,7 +542,7 @@ export function ExperienceCenter() {
             onClick={() => setActiveView('assistant')}
           >
             <MessageCircleMore aria-hidden="true" />
-          </button>
+          </button> : null}
         </div>
       ) : null}
 
@@ -613,7 +613,7 @@ export function ExperienceCenter() {
         bodyClassName={styles.assistantBody}
         description="Consulta productos, prepara ventas y registra compras desde una foto."
         footerClassName={styles.assistantFooter}
-        isOpen={activeView === 'assistant'}
+        isOpen={assistantEnabled && activeView === 'assistant'}
         panelClassName={styles.assistantPanel}
         size="md"
         title="Asistente CashGo"

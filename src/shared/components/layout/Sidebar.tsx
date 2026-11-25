@@ -3,6 +3,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
 import { getCurrentAuthUser } from "@/modules/auth/services/auth-api";
+import { usePlatformAccess } from "@/modules/platform-admin/platform-admin-api";
+import { useBusinessPlan } from "@/modules/auth/hooks/use-business-plan";
 import {
   getActiveBusiness,
   getActiveBusinessCategory,
@@ -154,13 +156,17 @@ export function Sidebar({
   const activeBusiness = getActiveBusiness(user);
   const activeBusinessCategory = getActiveBusinessCategory(user);
   const activeBusinessRole = getActiveBusinessRole(user);
+  const platformAccess = usePlatformAccess();
+  const plan = useBusinessPlan().data?.plan;
   const navigationRoutes = getModuleNavigationRoutes(
     languageCode,
     activeBusinessCategory,
     activeBusinessRole,
   );
   const businessRoutes = navigationRoutes.filter(
-    (route) => route.group === "business" && route.isVisible,
+    (route) => route.group === "business" && route.isVisible &&
+      (!plan || !["billing", "quotes", "reports", "deliveries"].includes(route.segment) ||
+        plan.modules.some((module) => module === route.segment)),
   );
   const contactRoutes = navigationRoutes.filter(
     (route) => route.group === "contacts" && route.isVisible,
@@ -458,14 +464,14 @@ export function Sidebar({
                 ) : null}
               </div>
 
-              <button
+              {!plan ? <button
                 className={styles.addBusinessButton}
                 type="button"
                 onClick={() => setCreateBusinessOpen(true)}
               >
                 <span className={styles.addBusinessIcon}>+</span>
                 <span>{dictionary.layout.sidebar.addBusiness}</span>
-              </button>
+              </button> : null}
             </section>
           ) : null}
 
@@ -492,6 +498,19 @@ export function Sidebar({
           </nav>
 
           <div className={styles.sidebarFooter}>
+            {platformAccess.data?.allowed ? (
+              <NavLink
+                to={routePaths.platformAdmin}
+                className={styles.utilityItem}
+                aria-label="Administración CashGo"
+                onClick={handleRouteClick}
+              >
+                <span className={styles.utilityContent}>
+                  <SidebarIcon className={styles.utilityIcon} name="settings" />
+                  <span className={styles.utilityLabel}>Administración CashGo</span>
+                </span>
+              </NavLink>
+            ) : null}
             {settingsRoute ? (
               <NavLink
                 to={settingsRoute.path}
