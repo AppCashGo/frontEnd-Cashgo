@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 type RegisterStartSchemaMessages = {
-  countryRequired: string;
-  phoneInvalid: string;
+  emailRequired: string;
+  emailInvalid: string;
   translationRequired: string;
   acceptedTermsRequired: string;
 };
@@ -11,12 +11,7 @@ export function createRegisterStartSchema(
   messages: RegisterStartSchemaMessages,
 ) {
   return z.object({
-    countryCode: z.string().trim().length(2, messages.countryRequired),
-    phone: z
-      .string()
-      .trim()
-      .min(7, messages.phoneInvalid)
-      .max(15, messages.phoneInvalid),
+    email: z.string().trim().min(1, messages.emailRequired).max(191).email(messages.emailInvalid),
     translationId: z.string().trim().min(1, messages.translationRequired),
     acceptedTerms: z.boolean().refine((value) => value, {
       message: messages.acceptedTermsRequired,

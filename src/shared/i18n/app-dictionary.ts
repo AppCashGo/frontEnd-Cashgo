@@ -1250,7 +1250,7 @@ export const appDictionary = {
         backToLanding: "Volver al inicio",
       },
       register: {
-        stepLabels: ["Tu número", "Verificación", "Tu negocio"],
+        stepLabels: ["Tu correo", "Verificación", "Tu negocio"],
         phone: {
           title: "Regístrate para comenzar",
           description:
@@ -1525,7 +1525,7 @@ export const appDictionary = {
         backToLanding: "Back to start",
       },
       register: {
-        stepLabels: ["Your number", "Verification", "Your business"],
+        stepLabels: ["Your email", "Verification", "Your business"],
         phone: {
           title: "Register to get started",
           description:

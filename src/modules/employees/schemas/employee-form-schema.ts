@@ -19,8 +19,8 @@ export const employeeFormSchema = z.object({
   phone: z
     .string()
     .trim()
-    .min(8, "El celular debe tener al menos 8 caracteres.")
-    .max(30, "El celular debe tener maximo 30 caracteres."),
+    .max(30, "El celular debe tener maximo 30 caracteres.")
+    .refine((value) => value.length === 0 || /^\+?[0-9 ()-]{8,29}$/.test(value), "Ingresa un celular válido."),
   role: z.enum(assignableUserRoles, {
     errorMap: () => ({
       message: "Selecciona un rol.",

@@ -5,8 +5,7 @@ type RegisterCompleteSchemaMessages = {
   fullNameRequired: string;
   businessNameRequired: string;
   categoryRequired: string;
-  emailRequired: string;
-  emailInvalid: string;
+  phoneInvalid: string;
   passwordMinLength: string;
 };
 
@@ -22,11 +21,7 @@ export function createRegisterCompleteSchema(
       }),
     }),
     sellerCode: z.string().trim().max(80).optional().or(z.literal("")),
-    email: z
-      .string()
-      .trim()
-      .min(1, messages.emailRequired)
-      .email(messages.emailInvalid),
+    businessPhone: z.string().trim().regex(/^\+?[0-9 ()-]{7,25}$/, messages.phoneInvalid).or(z.literal("")),
     password: z.string().min(8, messages.passwordMinLength),
   });
 }

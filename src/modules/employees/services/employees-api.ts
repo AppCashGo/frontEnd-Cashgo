@@ -63,3 +63,11 @@ export function deleteEmployee(employeeId: string) {
     accessToken: getAuthAccessToken(),
   });
 }
+
+export function sendEmployeeInvitation(employeeId: string, email: string) {
+  return postJson<{ email: string }, { email: string }>(
+    `/employees/${employeeId}/invitation`,
+    { email },
+    { accessToken: getAuthAccessToken() },
+  );
+}

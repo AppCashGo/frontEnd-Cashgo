@@ -441,6 +441,7 @@ type JsonRequestOptions = {
   handleGlobalAuthFailure?: boolean;
   onUnauthorized?: () => void;
   suppressNetworkWriteNotification?: boolean;
+  suppressWriteErrorNotification?: boolean;
 };
 
 type BlobRequestOptions = JsonRequestOptions & {
@@ -505,6 +506,7 @@ async function requestJson<TResponse, TBody = undefined>(
 
     if (
       method !== "GET" &&
+      !options?.suppressWriteErrorNotification &&
       !(options?.suppressNetworkWriteNotification && apiError.isNetworkError)
     ) {
       notifyApiWriteError(apiError);

@@ -37,6 +37,8 @@ export type Employee = {
   name: string;
   role: AppUserRole;
   activationStatus: EmployeeActivationStatus;
+  canInviteAccess: boolean;
+  invitationEmailSent?: boolean;
   recommendedPresetId: string;
   lastLoginAt: string | null;
   createdAt: string;
@@ -45,8 +47,8 @@ export type Employee = {
 
 export type EmployeeCreateInput = {
   name: string;
-  email?: string;
-  phone: string;
+  email: string;
+  phone?: string;
   role: AssignableUserRole;
 };
 

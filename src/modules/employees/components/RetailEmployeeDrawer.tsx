@@ -1,3 +1,4 @@
+import { EmployeeAccessInvitation } from "./EmployeeAccessInvitation"
 import { zodResolver } from '@hookform/resolvers/zod'
 import {
   ArrowLeft,
@@ -214,6 +215,7 @@ function getPresetForRole(
 
 function normalizePhone(phone: string) {
   const trimmedPhone = phone.trim()
+  if (!trimmedPhone) return ""
 
   if (trimmedPhone.startsWith('+')) {
     return trimmedPhone
@@ -489,6 +491,10 @@ export function RetailEmployeeDrawer({
   }
 
   const submitEmployee = handleSubmit(async (values) => {
+    if (!isEditing && !values.email.trim()) {
+      setError('email', { message: 'Indica el correo personal del empleado.' })
+      return
+    }
     try {
       const normalizedPhone = normalizePhone(values.phone)
 
@@ -496,7 +502,7 @@ export function RetailEmployeeDrawer({
         await onSubmit(
           {
             name: values.name.trim(),
-            phone: normalizedPhone,
+            ...(normalizedPhone ? { phone: normalizedPhone } : {}),
             role: values.role,
           },
           avatarUpload.file,
@@ -533,7 +539,8 @@ export function RetailEmployeeDrawer({
       await onSubmit(
         {
           name: pendingConfirmation.values.name.trim(),
-          phone: pendingConfirmation.normalizedPhone,
+          email: pendingConfirmation.values.email.trim(),
+          ...(pendingConfirmation.normalizedPhone ? { phone: pendingConfirmation.normalizedPhone } : {}),
           role: pendingConfirmation.values.role,
         },
         pendingConfirmation.avatarFile,
@@ -589,6 +596,9 @@ export function RetailEmployeeDrawer({
         title={drawerTitle}
         onClose={onClose}
       >
+        {employee?.canInviteAccess ? (
+          <EmployeeAccessInvitation key={employee.id} employee={employee} />
+        ) : null}
         <form className={styles.form} id={formId} noValidate onSubmit={submitEmployee}>
           <AvatarUploadField
             alt="Avatar del empleado"
@@ -611,8 +621,16 @@ export function RetailEmployeeDrawer({
             ) : null}
           </label>
 
+          {!isEditing ? (
+            <label className={styles.field}>
+              <span className={styles.label}>Correo del empleado *</span>
+              <input className={styles.input} type="email" autoComplete="email" {...register('email')} />
+              {errors.email ? <span className={styles.errorText}>{errors.email.message}</span> : null}
+            </label>
+          ) : null}
+
           <label className={styles.field}>
-            <span className={styles.label}>Numero celular de tu empleado *</span>
+            <span className={styles.label}>Celular del empleado (opcional)</span>
             <span className={styles.phoneField}>
               <span className={styles.countrySelect}>
                 <span className={styles.flagColombia} aria-hidden="true" />
@@ -721,7 +739,7 @@ export function RetailEmployeeDrawer({
         <ConfirmDialog
           cancelLabel="Editar"
           confirmLabel="Confirmar"
-          description="Recuerda que tu empleado deberá iniciar sesión con su número celular para asociarse a tu negocio."
+          description="Confirma el correo. El empleado lo usará para activar su cuenta."
           icon={<UserCheck />}
           isOpen={Boolean(pendingConfirmation)}
           isSubmitting={isSubmitting}
@@ -737,7 +755,8 @@ export function RetailEmployeeDrawer({
             <div>
               <strong>{pendingConfirmation.values.name}</strong>
               <span>
-                {formatConfirmationPhone(pendingConfirmation.normalizedPhone)}
+                {pendingConfirmation.values.email}
+                {pendingConfirmation.normalizedPhone ? ` · ${formatConfirmationPhone(pendingConfirmation.normalizedPhone)}` : ""}
               </span>
             </div>
             <span className={styles.confirmationRolePill}>

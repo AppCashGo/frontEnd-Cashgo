@@ -24,6 +24,11 @@ const OwnerInvitationPage = lazy(() =>
     default: module.OwnerInvitationPage,
   })),
 );
+const EmployeeInvitationPage = lazy(() =>
+  import("@/modules/auth/pages/EmployeeInvitationPage").then((module) => ({
+    default: module.EmployeeInvitationPage,
+  })),
+);
 const DashboardPage = lazy(routePageLoaders.dashboard);
 const ProductsPage = lazy(routePageLoaders.products);
 const InventoryPage = lazy(routePageLoaders.inventory);
@@ -74,6 +79,11 @@ function withModuleRouteSuspense(
 }
 
 export const appRouter = createBrowserRouter([
+  {
+    path: "/invitacion-empleado",
+    errorElement: <RouteErrorBoundary />,
+    element: withRouteSuspense(<EmployeeInvitationPage />, "Cargando invitación", "Preparando el acceso a tu equipo."),
+  },
   {
     path: routePaths.ownerInvitation,
     errorElement: <RouteErrorBoundary />,

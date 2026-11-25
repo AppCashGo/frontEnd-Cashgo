@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { LoginForm } from "@/modules/auth/components/LoginForm";
 import { RegistrationWizard } from "@/modules/auth/components/RegistrationWizard";
 import operationsIllustrationUrl from "@/shared/assets/images/cashgo-operations-illustration.svg";
@@ -16,7 +17,10 @@ export function AuthPage() {
     useAppTranslation();
   const { data: translations = [], isLoading: isTranslationsLoading } =
     useTranslationsQuery();
-  const [mode, setMode] = useState<AuthMode>("landing");
+  const registrationEnabled = import.meta.env.VITE_PUBLIC_REGISTRATION_ENABLED === "true";
+  const [searchParams] = useSearchParams();
+  const initialMethod = searchParams.get("method") === "password" ? "password" : undefined;
+  const [mode, setMode] = useState<AuthMode>(initialMethod ? "login" : "landing");
   const [registerStep, setRegisterStep] = useState(0);
 
   const activeTranslation = useMemo(() => {
@@ -132,18 +136,20 @@ export function AuthPage() {
                 </button>
               </div>
 
-              <div className={styles.ctaBlock}>
-                <p className={styles.ctaLabel}>
-                  {dictionary.auth.landing.firstTimeLabel}
-                </p>
-                <button
-                  className={styles.secondaryButton}
-                  type="button"
-                  onClick={() => setMode("register")}
-                >
-                  {dictionary.auth.landing.registerCta}
-                </button>
-              </div>
+              {registrationEnabled ? (
+                <div className={styles.ctaBlock}>
+                  <p className={styles.ctaLabel}>
+                    {dictionary.auth.landing.firstTimeLabel}
+                  </p>
+                  <button
+                    className={styles.secondaryButton}
+                    type="button"
+                    onClick={() => setMode("register")}
+                  >
+                    {dictionary.auth.landing.registerCta}
+                  </button>
+                </div>
+              ) : null}
             </div>
           </section>
         </div>
@@ -153,13 +159,14 @@ export function AuthPage() {
         <div className={styles.loginLayout}>
           {languageControl}
           <LoginForm
+            initialMethod={initialMethod}
             onBack={() => setMode("landing")}
-            onGoToRegister={() => setMode("register")}
+            onGoToRegister={registrationEnabled ? () => setMode("register") : undefined}
           />
         </div>
       ) : null}
 
-      {mode === "register" ? (
+      {registrationEnabled && mode === "register" ? (
         <div className={styles.registerLayout}>
           <aside className={styles.registerRail}>
             <div className={styles.registerRailInner}>

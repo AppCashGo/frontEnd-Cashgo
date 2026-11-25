@@ -69,35 +69,28 @@ export type LoginResponse = {
 
 export type RegisterStartPayload = {
   translationId: string;
-  countryCode: string;
-  phone: string;
+  email: string;
   acceptedTerms: boolean;
 };
 
 export type RegisterStartResponse = {
-  registrationId: string;
-  status: "PENDING_VERIFICATION" | "VERIFIED" | "COMPLETED" | "CANCELLED";
-  maskedPhone: string;
+  registrationToken: string;
   expiresInSeconds: number;
-  developmentVerificationCode?: string;
 };
 
 export type RegisterVerifyPayload = {
-  registrationId: string;
+  registrationToken: string;
   verificationCode: string;
 };
 
 export type RegisterVerifyResponse = {
-  registrationId: string;
-  status: "PENDING_VERIFICATION" | "VERIFIED" | "COMPLETED" | "CANCELLED";
-  maskedPhone: string;
-  verifiedAt: string;
+  verified: boolean;
 };
 
 export type RegisterCompletePayload = {
-  registrationId: string;
+  registrationToken: string;
   fullName: string;
-  email: string;
+  businessPhone?: string;
   password: string;
   businessName: string;
   businessCategory: string;

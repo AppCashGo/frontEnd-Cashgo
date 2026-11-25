@@ -1,3 +1,4 @@
+import { useToast } from "@/shared/hooks/use-toast"
 import { useDeferredValue, useEffect, useState } from 'react'
 import { CheckCircle, Pencil } from 'lucide-react'
 import { EmployeeFormDrawer } from '@/modules/employees/components/EmployeeFormDrawer'
@@ -25,7 +26,7 @@ import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { MetricCard } from '@/shared/components/ui/MetricCard'
-import { isTeamManagementRole } from '@/shared/constants/user-roles'
+import { isAdminWorkspaceRole } from '@/shared/constants/user-roles'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { joinClassNames } from '@/shared/utils/join-class-names'
@@ -80,10 +81,11 @@ function getRetailEmployeeRoleTone(employee: Employee) {
 }
 
 export function EmployeesPage() {
+  const toast = useToast()
   const navigationPreset = useBusinessNavigationPreset()
   const isRetailPreset = navigationPreset === 'retail'
   const currentUser = useAuthSessionStore((state) => state.user)
-  const canManageTeam = isTeamManagementRole(currentUser?.role)
+  const canManageTeam = isAdminWorkspaceRole(currentUser?.role)
   const [searchValue, setSearchValue] = useState('')
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(
     null,
@@ -123,8 +125,7 @@ export function EmployeesPage() {
             Acceso de gestion requerido
           </p>
           <h2 className={styles.restrictedTitle}>
-            El espacio de empleados esta reservado para administradores y
-            gerentes.
+            El espacio de empleados está reservado para propietarios y administradores.
           </h2>
           <p className={styles.restrictedDescription}>
             Inicia sesion con una cuenta que pueda crear, editar o revocar
@@ -181,6 +182,14 @@ export function EmployeesPage() {
     const createdEmployee = await createEmployeeMutation.mutateAsync(
       input as EmployeeCreateInput,
     )
+
+    if (createdEmployee.invitationEmailSent) {
+      toast.showSuccess(`Enviamos el acceso a ${createdEmployee.email}.`, { title: 'Correo enviado' })
+    } else if (createdEmployee.canInviteAccess) {
+      toast.showWarning('Abre la ficha para enviar de nuevo la invitación de acceso.', { title: 'Empleado creado' })
+    } else if (createdEmployee.invitationEmailSent === false) {
+      toast.showWarning('El empleado ya puede ingresar con su cuenta habitual. El aviso por correo quedó pendiente.')
+    }
 
     if (avatarFile) {
       await uploadEmployeeAvatarMutation.mutateAsync({
@@ -502,7 +511,7 @@ export function EmployeesPage() {
           <div className={styles.drawerColumn}>
             <EmployeeFormDrawer
               employee={selectedEmployee}
-              isSubmitting={isSubmitting}
+                  isSubmitting={isSubmitting}
               presets={presets}
               roles={roles}
               onStartCreate={startCreateEmployee}

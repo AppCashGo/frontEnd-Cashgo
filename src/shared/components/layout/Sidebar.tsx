@@ -464,7 +464,7 @@ export function Sidebar({
                 ) : null}
               </div>
 
-              {!plan ? <button
+              {!plan && import.meta.env.VITE_PUBLIC_REGISTRATION_ENABLED === "true" ? <button
                 className={styles.addBusinessButton}
                 type="button"
                 onClick={() => setCreateBusinessOpen(true)}

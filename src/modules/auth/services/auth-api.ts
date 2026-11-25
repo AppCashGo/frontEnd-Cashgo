@@ -15,6 +15,11 @@ import type {
   RegisterVerifyResponse,
 } from "@/modules/auth/types/auth-session";
 
+const signInRequestOptions = {
+  handleGlobalAuthFailure: false,
+  suppressWriteErrorNotification: true,
+};
+
 export function getCurrentAuthUser() {
   return getJson<AuthUser>("/auth/me", {
     accessToken: getAuthAccessToken(),
@@ -22,17 +27,36 @@ export function getCurrentAuthUser() {
 }
 
 export function login(credentials: LoginCredentials) {
-  return postJson<LoginResponse, LoginCredentials>("/auth/login", credentials);
+  return postJson<LoginResponse, LoginCredentials>("/auth/login", credentials, signInRequestOptions);
 }
 
 export function loginWithGoogle(payload: GoogleLoginPayload) {
-  return postJson<LoginResponse, GoogleLoginPayload>("/auth/google", payload);
+  return postJson<LoginResponse, GoogleLoginPayload>("/auth/google", payload, signInRequestOptions);
+}
+
+type StartEmailCodeInput = { identifier: string; password?: string };
+
+export function startEmailLogin(input: StartEmailCodeInput) {
+  return postJson<{ requestToken: string; expiresInSeconds: number }, StartEmailCodeInput>(
+    "/auth/login/email/start",
+    input,
+    signInRequestOptions,
+  );
+}
+
+export function verifyEmailLogin(input: { requestToken: string; verificationCode: string }) {
+  return postJson<LoginResponse, typeof input>(
+    "/auth/login/email/verify",
+    input,
+    signInRequestOptions,
+  );
 }
 
 export function startPhoneLogin(payload: PhoneLoginStartPayload) {
   return postJson<PhoneLoginStartResponse, PhoneLoginStartPayload>(
     "/auth/login/phone/start",
     payload,
+    signInRequestOptions,
   );
 }
 
@@ -40,6 +64,7 @@ export function verifyPhoneLogin(payload: PhoneLoginVerifyPayload) {
   return postJson<LoginResponse, PhoneLoginVerifyPayload>(
     "/auth/login/phone/verify",
     payload,
+    signInRequestOptions,
   );
 }
 
@@ -61,5 +86,13 @@ export function completeRegistration(payload: RegisterCompletePayload) {
   return postJson<LoginResponse, RegisterCompletePayload>(
     "/auth/register/complete",
     payload,
+  );
+}
+
+export function acceptEmployeeInvitation(payload: { token: string; password: string }) {
+  return postJson<{ email: string }, typeof payload>(
+    "/employee-invitations/accept",
+    payload,
+    signInRequestOptions,
   );
 }

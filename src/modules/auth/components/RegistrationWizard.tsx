@@ -1,4 +1,4 @@
-import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { Mail } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useRef, useState, type ClipboardEvent, type KeyboardEvent } from "react";
 import { useForm } from "react-hook-form";
@@ -28,49 +28,10 @@ type RegistrationWizardProps = {
 };
 
 type RegistrationSession = {
-  registrationId: string;
-  maskedPhone: string;
+  registrationToken: string;
+  email: string;
   expiresInSeconds: number;
-  developmentVerificationCode?: string;
 };
-
-const countryOptions = [
-  {
-    code: "CO",
-    label: "Colombia",
-    dialCode: "+57",
-  },
-  {
-    code: "US",
-    label: "United States",
-    dialCode: "+1",
-  },
-] as const;
-
-function PhoneStepIcon() {
-  return (
-    <svg aria-hidden="true" className={styles.sectionIcon} viewBox="0 0 24 24">
-      <rect
-        height="15"
-        rx="2.8"
-        width="9"
-        x="7.5"
-        y="4.5"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <path
-        d="M10.3 7.4h3.4"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeWidth="1.8"
-      />
-      <circle cx="12" cy="16.25" fill="currentColor" r="1" />
-    </svg>
-  );
-}
 
 function VerificationStepIcon() {
   return (
@@ -155,17 +116,16 @@ export function RegistrationWizard({
   const wizardCopy =
     languageCode === "es"
       ? {
-          phoneFieldLabel: "Ingresa tu número de teléfono",
-          phoneDescription:
-            "Te enviaremos un código de verificación por mensaje de WhatsApp",
+          emailFieldLabel: "Correo electrónico",
+          emailDescription:
+            "Te enviaremos un código de verificación a este correo.",
           verificationPrefix:
-            "Ingresa el código de verificación que hemos enviado por mensaje de WhatsApp al teléfono",
+            "Si el correo está disponible para registrarse, recibirás un código en",
           verificationInfo: "El mensaje puede tardar unos instantes.",
-          editPhone: "Editar",
+          editEmail: "Editar",
           waitPrefix: "¿No la has recibido? Espera",
           waitSuffix: "minutos",
           loginHint: "¿Ya tienes cuenta en Cashgo?",
-          phonePlaceholder: "Escribe tu número",
           sellerCodePlaceholder: "Escribe aquí",
           emailPlaceholder: "correo@negocio.com",
           passwordPlaceholder: "Mínimo 8 caracteres",
@@ -176,7 +136,6 @@ export function RegistrationWizard({
           startFallback:
             "No pudimos enviar el código en este momento. Intenta nuevamente.",
           validation: {
-            countryRequired: "Selecciona un país.",
             phoneInvalid: "Ingresa un número válido.",
             translationRequired: "Selecciona un idioma.",
             acceptedTermsRequired:
@@ -191,17 +150,16 @@ export function RegistrationWizard({
           },
         }
       : {
-          phoneFieldLabel: "Enter your phone number",
-          phoneDescription:
-            "We will send you a verification code through WhatsApp",
+          emailFieldLabel: "Email address",
+          emailDescription:
+            "We’ll send a verification code to this email address.",
           verificationPrefix:
-            "Enter the verification code that we sent through WhatsApp to",
+            "If this email address is available, you’ll receive a code at",
           verificationInfo: "The message may take a few moments.",
-          editPhone: "Edit",
+          editEmail: "Edit",
           waitPrefix: "Didn't get it? Wait",
           waitSuffix: "minutes",
           loginHint: "Already have a Cashgo account?",
-          phonePlaceholder: "Enter your phone number",
           sellerCodePlaceholder: "Type it here",
           emailPlaceholder: "owner@business.com",
           passwordPlaceholder: "At least 8 characters",
@@ -212,7 +170,6 @@ export function RegistrationWizard({
           startFallback:
             "We could not send the code right now. Please try again.",
           validation: {
-            countryRequired: "Select a country.",
             phoneInvalid: "Enter a valid phone number.",
             translationRequired: "Select a language.",
             acceptedTermsRequired: "You must accept the terms to continue.",
@@ -235,8 +192,8 @@ export function RegistrationWizard({
   const startFormSchema = useMemo(
     () =>
       createRegisterStartSchema({
-        countryRequired: wizardCopy.validation.countryRequired,
-        phoneInvalid: wizardCopy.validation.phoneInvalid,
+        emailRequired: wizardCopy.validation.emailRequired,
+        emailInvalid: wizardCopy.validation.emailInvalid,
         translationRequired: wizardCopy.validation.translationRequired,
         acceptedTermsRequired: wizardCopy.validation.acceptedTermsRequired,
       }),
@@ -249,8 +206,7 @@ export function RegistrationWizard({
         fullNameRequired: wizardCopy.validation.fullNameRequired,
         businessNameRequired: wizardCopy.validation.businessNameRequired,
         categoryRequired: wizardCopy.validation.categoryRequired,
-        emailRequired: wizardCopy.validation.emailRequired,
-        emailInvalid: wizardCopy.validation.emailInvalid,
+        phoneInvalid: wizardCopy.validation.phoneInvalid,
         passwordMinLength: wizardCopy.validation.passwordMinLength,
       }),
     [wizardCopy.validation],
@@ -259,8 +215,7 @@ export function RegistrationWizard({
   const startForm = useForm<RegisterStartValues>({
     resolver: zodResolver(startFormSchema),
     defaultValues: {
-      countryCode: "CO",
-      phone: "",
+      email: "",
       translationId: defaultTranslationId,
       acceptedTerms: false,
     },
@@ -273,16 +228,12 @@ export function RegistrationWizard({
       businessName: "",
       businessCategory: undefined,
       sellerCode: "",
-      email: "",
+      businessPhone: "",
       password: "",
     },
   });
 
   const selectedBusinessCategory = completeForm.watch("businessCategory");
-  const selectedCountryCode = startForm.watch("countryCode");
-  const selectedCountry =
-    countryOptions.find((option) => option.code === selectedCountryCode) ??
-    countryOptions[0];
   const otpCode = otpValues.join("");
 
   useEffect(() => {
@@ -323,10 +274,9 @@ export function RegistrationWizard({
       setOtpError(null);
       const response = await startRegistrationMutation.mutateAsync(values);
       setRegistrationSession({
-        registrationId: response.registrationId,
-        maskedPhone: response.maskedPhone,
+        registrationToken: response.registrationToken,
+        email: values.email,
         expiresInSeconds: response.expiresInSeconds,
-        developmentVerificationCode: response.developmentVerificationCode,
       });
       setOtpValues(["", "", "", "", "", ""]);
       setCurrentStep(1);
@@ -346,7 +296,7 @@ export function RegistrationWizard({
     try {
       setOtpError(null);
       await verifyRegistrationMutation.mutateAsync({
-        registrationId: registrationSession.registrationId,
+        registrationToken: registrationSession.registrationToken,
         verificationCode: otpCode,
       });
       setCurrentStep(2);
@@ -362,9 +312,9 @@ export function RegistrationWizard({
 
     try {
       await completeRegistrationMutation.mutateAsync({
-        registrationId: registrationSession.registrationId,
+        registrationToken: registrationSession.registrationToken,
         fullName: values.fullName,
-        email: values.email,
+        ...(values.businessPhone ? { businessPhone: values.businessPhone } : {}),
         password: values.password,
         businessName: values.businessName,
         businessCategory: values.businessCategory,
@@ -437,60 +387,33 @@ export function RegistrationWizard({
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <span className={styles.iconCircle}>
-              <PhoneStepIcon />
+              <Mail aria-hidden="true" className={styles.sectionIcon} />
             </span>
 
             <div className={styles.sectionCopy}>
               <h2 className={styles.title}>
-                {dictionary.auth.register.phone.title}
+                {languageCode === "es" ? "Verifica tu correo" : "Verify your email"}
               </h2>
-              <p className={styles.labelLead}>{wizardCopy.phoneFieldLabel}</p>
-              <p className={styles.description}>{wizardCopy.phoneDescription}</p>
+              <p className={styles.description}>{wizardCopy.emailDescription}</p>
             </div>
           </div>
 
           <form className={styles.form} noValidate onSubmit={submitStartForm}>
             <input type="hidden" {...startForm.register("translationId")} />
 
-            <div className={styles.field}>
-              <label className={styles.phoneControl} htmlFor="register-phone">
-                <span className={styles.countrySlot}>
-                  <span
-                    className={`${styles.flagCircle} ${
-                      selectedCountry.code === "US" ? styles.flagUS : styles.flagCO
-                    }`}
-                  />
-                  <span className={styles.countryDivider} />
-                  <span className={styles.countryChevron}>⌄</span>
-                  <SearchableSelect
-                    aria-label={dictionary.common.language}
-                    className={styles.countrySelect}
-                    {...startForm.register("countryCode")}
-                  >
-                    {countryOptions.map((option) => (
-                      <option key={option.code} value={option.code}>
-                        {option.label} {option.dialCode}
-                      </option>
-                    ))}
-                  </SearchableSelect>
-                </span>
-
-                <input
-                  autoComplete="tel"
-                  className={styles.input}
-                  id="register-phone"
-                  inputMode="numeric"
-                  placeholder={wizardCopy.phonePlaceholder}
-                  type="tel"
-                  {...startForm.register("phone")}
-                />
-              </label>
-            </div>
-
-            {startForm.formState.errors.phone?.message ? (
-              <p className={styles.errorMessage}>
-                {startForm.formState.errors.phone.message}
-              </p>
+            <label className={styles.field}>
+              <span className={styles.label}>{wizardCopy.emailFieldLabel}</span>
+              <input
+                autoCapitalize="none"
+                autoComplete="email"
+                className={styles.input}
+                placeholder={wizardCopy.emailPlaceholder}
+                type="email"
+                {...startForm.register("email")}
+              />
+            </label>
+            {startForm.formState.errors.email?.message ? (
+              <p className={styles.errorMessage}>{startForm.formState.errors.email.message}</p>
             ) : null}
 
             <label className={styles.checkboxRow}>
@@ -536,7 +459,7 @@ export function RegistrationWizard({
               </h2>
               <p className={styles.description}>
                 {wizardCopy.verificationPrefix}{" "}
-                <strong>{registrationSession.maskedPhone}</strong>
+                <strong>{registrationSession.email}</strong>
                 <button
                   className={styles.inlineLink}
                   type="button"
@@ -545,7 +468,7 @@ export function RegistrationWizard({
                     setCurrentStep(0);
                   }}
                 >
-                  {wizardCopy.editPhone}
+                  {wizardCopy.editEmail}
                 </button>
               </p>
             </div>
@@ -584,13 +507,6 @@ export function RegistrationWizard({
               {wizardCopy.waitSuffix}
             </span>
           </div>
-
-          {registrationSession.developmentVerificationCode ? (
-            <p className={styles.devHint}>
-              {dictionary.auth.register.verification.developmentHint}:{" "}
-              <strong>{registrationSession.developmentVerificationCode}</strong>
-            </p>
-          ) : null}
 
           {otpError ? (
             <div className={styles.errorBanner} role="alert">
@@ -707,21 +623,12 @@ export function RegistrationWizard({
             <div className={styles.accessFields}>
               <label className={styles.field}>
                 <span className={styles.label}>
-                  {dictionary.auth.register.business.emailLabel}
+                  {languageCode === "es" ? "Teléfono del negocio (opcional)" : "Business phone (optional)"}
                 </span>
-                <input
-                  autoCapitalize="none"
-                  autoComplete="email"
-                  className={styles.input}
-                  placeholder={wizardCopy.emailPlaceholder}
-                  type="email"
-                  {...completeForm.register("email")}
-                />
+                <input autoComplete="tel" className={styles.input} type="tel" {...completeForm.register("businessPhone")} />
               </label>
-              {completeForm.formState.errors.email?.message ? (
-                <p className={styles.errorMessage}>
-                  {completeForm.formState.errors.email.message}
-                </p>
+              {completeForm.formState.errors.businessPhone?.message ? (
+                <p className={styles.errorMessage}>{completeForm.formState.errors.businessPhone.message}</p>
               ) : null}
 
               <label className={styles.field}>

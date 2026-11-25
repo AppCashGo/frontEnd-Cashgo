@@ -1,3 +1,4 @@
+import { EmployeeAccessInvitation } from "./EmployeeAccessInvitation"
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from '@hookform/resolvers/zod'
 import { RotateCcw, Save, UserPlus } from 'lucide-react'
@@ -118,15 +119,18 @@ export function EmployeeFormDrawer({
       if (isEditing) {
         await onSubmit({
           name: values.name.trim(),
-          email: normalizedEmail,
-          phone: values.phone.trim(),
+          ...(values.phone.trim() ? { phone: values.phone.trim() } : {}),
           role: values.role,
         })
       } else {
+        if (!normalizedEmail) {
+          setError('email', { message: 'Indica el correo personal del empleado.' })
+          return
+        }
         await onSubmit({
           name: values.name.trim(),
           email: normalizedEmail,
-          phone: values.phone.trim(),
+          ...(values.phone.trim() ? { phone: values.phone.trim() } : {}),
           role: values.role,
         })
       }
@@ -184,6 +188,9 @@ export function EmployeeFormDrawer({
         </div>
       ) : null}
 
+      {employee?.canInviteAccess ? (
+        <EmployeeAccessInvitation key={employee.id} employee={employee} />
+      ) : null}
       <form className={styles.form} noValidate onSubmit={submitEmployee}>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="employee-name">
@@ -208,7 +215,7 @@ export function EmployeeFormDrawer({
         <div className={styles.inlineFields}>
           <div className={styles.field}>
             <label className={styles.label} htmlFor="employee-phone">
-              Teléfono de acceso
+              Celular (opcional)
             </label>
             <input
               aria-describedby={errors.phone ? 'employee-phone-error' : undefined}
@@ -253,14 +260,15 @@ export function EmployeeFormDrawer({
 
         <div className={styles.field}>
           <label className={styles.label} htmlFor="employee-email">
-            Correo (opcional)
+            Correo del empleado
           </label>
           <input
             aria-describedby={errors.email ? 'employee-email-error' : undefined}
             aria-invalid={Boolean(errors.email)}
             className={styles.input}
             id="employee-email"
-            placeholder="Opcional. Si lo omites, Cashgo crea un correo interno."
+            placeholder="nombre@correo.com"
+            readOnly={isEditing}
             type="email"
             {...register('email')}
           />
@@ -269,15 +277,6 @@ export function EmployeeFormDrawer({
               {errors.email.message}
             </p>
           ) : null}
-        </div>
-
-        <div className={styles.confirmCard}>
-          <p className={styles.confirmTitle}>Confirma la configuración</p>
-          <p className={styles.confirmDescription}>
-            Esta persona usará{' '}
-            <strong>{watch('phone') || 'el teléfono configurado'}</strong>{' '}
-            para recibir un código de verificación e ingresar. Verifícalo antes de guardar.
-          </p>
         </div>
 
         {selectedPreset ? (
