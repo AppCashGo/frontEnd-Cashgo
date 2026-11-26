@@ -96,3 +96,11 @@ export function acceptEmployeeInvitation(payload: { token: string; password: str
     signInRequestOptions,
   );
 }
+
+export function requestPasswordReset(email: string) {
+  return postJson<void, { email: string }>("/auth/password-reset/request", { email }, signInRequestOptions);
+}
+
+export function completePasswordReset(input: { token: string; password: string }) {
+  return postJson<void, typeof input>("/auth/password-reset/complete", input, signInRequestOptions);
+}

@@ -1,12 +1,52 @@
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { KeyRound, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, KeyRound, ShieldCheck } from "lucide-react";
 import { acceptEmployeeInvitation } from "@/modules/auth/services/auth-api";
 import { BrandLogo } from "@/shared/components/brand/BrandLogo";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "@/modules/auth/components/LoginForm.module.css";
 import pageStyles from "./AuthPage.module.css";
+
+function InvitationPasswordField({ label, visibilityLabel, value, disabled, onChange }: {
+  label: string;
+  visibilityLabel: string;
+  value: string;
+  disabled: boolean;
+  onChange: (value: string) => void;
+}) {
+  const id = useId();
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className={styles.field}>
+      <label className={styles.label} htmlFor={id}>{label}</label>
+      <div className={styles.passwordField}>
+        <input
+          autoComplete="new-password"
+          className={styles.input}
+          disabled={disabled}
+          id={id}
+          maxLength={72}
+          minLength={8}
+          required
+          type={visible ? "text" : "password"}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+        />
+        <button
+          aria-controls={id}
+          aria-label={`${visible ? "Ocultar" : "Mostrar"} ${visibilityLabel}`}
+          disabled={disabled}
+          type="button"
+          onClick={() => setVisible((current) => !current)}
+        >
+          {visible ? <EyeOff aria-hidden="true" /> : <Eye aria-hidden="true" />}
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function EmployeeInvitationPage() {
   const token = useLocation().hash.slice(1);
@@ -49,16 +89,20 @@ export function EmployeeInvitationPage() {
           <Link className={styles.primaryButton} to="/auth?method=password">Iniciar sesión</Link>
         ) : validToken ? (
           <form className={styles.form} onSubmit={submit}>
-            <label className={styles.field}>
-              <span className={styles.label}>Contraseña</span>
-              <input className={styles.input} type="password" autoComplete="new-password" required minLength={8}
-                maxLength={72} value={password} disabled={invitation.isPending} onChange={(event) => setPassword(event.target.value)} />
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>Repite la contraseña</span>
-              <input className={styles.input} type="password" autoComplete="new-password" required minLength={8}
-                maxLength={72} value={confirmation} disabled={invitation.isPending} onChange={(event) => setConfirmation(event.target.value)} />
-            </label>
+            <InvitationPasswordField
+              label="Contraseña"
+              visibilityLabel="contraseña"
+              value={password}
+              disabled={invitation.isPending}
+              onChange={setPassword}
+            />
+            <InvitationPasswordField
+              label="Repite la contraseña"
+              visibilityLabel="confirmación de contraseña"
+              value={confirmation}
+              disabled={invitation.isPending}
+              onChange={setConfirmation}
+            />
             {mismatch || invitation.error ? (
               <p role="alert" className={styles.errorBanner}>
                 {mismatch ? "Las contraseñas deben coincidir." : getErrorMessage(invitation.error, "No se pudo activar el acceso. Pide una nueva invitación.")}

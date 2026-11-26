@@ -29,6 +29,11 @@ const EmployeeInvitationPage = lazy(() =>
     default: module.EmployeeInvitationPage,
   })),
 );
+const PasswordResetPage = lazy(() =>
+  import("@/modules/auth/pages/PasswordResetPage").then((module) => ({
+    default: module.PasswordResetPage,
+  })),
+);
 const DashboardPage = lazy(routePageLoaders.dashboard);
 const ProductsPage = lazy(routePageLoaders.products);
 const InventoryPage = lazy(routePageLoaders.inventory);
@@ -79,6 +84,11 @@ function withModuleRouteSuspense(
 }
 
 export const appRouter = createBrowserRouter([
+  {
+    path: "/restablecer-contrasena",
+    errorElement: <RouteErrorBoundary />,
+    element: withRouteSuspense(<PasswordResetPage />, "Cargando recuperación", "Preparando el acceso a CashGo."),
+  },
   {
     path: "/invitacion-empleado",
     errorElement: <RouteErrorBoundary />,

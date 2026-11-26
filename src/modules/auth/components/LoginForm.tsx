@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Eye, EyeOff, KeyRound, Mail, MessageSquareLock, Smartphone } from "lucide-react";
 import { useGoogleLoginMutation } from "@/modules/auth/hooks/use-google-login-mutation";
 import { useLoginMutation } from "@/modules/auth/hooks/use-login-mutation";
@@ -766,6 +766,10 @@ export function LoginForm({ initialMethod, onBack, onGoToRegister }: LoginFormPr
                   {errors.password.message}
                 </p>
               ) : null}
+
+              <Link className={styles.inlineAction} to="/restablecer-contrasena">
+                {languageCode === "es" ? "Olvidé mi contraseña" : "Forgot my password"}
+              </Link>
 
               {errors.root?.message ? (
                 <div className={styles.errorBanner} role="alert">
