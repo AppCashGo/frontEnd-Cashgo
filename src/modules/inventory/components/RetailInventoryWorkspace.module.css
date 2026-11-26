@@ -195,67 +195,60 @@
 
 .tableActions {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  max-width: 100%;
 }
 
-.iconButtonWrap {
-  position: relative;
-  display: inline-flex;
-}
-
-.iconButton {
+.inventoryAction {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border: 1px solid rgba(184, 197, 213, 0.98);
-  border-radius: 0.9rem;
-  background: #ffffff;
-  color: #1f2a37;
-}
-
-.tooltipBubble {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 0.55rem);
-  z-index: 5;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: max-content;
-  padding: 0.45rem 0.7rem;
+  justify-content: flex-start;
+  gap: 0.45rem;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.52rem 0.7rem;
+  border: 1px solid #d1dced;
   border-radius: 0.6rem;
-  background: #1f2a37;
-  color: #ffffff;
-  font-size: 0.78rem;
+  background: #f8faff;
+  color: #254263;
+  font: inherit;
+  font-size: 0.82rem;
   font-weight: 700;
-  line-height: 1.2;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%) translateY(0.2rem);
-  transition:
-    opacity 0.2s ease,
-    transform 0.2s ease;
-  white-space: nowrap;
+  line-height: 1.3;
+  text-align: start;
+  cursor: pointer;
 }
 
-.tooltipBubble::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  width: 0.7rem;
-  height: 0.7rem;
-  background: #1f2a37;
-  transform: translateX(-50%) rotate(45deg);
+.inventoryAction svg {
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
 }
 
-.iconButtonWrap:hover .tooltipBubble,
-.iconButtonWrap:focus-within .tooltipBubble {
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
+.inventoryAction span {
+  overflow-wrap: anywhere;
+}
+
+.inventoryAction:hover {
+  border-color: #97b7dd;
+  background: #eaf2fd;
+}
+
+.inventoryAction:focus-visible {
+  outline: 2px solid #245eb0;
+  outline-offset: 2px;
+}
+
+.inventoryAction[data-primary='true'] {
+  border-color: #1d5192;
+  background: #205da1;
+  color: #ffffff;
+}
+
+.inventoryAction[data-primary='true']:hover {
+  background: #184c88;
 }
 
 .iconSvg {
@@ -898,8 +891,7 @@
 
   .headerActions > *,
   .catalogButton,
-  .tableActions,
-  .iconButtonWrap {
+  .tableActions {
     width: 100%;
   }
 
@@ -1107,9 +1099,8 @@
 }
 
 .tableToolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  min-width: 0;
   gap: 1rem;
   min-height: 5.2rem;
   padding: 1rem 1.25rem;
@@ -1124,6 +1115,10 @@
   flex-wrap: wrap;
   gap: 0.7rem;
   min-width: 0;
+}
+
+.tableToolbarRight {
+  justify-content: space-between;
 }
 
 .compactSelectWrap {
@@ -1217,23 +1212,6 @@
   color: #4f596b;
   font-size: 0.9rem;
   white-space: nowrap;
-}
-
-.tableActions {
-  gap: 0.35rem;
-}
-
-.iconButton {
-  width: 2.4rem;
-  height: 2.4rem;
-  border: 0;
-  border-radius: 0.55rem;
-  background: #f1f5fb;
-  color: #536176;
-}
-
-.mobileActionLabel {
-  display: none;
 }
 
 .table thead th {
@@ -1451,178 +1429,246 @@
   gap: 1rem;
 }
 
-.purchaseItemsSection {
+.purchaseDrawer {
+  width: min(100vw, 46rem);
+}
+
+.purchaseItemsSection,
+.purchasePicker,
+.purchaseFooter {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.65rem;
+  min-width: 0;
 }
 
 .purchaseItemsHeader,
-.purchaseItemTitleRow {
+.purchaseHeaderActions,
+.purchasePickerActions,
+.purchaseLineOptions,
+.purchaseFooterSummary {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  flex-wrap: wrap;
+  gap: 0.55rem;
 }
 
-.purchaseItemsHeader > div {
-  display: grid;
-  gap: 0.2rem;
+.purchaseItemsHeader h3 {
+  margin: 0;
 }
 
+.scanPurchaseButton,
 .addPurchaseItemButton,
 .removePurchaseItemButton {
-  border: 0;
-  background: transparent;
-  color: #0758d1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-height: 2.75rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid #bfd3f0;
+  border-radius: 0.55rem;
+  background: #f2f7ff;
+  color: #1c5293;
   font: inherit;
   font-size: 0.82rem;
   font-weight: 750;
   cursor: pointer;
 }
 
-.purchaseItemsHeader > .purchaseHeaderActions {
+.addPurchaseItemButton {
+  border-color: #205da1;
+  background: #205da1;
+  color: #fff;
+}
+
+.addPurchaseItemButton:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.removePurchaseItemButton {
+  min-width: 2.75rem;
+  padding: 0;
+  border-color: #f0d8d5;
+  background: #fffbfa;
+  color: #a63128;
+}
+
+.scanPurchaseButton svg,
+.addPurchaseItemButton svg,
+.removePurchaseItemButton svg,
+.purchasePickerSearch svg {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+}
+
+.purchaseEmpty,
+.purchasePicker {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px solid #dce7f6;
+  border-radius: 0.65rem;
+  background: #f6f9ff;
+  color: #435574;
+  font-size: 0.85rem;
+}
+
+.purchasePickerSearch {
   display: flex;
   align-items: center;
   gap: 0.55rem;
+  padding: 0 0.6rem;
+  border: 1px solid #ccd9ec;
+  border-radius: 0.5rem;
+  background: #fff;
 }
 
-.scanPurchaseButton {
+.purchasePickerSearch input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.6rem;
+  border: 0;
+  background: none;
+  color: #253854;
+  font: inherit;
+}
+
+.purchasePickerList {
+  max-height: min(22rem, 36vh);
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.purchasePickerOption {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.75rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid #e1e9f5;
+  cursor: pointer;
+}
+
+.purchasePickerOption span,
+.purchaseLineIdentity,
+.purchaseLineField {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.purchasePickerOption small,
+.purchaseLineIdentity small,
+.purchaseLineField span {
+  color: #50617b;
+  font-size: 0.75rem;
+}
+
+.purchasePickerActions {
+  justify-content: flex-end;
+}
+
+.purchaseLine {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(4.1rem, 0.65fr) minmax(5rem, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.65rem;
+  border: 1px solid #d9e3f1;
+  border-radius: 0.65rem;
+  background: #fff;
+  font-size: 0.85rem;
+}
+
+.purchaseLineField input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.6rem;
+  padding-inline: 0.55rem;
+}
+
+.purchaseLineField input:disabled {
+  opacity: 1;
+  background: #eff8f3;
+  color: #166534;
+}
+
+.purchaseLineGift {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  min-height: 2.35rem;
-  padding: 0 0.7rem;
-  border: 1px solid #9dbaf0;
-  border-radius: 0.65rem;
-  background: #eef4ff;
-  color: #1f56be;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  color: #3c5b59;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.purchaseLineGift input,
+.purchasePickerOption input {
+  accent-color: #205da1;
+}
+
+.purchaseLineAmount {
+  width: 100%;
+  color: #253854;
   font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.scanPurchaseButton svg {
-  width: 1rem;
-}
-
-.purchaseItemCard {
-  display: grid;
-  gap: 0.8rem;
-  padding: 0.9rem;
-  border: 1px solid #d7deea;
-  border-radius: 0.8rem;
-  background: #fbfcff;
+  text-align: end;
 }
 
 .purchaseItemCardInvalid {
   border-color: #e56d64;
   background: #fff8f7;
-  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.08);
 }
 
 .purchaseItemError {
+  grid-column: 1 / -1;
+  margin: 0;
   color: #b42318;
   font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1.4;
-}
-
-.purchaseGiftToggle {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.65rem;
-  padding: 0.75rem;
-  border: 1px solid #cfe8d8;
-  border-radius: 0.7rem;
-  background: #f2fbf5;
-  color: #166534;
-  cursor: pointer;
-}
-
-.purchaseGiftToggle input {
-  width: 1.05rem;
-  height: 1.05rem;
-  margin-top: 0.12rem;
-  accent-color: #15803d;
-}
-
-.purchaseGiftToggle span {
-  display: grid;
-  gap: 0.18rem;
-}
-
-.purchaseGiftToggle strong {
-  font-size: 0.82rem;
-}
-
-.purchaseGiftToggle small {
-  color: #4f6f5a;
-  font-size: 0.76rem;
-  line-height: 1.35;
-}
-
-.purchaseGiftCostInput:disabled {
-  border-color: #bbdfc7;
-  background: #eaf8ef;
-  color: #166534;
-  opacity: 1;
-}
-
-.purchaseGiftBadge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.3rem 0.58rem;
-  border-radius: 999px;
-  background: #dcfce7;
-  color: #166534;
-  font-size: 0.75rem;
-  font-weight: 800;
 }
 
 .purchaseValidationAlert {
   scroll-margin-block: 5rem;
 }
 
-.purchaseItemTitleRow strong {
-  color: #1d2939;
-  font-size: 0.88rem;
-}
-
-.removePurchaseItemButton {
-  color: #b42318;
-}
-
-.purchaseLineSubtotal {
-  justify-self: end;
-  color: #475467;
+.purchaseFooterSummary {
+  margin: 0;
+  color: #39516e;
   font-size: 0.82rem;
-  font-weight: 700;
 }
 
-.purchaseTotalCard {
+.purchaseFooterSummary div {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
-  border: 1px solid #c7d0df;
-  border-radius: 0.55rem;
-  background: #f0f4ff;
-  color: #3b4659;
+  align-items: baseline;
+  gap: 0.35rem;
 }
 
-.purchaseTotalCard > div {
-  display: grid;
-  gap: 0.25rem;
+.purchaseFooterSummary dd {
+  margin: 0;
+  color: #173e72;
+  font-weight: 800;
 }
 
-.purchaseTotalCard > div:last-child {
-  text-align: right;
-}
+@media (max-width: 580px) {
+  .purchaseLine {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
-.purchaseTotalCard strong {
-  color: #0758d1;
-  font-size: 1.25rem;
-  font-weight: 900;
+  .purchaseLineIdentity,
+  .purchaseLineOptions {
+    grid-column: 1 / -1;
+  }
+
+  .purchaseLineAmount {
+    margin-inline-start: auto;
+    width: auto;
+  }
 }
 
 .invoiceUploadSection {
@@ -1999,33 +2045,8 @@
     gap: 0.55rem;
   }
 
-  .iconButtonWrap,
-  .iconButton {
-    width: 100%;
-  }
-
-  .iconButtonWrap:last-child {
+  .inventoryAction:last-child:nth-child(odd) {
     grid-column: 1 / -1;
-  }
-
-  .iconButton {
-    justify-content: flex-start;
-    gap: 0.55rem;
-    min-height: 2.75rem;
-    padding: 0.6rem 0.75rem;
-  }
-
-  .mobileActionLabel {
-    display: inline;
-    overflow: hidden;
-    font-size: 0.76rem;
-    font-weight: 800;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .tooltipBubble {
-    display: none;
   }
 
   .table th:first-child,
@@ -2066,32 +2087,6 @@
 
   .supplierPickerRow {
     grid-template-columns: minmax(0, 1fr) 3rem;
-  }
-
-  .purchaseItemsHeader {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .purchaseItemsHeader > .purchaseHeaderActions {
-    width: 100%;
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .scanPurchaseButton,
-  .addPurchaseItemButton {
-    justify-content: center;
-    width: 100%;
-  }
-
-  .purchaseTotalCard {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .purchaseTotalCard > div:last-child {
-    text-align: left;
   }
 
   .drawer {
@@ -2203,33 +2198,8 @@
     gap: 0.55rem;
   }
 
-  .iconButtonWrap,
-  .iconButton {
-    width: 100%;
-  }
-
-  .iconButtonWrap:last-child {
+  .inventoryAction:last-child:nth-child(odd) {
     grid-column: 1 / -1;
-  }
-
-  .iconButton {
-    justify-content: flex-start;
-    gap: 0.55rem;
-    min-height: 2.75rem;
-    padding: 0.6rem 0.75rem;
-  }
-
-  .mobileActionLabel {
-    display: inline;
-    overflow: hidden;
-    font-size: 0.76rem;
-    font-weight: 800;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .tooltipBubble {
-    display: none;
   }
 
   .tableScroller {
@@ -2320,12 +2290,10 @@
 }
 
 @container inventory-dashboard (max-width: 28rem) {
-  .tableActions,
   .table tbody tr {
     grid-template-columns: 1fr;
   }
 
-  .iconButtonWrap:last-child,
   .table tbody td:first-child {
     grid-column: auto;
   }

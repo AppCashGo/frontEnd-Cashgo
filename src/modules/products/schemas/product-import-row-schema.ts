@@ -1,52 +1,58 @@
 import { z } from 'zod'
 import { productUnits } from '@/modules/products/types/product'
 
+const money = (label: string) =>
+  z
+    .number({
+      invalid_type_error: `${label} debe ser un valor válido con hasta dos decimales.`,
+      required_error: `Ingresa ${label.toLowerCase()}.`,
+    })
+    .min(0, `${label} debe ser mayor o igual a cero.`)
+    .max(99_999_999.99, `${label} supera el monto máximo admitido.`)
+
+const count = (label: string) =>
+  z
+    .number({
+      invalid_type_error: `${label} debe ser un número entero.`,
+      required_error: `Ingresa ${label.toLowerCase()}.`,
+    })
+    .int(`${label} debe ser un número entero.`)
+    .min(0, `${label} debe ser mayor o igual a cero.`)
+    .max(2_147_483_647, `${label} supera el máximo admitido.`)
+
 export const productImportRowSchema = z.object({
   rowNumber: z.number().int().positive(),
   name: z
-    .string()
+    .string({ required_error: 'Ingresa el nombre del producto.' })
     .trim()
-    .min(2, 'Name must contain at least 2 characters.')
-    .max(120, 'Name must contain at most 120 characters.'),
+    .min(2, 'El nombre debe tener al menos 2 caracteres.')
+    .max(120, 'El nombre supera los 120 caracteres.'),
   description: z
     .string()
     .trim()
-    .max(500, 'Description must contain at most 500 characters.')
+    .max(500, 'La descripción supera los 500 caracteres.')
     .optional(),
-  sku: z.string().trim().max(80, 'SKU must contain at most 80 characters.').optional(),
+  sku: z.string().trim().max(80, 'El SKU supera los 80 caracteres.').optional(),
   barcode: z
     .string()
     .trim()
-    .max(120, 'Barcode must contain at most 120 characters.')
+    .max(120, 'El código de barras supera los 120 caracteres.')
     .optional(),
-  cost: z
-    .number({
-      invalid_type_error: 'Cost must be a valid amount.',
+  cost: money('Costo').optional(),
+  price: money('Precio'),
+  stock: count('Existencias'),
+  minStock: count('Stock mínimo').optional(),
+  unit: z
+    .enum(productUnits, {
+      errorMap: () => ({ message: 'La unidad no está admitida.' }),
     })
-    .finite('Cost must be a valid amount.')
-    .min(0, 'Cost must be greater than or equal to 0.')
     .optional(),
-  price: z
-    .number({
-      invalid_type_error: 'Price must be a valid amount.',
+  isActive: z
+    .boolean({
+      invalid_type_error:
+        'Usa Sí o No para indicar si el producto está activo.',
     })
-    .finite('Price must be a valid amount.')
-    .min(0, 'Price must be greater than or equal to 0.'),
-  stock: z
-    .number({
-      invalid_type_error: 'Stock must be a valid integer.',
-    })
-    .int('Stock must be a valid integer.')
-    .min(0, 'Stock must be greater than or equal to 0.'),
-  minStock: z
-    .number({
-      invalid_type_error: 'Minimum stock must be a valid integer.',
-    })
-    .int('Minimum stock must be a valid integer.')
-    .min(0, 'Minimum stock must be greater than or equal to 0.')
     .optional(),
-  unit: z.enum(productUnits).optional(),
-  isActive: z.boolean().optional(),
 })
 
 export type ProductImportRowSchemaValues = z.infer<

@@ -7,8 +7,9 @@ import type { PaymentFundSource } from '@/modules/cash-register/types/cash-regis
 import type { KeyboardEvent, ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Camera, ClipboardCheck, ScanBarcode, Truck } from 'lucide-react'
+import { Camera, ClipboardCheck, Plus, ScanBarcode, Store, Trash2, Truck } from 'lucide-react'
 import { BakeryDailyOperationsPanel } from '@/modules/inventory/components/BakeryDailyOperationsPanel'
+import { PurchaseProductPicker } from '@/modules/inventory/components/PurchaseProductPicker'
 import { InventoryCountDrawer } from '@/modules/inventory/components/InventoryCountDrawer'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import {
@@ -150,15 +151,16 @@ type TaxFormState = {
 type DrawerShellProps = {
   title: string
   titleAccessory?: ReactNode
+  panelClassName?: string
   isBusy?: boolean
   onClose: () => void
   children: ReactNode
   footer?: ReactNode
 }
 
-type IconButtonProps = {
+type InventoryActionProps = {
   label: string
-  tooltip: string
+  primary?: boolean
   onClick: () => void
   children: ReactNode
 }
@@ -174,14 +176,14 @@ function createDefaultCategoryEditorState(): CategoryEditorState {
 
 let purchaseLineSequence = 0
 
-function createPurchaseLineState(): PurchaseLineState {
+function createPurchaseLineState(product: Product): PurchaseLineState {
   purchaseLineSequence += 1
 
   return {
     id: purchaseLineSequence,
-    productId: '',
+    productId: product.id,
     quantity: '1',
-    unitCost: '',
+    unitCost: product.cost > 0 ? String(product.cost) : '',
     isGift: false,
   }
 }
@@ -189,7 +191,7 @@ function createPurchaseLineState(): PurchaseLineState {
 function createDefaultPurchaseFormState(): PurchaseFormState {
   return {
     supplierId: '',
-    items: [createPurchaseLineState()],
+    items: [],
     reference: '',
     paymentMethod: 'CASH',
     fundSource: 'REGISTER',
@@ -345,6 +347,7 @@ function clampPercentage(value: number) {
 function DrawerShell({
   title,
   titleAccessory,
+  panelClassName = styles.drawer,
   isBusy = false,
   onClose,
   children,
@@ -361,7 +364,7 @@ function DrawerShell({
       footerClassName={styles.drawerFooter}
       isOpen
       isCloseDisabled={isBusy}
-      panelClassName={styles.drawer}
+      panelClassName={panelClassName}
       title={title}
       titleAccessory={titleAccessory}
       onClose={onClose}
@@ -371,20 +374,17 @@ function DrawerShell({
   )
 }
 
-function IconButton({ label, tooltip, onClick, children }: IconButtonProps) {
+function InventoryAction({ label, primary = false, onClick, children }: InventoryActionProps) {
   return (
-    <div className={styles.iconButtonWrap}>
-      <button
-        aria-label={label}
-        className={styles.iconButton}
-        type="button"
-        onClick={onClick}
-      >
-        {children}
-        <span className={styles.mobileActionLabel}>{label}</span>
-      </button>
-      <span className={styles.tooltipBubble}>{tooltip}</span>
-    </div>
+    <button
+      className={styles.inventoryAction}
+      data-primary={primary}
+      type="button"
+      onClick={onClick}
+    >
+      {children}
+      <span>{label}</span>
+    </button>
   )
 }
 
@@ -504,6 +504,10 @@ export function RetailInventoryWorkspace() {
     () => products.filter((product) => product.inventoryBehavior === 'PURCHASED'),
     [products],
   )
+  const purchasableById = useMemo(
+    () => new Map(purchasableProducts.map((product) => [product.id, product])),
+    [purchasableProducts],
+  )
   const suppliers = useMemo(
     () => suppliersQuery.data ?? [],
     [suppliersQuery.data],
@@ -520,6 +524,7 @@ export function RetailInventoryWorkspace() {
   const [isPremiumBannerVisible, setPremiumBannerVisible] = useState(true)
   const [feedbackMessage, setFeedbackMessage] =
     useState<FeedbackMessage | null>(null)
+  const [isPurchasePickerOpen, setPurchasePickerOpen] = useState(false)
   const [purchaseFormError, setPurchaseFormError] = useState<string | null>(
     null,
   )
@@ -659,34 +664,9 @@ export function RetailInventoryWorkspace() {
           }
         }
 
-        const emptyItem = currentState.items.find((item) => !item.productId)
-        if (emptyItem) {
-          return {
-            ...currentState,
-            items: currentState.items.map((item) =>
-              item.id === emptyItem.id
-                ? {
-                    ...item,
-                    productId: product.id,
-                    quantity: '1',
-                    unitCost: String(product.cost),
-                  }
-                : item,
-            ),
-          }
-        }
-
         return {
           ...currentState,
-          items: [
-            ...currentState.items,
-            {
-              ...createPurchaseLineState(),
-              productId: product.id,
-              quantity: '1',
-              unitCost: String(product.cost),
-            },
-          ],
+          items: [...currentState.items, createPurchaseLineState(product)],
         }
       })
     },
@@ -759,12 +739,11 @@ export function RetailInventoryWorkspace() {
     purchaseFormState.purchaseDate &&
     purchaseFormState.dueDate < purchaseFormState.purchaseDate,
   )
-  const invalidPurchaseItemIndex = purchaseFormState.items.findIndex(
-    (item) =>
-      !item.productId ||
-      parsePositiveNumber(item.quantity) <= 0 ||
-      (!item.isGift && parsePositiveNumber(item.unitCost) <= 0),
-  )
+  const invalidPurchaseItemIndex = purchaseFormState.items.findIndex((item) => {
+    const quantity = parsePositiveNumber(item.quantity)
+    return !purchasableById.has(item.productId) || !Number.isSafeInteger(quantity) ||
+      quantity <= 0 || (!item.isGift && roundMonetaryAmount(parsePositiveNumber(item.unitCost)) <= 0)
+  })
   const purchaseValidationError = !purchaseFormState.supplierId
     ? languageCode === 'en'
       ? 'Select a supplier.'
@@ -997,7 +976,34 @@ export function RetailInventoryWorkspace() {
     setAssignedProductSearchTerm('')
   }
 
+  function addPurchaseProducts(selected: Product[]) {
+    setPurchaseFormError(null)
+    setPurchaseFormState((state) => {
+      const included = new Set(state.items.map((item) => item.productId))
+      const additions = selected.filter((product) => !included.has(product.id))
+      return {
+        ...state,
+        items: [...state.items, ...additions.map(createPurchaseLineState)],
+      }
+    })
+    setPurchasePickerOpen(false)
+  }
+
+  function updatePurchaseLine(
+    id: number,
+    change: Partial<Omit<PurchaseLineState, 'id' | 'productId'>>,
+  ) {
+    setPurchaseFormError(null)
+    setPurchaseFormState((state) => ({
+      ...state,
+      items: state.items.map((item) =>
+        item.id === id ? { ...item, ...change } : item,
+      ),
+    }))
+  }
+
   function handleClosePurchaseDrawer() {
+    setPurchasePickerOpen(false)
     setQuickSupplierOpen(false)
     setPurchaseDrawerOpen(false)
     setPurchaseFormError(null)
@@ -1372,6 +1378,7 @@ export function RetailInventoryWorkspace() {
     const hasInvalidItem = purchaseItems.some(
       (item, index) =>
         !item.productId ||
+        !Number.isSafeInteger(item.quantity) ||
         item.quantity <= 0 ||
         (!purchaseFormState.items[index]?.isGift && item.unitCost <= 0),
     )
@@ -1957,45 +1964,41 @@ export function RetailInventoryWorkspace() {
                 .replace('{total}', products.length.toString())}
             </span>
             <div className={styles.tableActions}>
-              <IconButton
+              <InventoryAction
                 label={copy.virtualCatalog}
-                tooltip={copy.virtualCatalog}
                 onClick={() => {
                   void handleShareCatalog()
                 }}
               >
-                <BoxIcon />
-              </IconButton>
-              {canManageInventory ? <IconButton
+                <Store aria-hidden="true" />
+              </InventoryAction>
+              {canManageInventory ? <InventoryAction
                 label={copy.registerPurchase}
-                tooltip={copy.registerPurchase}
+                primary
                 onClick={() => setPurchaseDrawerOpen(true)}
               >
                 <BoxIcon />
-              </IconButton> : null}
-              {canManageInventory ? <IconButton
+              </InventoryAction> : null}
+              {canManageInventory ? <InventoryAction
                 label={copy.adjustInventory}
-                tooltip={copy.adjustInventory}
                 onClick={() => setAdjustmentDrawerOpen(true)}
               >
                 <AdjustmentIcon />
-              </IconButton> : null}
-              {canManageInventory ? <IconButton
+              </InventoryAction> : null}
+              {canManageInventory ? <InventoryAction
                 label={copy.productTaxes}
-                tooltip={copy.productTaxes}
                 onClick={() => setTaxesDrawerOpen(true)}
               >
                 <TaxIcon />
-              </IconButton> : null}
-              <IconButton
+              </InventoryAction> : null}
+              <InventoryAction
                 label={copy.downloadInventory}
-                tooltip={copy.downloadInventory}
                 onClick={() => {
                   void handleDownloadInventory()
                 }}
               >
                 <DownloadIcon />
-              </IconButton>
+              </InventoryAction>
             </div>
           </div>
         </div>
@@ -2805,45 +2808,59 @@ export function RetailInventoryWorkspace() {
 
       {isPurchaseDrawerOpen ? (
         <DrawerShell
+          panelClassName={`${styles.drawer} ${styles.purchaseDrawer}`}
           titleAccessory={
             <span className={styles.drawerTitleIcon}>
               <BoxIcon />
             </span>
           }
           footer={
-            <DrawerActionFooter>
-              <button
-                className={retailStyles.buttonOutline}
-                disabled={
-                  registerPurchaseMutation.isPending ||
+            <div className={styles.purchaseFooter}>
+              <dl className={styles.purchaseFooterSummary}>
+                <div>
+                  <dt>{copy.estimatedTotal}</dt>
+                  <dd>{formatCurrency(estimatedPurchaseTotal)}</dd>
+                </div>
+                <div>
+                  <dt>{copy.purchaseBalance}</dt>
+                  <dd>{formatCurrency(Math.max(estimatedPurchaseTotal - purchasePaymentAmount, 0))}</dd>
+                </div>
+              </dl>
+              <DrawerActionFooter>
+                <button
+                  className={retailStyles.buttonOutline}
+                  disabled={
+                    registerPurchaseMutation.isPending ||
+                    uploadPurchaseInvoiceMutation.isPending
+                  }
+                  type="button"
+                  onClick={handleClosePurchaseDrawer}
+                >
+                  {copy.cancel}
+                </button>
+                <button
+                  className={retailStyles.buttonDark}
+                  disabled={
+                    isPurchasePickerOpen ||
+                    registerPurchaseMutation.isPending ||
+                    uploadPurchaseInvoiceMutation.isPending
+                  }
+                  type="button"
+                  onClick={() => {
+                    void handleRegisterPurchase()
+                  }}
+                >
+                  {registerPurchaseMutation.isPending ||
                   uploadPurchaseInvoiceMutation.isPending
-                }
-                type="button"
-                onClick={handleClosePurchaseDrawer}
-              >
-                {copy.cancel}
-              </button>
-              <button
-                className={retailStyles.buttonDark}
-                disabled={
-                  registerPurchaseMutation.isPending ||
-                  uploadPurchaseInvoiceMutation.isPending
-                }
-                type="button"
-                onClick={() => {
-                  void handleRegisterPurchase()
-                }}
-              >
-                {registerPurchaseMutation.isPending ||
-                uploadPurchaseInvoiceMutation.isPending
-                  ? uploadPurchaseInvoiceMutation.isPending
-                    ? languageCode === 'en'
-                      ? 'Uploading invoice...'
-                      : 'Subiendo factura...'
-                    : copy.registering
-                  : copy.purchaseSubmit}
-              </button>
-            </DrawerActionFooter>
+                    ? uploadPurchaseInvoiceMutation.isPending
+                      ? languageCode === 'en'
+                        ? 'Uploading invoice...'
+                        : 'Subiendo factura...'
+                      : copy.registering
+                    : copy.purchaseSubmit}
+                </button>
+              </DrawerActionFooter>
+            </div>
           }
           isBusy={
             registerPurchaseMutation.isPending ||
@@ -2929,16 +2946,14 @@ export function RetailInventoryWorkspace() {
               />
             ) : null}
 
-            <div className={styles.purchaseItemsSection}>
+            <section
+              className={styles.purchaseItemsSection}
+              aria-label={copy.purchaseProducts}
+            >
               <div className={styles.purchaseItemsHeader}>
-                <div>
-                  <span className={styles.fieldLabel}>
-                    {copy.purchaseProducts} *
-                  </span>
-                  <small className={styles.fieldHint}>
-                    {copy.purchaseProductHint}
-                  </small>
-                </div>
+                <h3 className={styles.fieldLabel}>
+                  {copy.purchaseProducts} · {purchaseFormState.items.length}
+                </h3>
                 <div className={styles.purchaseHeaderActions}>
                   <button
                     className={styles.scanPurchaseButton}
@@ -2948,222 +2963,126 @@ export function RetailInventoryWorkspace() {
                       setBarcodeScannerOpen(true)
                     }}
                   >
-                    <ScanBarcode aria-hidden="true" /> Escanear producto
+                    <ScanBarcode aria-hidden="true" />
+                    {languageCode === 'en' ? 'Scan product' : 'Escanear'}
                   </button>
-                  <button
-                    className={styles.addPurchaseItemButton}
-                    type="button"
-                    onClick={() =>
-                      setPurchaseFormState((currentState) => ({
-                        ...currentState,
-                        items: [...currentState.items, createPurchaseLineState()],
-                      }))
-                    }
-                  >
-                    + {copy.purchaseAddProduct}
-                  </button>
+                  {!isPurchasePickerOpen ? (
+                    <button
+                      className={styles.addPurchaseItemButton}
+                      type="button"
+                      onClick={() => setPurchasePickerOpen(true)}
+                    >
+                      <Plus aria-hidden="true" />
+                      {languageCode === 'en' ? 'Add products' : 'Agregar productos'}
+                    </button>
+                  ) : null}
                 </div>
               </div>
+              {isPurchasePickerOpen ? (
+                <PurchaseProductPicker
+                  label={languageCode === 'en' ? 'Select products for purchase' : 'Seleccionar productos para la compra'}
+                  products={purchasableProducts}
+                  includedIds={new Set(purchaseProductIds)}
+                  isEnglish={languageCode === 'en'}
+                  onAdd={addPurchaseProducts}
+                  onCancel={() => setPurchasePickerOpen(false)}
+                />
+              ) : !purchaseFormState.items.length ? (
+                <p className={styles.purchaseEmpty}>
+                  {languageCode === 'en' ? 'Choose several products at once or scan them.' : 'Selecciona varios productos de una vez o escanéalos.'}
+                </p>
+              ) : null}
 
               {purchaseFormState.items.map((item, index) => {
-                const isDuplicate =
-                  Boolean(purchaseFormError) &&
-                  duplicatePurchaseProductIds.has(item.productId)
+                const product = purchasableById.get(item.productId)
+                const name =
+                  product?.name ?? copy.purchaseLine.replace('{number}', String(index + 1))
                 const isInvalid =
-                  Boolean(purchaseFormError) &&
-                  (!item.productId ||
-                    parsePositiveNumber(item.quantity) <= 0 ||
-                    (!item.isGift && parsePositiveNumber(item.unitCost) <= 0))
-
+                  Boolean(purchaseFormError) && index === invalidPurchaseItemIndex
+                const lineTotal = item.isGift
+                  ? 0
+                  : parsePositiveNumber(item.quantity) * parsePositiveNumber(item.unitCost)
                 return (
                   <article
-                    className={`${styles.purchaseItemCard} ${
-                      isDuplicate || isInvalid
-                        ? styles.purchaseItemCardInvalid
-                        : ''
-                    }`}
+                    className={`${styles.purchaseLine} ${isInvalid ? styles.purchaseItemCardInvalid : ''}`}
                     id={`purchase-line-${item.id}`}
                     key={item.id}
                   >
-                    <div className={styles.purchaseItemTitleRow}>
-                      <strong>
-                        {copy.purchaseLine.replace(
-                          '{number}',
-                          String(index + 1),
-                        )}
-                      </strong>
-                      {purchaseFormState.items.length > 1 ? (
-                        <button
-                          className={styles.removePurchaseItemButton}
-                          type="button"
-                          onClick={() =>
-                            setPurchaseFormState((currentState) => ({
-                              ...currentState,
-                              items: currentState.items.filter(
-                                (currentItem) => currentItem.id !== item.id,
-                              ),
-                            }))
-                          }
-                        >
-                          {copy.remove}
-                        </button>
+                    <div className={styles.purchaseLineIdentity}>
+                      <strong>{name}</strong>
+                      {product?.sku || product?.barcode ? (
+                        <small>{product.sku || product.barcode}</small>
                       ) : null}
                     </div>
-
-                    <label className={styles.fieldGroup}>
-                      <span className={styles.fieldLabel}>
-                        {copy.purchaseProduct}
-                      </span>
-                      <SearchableSelect
-                        className={styles.selectInput}
-                        value={item.productId}
-                        onChange={(event) =>
-                          setPurchaseFormState((currentState) => ({
-                            ...currentState,
-                            items: currentState.items.map((currentItem) =>
-                              currentItem.id === item.id
-                                ? {
-                                    ...currentItem,
-                                    productId: event.target.value,
-                                  }
-                                : currentItem,
-                            ),
-                          }))
-                        }
-                      >
-                        <option value="">{copy.selectOption}</option>
-                        {purchasableProducts.map((product) => (
-                          <option key={product.id} value={product.id}>
-                            {product.name}
-                          </option>
-                        ))}
-                      </SearchableSelect>
-                    </label>
-
-                    <label className={styles.purchaseGiftToggle}>
+                    <label className={styles.purchaseLineField}>
+                      <span>{copy.purchaseQuantity}</span>
                       <input
-                        checked={item.isGift}
-                        type="checkbox"
+                        aria-label={`${copy.purchaseQuantity}: ${name}`}
+                        className={styles.textInput}
+                        inputMode="numeric"
+                        min="1"
+                        step="1"
+                        type="number"
+                        value={item.quantity}
                         onChange={(event) =>
-                          setPurchaseFormState((currentState) => ({
-                            ...currentState,
-                            items: currentState.items.map((currentItem) =>
-                              currentItem.id === item.id
-                                ? {
-                                    ...currentItem,
-                                    isGift: event.target.checked,
-                                    unitCost: event.target.checked ? '0' : '',
-                                  }
-                                : currentItem,
-                            ),
-                          }))
+                          updatePurchaseLine(item.id, { quantity: event.target.value })
                         }
                       />
-                      <span>
-                        <strong>
-                          {languageCode === 'en'
-                            ? 'Gift from supplier'
-                            : 'Producto obsequiado por el proveedor'}
-                        </strong>
-                        <small>
-                          {languageCode === 'en'
-                            ? 'Adds stock without increasing the purchase total.'
-                            : 'Suma existencias sin aumentar el total de la compra.'}
-                        </small>
-                      </span>
                     </label>
-
-                    <div className={styles.purchaseFieldsRow}>
-                      <label className={styles.fieldGroup}>
-                        <span className={styles.fieldLabel}>
-                          {copy.purchaseQuantity}
-                        </span>
+                    <label className={styles.purchaseLineField}>
+                      <span>{copy.purchaseUnitCost}</span>
+                      <input
+                        aria-label={`${copy.purchaseUnitCost}: ${name}`}
+                        className={styles.textInput}
+                        disabled={item.isGift}
+                        inputMode="decimal"
+                        min="0.01"
+                        placeholder="0.00"
+                        step="0.01"
+                        type="number"
+                        value={item.isGift ? '0' : item.unitCost}
+                        onChange={(event) =>
+                          updatePurchaseLine(item.id, { unitCost: event.target.value })
+                        }
+                      />
+                    </label>
+                    <div className={styles.purchaseLineOptions}>
+                      <label className={styles.purchaseLineGift}>
                         <input
-                          className={styles.textInput}
-                          inputMode="numeric"
-                          min="1"
-                          step="1"
-                          type="number"
-                          value={item.quantity}
+                          aria-label={`${languageCode === 'en' ? 'Gift' : 'Obsequio'}: ${name}`}
+                          checked={item.isGift}
+                          type="checkbox"
                           onChange={(event) =>
-                            setPurchaseFormState((currentState) => ({
-                              ...currentState,
-                              items: currentState.items.map((currentItem) =>
-                                currentItem.id === item.id
-                                  ? {
-                                      ...currentItem,
-                                      quantity: event.target.value,
-                                    }
-                                  : currentItem,
-                              ),
-                            }))
+                            updatePurchaseLine(item.id, { isGift: event.target.checked })
                           }
                         />
+                        {languageCode === 'en' ? 'Gift' : 'Obsequio'}
                       </label>
-
-                      <label className={styles.fieldGroup}>
-                        <span className={styles.fieldLabel}>
-                          {copy.purchaseUnitCost}
-                        </span>
-                        <input
-                          className={`${styles.textInput} ${
-                            item.isGift ? styles.purchaseGiftCostInput : ''
-                          }`}
-                          disabled={item.isGift}
-                          inputMode="decimal"
-                          min="0.01"
-                          placeholder="$ 0.00"
-                          step="0.01"
-                          type="number"
-                          value={item.unitCost}
-                          onChange={(event) =>
-                            setPurchaseFormState((currentState) => ({
-                              ...currentState,
-                              items: currentState.items.map((currentItem) =>
-                                currentItem.id === item.id
-                                  ? {
-                                      ...currentItem,
-                                      unitCost: event.target.value,
-                                    }
-                                  : currentItem,
-                              ),
-                            }))
-                          }
-                        />
-                      </label>
+                      <button
+                        aria-label={`${copy.remove}: ${name}`}
+                        className={styles.removePurchaseItemButton}
+                        type="button"
+                        onClick={() => {
+                          setPurchaseFormError(null)
+                          setPurchaseFormState((state) => ({
+                            ...state,
+                            items: state.items.filter((line) => line.id !== item.id),
+                          }))
+                        }}
+                      >
+                        <Trash2 aria-hidden="true" />
+                      </button>
+                      <strong className={styles.purchaseLineAmount}>
+                        {formatCurrency(lineTotal)}
+                      </strong>
                     </div>
-                    <span className={styles.purchaseLineSubtotal}>
-                      {item.isGift ? (
-                        <span className={styles.purchaseGiftBadge}>
-                          {languageCode === 'en'
-                            ? 'Gift · $0'
-                            : 'Obsequio · $0'}
-                        </span>
-                      ) : (
-                        <>
-                          {copy.purchaseSubtotal}:{' '}
-                          {formatCurrency(
-                            parsePositiveNumber(item.quantity) *
-                              parsePositiveNumber(item.unitCost),
-                          )}
-                        </>
-                      )}
-                    </span>
-                    {isDuplicate || isInvalid ? (
-                      <small className={styles.purchaseItemError} role="alert">
-                        {isDuplicate
-                          ? languageCode === 'en'
-                            ? 'This product is repeated. Remove it or select a different one.'
-                            : 'Este producto está repetido. Quítalo o selecciona uno diferente.'
-                          : languageCode === 'en'
-                            ? 'Select a product and enter a valid quantity and unit cost, or mark it as a gift.'
-                            : 'Selecciona el producto e ingresa una cantidad y un costo unitario válidos, o márcalo como obsequio.'}
-                      </small>
+                    {isInvalid ? (
+                      <p className={styles.purchaseItemError}>{purchaseValidationError}</p>
                     ) : null}
                   </article>
                 )
               })}
-            </div>
+            </section>
 
             <div className={styles.purchaseFieldsRow}>
               <label className={styles.fieldGroup}>
@@ -3345,29 +3264,6 @@ export function RetailInventoryWorkspace() {
                 </small>
               </div>
             ) : null}
-
-            <div className={styles.purchaseTotalCard}>
-              <div>
-                <span>{copy.estimatedTotal}</span>
-                <strong>{formatCurrency(estimatedPurchaseTotal)}</strong>
-              </div>
-              <div>
-                <span>{copy.purchaseBalance}</span>
-                <strong>
-                  {formatCurrency(
-                    Math.max(
-                      estimatedPurchaseTotal -
-                        (purchaseFormState.status === 'PAID'
-                          ? estimatedPurchaseTotal
-                          : purchaseFormState.status === 'PARTIAL'
-                            ? parsePositiveNumber(purchaseFormState.amountPaid)
-                            : 0),
-                      0,
-                    ),
-                  )}
-                </strong>
-              </div>
-            </div>
 
             <div className={styles.invoiceUploadSection}>
               <div className={styles.invoiceUploadHeading}>

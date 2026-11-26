@@ -110,6 +110,7 @@ export async function importProducts(input: ProductImportMutationInput) {
     input,
     {
       accessToken: getAuthAccessToken(),
+      suppressWriteErrorNotification: true,
     },
   )
 }
