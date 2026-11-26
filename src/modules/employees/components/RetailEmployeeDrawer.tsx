@@ -3,21 +3,27 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import {
   ArrowLeft,
   BarChart3,
+  Camera,
   Check,
+  CircleCheck,
+  Clock3,
   ChevronDown,
   ChevronUp,
   DollarSign,
+  Mail,
   PackageCheck,
   ReceiptText,
+  Phone,
   Save,
   Settings2,
   ShieldCheck,
   UserCheck,
+  UserRound,
   UsersRound,
   UtensilsCrossed,
   UserPlus,
 } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import {
   employeeFormSchema,
@@ -31,7 +37,7 @@ import type {
   EmployeePermissionPreset,
   EmployeeUpdateInput,
 } from '@/modules/employees/types/employee'
-import type { AssignableUserRole } from '@/shared/constants/user-roles'
+import { assignableUserRoles, type AssignableUserRole } from '@/shared/constants/user-roles'
 import { AvatarUploadField } from '@/shared/components/ui/AvatarUploadField'
 import { AppButton } from '@/shared/components/ui/AppButton'
 import { ConfirmDialog } from '@/shared/components/ui/ConfirmDialog'
@@ -44,7 +50,6 @@ import styles from './RetailEmployeeDrawer.module.css'
 type RetailRoleOption = {
   role: AssignableUserRole
   label: string
-  presetId: string
 }
 
 type RetailEmployeeDrawerProps = {
@@ -73,9 +78,9 @@ type PendingEmployeeConfirmation = {
 }
 
 const primaryRetailRoleOptions: RetailRoleOption[] = [
-  { role: 'ADMIN', label: 'Administrador', presetId: 'ADMINISTRATOR' },
-  { role: 'SELLER', label: 'Mesero o vendedor', presetId: 'SELLER_OPERATOR' },
-  { role: 'STAFF', label: 'Domiciliario', presetId: 'SELLER_OPERATOR' },
+  { role: 'ADMIN', label: 'Administrador' },
+  { role: 'SELLER', label: 'Mesero o vendedor' },
+  { role: 'STAFF', label: 'Domiciliario' },
 ]
 
 const fallbackRoleLabels: Partial<Record<AssignableUserRole, string>> = {
@@ -86,12 +91,12 @@ const fallbackRoleLabels: Partial<Record<AssignableUserRole, string>> = {
 
 const permissionGroupLabels: Record<string, string> = {
   admin: 'Configuraciones',
-  cash: 'Caja',
+  cash: 'Caja y gastos',
   catalog: 'Inventario',
   contacts: 'Clientes y proveedores',
   finance: 'Reportes',
   operations: 'Caja',
-  sales: 'Ventas y gastos',
+  sales: 'Ventas',
   tables: 'Mesas',
 }
 
@@ -111,16 +116,16 @@ const permissionLabels: Record<string, string> = {
   'receivables.manage': 'Gestionar cuentas por cobrar',
   'reports.export': 'Exportar reportes',
   'reports.view': 'Ver reportes',
-  'sales.create': 'Registrar ventas y gastos',
-  'sales.delete': 'Eliminar ventas y gastos',
-  'sales.edit': 'Editar o eliminar ventas y gastos',
+  'sales.create': 'Registrar ventas',
+  'sales.delete': 'Anular ventas',
+  'sales.edit': 'Editar ventas',
   'sales.view': 'Visualizar movimientos',
   'settings.manage': 'Modificar configuraciones',
   'suppliers.manage': 'Crear y editar proveedores',
   'suppliers.view': 'Ver proveedores',
   'tables.manage': 'Crear y administrar mesas',
   'tables.view': 'Ver mesas',
-  'team.manage': 'Crear empleados y editar permisos',
+  'team.manage': 'Crear empleados, editar perfiles y retirar accesos',
 }
 
 function getApiErrorMessage(error: unknown) {
@@ -143,25 +148,9 @@ function getRetailRoleLabel(role: AssignableUserRole) {
   )
 }
 
-function getRetailRolePresetId(role: AssignableUserRole) {
-  return (
-    primaryRetailRoleOptions.find((option) => option.role === role)?.presetId ??
-    (role === 'ACCOUNTANT' ? 'ACCOUNTING_CONTROL' : 'SELLER_OPERATOR')
-  )
-}
-
 function getRoleForForm(employee: Employee | null): AssignableUserRole {
   const role = employee?.role
-
-  if (role === 'ADMIN' || role === 'SELLER' || role === 'STAFF') {
-    return role
-  }
-
-  if (role === 'MANAGER') {
-    return 'ADMIN'
-  }
-
-  return 'SELLER'
+  return role && role !== 'OWNER' && assignableUserRoles.includes(role) ? role : 'SELLER'
 }
 
 function getDefaultValues(employee: Employee | null): EmployeeFormValues {
@@ -192,7 +181,6 @@ function getAvailableRetailRoles(
     options.push({
       role: selectedRole,
       label: getRetailRoleLabel(selectedRole),
-      presetId: getRetailRolePresetId(selectedRole),
     })
   }
 
@@ -203,14 +191,7 @@ function getPresetForRole(
   presets: EmployeePermissionPreset[],
   role: AssignableUserRole,
 ) {
-  const presetId = getRetailRolePresetId(role)
-
-  return (
-    presets.find((preset) => preset.id === presetId) ??
-    presets.find((preset) => preset.recommendedRoles.includes(role)) ??
-    presets[0] ??
-    null
-  )
+  return presets.find((preset) => preset.recommendedRoles.includes(role)) ?? null
 }
 
 function normalizePhone(phone: string) {
@@ -275,12 +256,9 @@ function EmployeePermissionsModal({
   roleLabel,
   onClose,
 }: EmployeePermissionsModalProps) {
-  const allPermissionKeys = useMemo(
-    () =>
-      preset.permissionGroups.flatMap((group) =>
-        group.permissions.map((permission) => permission.key),
-      ),
-    [preset],
+  const permissionCount = preset.permissionGroups.reduce(
+    (total, group) => total + group.permissions.length,
+    0,
   )
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(
     () => getInitialExpandedGroups(preset),
@@ -319,22 +297,32 @@ function EmployeePermissionsModal({
             <ShieldCheck aria-hidden="true" />
           </span>
           <div className={styles.modalHeaderCopy}>
-            <span className={styles.modalEyebrow}>Control de acceso</span>
             <h3 className={styles.modalTitle}>
               Permisos de {roleLabel.toLowerCase()}
             </h3>
             <p className={styles.modalDescription}>
-              Consulta lo que podrá hacer esta persona con el rol seleccionado.
+              Acciones asociadas a este rol. La disponibilidad depende de los módulos del negocio.
             </p>
           </div>
         </div>
 
         <div className={styles.permissionsSummary}>
           <div>
-            <strong>{allPermissionKeys.length}</strong>
-            <span>permisos incluidos</span>
+            <strong>{permissionCount}</strong>
+            <span>{permissionCount === 1 ? 'permiso' : 'permisos'} en {preset.permissionGroups.length} áreas</span>
           </div>
-          <span className={styles.roleBadge}>{roleLabel}</span>
+          <button
+            autoFocus
+            className={styles.expandPermissions}
+            type="button"
+            onClick={() => setExpandedGroups(
+              expandedGroups.size === preset.permissionGroups.length
+                ? new Set()
+                : new Set(preset.permissionGroups.map((group) => group.id)),
+            )}
+          >
+            {expandedGroups.size === preset.permissionGroups.length ? 'Contraer todo' : 'Expandir todo'}
+          </button>
         </div>
 
         <div className={styles.permissionsList}>
@@ -348,12 +336,6 @@ function EmployeePermissionsModal({
                 key={group.id}
               >
                 <div className={styles.permissionGroupHeader}>
-                  <span
-                    aria-hidden="true"
-                    className={styles.permissionCheckActive}
-                  >
-                    <Check />
-                  </span>
                   <button
                     className={styles.permissionGroupToggle}
                     aria-controls={`permission-group-${group.id}`}
@@ -379,38 +361,31 @@ function EmployeePermissionsModal({
                   </button>
                 </div>
 
-                {isExpanded ? (
-                  <div
-                    className={styles.permissionItems}
-                    id={`permission-group-${group.id}`}
-                  >
-                    {group.permissions.map((permission) => (
-                        <div
-                          className={`${styles.permissionItem} ${styles.permissionItemSelected}`}
-                          key={permission.key}
-                        >
-                          <span className={styles.permissionItemCheckActive}>
-                            <Check />
-                          </span>
-                          <span>{getPermissionLabel(permission)}</span>
-                        </div>
-                    ))}
-                  </div>
-                ) : null}
+                <ul
+                  className={styles.permissionItems}
+                  hidden={!isExpanded}
+                  id={`permission-group-${group.id}`}
+                >
+                  {isExpanded ? group.permissions.map((permission) => (
+                    <li className={styles.permissionItem} key={permission.key}>
+                      <Check aria-hidden="true" />
+                      <span>{getPermissionLabel(permission)}</span>
+                    </li>
+                  )) : null}
+                </ul>
               </article>
             )
           })}
         </div>
 
         <div className={styles.permissionsFooter}>
-          <span>Estos permisos se asignan automáticamente al elegir este rol.</span>
           <AppButton
             fullWidth
             startIcon={<ShieldCheck aria-hidden="true" size={18} />}
             type="button"
             onClick={onClose}
           >
-            Entendido
+            Volver al formulario
           </AppButton>
         </div>
     </ModalShell>
@@ -431,6 +406,7 @@ export function RetailEmployeeDrawer({
   const [permissionRole, setPermissionRole] = useState<AssignableUserRole | null>(
     null,
   )
+  const permissionTrigger = useRef<HTMLButtonElement | null>(null)
   const [pendingConfirmation, setPendingConfirmation] =
     useState<PendingEmployeeConfirmation | null>(null)
   const {
@@ -441,13 +417,15 @@ export function RetailEmployeeDrawer({
     setError,
     setValue,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<EmployeeFormValues>({
     defaultValues: getDefaultValues(employee),
     resolver: zodResolver(employeeFormSchema),
   })
   const selectedRole = watch('role')
   const roleOptions = getAvailableRetailRoles(roles, selectedRole)
+  const selectedPermissions = getPresetForRole(presets, selectedRole)
+  const employeeEmail = employee && !employee.email.endsWith('@users.cashgo.local') ? employee.email : null
   const drawerTitle = isEditing ? 'Editar empleado' : 'Crear empleado'
   const formId = 'retail-employee-form'
   const permissionPreset = permissionRole
@@ -475,6 +453,16 @@ export function RetailEmployeeDrawer({
       shouldDirty: true,
       shouldValidate: true,
     })
+  }
+
+  function showPermissions(role: AssignableUserRole, trigger: HTMLButtonElement) {
+    permissionTrigger.current = trigger
+    setPermissionRole(role)
+  }
+
+  function closePermissions() {
+    setPermissionRole(null)
+    permissionTrigger.current?.focus()
   }
 
   function handleAvatarChange(file: File | null) {
@@ -565,7 +553,9 @@ export function RetailEmployeeDrawer({
         ariaLabel={drawerTitle}
         bodyClassName={styles.drawerBody}
         className={styles.drawerBackdrop}
-        confirmClose
+        confirmClose={isDirty || Boolean(avatarUpload.file)}
+        isCloseDisabled={isSubmitting}
+        description={isEditing ? 'Actualiza el perfil y revisa el acceso al negocio.' : 'Completa el perfil y envía el acceso por correo.'}
         closeButtonClassName={styles.backButton}
         closeButtonPlacement="start"
         closeContent={<ArrowLeft />}
@@ -596,128 +586,167 @@ export function RetailEmployeeDrawer({
         title={drawerTitle}
         onClose={onClose}
       >
+        {employee ? (
+          <section className={styles.accessPanel} aria-label="Estado del acceso">
+            <span
+              className={styles.accessIcon}
+              data-active={employee.activationStatus === 'ACTIVE'}
+            >
+              {employee.activationStatus === 'ACTIVE'
+                ? <CircleCheck aria-hidden="true" />
+                : <Clock3 aria-hidden="true" />}
+            </span>
+            <div>
+              <strong>{employee.activationStatus === 'ACTIVE' ? 'Acceso activo' : 'Activación pendiente'}</strong>
+              {employeeEmail ? <p>{employeeEmail}</p> : null}
+            </div>
+          </section>
+        ) : null}
         {employee?.canInviteAccess ? (
           <EmployeeAccessInvitation key={employee.id} employee={employee} />
         ) : null}
         <form className={styles.form} id={formId} noValidate onSubmit={submitEmployee}>
           <AvatarUploadField
-            alt="Avatar del empleado"
+            alt="Foto del empleado"
+            className={styles.avatarCard}
+            changeLabel="Cambiar foto"
             disabled={isSubmitting}
+            hint="Se muestra junto a su nombre en el equipo."
             imageUrl={visibleAvatarUrl}
+            placeholderIcon={<UserRound />}
+            trailingIcon={<Camera />}
+            uploadLabel="Agregar foto"
+            variant="card"
             onSelectFile={handleAvatarChange}
           />
 
-          <label className={styles.field}>
-            <span className={styles.label}>Nombre *</span>
-            <input
-              aria-invalid={Boolean(errors.name)}
-              className={styles.input}
-              placeholder="Martha"
-              type="text"
-              {...register('name')}
-            />
-            {errors.name ? (
-              <span className={styles.errorText}>{errors.name.message}</span>
-            ) : null}
-          </label>
-
-          {!isEditing ? (
+          <section className={styles.formSection} aria-label="Datos de contacto">
+            <h3><Mail aria-hidden="true" /> Datos de contacto</h3>
             <label className={styles.field}>
-              <span className={styles.label}>Correo del empleado *</span>
-              <input className={styles.input} type="email" autoComplete="email" {...register('email')} />
-              {errors.email ? <span className={styles.errorText}>{errors.email.message}</span> : null}
-            </label>
-          ) : null}
-
-          <label className={styles.field}>
-            <span className={styles.label}>Celular del empleado (opcional)</span>
-            <span className={styles.phoneField}>
-              <span className={styles.countrySelect}>
-                <span className={styles.flagColombia} aria-hidden="true" />
-                <ChevronDown />
-              </span>
+              <span className={styles.label}>Nombre *</span>
               <input
-                aria-invalid={Boolean(errors.phone)}
-                className={styles.phoneInput}
-                inputMode="tel"
-                placeholder="3176469300"
-                type="tel"
-                {...register('phone')}
+                aria-invalid={Boolean(errors.name)}
+                className={styles.input}
+                placeholder="Martha"
+                type="text"
+                {...register('name')}
               />
-            </span>
-            {errors.phone ? (
-              <span className={styles.errorText}>{errors.phone.message}</span>
+              {errors.name ? (
+                <span className={styles.errorText}>{errors.name.message}</span>
+              ) : null}
+            </label>
+
+            {!isEditing ? (
+              <label className={styles.field}>
+                <span className={styles.label}>Correo del empleado *</span>
+                <input aria-invalid={Boolean(errors.email)} className={styles.input} type="email" autoComplete="email" {...register('email')} />
+                <small className={styles.fieldHint}>Aquí recibirá el enlace para crear su contraseña.</small>
+                {errors.email ? <span className={styles.errorText}>{errors.email.message}</span> : null}
+              </label>
             ) : null}
-          </label>
 
-          <div className={styles.field}>
-            <span className={styles.label}>Rol *</span>
-            <div className={styles.roleSelectWrapper}>
-              <button
-                aria-expanded={isRoleMenuOpen}
-                className={styles.roleSelectButton}
-                type="button"
-                onClick={() => setRoleMenuOpen((isOpenMenu) => !isOpenMenu)}
-              >
-                <span className={styles.roleSelectValue}>
-                  <span className={styles.roleSelectIcon}>
-                    <UserCheck aria-hidden="true" />
-                  </span>
-                  <span className={styles.roleSelectCopy}>
-                    <strong>
-                      {selectedRole
-                        ? getRetailRoleLabel(selectedRole)
-                        : 'Selecciona un rol'}
-                    </strong>
-                    <small>Perfil de acceso del empleado</small>
-                  </span>
-                </span>
-                <span className={styles.roleSelectChevron}>
-                  {isRoleMenuOpen ? <ChevronUp /> : <ChevronDown />}
-                </span>
-              </button>
+            <label className={styles.field}>
+              <span className={styles.label}>Celular del empleado (opcional)</span>
+              <span className={styles.phoneField}>
+                <span className={styles.phoneIcon}><Phone aria-hidden="true" /></span>
+                <input
+                  aria-invalid={Boolean(errors.phone)}
+                  className={styles.phoneInput}
+                  inputMode="tel"
+                  autoComplete="tel"
+                  placeholder="300 123 4567"
+                  type="tel"
+                  {...register('phone')}
+                />
+              </span>
+              <small className={styles.fieldHint}>Usamos +57 para números locales. También puedes escribir el número con su indicativo.</small>
+              {errors.phone ? (
+                <span className={styles.errorText}>{errors.phone.message}</span>
+              ) : null}
+            </label>
+          </section>
 
-              {isRoleMenuOpen ? (
-                <div className={styles.roleMenu}>
-                  {roleOptions.map((option) => (
-                    <div className={styles.roleOption} key={option.role}>
-                      <button
-                        className={styles.roleChoiceButton}
-                        type="button"
-                        onClick={() => {
-                          selectRole(option.role)
-                          setRoleMenuOpen(false)
-                        }}
-                      >
-                        <span className={styles.roleOptionIcon}>
-                          <UserCheck aria-hidden="true" />
-                        </span>
-                        <span>{option.label}</span>
-                        {option.role === selectedRole ? (
-                          <Check className={styles.roleSelectedIcon} aria-hidden="true" />
+          <section className={styles.formSection} aria-label="Rol y permisos">
+            <h3><ShieldCheck aria-hidden="true" /> Rol y permisos</h3>
+            <div className={styles.field}>
+              <span className={styles.label} id="retail-employee-role-label">Rol *</span>
+              <div className={styles.roleSelectWrapper}>
+                <button
+                  aria-expanded={isRoleMenuOpen}
+                  aria-controls="retail-employee-role-options"
+                  aria-labelledby="retail-employee-role-label retail-employee-role-value"
+                  className={styles.roleSelectButton}
+                  type="button"
+                  onClick={() => setRoleMenuOpen((isOpenMenu) => !isOpenMenu)}
+                >
+                  <span className={styles.roleSelectValue}>
+                    <span className={styles.roleSelectIcon}>
+                      <UserCheck aria-hidden="true" />
+                    </span>
+                    <span className={styles.roleSelectCopy}>
+                      <strong id="retail-employee-role-value">
+                        {selectedRole
+                          ? getRetailRoleLabel(selectedRole)
+                          : 'Selecciona un rol'}
+                      </strong>
+                      <small>Perfil de acceso del empleado</small>
+                    </span>
+                  </span>
+                  <span className={styles.roleSelectChevron}>
+                    {isRoleMenuOpen ? <ChevronUp /> : <ChevronDown />}
+                  </span>
+                </button>
+
+                {isRoleMenuOpen ? (
+                  <div className={styles.roleMenu} id="retail-employee-role-options">
+                    {roleOptions.map((option) => (
+                      <div className={styles.roleOption} key={option.role}>
+                        <button
+                          className={styles.roleChoiceButton}
+                          type="button"
+                          onClick={() => {
+                            selectRole(option.role)
+                            setRoleMenuOpen(false)
+                          }}
+                        >
+                          <span className={styles.roleOptionIcon}>
+                            <UserCheck aria-hidden="true" />
+                          </span>
+                          <span>{option.label}</span>
+                          {option.role === selectedRole ? (
+                            <Check className={styles.roleSelectedIcon} aria-hidden="true" />
+                          ) : null}
+                        </button>
+                        {getPresetForRole(presets, option.role) ? (
+                          <button
+                            aria-label={`Ver permisos de ${option.label}`}
+                            className={styles.permissionLink}
+                            type="button"
+                            onClick={(event) => showPermissions(option.role, event.currentTarget)}
+                          >
+                            Ver permisos
+                          </button>
                         ) : null}
-                      </button>
-                      <button
-                        className={styles.permissionLink}
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          selectRole(option.role)
-                          setPermissionRole(option.role)
-                          setRoleMenuOpen(false)
-                        }}
-                      >
-                        Ver permisos
-                      </button>
-                    </div>
-                  ))}
-                </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+              {errors.role ? (
+                <span className={styles.errorText}>{errors.role.message}</span>
               ) : null}
             </div>
-            {errors.role ? (
-              <span className={styles.errorText}>{errors.role.message}</span>
+            {selectedPermissions ? (
+              <button
+                className={styles.selectedPermissionLink}
+                type="button"
+                onClick={(event) => showPermissions(selectedRole, event.currentTarget)}
+              >
+                <ShieldCheck aria-hidden="true" size={17} />
+                Ver permisos del rol seleccionado
+              </button>
             ) : null}
-          </div>
+          </section>
 
           {errors.root?.message ? (
             <div className={styles.errorBanner} role="alert">
@@ -731,7 +760,7 @@ export function RetailEmployeeDrawer({
         <EmployeePermissionsModal
           preset={permissionPreset}
           roleLabel={getRetailRoleLabel(permissionRole)}
-          onClose={() => setPermissionRole(null)}
+          onClose={closePermissions}
         />
       ) : null}
 

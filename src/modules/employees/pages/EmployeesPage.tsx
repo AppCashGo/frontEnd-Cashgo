@@ -1,6 +1,6 @@
 import { useToast } from "@/shared/hooks/use-toast"
 import { useDeferredValue, useEffect, useState } from 'react'
-import { CheckCircle, Pencil, Trash2 } from 'lucide-react'
+import { CheckCircle, Clock3, MailPlus, Pencil, Search, Trash2, UserPlus, UsersRound } from 'lucide-react'
 import { EmployeeFormDrawer } from '@/modules/employees/components/EmployeeFormDrawer'
 import { EmployeesRoster } from '@/modules/employees/components/EmployeesRoster'
 import { RetailEmployeeDrawer } from '@/modules/employees/components/RetailEmployeeDrawer'
@@ -20,17 +20,19 @@ import type {
 } from '@/modules/employees/types/employee'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
+import { WorkspaceBusinessTitle } from '@/shared/components/retail/WorkspaceBusinessTitle'
+import workspaceVisual from '@/shared/components/retail/WorkspaceVisual.module.css'
+import { SalesCustomerAvatar } from '@/modules/sales/components/SalesVisuals'
 import { RetailTableShell } from '@/shared/components/retail/RetailTableShell'
 import { TableStateRow } from '@/shared/components/retail/TableStateRow'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { useBusinessNavigationPreset } from '@/shared/hooks/use-business-navigation-preset'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { MetricCard } from '@/shared/components/ui/MetricCard'
-import { isAdminWorkspaceRole } from '@/shared/constants/user-roles'
+import { isAdminWorkspaceRole, userRoleLabels } from '@/shared/constants/user-roles'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { joinClassNames } from '@/shared/utils/join-class-names'
-import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import styles from './EmployeesPage.module.css'
 
 function matchesEmployeeSearch(employee: Employee, query: string) {
@@ -44,7 +46,8 @@ function matchesEmployeeSearch(employee: Employee, query: string) {
     employee.name.toLowerCase().includes(normalizedQuery) ||
     employee.email.toLowerCase().includes(normalizedQuery) ||
     (employee.phone ?? '').toLowerCase().includes(normalizedQuery) ||
-    employee.role.toLowerCase().includes(normalizedQuery)
+    employee.role.toLowerCase().includes(normalizedQuery) ||
+    getRetailEmployeeRoleLabel(employee).toLowerCase().includes(normalizedQuery)
   )
 }
 
@@ -53,15 +56,11 @@ function getRetailEmployeeRoleLabel(employee: Employee) {
     return 'Propietario'
   }
 
-  if (employee.role === 'ADMIN' || employee.role === 'MANAGER') {
-    return 'Administrador'
-  }
-
   if (employee.role === 'STAFF') {
     return 'Domiciliario'
   }
 
-  return 'Mesero o vendedor'
+  return employee.role === 'SELLER' ? 'Mesero o vendedor' : userRoleLabels[employee.role]
 }
 
 function getRetailEmployeeRoleTone(employee: Employee) {
@@ -87,6 +86,7 @@ export function EmployeesPage() {
   const currentUser = useAuthSessionStore((state) => state.user)
   const canManageTeam = isAdminWorkspaceRole(currentUser?.role)
   const [searchValue, setSearchValue] = useState('')
+  const [accessFilter, setAccessFilter] = useState<'all' | 'active' | 'pending'>('all')
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(
     null,
   )
@@ -259,32 +259,68 @@ export function EmployeesPage() {
   }
 
   if (isRetailPreset) {
+    const filteredEmployees = visibleEmployees.filter((employee) =>
+      accessFilter === 'all' || (employee.activationStatus === 'ACTIVE') === (accessFilter === 'active'),
+    )
+
     return (
       <>
         {confirmationDialog}
         <RetailPageLayout
-          accent="success"
-          bodyVariant="flush"
-          title="Empleados"
+          headerClassName={`${workspaceVisual.hero} ${workspaceVisual.catalogHeader}`}
+          title={<WorkspaceBusinessTitle>Empleados</WorkspaceBusinessTitle>}
+          meta={<span>Gestiona los accesos y roles de tu equipo.</span>}
           actions={
             <button
-              className={retailStyles.buttonDark}
+              className={`${retailStyles.buttonDark} ${workspaceVisual.catalogAction} ${workspaceVisual.catalogPrimary}`}
               type="button"
               onClick={startCreateEmployee}
             >
+              <UserPlus aria-hidden="true" size={18} />
               Crear empleado
             </button>
           }
         >
-          <section className={styles.retailEmployeesWorkspace}>
+          <section className={styles.retailEmployeesWorkspace} aria-label="Equipo del negocio">
+            <div className={styles.teamSummary} role="group" aria-label="Filtrar por estado de acceso">
+              {([
+                { id: 'all', label: 'Todo el equipo', count: employees.length, Icon: UsersRound },
+                { id: 'active', label: 'Accesos activos', count: activeEmployees, Icon: CheckCircle },
+                { id: 'pending', label: 'Activación pendiente', count: pendingEmployees + phoneSetupNeeded, Icon: Clock3 },
+              ] as const).map(({ id, label, count, Icon }) => (
+                <button
+                  aria-pressed={accessFilter === id}
+                  className={styles.teamMetric}
+                  data-tone={id}
+                  key={id}
+                  type="button"
+                  onClick={() => setAccessFilter(id)}
+                >
+                  <span className={styles.metricIcon}><Icon aria-hidden="true" /></span>
+                  <span><strong>{count}</strong>{label}</span>
+                </button>
+              ))}
+            </div>
             <RetailTableShell
               isRefreshing={employeesQuery.isFetching && !employeesQuery.isLoading}
               title="Empleados registrados"
+              toolbar={
+                <label className={styles.teamSearch}>
+                  <Search aria-hidden="true" size={18} />
+                  <input
+                    aria-label="Buscar empleados"
+                    placeholder="Nombre, correo, celular o rol"
+                    type="search"
+                    value={searchValue}
+                    onChange={(event) => setSearchValue(event.target.value)}
+                  />
+                </label>
+              }
             >
               <table className={retailStyles.table}>
                 <thead>
                   <tr>
-                    <th>Nombre</th>
+                    <th>Empleado</th>
                     <th>Celular</th>
                     <th>Rol</th>
                     <th>Estado</th>
@@ -320,35 +356,21 @@ export function EmployeesPage() {
 
                   {!employeesQuery.isLoading &&
                   !employeesQuery.isError &&
-                  visibleEmployees.length > 0
-                    ? visibleEmployees.map((employee) => {
+                  filteredEmployees.length > 0
+                    ? filteredEmployees.map((employee) => {
                         const canEditEmployee = employee.role !== 'OWNER'
-                        const avatarUrl = resolveApiAssetUrl(
-                          employee.avatarUrl,
-                        )
+                        const email = employee.email.endsWith('@users.cashgo.local') ? null : employee.email
+                        const active = employee.activationStatus === 'ACTIVE'
 
                         return (
                           <tr key={employee.id}>
-                            <td data-label="Nombre">
+                            <td data-label="Empleado">
                               <span className={styles.retailEmployeeIdentity}>
-                                <span
-                                  className={styles.retailEmployeeAvatar}
-                                  aria-hidden="true"
-                                >
-                                  {avatarUrl ? (
-                                    <img
-                                      alt=""
-                                      decoding="async"
-                                      loading="lazy"
-                                      src={avatarUrl}
-                                    />
-                                  ) : (
-                                    employee.name.charAt(0).toUpperCase()
-                                  )}
+                                <SalesCustomerAvatar name={employee.name} avatarUrl={employee.avatarUrl} />
+                                <span className={styles.identityCopy}>
+                                  <strong className={styles.retailEmployeeName}>{employee.name}</strong>
+                                  {email ? <small>{email}</small> : null}
                                 </span>
-                                <strong className={styles.retailEmployeeName}>
-                                  {employee.name}
-                                </strong>
                               </span>
                             </td>
                             <td data-label="Celular">
@@ -365,43 +387,36 @@ export function EmployeesPage() {
                               </span>
                             </td>
                             <td data-label="Estado">
-                              <span
-                                className={
-                                  employee.activationStatus === 'ACTIVE'
-                                    ? styles.retailStatusActive
-                                    : styles.retailStatusPending
-                                }
-                              >
-                                <CheckCircle />
-                                {employee.activationStatus === 'ACTIVE'
-                                  ? 'Activo'
-                                  : 'Pendiente'}
+                              <span className={styles.retailAccessBadge} data-active={active}>
+                                {active ? <CheckCircle aria-hidden="true" /> : <Clock3 aria-hidden="true" />}
+                                {active ? 'Activo' : 'Pendiente'}
                               </span>
                             </td>
                             <td data-label="Acciones">
-                              {canEditEmployee ? (
-                                <button
-                                  className={styles.retailEditButton}
-                                  type="button"
-                                  onClick={() => startEditEmployee(employee.id)}
-                                >
-                                  <Pencil />
-                                  Editar
-                                  <span aria-hidden="true">›</span>
-                                </button>
-                              ) : null}
-                              {canRemoveEmployee(employee) ? (
-                                <button
-                                  aria-label={`Eliminar a ${employee.name}`}
-                                  className={`${styles.retailEditButton} ${styles.retailDeleteButton}`}
-                                  disabled={deleteEmployeeMutation.isPending}
-                                  type="button"
-                                  onClick={() => void handleDeleteEmployee(employee)}
-                                >
-                                  <Trash2 aria-hidden="true" />
-                                  Eliminar
-                                </button>
-                              ) : null}
+                              <div className={styles.teamRowActions}>
+                                {canEditEmployee ? (
+                                  <button
+                                    className={styles.retailEditButton}
+                                    type="button"
+                                    onClick={() => startEditEmployee(employee.id)}
+                                  >
+                                    {employee.canInviteAccess ? <MailPlus aria-hidden="true" /> : <Pencil aria-hidden="true" />}
+                                    {employee.canInviteAccess ? 'Gestionar acceso' : 'Editar'}
+                                  </button>
+                                ) : null}
+                                {canRemoveEmployee(employee) ? (
+                                  <button
+                                    aria-label={`Eliminar a ${employee.name}`}
+                                    className={`${styles.retailEditButton} ${styles.retailDeleteButton}`}
+                                    disabled={deleteEmployeeMutation.isPending}
+                                    type="button"
+                                    onClick={() => void handleDeleteEmployee(employee)}
+                                  >
+                                    <Trash2 aria-hidden="true" />
+                                    Eliminar
+                                  </button>
+                                ) : null}
+                              </div>
                             </td>
                           </tr>
                         )
@@ -410,11 +425,11 @@ export function EmployeesPage() {
 
                   {!employeesQuery.isLoading &&
                   !employeesQuery.isError &&
-                  visibleEmployees.length === 0 ? (
+                  filteredEmployees.length === 0 ? (
                     <TableStateRow
                       colSpan={5}
-                      description="Crea empleados para asignar roles, permisos y responsabilidades dentro del negocio."
-                      title="Aun no tienes empleados creados."
+                      description={employees.length ? 'Cambia la búsqueda o selecciona otro estado.' : 'Crea un empleado para enviarle su acceso por correo.'}
+                      title={employees.length ? 'No encontramos empleados' : 'Aún no hay empleados'}
                     />
                   ) : null}
                 </tbody>

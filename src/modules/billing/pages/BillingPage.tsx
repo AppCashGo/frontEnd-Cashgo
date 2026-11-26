@@ -1,3 +1,5 @@
+import { WorkspaceBusinessTitle } from "@/shared/components/retail/WorkspaceBusinessTitle";
+import workspaceVisual from "@/shared/components/retail/WorkspaceVisual.module.css";
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useDeferredValue, useMemo, useState } from "react";
 import { Download, FileCog, ReceiptText } from "lucide-react";
@@ -138,8 +140,8 @@ export function BillingPage() {
     (accumulator, document) => accumulator + document.balance,
     0,
   );
-  const approvedCount = documents.filter(
-    (document) => document.invoiceStatus === "APPROVED",
+  const overdueCount = documents.filter(
+    (document) => document.paymentStatus === "OVERDUE",
   ).length;
   const hasError =
     billingQuery.isError ||
@@ -224,9 +226,9 @@ export function BillingPage() {
 
   return (
     <div className={styles.page}>
-      <section className={styles.hero}>
+      <section className={`${styles.hero} ${workspaceVisual.hero}`}>
         <div className={styles.heroCopy}>
-          <h2 className={styles.title}>{copy.pageTitle}</h2>
+          <h1 className={styles.title}><WorkspaceBusinessTitle>{copy.pageTitle}</WorkspaceBusinessTitle></h1>
           <p className={styles.description}>{copy.pageDescription}</p>
         </div>
 
@@ -265,8 +267,8 @@ export function BillingPage() {
             {configuration?.taxId ?? "—"}
           </p>
         </div>
-        <div className={styles.configurationCard}>
-          <p className={styles.configurationLabel}>{copy.summaryResolution}</p>
+        <div className={styles.configurationCard} data-missing={!configuration?.resolution}>
+          <p className={styles.configurationLabel}><FileCog aria-hidden="true" /> {copy.summaryResolution}</p>
           <p className={styles.configurationValue}>
             {configuration?.resolution?.resolution ?? copy.summaryMissingResolution}
           </p>
@@ -306,8 +308,8 @@ export function BillingPage() {
         <MetricCard
           hint={copy.overdueCountHint}
           label={copy.overdueCount}
-          tone={approvedCount > 0 ? "success" : "default"}
-          value={approvedCount.toString()}
+          tone={overdueCount > 0 ? "alert" : "default"}
+          value={overdueCount.toString()}
         />
       </div>
 
@@ -492,6 +494,7 @@ export function BillingPage() {
                   <tr>
                     <td colSpan={9}>
                       <RetailEmptyState
+                        icon={<ReceiptText aria-hidden="true" />}
                         description={copy.emptyDescription}
                         title={copy.emptyTitle}
                       />

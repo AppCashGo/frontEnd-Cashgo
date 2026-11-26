@@ -2,12 +2,14 @@ export type BestSellingProduct = {
   productId: string
   name: string
   quantitySold: number
+  imageUrl?: string | null
 }
 
 export type LowStockAlert = {
   productId: string
   name: string
   stock: number
+  imageUrl?: string | null
 }
 
 export type QaEvidenceCounts = {

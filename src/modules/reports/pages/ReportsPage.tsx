@@ -1,3 +1,5 @@
+import { WorkspaceBusinessTitle } from "@/shared/components/retail/WorkspaceBusinessTitle";
+import workspaceVisual from "@/shared/components/retail/WorkspaceVisual.module.css";
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import {
   Banknote,
@@ -682,7 +684,7 @@ export function ReportsPage() {
   if (isRetailPreset) {
     return (
       <RetailPageLayout
-        accent="success"
+        headerClassName={workspaceVisual.hero}
         actions={
           <div className={retailPageStyles.headerTabs}>
             <button
@@ -692,6 +694,7 @@ export function ReportsPage() {
                   : retailPageStyles.headerTab
               }
               type="button"
+              aria-pressed={retailTab === 'sales'}
               onClick={() => setRetailTab('sales')}
             >
               <BarChart3 size={17} />
@@ -704,6 +707,7 @@ export function ReportsPage() {
                   : retailPageStyles.headerTab
               }
               type="button"
+              aria-pressed={retailTab === 'expenses'}
               onClick={() => setRetailTab('expenses')}
             >
               <ReceiptText size={17} />
@@ -716,6 +720,7 @@ export function ReportsPage() {
                   : retailPageStyles.headerTab
               }
               type="button"
+              aria-pressed={retailTab === 'employees'}
               onClick={() => setRetailTab('employees')}
             >
               <UsersRound size={17} />
@@ -725,7 +730,7 @@ export function ReportsPage() {
         }
         bodyClassName={retailPageStyles.body}
         bodyVariant="flush"
-        title={copy.title}
+        title={<WorkspaceBusinessTitle>{copy.title}</WorkspaceBusinessTitle>}
       >
         <div className={retailPageStyles.page}>
           <div className={retailPageStyles.filtersRow}>
@@ -812,7 +817,7 @@ export function ReportsPage() {
                   <p className={retailPageStyles.salesSummaryValue}>
                     {formatRetailCurrency(totalRevenue, languageCode)}
                   </p>
-                  <span className={retailPageStyles.trendBadge}>
+                  <span className={retailPageStyles.trendBadge} data-direction={totalRevenueTrend < 0 ? "down" : totalRevenueTrend > 0 ? "up" : "flat"}>
                     {formatRetailTrend(totalRevenueTrend, languageCode)}
                   </span>
                 </div>
@@ -834,7 +839,7 @@ export function ReportsPage() {
                   <p className={retailPageStyles.salesSummaryValue}>
                     {formatRetailCurrency(grossProfit, languageCode)}
                   </p>
-                  <span className={retailPageStyles.trendBadge}>
+                  <span className={retailPageStyles.trendBadge} data-direction={grossProfitTrend < 0 ? "down" : grossProfitTrend > 0 ? "up" : "flat"}>
                     {formatRetailTrend(grossProfitTrend, languageCode)}
                   </span>
                 </div>
@@ -918,7 +923,7 @@ export function ReportsPage() {
                             <td>
                               <div className={retailPageStyles.amountWithTrend}>
                                 <span>{formatRetailCurrency(item.revenue, languageCode)}</span>
-                                <span className={retailPageStyles.trendBadge}>
+                                <span className={retailPageStyles.trendBadge} data-direction={productTrend < 0 ? "down" : productTrend > 0 ? "up" : "flat"}>
                                   {formatRetailTrend(productTrend, languageCode)}
                                 </span>
                               </div>

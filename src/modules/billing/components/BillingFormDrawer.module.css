@@ -248,3 +248,15 @@
     grid-template-columns: 1fr;
   }
 }
+
+.noteDisclosure { padding: 0.65rem; border: 1px solid #d9e5f4; border-radius: 0.65rem; background: #f7faff; }
+.noteDisclosure summary { cursor: pointer; color: #365777; font-size: 0.85rem; font-weight: 750; }
+.noteDisclosure .textarea { margin-top: 0.55rem; }
+.invoiceSelection { display: flex; align-items: center; gap: 0.55rem; padding: 0.65rem; border-radius: 0.65rem; background: #eaf6f0; color: #215e4a; font-size: 0.8rem; }
+.invoiceSelection > span { display: grid; gap: 0.15rem; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.invoiceSelection svg, .optionHeader svg, .optionMeta svg { width: 1rem; height: 1rem; flex: 0 0 auto; }
+.optionCardSelected svg { color: #226baf; }
+.optionMeta { flex-wrap: wrap; }
+.optionMeta span { display: inline-flex; align-items: center; gap: 0.28rem; }
+.searchInput input { border: 0; box-shadow: none; }
+.availableSalesError { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; justify-content: space-between; padding: 0.7rem; border-radius: 0.6rem; background: #fff0eb; color: #944431; }

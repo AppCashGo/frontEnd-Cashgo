@@ -3,7 +3,7 @@ import type {
   ExpenseCategory,
   ExpenseStatus,
 } from '@/modules/expenses/types/expense'
-import { ListFilter, Search, X } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import styles from './ExpensesFiltersBar.module.css'
 import { getExpenseCategoryLabel } from '@/modules/expenses/utils/expense-category-label'
@@ -60,6 +60,7 @@ export function ExpensesFiltersBar({
         <label className={styles.field}>
           <span className={styles.label}>Estado</span>
           <SearchableSelect
+            aria-label="Estado del gasto"
             className={styles.select}
             value={selectedStatus}
             onChange={(event) =>
@@ -76,6 +77,7 @@ export function ExpensesFiltersBar({
         <label className={styles.field}>
           <span className={styles.label}>Categoría</span>
           <SearchableSelect
+            aria-label="Categoría del gasto"
             className={styles.select}
             value={selectedCategoryId}
             onChange={(event) => onCategoryChange(event.target.value)}
@@ -115,8 +117,8 @@ export function ExpensesFiltersBar({
           type="button"
           onClick={onReset}
         >
-          {hasActiveFilters ? <X aria-hidden="true" size={17} /> : <ListFilter aria-hidden="true" size={17} />}
-          {hasActiveFilters ? 'Limpiar' : 'Filtrar'}
+          <X aria-hidden="true" size={17} />
+          Limpiar filtros
         </button>
       </div>
     </SurfaceCard>

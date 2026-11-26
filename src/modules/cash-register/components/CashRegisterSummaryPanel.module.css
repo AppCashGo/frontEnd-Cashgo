@@ -1,131 +1,436 @@
-.panel {
+.panel,
+.methods {
   display: grid;
-  gap: 1.25rem;
-  padding: 1.25rem;
-}
-
-.header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
   gap: 1rem;
+  min-width: 0;
 }
 
-.eyebrow {
-  margin: 0 0 0.35rem;
-  color: #7b819b;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.title {
-  margin: 0;
-  color: #1b2238;
-  font-size: 1.05rem;
-}
-
-.differencePill {
-  border-radius: 999px;
-  background: #edf3e8;
-  color: #376041;
-  font-size: 0.75rem;
-  font-weight: 800;
-  padding: 0.45rem 0.75rem;
-  white-space: nowrap;
-}
-
-.differencePillAlert {
-  background: #fdeaea;
-  color: #ac4545;
-}
-
-.differencePillAccent {
-  background: #f3f0ff;
-  color: #5d4ab2;
-}
-
-.metaGrid {
+.overview {
   display: grid;
-  gap: 0.85rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
 }
 
-.metaItem {
-  border: 1px solid #ebedf6;
+.balance,
+.metrics,
+.adjustments,
+.methodRows {
+  margin: 0;
+}
+
+.balance {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-rows: 1fr auto auto;
+  gap: 0.45rem;
+  min-height: 11.5rem;
+  padding: clamp(1rem, 2vw, 1.4rem);
+  border: 1px solid #294a77;
   border-radius: 1rem;
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.9rem;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, #0c2041 0%, #0c2041ed 31%, #0c20413b 72%, #0c204114),
+    linear-gradient(0deg, #08152ddb, #08152d00 55%),
+    #102347 url("../assets/cash-register-balance.webp") right center / cover no-repeat;
+  box-shadow: 0 0.6rem 1.5rem #11274b24;
+  color: #fff;
 }
 
-.metaLabel {
-  color: #7f869f;
-  font-size: 0.76rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.metaValue {
-  color: #1c2237;
-  font-size: 0.95rem;
-  font-weight: 700;
-  line-height: 1.35;
-}
-
-.metricsStack,
-.paymentList {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.metricRow,
-.paymentRow {
-  align-items: center;
+.balance dt,
+.metric dt {
   display: flex;
-  gap: 1rem;
-  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.metricRow span,
-.paymentRow span {
-  color: #4f5772;
-  font-size: 0.92rem;
+.balance dt {
+  color: #e4efff;
+  font-size: 0.83rem;
+  font-weight: 650;
 }
 
-.metricRow strong,
-.paymentRow strong {
-  color: #1d2337;
-  font-size: 0.94rem;
+.balanceMain svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: 0 0 auto;
 }
 
-.metricRowStrong {
-  border-top: 1px solid #eceef5;
-  padding-top: 0.75rem;
-}
-
-.paymentBlock {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.paymentHeader {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.paymentTitle {
-  color: #1b2238;
-  font-size: 0.95rem;
-  font-weight: 800;
-}
-
-.paymentHint,
-.emptyCopy {
-  color: #76809b;
-  font-size: 0.84rem;
-  line-height: 1.45;
+.balance dd,
+.metric dd,
+.adjustments dd,
+.methodRows dd {
   margin: 0;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.balanceMain dd {
+  margin-top: 0.45rem;
+  font-size: clamp(1.65rem, 3.2vw, 2.4rem);
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+  overflow-wrap: anywhere;
+  text-shadow: 0 2px 7px #071d3a8c;
+}
+
+.balanceOpening,
+.balanceCash {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.75rem;
+  color: #fff;
+}
+
+.balanceOpening {
+  margin-top: 0.5rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid #ffffff38;
+}
+
+.balanceOpening dt,
+.balanceOpening dd {
+  color: #d5e4fa;
+  font-size: 0.8rem;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
+}
+
+.metric {
+  --metric-tint: #eef5ff;
+  --metric-stroke: #d8e7fb;
+  --metric-chip: #dceaff;
+  --metric-ink: #215fa8;
+  display: grid;
+  align-content: center;
+  gap: 0.5rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid var(--metric-stroke);
+  border-radius: 0.85rem;
+  background: linear-gradient(150deg, var(--metric-tint), #fff);
+}
+
+.metric[data-tone="income"] {
+  --metric-tint: #eaf8f3;
+  --metric-stroke: #d7eee4;
+  --metric-chip: #d9f1e7;
+  --metric-ink: #137154;
+}
+
+.metric[data-tone="expense"] {
+  --metric-tint: #fff1ea;
+  --metric-stroke: #f5ded2;
+  --metric-chip: #fbe4da;
+  --metric-ink: #a04130;
+}
+
+.metric dt {
+  color: #485a76;
+  font-size: 0.8rem;
+  font-weight: 650;
+}
+
+.metricIcon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  background: var(--metric-chip);
+  color: var(--metric-ink);
+}
+
+.metricIcon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.methodRows dd[data-tone="danger"] {
+  color: #a63737;
+}
+
+.metric dd {
+  color: #172942;
+  font-size: clamp(1rem, 1.65vw, 1.25rem);
+  overflow-wrap: anywhere;
+}
+
+.metricHint {
+  display: block;
+  margin-top: 0.15rem;
+  color: #52637b;
+  font-size: 0.72rem;
+  font-weight: 550;
+}
+
+.adjustments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1.35rem;
+  color: #485a76;
+  font-size: 0.8rem;
+}
+
+.adjustments > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.methods {
+  gap: 0.65rem;
+}
+
+.methodsHeading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+}
+
+.methodsHeading h3 {
+  margin: 0;
+  color: #172942;
+  font-size: 1rem;
+}
+
+.methodsHeading > span {
+  color: #52637b;
+  font-size: 0.78rem;
+}
+
+.methodGrid,
+.otherMethods {
+  display: grid;
+  align-items: start;
+  gap: 0.55rem;
+}
+
+.otherMethods {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+
+.method {
+  min-width: 0;
+  border: 1px solid #dbe4f1;
+  border-radius: 0.7rem;
+  background: #fff;
+}
+
+.method[data-method="CASH"] {
+  border-color: #c7e5dd;
+  background: #f1faf6;
+}
+
+.method[data-method="CASH"] .methodIcon {
+  background: #d9f2e9;
+  color: #1a7158;
+}
+
+.method[data-method="DIGITAL_WALLET"] .methodIcon {
+  background: #ede5fb;
+  color: #6b479e;
+}
+
+.method[data-method="BANK_DEPOSIT"] .methodIcon {
+  background: #f8efdd;
+  color: #846026;
+}
+
+.method[data-method="TRANSFER"] .methodIcon {
+  background: #e1f2f8;
+  color: #266779;
+}
+
+.method summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3.2rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: inherit;
+  color: #172942;
+  cursor: pointer;
+  list-style: none;
+}
+
+.method summary::-webkit-details-marker {
+  display: none;
+}
+
+.method summary:hover {
+  background: #edf4ff;
+}
+
+.method summary:focus-visible {
+  outline: 2px solid #1c63b5;
+  outline-offset: 2px;
+}
+
+.method summary strong {
+  font-size: 0.83rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.methodIcon {
+  display: grid;
+  width: 1.9rem;
+  height: 1.9rem;
+  place-items: center;
+  border-radius: 0.45rem;
+  background: #e9f0fc;
+  color: #23578f;
+}
+
+.methodIcon svg,
+.chevron {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.methodLabel {
+  font-size: 0.83rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.method[open] .chevron {
+  transform: rotate(180deg);
+}
+
+.methodRows {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.65rem 0.75rem 0.8rem;
+  border-top: 1px solid #dbe4f1;
+  color: #485a76;
+  font-size: 0.78rem;
+}
+
+.methodRows > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.15rem 0.75rem;
+}
+
+@media (min-width: 960px) {
+  .overview,
+  .methodGrid {
+    grid-template-columns: minmax(15rem, 1fr) minmax(0, 2fr);
+  }
+}
+
+@media (max-width: 360px) {
+  .metric {
+    padding-inline: 0.55rem;
+  }
+
+  .method summary {
+    column-gap: 0.35rem;
+  }
+
+  .metric dt {
+    display: grid;
+    justify-items: start;
+    gap: 0.3rem;
+  }
+}
+
+.fundsOverview {
+  display: grid;
+  align-items: start;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+}
+
+.reserveOverview,
+.totalFunds {
+  border: 1px solid #e2e0f1;
+  border-radius: 0.65rem;
+  color: #494172;
+  background: #f8f7fd;
+  font-size: 0.85rem;
+}
+
+.reserveOverview summary,
+.totalFunds {
+  display: grid;
+  align-items: center;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.35rem 0.6rem;
+  min-height: 3.25rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.reserveOverview summary {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  border-radius: inherit;
+  cursor: pointer;
+  list-style: none;
+}
+
+.reserveOverview summary::-webkit-details-marker {
+  display: none;
+}
+
+.reserveOverview summary:hover {
+  background: #f2effb;
+}
+
+.reserveOverview summary:focus-visible {
+  outline: 2px solid #6149a4;
+  outline-offset: 2px;
+}
+
+.reserveOverview[open] summary .chevron {
+  transform: rotate(180deg);
+}
+
+.fundsLabel {
+  font-weight: 750;
+  overflow-wrap: anywhere;
+}
+
+.fundsOverview svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.fundsOverview strong {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.totalFunds {
+  color: #294b73;
+  background: #f3f7fd;
+  border-color: #dbe6f6;
+}
+
+.totalFunds small,
+.reserveDetails p {
+  display: block;
+  color: #52637b;
+  font-size: 0.76rem;
+}
+
+.reserveDetails {
+  padding: 0.6rem 0.75rem 0.8rem;
+  border-top: 1px solid #e2e0f1;
+}
+
+.reserveDetails p {
+  margin: 0 0 0.65rem;
 }

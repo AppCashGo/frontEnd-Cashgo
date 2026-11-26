@@ -37,7 +37,7 @@
   outline-offset: -3px;
 }
 
-.accordionSummary svg {
+.accordionSummary > svg {
   width: 1.05rem;
   height: 1.05rem;
   color: #111827;
@@ -258,7 +258,8 @@
   }
 
   .notificationRow {
-    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.55rem;
+    padding-inline: 0.65rem;
   }
 
   .numberField {
@@ -270,13 +271,9 @@
     width: 100%;
   }
 
-  .toggleInput {
-    grid-column: 1 / -1;
-    justify-self: end;
-  }
 
   .footer,
-  .saveButton {
+  .footer > button {
     width: 100%;
   }
 }

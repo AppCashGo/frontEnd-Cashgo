@@ -1,14 +1,18 @@
 .page {
   display: grid;
-  gap: 1.55rem;
+  gap: 1.25rem;
   color: #172033;
 }
 
 .hero {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: space-between;
   gap: 1.5rem;
+}
+
+.page .hero.hero {
+  margin: 0;
 }
 
 .heroCopy {
@@ -20,7 +24,7 @@
 .title {
   margin: 0;
   color: #101a2e;
-  font-size: clamp(2rem, 3.2vw, 2.75rem);
+  font-size: clamp(1.7rem, 2.7vw, 2.15rem);
   font-weight: 800;
   letter-spacing: -0.045em;
   line-height: 1;
@@ -29,7 +33,7 @@
 .description {
   margin: 0;
   color: #5d6679;
-  font-size: 1rem;
+  font-size: 0.93rem;
   line-height: 1.55;
 }
 
@@ -40,13 +44,13 @@
   gap: 0.65rem;
 }
 
-.primaryButton,
-.secondaryButton {
+.heroButton {
   min-height: 2.65rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.48rem;
+  border: 1px solid;
   border-radius: 0.65rem;
   padding: 0.7rem 1.15rem;
   font: inherit;
@@ -55,21 +59,10 @@
   cursor: pointer;
 }
 
-.primaryButton {
-  border: 1px solid #075acb;
-  background: #075acb;
-  color: #ffffff;
-  box-shadow: 0 0.35rem 0.75rem rgba(7, 90, 203, 0.18);
+.heroButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
-
-.secondaryButton {
-  border: 1px solid #c8d0e1;
-  background: #ffffff;
-  color: #1546a8;
-}
-
-.primaryButton:hover { background: #064fab; }
-.secondaryButton:hover { background: #f7f9fd; }
 
 .metricsGrid {
   display: grid;
@@ -80,19 +73,20 @@
 .metricCard,
 .metricCardButton {
   min-width: 0;
-  min-height: 10.5rem;
+  min-height: 9.4rem;
   display: grid;
   align-content: space-between;
   gap: 0.85rem;
   border: 1px solid #cbd3e2;
   border-radius: 0.85rem;
   padding: 1.35rem 1.45rem;
-  background: #ffffff;
+  background: linear-gradient(145deg, #eef5ff, #fff 65%);
   box-shadow: 0 2px 5px rgba(21, 32, 58, 0.04);
 }
 
 .metricCardButton {
   width: 100%;
+  background: linear-gradient(145deg, #f2eeff, #fff 65%);
   color: inherit;
   font: inherit;
   text-align: left;
@@ -116,10 +110,53 @@
   text-transform: uppercase;
 }
 
-.metricIconDanger { color: #e7a4a7; }
-.metricIconPaid { color: #316ee8; }
-.metricIconPending { color: #d1393c; }
-.metricIconCategories { color: #54617b; }
+.metricIcon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 0.65rem;
+  background: #dfedff;
+  color: #22569b;
+}
+
+.metricIcon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.metricCard[data-tone="paid"] {
+  background: linear-gradient(145deg, #eaf8f3, #fff 65%);
+}
+
+.metricCard[data-tone="paid"] .metricIcon {
+  background: #dff4e9;
+  color: #126647;
+}
+
+.metricCard[data-tone="pending"] {
+  background: linear-gradient(145deg, #fff7e6, #fff 65%);
+}
+
+.metricCard[data-tone="pending"] .metricIcon {
+  background: #ffedc8;
+  color: #794607;
+}
+
+.metricCardButton .metricIcon {
+  background: #e8defb;
+  color: #6333a0;
+}
+
+.categoryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #5d358d;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
 
 .metricValue,
 .metricValueSmall,
@@ -136,7 +173,7 @@
 .metricValue { font-size: clamp(1.8rem, 2.8vw, 2.65rem); }
 .metricValueSmall,
 .metricValueSmallDanger { font-size: clamp(1.55rem, 2.1vw, 2rem); }
-.metricValueSmallDanger { color: #c81f24; }
+.metricValueSmallDanger { color: #794607; }
 
 .metricHint {
   margin: 0;
@@ -155,12 +192,11 @@
 .progressPending {
   display: block;
   height: 100%;
-  min-width: 0.35rem;
   border-radius: inherit;
 }
 
-.progressPaid { background: #075acb; }
-.progressPending { background: #c81f24; }
+.progressPaid { background: #148059; }
+.progressPending { background: #bc7a16; }
 
 .feedbackBanner {
   border: 1px solid #f1c977;
@@ -205,7 +241,32 @@
 }
 
 @media (max-width: 460px) {
-  .metricsGrid { grid-template-columns: 1fr; }
+  .page .hero.hero .heroActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .heroActions .heroButton { padding: 0.5rem; }
+
   .metricCard,
-  .metricCardButton { min-height: 7.8rem; }
+  .metricCardButton {
+    min-height: 0;
+    gap: 0.6rem;
+    padding: 0.75rem;
+  }
+
+  .metricHeader {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    gap: 0.4rem;
+  }
+
+  .metricIcon { width: 2rem; height: 2rem; }
+  .metricValue,
+  .metricValueSmall,
+  .metricValueSmallDanger { font-size: clamp(1.05rem, 5vw, 1.4rem); }
+  .metricHint,
+  .categoryLink { font-size: 0.73rem; }
+  .categoryLink svg { flex: 0 0 auto; }
 }

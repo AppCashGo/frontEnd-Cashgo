@@ -1,11 +1,12 @@
-import { Search } from "lucide-react";
+import { CalendarDays, CircleAlert, CircleCheck, Search, Scale } from "lucide-react";
 import type { CashRegisterSession } from "@/modules/cash-register/types/cash-register";
 import {
   formatCashRegisterCurrency,
-  formatCashRegisterDate,
+  formatCashRegisterDateTime,
   getPaymentMethodLabel,
 } from "@/modules/cash-register/utils/format-cash-register";
 import { joinClassNames } from "@/shared/utils/join-class-names";
+import { CashRegisterOperatorAvatar } from "./CashRegisterOperatorAvatar";
 import styles from "./CashRegisterHistoryList.module.css";
 
 type CashRegisterHistoryListProps = {
@@ -29,30 +30,31 @@ export function CashRegisterHistoryList({
 
   return (
     <div className={styles.panel}>
-      <div className={styles.header}>
-        <div>
-          <p className={styles.eyebrow}>Cierres de caja</p>
-          <h3 className={styles.title}>Historial reciente del arqueo</h3>
-        </div>
-        <span className={styles.countPill}>{sessions.length} cierres</span>
-      </div>
+      <p className={styles.count}>
+        {sessions.length} {sessions.length === 1 ? "cierre" : "cierres"} en el periodo
+      </p>
 
       <div className={styles.list}>
         {sessions.map((session) => (
           <article className={styles.card} key={session.id}>
             <div className={styles.cardHeader}>
-              <div>
-                <p className={styles.cardTitle}>
-                  {session.responsibleUserName ?? "Responsable no asignado"}
-                </p>
-                <p className={styles.cardDate}>
-                  {formatCashRegisterDate(session.closedAt ?? session.openedAt)}
-                </p>
+              <div className={styles.cardOperator}>
+                <CashRegisterOperatorAvatar name={session.responsibleUserName} />
+                <div>
+                  <p className={styles.cardTitle}>
+                    {session.responsibleUserName ?? "Responsable no asignado"}
+                  </p>
+                  <p className={styles.cardDate}>
+                    <CalendarDays aria-hidden="true" />
+                    {formatCashRegisterDateTime(session.closedAt ?? session.openedAt)}
+                  </p>
+                </div>
               </div>
 
               <span
                 className={joinClassNames(
                   styles.differencePill,
+                  session.difference === 0 && styles.differencePillMatched,
                   session.difference !== null &&
                     session.difference < 0 &&
                     styles.differencePillAlert,
@@ -61,9 +63,18 @@ export function CashRegisterHistoryList({
                     styles.differencePillAccent,
                 )}
               >
+                {session.difference === 0 ? (
+                  <CircleCheck aria-hidden="true" />
+                ) : session.difference === null ? (
+                  <Scale aria-hidden="true" />
+                ) : (
+                  <CircleAlert aria-hidden="true" />
+                )}
                 {session.difference === null
-                  ? "Sin cierre"
-                  : formatCashRegisterCurrency(session.difference)}
+                  ? "Sin diferencia registrada"
+                  : session.difference === 0
+                    ? "Cuadrada"
+                    : `Diferencia ${formatCashRegisterCurrency(session.difference)}`}
               </span>
             </div>
 
@@ -81,7 +92,7 @@ export function CashRegisterHistoryList({
                 </strong>
               </div>
               <div className={styles.metric}>
-                <span className={styles.metricLabel}>Esperado</span>
+                <span className={styles.metricLabel}>Efectivo esperado</span>
                 <strong>
                   {formatCashRegisterCurrency(session.cashExpectedTotal)}
                 </strong>

@@ -362,35 +362,6 @@
   font-weight: 900;
 }
 
-.productPreview {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 6.5rem;
-  height: 6.5rem;
-  border-radius: 1.1rem;
-  background: linear-gradient(180deg, #edd2ff 0%, #f8eaff 100%);
-}
-
-.productPreviewWithImage {
-  overflow: hidden;
-  background: #ffffff;
-}
-
-.productPreviewWithImage img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
-}
-
-.productPreviewMark {
-  color: #c892ea;
-  font-size: 4rem;
-  font-weight: 900;
-  line-height: 1;
-}
-
 .productPrice {
   margin: 0;
   color: #1f2a37;
@@ -506,27 +477,6 @@
   min-width: 0;
 }
 
-.cartAvatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.9rem;
-  background: #eef2f7;
-  color: #7b8aa1;
-  font-weight: 900;
-}
-
-.cartAvatarImage {
-  width: 2.75rem;
-  height: 2.75rem;
-  border-radius: 0.9rem;
-  background: #eef2f7;
-  object-fit: cover;
-  flex: 0 0 auto;
-}
-
 .cartItemName {
   margin: 0;
   color: #1f2a37;
@@ -618,13 +568,6 @@
   color: #1f2a37;
   font-weight: 800;
   text-align: center;
-}
-
-.cartMetaLine {
-  margin: 0;
-  color: #46566a;
-  font-size: 0.92rem;
-  font-weight: 700;
 }
 
 .panelFooter {
@@ -1371,25 +1314,6 @@
   box-shadow: none;
 }
 
-.paymentMethodIcon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  color: #1f2a37;
-}
-
-.paymentMethodIconSvg {
-  width: 2.1rem;
-  height: 2.1rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2.2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
 .paymentMethodLabel {
   display: inline-flex;
   align-items: center;
@@ -1427,34 +1351,6 @@
   border-radius: 999px;
   font-size: 0.75rem;
   line-height: 1;
-}
-
-.nequiMark {
-  position: relative;
-  display: inline-flex;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.45rem;
-  background: #26365f;
-  transform: rotate(45deg);
-}
-
-.nequiMark::before,
-.nequiMark::after {
-  content: '';
-  position: absolute;
-  inset: -0.25rem;
-  border-radius: inherit;
-}
-
-.nequiMark::before {
-  border-top: 0.32rem solid #00c7d9;
-  border-bottom: 0.32rem solid #ff2d8e;
-}
-
-.nequiMark::after {
-  border-left: 0.32rem solid #5b4bff;
-  border-right: 0.32rem solid #ff7a00;
 }
 
 .daviplataMark {
@@ -2774,21 +2670,6 @@
   box-shadow: 0 0.85rem 1.5rem rgba(15, 23, 42, 0.18);
 }
 
-.productPreview,
-.productPreviewWithImage {
-  width: min(7.9rem, 76%);
-  border-radius: 1rem;
-}
-
-.productPreview {
-  background: linear-gradient(135deg, #dbeafe, #e0e7ff);
-}
-
-.productPreviewMark {
-  color: var(--sales-secondary, #4f46e5);
-  opacity: 0.42;
-}
-
 .productPrice {
   color: var(--sales-tertiary, #0f172a);
   font-size: 1.32rem;
@@ -3584,4 +3465,233 @@
     min-height: calc(100dvh - 4.5rem);
     border-radius: 0.9rem;
   }
+}
+
+.posHeader {
+  gap: 1rem;
+  border-bottom-color: #d9e6f7;
+  background: linear-gradient(105deg, #eaf4fe, #fff 57%);
+}
+
+.posTitle,
+.panelTitle,
+.quickSaleButton,
+.quickExpenseButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.posTitle { white-space: nowrap; }
+
+.posHeader .quickSaleButton,
+.posHeader .quickExpenseButton,
+.posHeader .heldSalesButton {
+  justify-content: center;
+  min-width: 0;
+  min-height: 2.65rem;
+  padding: 0.5rem 0.7rem;
+  border-radius: 0.65rem;
+  white-space: normal;
+  font-size: 0.82rem;
+}
+
+.posHeader .quickSaleButton {
+  border: 1px solid #bdd4f1;
+  background: #edf5ff;
+  color: #1b5090;
+  box-shadow: none;
+}
+
+.posHeader .quickSaleButton:hover {
+  background: #dcecff;
+  color: #1b5090;
+}
+
+.posHeader .quickExpenseButton {
+  border: 1px solid #f2d3c7;
+  background: #fff2e9;
+  color: #9e442d;
+  box-shadow: none;
+}
+
+.posHeader .quickExpenseButton:hover {
+  background: #fbe6dd;
+  color: #923b25;
+}
+
+.posHeader .quickSaleButton svg,
+.posHeader .quickExpenseButton svg,
+.posHeader .heldSalesButton svg,
+.panelTitle svg,
+.catalogSearchIcon,
+.backButton svg,
+.paymentStepBadge svg,
+.createPlus svg,
+.deleteButton svg {
+  flex: 0 0 auto;
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.posHeader .headerActionDivider { display: none; }
+
+.catalogSearchIcon {
+  margin-inline-start: 0.75rem;
+  color: #5a76aa;
+}
+
+.productsGrid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 9.5rem), 1fr));
+}
+
+.productCard,
+.createCard {
+  min-height: 12.5rem;
+  border-radius: 0.8rem;
+}
+
+.productCard {
+  min-width: 0;
+  padding: 0.65rem;
+  box-shadow: 0 0.3rem 0.85rem #17305210;
+}
+
+.productCardSelected {
+  border-color: #85b4ea;
+  background: #f0f7ff;
+  box-shadow: inset 0 0 0 1px #b5d7fb;
+}
+
+.productPrice { color: #174d88; }
+.productName { overflow-wrap: anywhere; }
+
+.createCard {
+  background: linear-gradient(145deg, #e6f2ff, #fff 80%);
+}
+
+.createPlus {
+  border: 0;
+  border-radius: 0.65rem;
+  background: #dbeaff;
+  color: #245895;
+}
+
+.panelHeader {
+  background: linear-gradient(105deg, #e9f4ff, #f9fcff);
+}
+
+.panelTitle svg { color: #245d9a; }
+
+.cartCount {
+  min-width: 1.35rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 0.35rem;
+  background: #dceaff;
+  color: #255890;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.cartItem {
+  padding: 0.6rem;
+  border: 1px solid #e1eaf5;
+  border-radius: 0.7rem;
+  background: #f9fbff;
+}
+
+.catalogPanelFooter .holdButton,
+.catalogPanelFooter .continueButton {
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
+}
+
+.paymentHeader {
+  padding: 0.75rem;
+  border: 1px solid #d7e7fa;
+  border-radius: 0.75rem;
+  background: #eff6ff;
+}
+
+.paymentTitle { font-size: clamp(1.25rem, 2vw, 1.6rem); }
+
+.checkoutTotalPreview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  padding: 0.65rem;
+  border: 1px solid #d5e9de;
+  border-radius: 0.75rem;
+  background: #f1faf5;
+  color: #216449;
+}
+
+.checkoutThumbnails {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.checkoutTotalPreview > div:last-child { display: grid; gap: 0.15rem; }
+.checkoutTotalPreview > div:last-child span { font-size: 0.75rem; color: #426c5b; }
+.checkoutTotalPreview > div:last-child strong { font-size: 1.12rem; }
+
+.paymentSection {
+  border-color: #dbe6f4;
+  border-radius: 0.75rem;
+  background: #fbfdff;
+}
+
+.paymentStepBadge {
+  background: #e3efff;
+  color: #205991;
+}
+
+.paymentMethodCard,
+.paymentMethodCardActive {
+  min-width: 0;
+  min-height: 5.25rem;
+  gap: 0.35rem;
+  padding: 0.45rem;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.paymentMethodCardActive {
+  border-color: #457fc4;
+  background: #edf5ff;
+  box-shadow: inset 0 0 0 1px #9bc4f5;
+}
+
+.paymentMethodCheck {
+  width: 1.55rem;
+  height: 1.55rem;
+  border-radius: 0 0.55rem 0 0.55rem;
+}
+
+.paymentMethodCheck::before {
+  width: 0.86rem;
+  height: 0.86rem;
+  border-width: 1px;
+  font-size: 0.58rem;
+}
+
+.paymentMethodLabel {
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 520px) {
+  .productsGrid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 8rem), 1fr));
+    gap: 0.55rem;
+  }
+
+  .paymentMethodsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; }
+  .paymentMethodCard, .paymentMethodCardActive { padding-inline: 0.25rem; }
+  .paymentMethodLabel { font-size: 0.75rem; }
+  .paymentPanel .panelBody { padding-inline: 0.6rem; }
+  .productCard, .createCard { min-height: 11.75rem; }
 }

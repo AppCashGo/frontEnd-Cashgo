@@ -204,3 +204,7 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+.configurationCard[data-missing='true'] { background: #fff8ed; border-color: #ead5ae; }
+.configurationLabel { display: flex; align-items: center; gap: 0.35rem; }
+.configurationLabel svg { width: 0.9rem; height: 0.9rem; }

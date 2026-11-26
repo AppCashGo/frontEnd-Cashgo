@@ -3,20 +3,27 @@ import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert"
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
+  ArrowDownUp,
   ArrowLeft,
+  ArrowRight,
   Banknote,
   CheckCircle,
   CheckCircle2,
   Camera,
   CreditCard,
-  Crown,
+  History,
   Layers3,
+  PackagePlus,
   Pause,
   Plus,
+  ReceiptText,
   ScanBarcode,
+  Search,
   ShoppingCart,
   Star,
+  Store,
   Trash2,
+  Wallet,
 } from 'lucide-react'
 import type { CashRegisterDrawerMode } from '@/modules/cash-register/components/CashRegisterSessionDrawer'
 import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashRegisterFlowDrawer'
@@ -54,6 +61,7 @@ import {
 } from '@/modules/sales/hooks/use-create-sale-mutation'
 import { useSaleCart } from '@/modules/sales/hooks/use-sale-cart'
 import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
+import { SalesBusinessMark, SalesPaymentIcon, SalesProductPhoto } from '@/modules/sales/components/SalesVisuals'
 import { SaleCompletionActions } from '@/modules/sales/components/SaleCompletionActions'
 import { OfflineSalesQueuePanel } from '@/modules/sales/components/OfflineSalesQueuePanel'
 import { SaleQuantityInput } from '@/modules/sales/components/SaleQuantityInput'
@@ -818,47 +826,6 @@ function PrinterIcon() {
   )
 }
 
-function PaymentMethodIcon({ option }: { option: RetailPaymentOption }) {
-  switch (option) {
-    case 'CASH':
-      return (
-        <svg aria-hidden="true" className={styles.paymentMethodIconSvg} viewBox="0 0 24 24">
-          <path d="M4 7h16v10H4z" />
-          <path d="M8 12h.01M16 12h.01" />
-          <circle cx="12" cy="12" r="2.4" />
-        </svg>
-      )
-    case 'CARD':
-      return (
-        <svg aria-hidden="true" className={styles.paymentMethodIconSvg} viewBox="0 0 24 24">
-          <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9Z" />
-          <path d="M7 10h.01M16 14h1.5" />
-        </svg>
-      )
-    case 'TRANSFER':
-    case 'BANK_DEPOSIT':
-      return (
-        <svg aria-hidden="true" className={styles.paymentMethodIconSvg} viewBox="0 0 24 24">
-          <path d="M4 10h16L12 5 4 10Z" />
-          <path d="M6 10v7M10 10v7M14 10v7M18 10v7M4 19h16" />
-        </svg>
-      )
-    case 'OTHER':
-      return (
-        <svg aria-hidden="true" className={styles.paymentMethodIconSvg} viewBox="0 0 24 24">
-          <circle cx="8" cy="8" r="2" />
-          <circle cx="16" cy="8" r="2" />
-          <circle cx="8" cy="16" r="2" />
-          <circle cx="16" cy="16" r="2" />
-        </svg>
-      )
-    case 'DIGITAL_WALLET':
-      return <span className={styles.nequiMark} aria-hidden="true" />
-    default:
-      return null
-  }
-}
-
 type ChangeCalculatorModalProps = {
   saleTotal: number
   amountTenderedInput: string
@@ -990,20 +957,19 @@ function PaymentMethodSelector({
   onChange,
 }: PaymentMethodSelectorProps) {
   return (
-    <div className={styles.paymentMethodsGrid}>
+    <div className={styles.paymentMethodsGrid} role="group" aria-label="Medios de pago">
       {paymentOptions.map((option) => {
         const isActive = value === option.value
 
         return (
           <button
+            aria-pressed={isActive}
             key={option.value}
             className={isActive ? styles.paymentMethodCardActive : styles.paymentMethodCard}
             type="button"
             onClick={() => onChange(option.value)}
           >
-            <span className={styles.paymentMethodIcon}>
-              <PaymentMethodIcon option={option.value} />
-            </span>
+            <SalesPaymentIcon method={option.value} />
             <span className={styles.paymentMethodLabel}>{option.label}</span>
             {isActive ? (
               <span className={styles.paymentMethodCheck} aria-hidden="true" />
@@ -1157,6 +1123,13 @@ export function RetailSalesWorkspace() {
   const [selectedVariantEntry, setSelectedVariantEntry] =
     useState<CatalogProductEntry | null>(null)
   const [saleStep, setSaleStep] = useState<RetailStep>('CATALOG')
+  const paymentHeadingRef = useRef<HTMLHeadingElement>(null)
+
+  useEffect(() => {
+    if (saleStep === 'PAYMENT') {
+      paymentHeadingRef.current?.focus()
+    }
+  }, [saleStep])
   const [selectedCustomerId, setSelectedCustomerId] = useState('')
   const [settlement, setSettlement] = useState<RetailSettlement>('PAID')
   const [discountOpen, setDiscountOpen] = useState(false)
@@ -2637,7 +2610,13 @@ export function RetailSalesWorkspace() {
       <RetailPageLayout
         bodyClassName={styles.salesBody}
         bodyVariant="flush"
-        title="Nueva venta"
+        headerClassName={styles.posHeader}
+        title={
+          <span className={styles.posTitle}>
+            <SalesBusinessMark logoUrl={activeBusiness?.logoUrl ?? authUser?.logoUrl} />
+            Nueva venta
+          </span>
+        }
         actions={
           <>
             {currentCashRegister ? (
@@ -2652,7 +2631,7 @@ export function RetailSalesWorkspace() {
                   }
                 }}
               >
-                <Crown aria-hidden="true" />
+                <Store aria-hidden="true" />
                 Caja abierta
               </button>
             ) : (
@@ -2661,7 +2640,7 @@ export function RetailSalesWorkspace() {
                 type="button"
                 onClick={() => openCashRegisterDrawer('manage')}
               >
-                <Crown />
+                <Store aria-hidden="true" />
                 Abrir caja
               </button>
             )}
@@ -2671,7 +2650,7 @@ export function RetailSalesWorkspace() {
               type="button"
               onClick={() => setHeldSalesOpen(true)}
             >
-              Cuentas en espera
+              <Pause aria-hidden="true" /> Cuentas en espera
               <span>{heldSales.length}</span>
             </button>
             <button
@@ -2679,21 +2658,21 @@ export function RetailSalesWorkspace() {
               type="button"
               onClick={openSalesHistory}
             >
-              Historial de ventas
+              <History aria-hidden="true" /> Historial de ventas
             </button>
             <button
               className={styles.quickSaleButton}
               type="button"
               onClick={handleOpenQuickSaleDrawer}
             >
-              Nueva venta libre
+              <Plus aria-hidden="true" /> Nueva venta libre
             </button>
             <button
               className={styles.quickExpenseButton}
               type="button"
               onClick={handleOpenQuickExpenseDrawer}
             >
-              Nuevo gasto
+              <ReceiptText aria-hidden="true" /> Nuevo gasto
             </button>
           </>
         }
@@ -2735,10 +2714,12 @@ export function RetailSalesWorkspace() {
                 aria-label="Ordenar inventario"
                 onClick={() => setSortDrawerOpen(true)}
               >
-                ⇅
+                <ArrowDownUp aria-hidden="true" />
               </button>
               <label className={retailStyles.searchField} htmlFor="retail-sale-search">
+                <Search aria-hidden="true" className={styles.catalogSearchIcon} />
                 <input
+                  aria-label="Buscar o escanear código"
                   className={retailStyles.input}
                   data-barcode-scanner="true"
                   id="retail-sale-search"
@@ -2812,7 +2793,7 @@ export function RetailSalesWorkspace() {
                 type="button"
                 onClick={() => handleGoToCreateProduct()}
               >
-                <span className={styles.createPlus}>+</span>
+                <span className={styles.createPlus}><PackagePlus aria-hidden="true" /></span>
                 <span className={styles.createTitle}>Crear producto</span>
               </button>
 
@@ -2846,7 +2827,7 @@ export function RetailSalesWorkspace() {
                 return (
                   <article className={styles.productCardShell} key={entry.id}>
                     <button
-                      className={styles.productCard}
+                      className={productQuantity > 0 ? `${styles.productCard} ${styles.productCardSelected}` : styles.productCard}
                       type="button"
                       disabled={!canSellProduct}
                       onClick={() => {
@@ -2863,26 +2844,7 @@ export function RetailSalesWorkspace() {
                         </span>
                       ) : null}
 
-                      <div
-                        className={
-                          productImageUrl
-                            ? `${styles.productPreview} ${styles.productPreviewWithImage}`
-                            : styles.productPreview
-                        }
-                      >
-                        {productImageUrl ? (
-                          <img
-                            alt=""
-                            decoding="async"
-                            loading="lazy"
-                            src={productImageUrl}
-                          />
-                        ) : (
-                          <span className={styles.productPreviewMark}>
-                          {entry.name.slice(0, 1).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
+                      <SalesProductPhoto src={productImageUrl} />
 
                       <p className={styles.productPrice}>
                         {isVariantGroup ? 'Desde ' : ''}{formatCurrency(minimumPrice)}
@@ -2969,7 +2931,10 @@ export function RetailSalesWorkspace() {
                 </button>
                 <div className={styles.panelHeader}>
                   <div>
-                    <p className={styles.panelTitle}>Productos</p>
+                    <p className={styles.panelTitle}>
+                      <ShoppingCart aria-hidden="true" />
+                      Canasta <span className={styles.cartCount}>{totalItems}</span>
+                    </p>
                     {activeHeldSale ? (
                       <p className={styles.activeHoldLabel}>
                         Editando {activeHeldSale.code} · {activeHeldSale.label}
@@ -2989,8 +2954,9 @@ export function RetailSalesWorkspace() {
                 <div className={styles.panelBody}>
                   {cartItems.length === 0 ? (
                     <RetailEmptyState
-                      title="Agrega productos rápidamente usando tu lector de código de barras"
-                      description="Si no está en tu inventario, aquí verás tu canasta en cuanto empieces a agregar productos."
+                      icon={<ShoppingCart aria-hidden="true" />}
+                      title="Tu canasta está vacía"
+                      description="Elige un producto del catálogo o escanea su código de barras."
                     />
                   ) : (
                     <div className={styles.cartList}>
@@ -3003,19 +2969,10 @@ export function RetailSalesWorkspace() {
                           <article className={styles.cartItem} key={item.product.id}>
                             <div className={styles.cartItemHead}>
                               <div className={styles.cartItemCopy}>
-                                {productImageUrl ? (
-                                  <img
-                                    alt=""
-                                    className={styles.cartAvatarImage}
-                                    decoding="async"
-                                    loading="lazy"
-                                    src={productImageUrl}
-                                  />
-                                ) : (
-                                  <div className={styles.cartAvatar}>
-                                    {item.product.name.slice(0, 1).toUpperCase()}
-                                  </div>
-                                )}
+                                <SalesProductPhoto
+                                  compact
+                                  src={productImageUrl ?? resolveProductImageUrl(item.product.variantGroup?.imageUrls)}
+                                />
                                 <div>
                                   <p className={styles.cartItemName}>
                                     {item.product.name}
@@ -3023,11 +2980,12 @@ export function RetailSalesWorkspace() {
                                 </div>
                               </div>
                               <button
+                                aria-label={`Quitar ${item.product.name} de la canasta`}
                                 className={styles.deleteButton}
                                 type="button"
                                 onClick={() => removeProduct(item.product.id)}
                               >
-                                🗑
+                                <Trash2 aria-hidden="true" />
                               </button>
                             </div>
 
@@ -3079,11 +3037,7 @@ export function RetailSalesWorkspace() {
                               </div>
                             </div>
 
-                            <p className={styles.cartMetaLine}>
-                              Precio por {item.quantity.toString()}{' '}
-                              {item.quantity === 1 ? 'unidad' : 'unidades'}:{' '}
-                              <strong>{formatCurrency(item.lineTotal)}</strong>
-                            </p>
+
                           </article>
                         )
                       })}
@@ -3103,7 +3057,7 @@ export function RetailSalesWorkspace() {
                     onClick={() => setHoldSaleModalOpen(true)}
                   >
                     <Pause aria-hidden="true" />
-                    <span>{activeHeldSale ? 'Actualizar' : 'Espera'}</span>
+                    <span>{activeHeldSale ? 'Actualizar espera' : 'Dejar en espera'}</span>
                   </button>
                   <button
                     className={styles.continueButton}
@@ -3112,7 +3066,7 @@ export function RetailSalesWorkspace() {
                     onClick={() => setSaleStep('PAYMENT')}
                   >
                     <CreditCard aria-hidden="true" />
-                    <span>Otros pagos</span>
+                    <span>Ir al cobro</span><ArrowRight aria-hidden="true" />
                   </button>
                 </div>
               </section>
@@ -3126,19 +3080,32 @@ export function RetailSalesWorkspace() {
                       type="button"
                       onClick={() => setSaleStep('CATALOG')}
                     >
-                      ←
+                      <ArrowLeft aria-hidden="true" />
                     </button>
                     <div>
-                      <h2 className={styles.paymentTitle}>Finalizar venta</h2>
+                      <h2 className={styles.paymentTitle} ref={paymentHeadingRef} tabIndex={-1}>Finalizar venta</h2>
                       <p className={styles.paymentSubtitle}>
-                        Define cómo se pagará y revisa los datos antes de crearla.
+                        {totalItems} {totalItems === 1 ? 'unidad' : 'unidades'} en la canasta
                       </p>
                     </div>
                   </div>
 
+                  <div className={styles.checkoutTotalPreview}>
+                    <div className={styles.checkoutThumbnails}>
+                      {cartItems.slice(0, 3).map(({ product }) => (
+                        <SalesProductPhoto
+                          compact
+                          key={product.id}
+                          src={resolveProductImageUrl(product.imageUrls) ?? resolveProductImageUrl(product.variantGroup?.imageUrls)}
+                        />
+                      ))}
+                    </div>
+                    <div><span>Total de la venta</span><strong>{formatCurrency(totalAmount)}</strong></div>
+                  </div>
+
                   <section className={styles.paymentSection}>
                     <div className={styles.paymentSectionHeader}>
-                      <span className={styles.paymentStepBadge}>1</span>
+                      <span className={styles.paymentStepBadge}><Wallet aria-hidden="true" /></span>
                       <div>
                         <h3>Condición de pago</h3>
                         <p>Indica si el cliente paga ahora o queda debiendo.</p>
@@ -3153,6 +3120,7 @@ export function RetailSalesWorkspace() {
                             : styles.segmentButton
                         }
                         type="button"
+                        aria-pressed={settlement === 'PAID'}
                         onClick={() => setSettlement('PAID')}
                       >
                         Pagada ahora
@@ -3164,6 +3132,7 @@ export function RetailSalesWorkspace() {
                             : styles.segmentButton
                         }
                         type="button"
+                        aria-pressed={settlement === 'CREDIT'}
                         onClick={() => setSettlement('CREDIT')}
                       >
                         Venta a crédito
@@ -3173,7 +3142,7 @@ export function RetailSalesWorkspace() {
 
                   <section className={styles.paymentSection}>
                     <div className={styles.paymentSectionHeader}>
-                      <span className={styles.paymentStepBadge}>2</span>
+                      <span className={styles.paymentStepBadge}><ReceiptText aria-hidden="true" /></span>
                       <div>
                         <h3>Datos de la venta</h3>
                         <p>Registra la fecha y el cliente relacionado.</p>
@@ -3295,7 +3264,7 @@ export function RetailSalesWorkspace() {
 
                   <section className={styles.paymentSection}>
                     <div className={styles.paymentSectionHeader}>
-                      <span className={styles.paymentStepBadge}>3</span>
+                      <span className={styles.paymentStepBadge}><CreditCard aria-hidden="true" /></span>
                       <div>
                         <h3>
                           {settlement === 'PAID'
@@ -3361,13 +3330,13 @@ export function RetailSalesWorkspace() {
                     <>
                       <div className={styles.fieldGroup}>
                         <p className={styles.helperTitle}>
-                          Selecciona el número de pagos que realizarás y el método de
-                          pago*
+                          Número de pagos
                         </p>
                         <div className={styles.paymentSplitRow}>
                           {paymentSplitOptions.map((option) => (
                             <button
                               key={option}
+                              aria-pressed={paymentSplitCount === option}
                               className={
                                 paymentSplitCount === option
                                   ? styles.splitButtonActive
@@ -3488,6 +3457,7 @@ export function RetailSalesWorkspace() {
                   <div className={styles.paymentDetailCard}>
                     <button
                       className={styles.paymentDetailHeader}
+                      aria-expanded={paymentDetailsOpen}
                       type="button"
                       onClick={() => setPaymentDetailsOpen((current) => !current)}
                     >

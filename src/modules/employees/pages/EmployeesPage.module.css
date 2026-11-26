@@ -125,9 +125,113 @@
 }
 
 .retailEmployeesWorkspace {
+  container: employee-roster / inline-size;
   display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.teamSummary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.teamMetric {
+  --metric-background: #edf5ff;
+  --metric-icon: #dceafd;
+  --metric-color: #245286;
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
-  padding: 0 clamp(1rem, 2vw, 2rem) 2rem;
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid #d6e1ef;
+  border-radius: 0.85rem;
+  background: linear-gradient(130deg, var(--metric-background), #fff 75%);
+  color: var(--metric-color);
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.teamMetric[data-tone="active"] {
+  --metric-background: #eaf8f3;
+  --metric-icon: #d9f3e7;
+  --metric-color: #106549;
+}
+
+.teamMetric[data-tone="pending"] {
+  --metric-background: #fff7e5;
+  --metric-icon: #faeac7;
+  --metric-color: #75490c;
+}
+
+.teamMetric:hover,
+.teamMetric[aria-pressed="true"] {
+  border-color: var(--metric-color);
+}
+
+.teamMetric[aria-pressed="true"] {
+  box-shadow: inset 0 -2px var(--metric-color);
+}
+
+.teamMetric > span:last-child {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.teamMetric strong {
+  color: #17243a;
+  font-size: clamp(1.3rem, 2.6cqi, 2rem);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.metricIcon {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.65rem;
+  background: var(--metric-icon);
+}
+
+.metricIcon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.teamSearch {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: min(100%, 30rem);
+  min-height: 2.65rem;
+  padding: 0 0.8rem;
+  border: 1px solid #cad9eb;
+  border-radius: 0.65rem;
+  color: #426489;
+}
+
+.teamSearch:focus-within {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
+}
+
+.teamSearch input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ui-text);
+  font: inherit;
 }
 
 .retailEmployeeIdentity {
@@ -137,29 +241,26 @@
   min-width: 0;
 }
 
-.retailEmployeeAvatar {
-  width: 2.25rem;
-  height: 2.25rem;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #eef4ff;
-  color: #2457b8;
-  font-size: 0.95rem;
-  font-weight: 900;
+.retailEmployeeIdentity > span:first-child {
+  width: 2.85rem;
+  height: 2.85rem;
+  border-radius: 0.8rem;
 }
 
-.retailEmployeeAvatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.identityCopy {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.identityCopy small {
+  color: #53647c;
+  font-size: 0.77rem;
 }
 
 .retailEmployeeName {
-  font-weight: 900;
+  font-weight: 800;
 }
 
 .retailRolePill {
@@ -190,59 +291,59 @@
   color: #6a3cc3;
 }
 
-.retailStatusActive,
-.retailStatusPending {
+.retailAccessBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  font-weight: 900;
+  gap: 0.35rem;
+  width: fit-content;
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.45rem;
+  background: #fff0cf;
+  color: #75490c;
+  font-size: 0.78rem;
+  font-weight: 800;
   white-space: nowrap;
 }
 
-.retailStatusActive {
-  color: #1f2a37;
+.retailAccessBadge[data-active="true"] {
+  background: #e4f5ed;
+  color: #126647;
 }
 
-.retailStatusPending {
-  color: #9a6b12;
+.retailAccessBadge svg,
+.retailEditButton svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
 }
 
-.retailStatusActive svg,
-.retailStatusPending svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  padding: 0.2rem;
-  border-radius: 999px;
-}
-
-.retailStatusActive svg {
-  background: #d9f8e8;
-  color: #2fa36a;
-}
-
-.retailStatusPending svg {
-  background: #fff3d4;
-  color: #d29417;
+.teamRowActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
 }
 
 .retailEditButton {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.35rem;
   min-height: 2.25rem;
-  border: 0;
-  background: transparent;
-  color: #1f2a37;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #d5e1ed;
+  border-radius: 0.55rem;
+  background: #f3f7fc;
+  color: #255181;
   font: inherit;
-  font-weight: 900;
-  text-decoration: underline;
+  font-size: 0.82rem;
+  font-weight: 750;
   cursor: pointer;
 }
 
-.retailEditButton svg {
-  width: 1.05rem;
-  height: 1.05rem;
-}
+.retailEditButton:hover { background: #e6f0fb; }
+.retailDeleteButton { border-color: transparent; background: transparent; color: #a52625; }
+.retailDeleteButton:hover { background: #ffe7e5; }
+.retailDeleteButton:disabled { opacity: 0.55; cursor: wait; }
 
 @media (min-width: 720px) {
   .metricsGrid {
@@ -282,9 +383,20 @@
     width: 100%;
   }
 
-  .retailEmployeesWorkspace {
-    padding-inline: 0;
+}
+
+@container employee-roster (max-width: 42rem) {
+  .teamSummary { gap: 0.45rem; }
+
+  .teamMetric {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    padding: 0.55rem;
+    font-size: 0.73rem;
   }
+
+  .metricIcon { width: 1.9rem; height: 1.9rem; }
 
   .retailEmployeesWorkspace table,
   .retailEmployeesWorkspace tbody,
@@ -335,6 +447,14 @@
     text-transform: uppercase;
   }
 
+  .retailEmployeesWorkspace td:last-child:has(.teamRowActions:empty) {
+    display: none;
+  }
+
+  .retailEmployeesWorkspace td:last-child:has(.teamRowActions) {
+    grid-template-columns: 1fr;
+  }
+
   .retailEmployeesWorkspace td:first-child {
     grid-template-columns: 1fr;
   }
@@ -346,9 +466,4 @@
   .retailEditButton {
     min-height: 2.75rem;
   }
-}
-
-.retailDeleteButton {
-  margin-inline-start: 0.45rem;
-  color: #a62f24;
 }

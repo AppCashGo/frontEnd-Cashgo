@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Upload } from "lucide-react";
 import { IMAGE_UPLOAD_ACCEPT } from "@/shared/utils/image-upload-validation";
 import { joinClassNames } from "@/shared/utils/join-class-names";
@@ -33,7 +33,8 @@ export function AvatarUploadField({
   variant = "circle",
   onSelectFile,
 }: AvatarUploadFieldProps) {
-  const hasImage = Boolean(imageUrl);
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const hasImage = Boolean(imageUrl && imageUrl !== failedImageUrl);
   const label = hasImage ? changeLabel : uploadLabel;
 
   return (
@@ -58,7 +59,12 @@ export function AvatarUploadField({
 
       <span className={styles.media}>
         {hasImage ? (
-          <img alt={alt} className={styles.preview} src={imageUrl ?? ""} />
+          <img
+            alt={alt}
+            className={styles.preview}
+            src={imageUrl ?? ""}
+            onError={() => setFailedImageUrl(imageUrl)}
+          />
         ) : (
           <span className={styles.placeholder} aria-hidden="true">
             {placeholderIcon ?? <Upload />}

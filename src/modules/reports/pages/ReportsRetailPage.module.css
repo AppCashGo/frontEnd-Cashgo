@@ -388,3 +388,10 @@
     padding: 1rem;
   }
 }
+
+.headerTabs { min-width: 0; flex-wrap: wrap; gap: 0.5rem; }
+.headerTab, .headerTabActive { min-height: 2.55rem; padding: 0.4rem 0.7rem; border-radius: 0.6rem; border: 1px solid #6889b1; color: #e9f3ff; }
+.headerTabActive { background: #eef6ff; color: #1c4a79; }
+.headerTabActive::after { content: none; }
+.trendBadge[data-direction='down'] { background: #fce8e3; color: #a2382c; }
+.trendBadge[data-direction='flat'] { background: #e9eff6; color: #465e7b; }

@@ -232,10 +232,11 @@
   padding: 0 clamp(1rem, 2.4vw, 2rem) 2rem;
 }
 
-.shiftCard {
+.shiftCard,
+.closureCard {
   display: grid;
-  gap: 1rem;
-  justify-items: start;
+  gap: 1.15rem;
+  min-width: 0;
   padding: clamp(1rem, 2.4vw, 1.65rem);
   border: 1px solid #d7deea;
   border-radius: 1rem;
@@ -251,6 +252,27 @@
   width: 100%;
 }
 
+.shiftTitle {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+}
+
+.shiftStatus {
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  background: #edf1f7;
+  color: #4b5c74;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.shiftStatus[data-open="true"] {
+  background: #def5e9;
+  color: #136447;
+}
+
 .shiftHeader h2,
 .closureHeader h2 {
   margin: 0;
@@ -262,6 +284,41 @@
   color: #586880;
   font-size: 0.9rem;
   overflow-wrap: anywhere;
+}
+
+.shiftMeta,
+.shiftMeta span {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem 0.65rem;
+}
+
+.shiftMeta {
+  flex-wrap: wrap;
+}
+
+.shiftMeta strong {
+  color: #344d6b;
+}
+
+.shiftMeta svg {
+  flex: 0 0 auto;
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.shiftActions .closeShiftButton {
+  border-color: #e6d2b7;
+  background: #fffaf2;
+  color: #734b22;
+}
+
+.shiftActions .closeShiftButton:hover {
+  background: #fbefd9;
+}
+
+.shiftActions .closeShiftButton svg {
+  color: inherit;
 }
 
 .shiftIcon {
@@ -293,31 +350,11 @@
   justify-content: space-between;
 }
 
-.shiftBalances {
+.closureFilters {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
-  width: 100%;
-  margin: 0;
-}
-
-.shiftBalances > div {
-  min-width: 0;
-  padding: 0.8rem 0.9rem;
-  border-radius: 0.65rem;
-  background: #f3f6fb;
-  overflow-wrap: anywhere;
-}
-
-.shiftBalances dt {
-  color: #586880;
-  font-size: 0.82rem;
-}
-
-.shiftBalances dd {
-  margin: 0.25rem 0 0;
-  font-size: 1.1rem;
-  font-weight: 800;
+  width: min(100%, 22rem);
 }
 
 .filtersBar {
@@ -383,7 +420,8 @@
   padding: 0 1rem;
 }
 
-.filtersBar .periodSelect {
+.filtersBar .periodSelect,
+.closureFilters .periodSelect {
   min-height: 3rem;
   border-radius: 0.55rem;
   font-weight: 700;
@@ -922,17 +960,28 @@
     align-items: center;
   }
 
-  .filtersBarClosures {
-    width: min(100%, 24rem);
-    grid-template-columns: minmax(8rem, 10rem) minmax(10rem, 13rem);
-  }
-
   .filtersBarWithoutButton {
     grid-template-columns: minmax(8rem, 9.5rem) minmax(10rem, 12rem) minmax(0, 1fr);
   }
 
   .reportButton {
     justify-self: end;
+  }
+}
+
+@media (max-width: 720px) {
+  .shiftHeader {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .shiftHeader > button,
+  .shiftActions {
+    grid-column: 1 / -1;
+  }
+
+  .shiftActions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 7rem), 1fr));
   }
 }
 
@@ -957,21 +1006,172 @@
     width: 100%;
   }
 
-  .shiftHeader {
-    grid-template-columns: auto minmax(0, 1fr);
+  .shiftActions > button {
+    gap: 0.35rem;
+    padding-inline: 0.5rem;
   }
 
-  .shiftHeader > button,
-  .shiftActions {
-    grid-column: 1 / -1;
-  }
-
-  .shiftActions {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .closureFilters .dateShell {
+    padding-inline: 0.55rem;
+    gap: 0.25rem;
   }
 
   .drawerActions {
     grid-template-columns: 1fr;
   }
 }
+
+@media (max-width: 420px) {
+  .cashWorkspace {
+    padding-inline: 0.5rem;
+  }
+
+  .shiftCard,
+  .closureCard {
+    padding-inline: 0.75rem;
+  }
+
+  .closureFilters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.shiftOperations {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.shiftOperations h3 {
+  margin: 0;
+  color: #172942;
+  font-size: 1rem;
+}
+
+.shiftOperationGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.65rem;
+}
+
+.shiftOperationGrid button {
+  --operation-bg: #eff6ff;
+  --operation-border: #d0e1f7;
+  --operation-hover-border: #88afdf;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+  min-height: 4.35rem;
+  padding: 0.7rem;
+  border: 1px solid var(--operation-border);
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, var(--operation-bg), #fff 85%);
+  color: #172942;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.shiftOperationGrid button[data-operation="movement"] {
+  --operation-bg: #eaf7f1;
+  --operation-border: #d2ebe0;
+  --operation-hover-border: #85bdab;
+}
+
+.shiftOperationGrid button[data-operation="reserve"] {
+  --operation-bg: #f3effb;
+  --operation-border: #e4dbf5;
+  --operation-hover-border: #b7a3dc;
+}
+
+.shiftOperationGrid button:hover {
+  border-color: var(--operation-hover-border);
+  background: var(--operation-bg);
+}
+
+.shiftOperationGrid button:focus-visible {
+  outline: 2px solid #1c63b5;
+  outline-offset: 2px;
+}
+
+.shiftOperationIcon {
+  display: grid;
+  width: 2.35rem;
+  height: 2.35rem;
+  place-items: center;
+  border-radius: 0.65rem;
+  background: #e5f1ff;
+  color: #23578f;
+}
+
+.shiftOperationIcon[data-operation="movement"] {
+  background: #e3f7ed;
+  color: #17604b;
+}
+
+.shiftOperationIcon[data-operation="reserve"] {
+  background: #f0ebfe;
+  color: #6346a0;
+}
+
+.shiftOperationIcon svg,
+.shiftOperationArrow {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.shiftOperationArrow {
+  color: #476187;
+}
+
+.shiftOperationText {
+  display: grid;
+  gap: 0.15rem;
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+}
+
+.shiftOperationText small {
+  color: #52637b;
+  font-size: 0.76rem;
+}
+
+.shiftOperationsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+}
+
+.transferHistoryLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  color: #21578e;
+  font-size: 0.8rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.transferHistoryLink:hover {
+  text-decoration: underline;
+}
+
+.transferHistoryLink svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.movementsHero { background: radial-gradient(ellipse at 85% 18%, #255983, #162f53 53%, #112541); }
+.movementsHero h1 { color: #fff; }
+.summaryCard[data-tone='balance'] { background: #eff5fe; border-color: #d4e4fa; }
+.summaryCard[data-tone='sales'] { background: #eff9f5; border-color: #d3ece1; }
+.summaryCard[data-tone='expenses'] { background: #fff5ed; border-color: #f1ded4; }
+.ledgerTab, .ledgerTabActive { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; }
+.ledgerTab svg, .ledgerTabActive svg { width: 1rem; height: 1rem; flex: 0 0 auto; }
+.ledgerTabActive { background: #edf5ff; color: #225e9f; }

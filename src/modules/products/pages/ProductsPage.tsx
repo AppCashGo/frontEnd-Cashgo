@@ -1,6 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { lazy, Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react'
-import { BadgeDollarSign, ChevronLeft, ChevronRight, ClipboardCheck, ImageIcon, MoreVertical, Package, Plus, Search, Tags, Upload } from 'lucide-react'
+import { BadgeDollarSign, ChevronLeft, ChevronRight, ClipboardCheck, Package, Pencil, Plus, Search, Tags, Trash2, Upload } from 'lucide-react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { RetailProductCreateWorkspace, type RetailProductCreateWorkspaceTab } from '@/modules/inventory/components/RetailProductCreateWorkspace'
 import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inventory-query'
@@ -8,8 +8,13 @@ import { useDeleteProductMutation, useImportProductsMutation, useProductsQuery }
 import type { Product } from '@/modules/products/types/product'
 import { matchesProductSearch } from '@/modules/products/utils/matches-product-search'
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
+import { getProductStockStatus } from '@/modules/products/utils/product-stock-status'
 import { getProductUnitStockLabel } from '@/modules/products/utils/product-unit-options'
+import { SalesProductPhoto } from '@/modules/sales/components/SalesVisuals'
+import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
+import { WorkspaceBusinessTitle } from '@/shared/components/retail/WorkspaceBusinessTitle'
+import workspaceVisual from '@/shared/components/retail/WorkspaceVisual.module.css'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
@@ -18,7 +23,8 @@ import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { routePaths } from '@/routes/route-paths'
 import styles from './ProductsPage.module.css'
 
-type StockFilter = 'ALL' | 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK'
+type StockStatus = ReturnType<typeof getProductStockStatus>
+type StockFilter = 'ALL' | 'healthy' | 'low' | 'out'
 
 const PAGE_SIZE = 10
 const workspaceTabs: RetailProductCreateWorkspaceTab[] = ['basic', 'variants', 'measures']
@@ -32,39 +38,13 @@ function isWorkspaceTab(value: string | null): value is RetailProductCreateWorks
   return workspaceTabs.includes(value as RetailProductCreateWorkspaceTab)
 }
 
-function getStockStatus(product: Product) {
-  if (!product.isActive) return { label: 'Inactivo', tone: styles.statusInactive }
-  if (product.inventoryBehavior === 'MADE_TO_ORDER') {
-    return { label: 'Preparado al pedir', tone: styles.statusHealthy }
-  }
-  if (product.stock === 0) return { label: 'Agotado', tone: styles.statusOut }
-  if (product.stock <= Math.max(product.minStock, 5)) {
-    return { label: 'Stock bajo', tone: styles.statusLow }
-  }
-  return { label: 'En stock', tone: styles.statusHealthy }
-}
-
-function matchesStockFilter(product: Product, filter: StockFilter) {
-  if (product.inventoryBehavior === 'MADE_TO_ORDER') return filter === 'ALL'
-  if (filter === 'OUT_OF_STOCK') return product.stock === 0
-  if (filter === 'LOW_STOCK') {
-    return product.stock > 0 && product.stock <= Math.max(product.minStock, 5)
-  }
-  if (filter === 'IN_STOCK') return product.stock > Math.max(product.minStock, 5)
-  return true
-}
-
-function ProductThumbnail({ product }: { product: Product }) {
-  const imageUrl = resolveProductImageUrl(product.imageUrls)
-  return (
-    <span className={styles.thumbnail}>
-      {imageUrl ? (
-        <img alt="" decoding="async" loading="lazy" src={imageUrl} />
-      ) : (
-        <ImageIcon aria-hidden="true" size={20} strokeWidth={1.8} />
-      )}
-    </span>
-  )
+const stockLabels: Record<StockStatus, string> = {
+  healthy: 'En stock',
+  low: 'Stock bajo',
+  out: 'Sin stock',
+  inactive: 'Inactivo',
+  madeToOrder: 'Preparado al pedir',
+  variantParent: 'Ver variantes',
 }
 
 export function ProductsPage() {
@@ -73,10 +53,10 @@ export function ProductsPage() {
   const [categoryId, setCategoryId] = useState('ALL')
   const [stockFilter, setStockFilter] = useState<StockFilter>('ALL')
   const [page, setPage] = useState(1)
-  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
   const deferredSearch = useDeferredValue(searchValue.trim().toLowerCase())
   const productsQuery = useProductsQuery()
   const categoriesQuery = useInventoryCategoriesQuery()
+  const defaultStockThreshold = useBusinessSettingsQuery().data?.defaultLowStockThreshold
   const importMutation = useImportProductsMutation()
   const deleteMutation = useDeleteProductMutation()
   const { confirm, confirmationDialog } = useConfirmDialog()
@@ -97,8 +77,8 @@ export function ProductsPage() {
     () => products.filter((product) =>
       matchesProductSearch(product, deferredSearch) &&
       (categoryId === 'ALL' || product.categoryId === categoryId) &&
-      matchesStockFilter(product, stockFilter)),
-    [categoryId, deferredSearch, products, stockFilter],
+      (stockFilter === 'ALL' || getProductStockStatus(product, defaultStockThreshold) === stockFilter)),
+    [categoryId, defaultStockThreshold, deferredSearch, products, stockFilter],
   )
   const pageCount = Math.max(1, Math.ceil(filteredProducts.length / PAGE_SIZE))
   const paginatedProducts = filteredProducts.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -122,7 +102,6 @@ export function ProductsPage() {
     const params = new URLSearchParams(searchParams)
     Object.entries(next).forEach(([key, value]) => value ? params.set(key, value) : params.delete(key))
     setSearchParams(params)
-    setOpenMenuId(null)
   }
 
   function closeWorkspace() {
@@ -130,7 +109,7 @@ export function ProductsPage() {
   }
 
   async function handleDelete(product: Product) {
-    setOpenMenuId(null)
+    deleteMutation.reset()
     const shouldDelete = await confirm({
       title: 'Eliminar producto',
       description: `Vas a eliminar “${product.name}” del catálogo. Esta acción no se puede deshacer.`,
@@ -138,7 +117,7 @@ export function ProductsPage() {
       cancelLabel: 'Cancelar',
       tone: 'danger',
     })
-    if (shouldDelete) await deleteMutation.mutateAsync(product.id)
+    if (shouldDelete) deleteMutation.mutate(product.id)
   }
 
   if (isProductWorkspaceOpen) {
@@ -150,16 +129,17 @@ export function ProductsPage() {
       {confirmationDialog}
       <RetailPageLayout
         bodyClassName={styles.body}
-        title="Productos"
+        headerClassName={`${workspaceVisual.hero} ${workspaceVisual.catalogHeader}`}
+        title={<WorkspaceBusinessTitle>Productos</WorkspaceBusinessTitle>}
         meta={<span>Gestiona tu catálogo detallado de artículos y servicios.</span>}
         actions={<>
-          <Link className={`${retailStyles.buttonOutline} ${styles.headerButton}`} to={routePaths.inventory}>
+          <Link className={`${retailStyles.buttonOutline} ${workspaceVisual.catalogAction}`} to={routePaths.inventory}>
             <ClipboardCheck aria-hidden="true" size={18} /> Ver existencias
           </Link>
-          <button className={`${retailStyles.buttonOutline} ${styles.headerButton}`} type="button" onClick={() => updateWorkspaceParams({ mode: 'import' })}>
+          <button className={`${retailStyles.buttonOutline} ${workspaceVisual.catalogAction}`} type="button" onClick={() => updateWorkspaceParams({ mode: 'import' })}>
             <Upload aria-hidden="true" size={18} /> Carga masiva
           </button>
-          <button className={`${retailStyles.buttonDark} ${styles.headerButton}`} type="button" onClick={() => updateWorkspaceParams({ mode: 'create', productId: null, tab: 'basic' })}>
+          <button className={`${retailStyles.buttonDark} ${workspaceVisual.catalogAction} ${workspaceVisual.catalogPrimary}`} type="button" onClick={() => updateWorkspaceParams({ mode: 'create', productId: null, tab: 'basic' })}>
             <Plus aria-hidden="true" size={19} /> Crear producto
           </button>
         </>}
@@ -167,7 +147,7 @@ export function ProductsPage() {
         <section className={styles.metrics} aria-label="Resumen del catálogo">
           <article className={styles.metricCard}><span className={styles.metricIcon}><Package aria-hidden="true" /></span><div><span>Total de productos</span><strong>{products.length.toLocaleString('es-CO')}</strong></div></article>
           <article className={styles.metricCard}><span className={styles.metricIcon}><Tags aria-hidden="true" /></span><div><span>Categorías activas</span><strong>{categories.filter((category) => category.isVisibleInCatalog).length}</strong></div></article>
-          <article className={styles.metricCard}><span className={styles.metricIcon}><BadgeDollarSign aria-hidden="true" /></span><div><span>Valor de venta total</span><strong>{formatCurrency(totalSaleValue)}</strong></div></article>
+          <article className={styles.metricCard}><span className={styles.metricIcon}><BadgeDollarSign aria-hidden="true" /></span><div><span>Valor del stock a precio de venta</span><strong>{formatCurrency(totalSaleValue)}</strong></div></article>
         </section>
 
         <section className={styles.catalogCard}>
@@ -178,18 +158,27 @@ export function ProductsPage() {
             </label>
             <label className={styles.selectField}>
               <span className={styles.srOnly}>Filtrar por categoría</span>
-              <SearchableSelect value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
+              <SearchableSelect aria-label="Filtrar por categoría" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
                 <option value="ALL">Todas las categorías</option>
                 {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
               </SearchableSelect>
             </label>
             <label className={styles.selectField}>
               <span className={styles.srOnly}>Filtrar por stock</span>
-              <SearchableSelect value={stockFilter} onChange={(event) => setStockFilter(event.target.value as StockFilter)}>
-                <option value="ALL">Cualquier stock</option><option value="IN_STOCK">En stock</option><option value="LOW_STOCK">Stock bajo</option><option value="OUT_OF_STOCK">Agotado</option>
+              <SearchableSelect aria-label="Filtrar por stock" value={stockFilter} onChange={(event) => setStockFilter(event.target.value as StockFilter)}>
+                <option value="ALL">Cualquier stock</option>
+                <option value="healthy">{stockLabels.healthy}</option>
+                <option value="low">{stockLabels.low}</option>
+                <option value="out">{stockLabels.out}</option>
               </SearchableSelect>
             </label>
           </div>
+
+          {deleteMutation.isError ? (
+            <p className={styles.deleteError} role="alert">
+              {getErrorMessage(deleteMutation.error, 'No se pudo eliminar el producto.')}
+            </p>
+          ) : null}
 
           {productsQuery.isLoading ? <div className={styles.state} role="status">Cargando productos...</div> : productsQuery.isError ? (
             <div className={styles.state} role="alert"><strong>No pudimos cargar los productos.</strong><span>{getErrorMessage(productsQuery.error, 'Intenta nuevamente.')}</span><button className={retailStyles.buttonOutline} type="button" onClick={() => void productsQuery.refetch()}>Reintentar</button></div>
@@ -198,19 +187,52 @@ export function ProductsPage() {
           ) : (
             <div className={styles.tableScroller}>
               <table className={styles.table}>
-                <thead><tr><th>Producto</th><th>SKU</th><th>Costo</th><th>Precio de venta</th><th>Stock</th><th>Estado</th><th className={styles.actionsHeading}>Acciones</th></tr></thead>
+                <thead><tr><th>Producto</th><th>SKU</th><th>Costo</th><th>Precio de venta</th><th>Stock</th><th>Estado</th><th>Acciones</th></tr></thead>
                 <tbody>{paginatedProducts.map((product) => {
-                  const status = getStockStatus(product)
+                  const status = getProductStockStatus(product, defaultStockThreshold)
+                  const canTrackStock = product.inventoryBehavior !== 'MADE_TO_ORDER' &&
+                    product.productType !== 'VARIANT_PARENT'
+                  const openEditor = () => updateWorkspaceParams({ productId: product.id, mode: null, tab: 'basic' })
                   return <tr key={product.id}>
-                    <td data-label="Producto"><button className={styles.productCell} type="button" onClick={() => updateWorkspaceParams({ productId: product.id, mode: null, tab: 'basic' })}><ProductThumbnail product={product} /><span><strong>{product.name}</strong><small>{categoryById.get(product.categoryId ?? '') ?? 'Sin categoría'}</small></span></button></td>
-                    <td data-label="SKU">{product.sku ?? '—'}</td>
+                    <td data-label="Producto">
+                      <button className={styles.productCell} type="button" onClick={openEditor}>
+                        <SalesProductPhoto
+                          compact
+                          src={resolveProductImageUrl(product.imageUrls) ?? resolveProductImageUrl(product.variantGroup?.imageUrls)}
+                        />
+                        <span>
+                          <strong>{product.name}</strong>
+                          <small>{categoryById.get(product.categoryId ?? '') ?? 'Sin categoría'}</small>
+                        </span>
+                      </button>
+                    </td>
+                    <td data-label="SKU" className={styles.sku}>{product.sku ?? '—'}</td>
                     <td data-label="Costo">{formatCurrency(product.cost)}</td>
                     <td data-label="Precio de venta" className={styles.price}>{formatCurrency(product.price)}</td>
-                    <td data-label="Stock">{product.inventoryBehavior === 'MADE_TO_ORDER' ? <span> No aplica </span> : <span className={product.stock <= Math.max(product.minStock, 5) ? styles.lowStock : undefined}><strong>{product.stock}</strong> {getProductUnitStockLabel(product.unit, product.stock)}</span>}</td>
-                    <td data-label="Estado"><span className={`${styles.status} ${status.tone}`}>{status.label}</span></td>
+                    <td data-label="Stock">
+                      {canTrackStock ? (
+                        <span className={styles.stockQty}>
+                          <strong>{product.stock}</strong> {getProductUnitStockLabel(product.unit, product.stock)}
+                        </span>
+                      ) : <span>—</span>}
+                    </td>
+                    <td data-label="Estado"><span className={styles.status} data-status={status}>{stockLabels[status]}</span></td>
                     <td data-label="Acciones" className={styles.actionCell}>
-                      <button aria-expanded={openMenuId === product.id} aria-label={`Acciones de ${product.name}`} className={styles.menuButton} type="button" onClick={() => setOpenMenuId((current) => current === product.id ? null : product.id)}><MoreVertical aria-hidden="true" size={20} /></button>
-                      {openMenuId === product.id ? <div className={styles.actionMenu}><button type="button" onClick={() => updateWorkspaceParams({ productId: product.id, mode: null, tab: 'basic' })}>Editar producto</button><button className={styles.deleteAction} disabled={deleteMutation.isPending} type="button" onClick={() => void handleDelete(product)}>Eliminar</button></div> : null}
+                      <div className={styles.rowActions}>
+                        <button aria-label={`Editar ${product.name}`} type="button" onClick={openEditor}>
+                          <Pencil aria-hidden="true" /> Editar
+                        </button>
+                        <button
+                          aria-label={`Eliminar ${product.name}`}
+                          className={styles.deleteAction}
+                          disabled={deleteMutation.isPending}
+                          title="Eliminar producto"
+                          type="button"
+                          onClick={() => void handleDelete(product)}
+                        >
+                          <Trash2 aria-hidden="true" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 })}</tbody>

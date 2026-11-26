@@ -1,0 +1,91 @@
+.businessMark,
+.productPhoto,
+.customerAvatar,
+.paymentIcon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+}
+
+.businessMark {
+  width: 2.45rem;
+  height: 2.45rem;
+  padding: 0.15rem;
+  border: 1px solid #cbdff6;
+  border-radius: 0.7rem;
+  background: #fff;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.businessMark img {
+  width: 100%;
+  height: 100%;
+}
+
+.productPhoto {
+  width: 100%;
+  height: clamp(4.3rem, 8vw, 6.5rem);
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e7eff9;
+  border-radius: 0.7rem;
+  background: radial-gradient(ellipse at center, #fff 32%, #f0f6fd);
+  color: #4875ae;
+}
+
+.productPhoto[data-compact] {
+  width: 2.85rem;
+  height: 2.85rem;
+  border-radius: 0.65rem;
+}
+
+.productPhoto img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 0.25rem;
+  object-fit: contain;
+}
+
+.productPhoto svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.customerAvatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.6rem;
+  background: linear-gradient(135deg, #e1f6f7, #e6eeff);
+  color: #254e80;
+  font-size: 0.74rem;
+  font-weight: 800;
+  overflow: hidden;
+}
+
+.customerAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.paymentIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
+  background: #e9eef7;
+  color: #4a6386;
+}
+
+.paymentIcon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.paymentIcon[data-method="CASH"] { background: #def4e9; color: #19694d; }
+.paymentIcon[data-method="CARD"] { background: #e1eeff; color: #205892; }
+.paymentIcon[data-method="DIGITAL_WALLET"] { background: #eee6fb; color: #634394; }
+.paymentIcon[data-method="TRANSFER"] { background: #dff2f6; color: #226378; }
+.paymentIcon[data-method="BANK_DEPOSIT"] { background: #faefdb; color: #795721; }
+.paymentIcon[data-method="CREDIT"] { background: #ffede5; color: #90442e; }

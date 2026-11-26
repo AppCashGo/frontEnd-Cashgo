@@ -1,6 +1,5 @@
-import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { type FormEvent, useEffect, useState } from 'react'
-import { Printer, Save } from 'lucide-react'
+import { Eye, Printer, ReceiptText, Save } from 'lucide-react'
 import type {
   BusinessPrintSettingsInput,
   BusinessSettings,
@@ -8,6 +7,7 @@ import type {
 } from '@/modules/settings/types/settings'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { AppButton } from '@/shared/components/ui/AppButton'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import styles from './PrintSettingsPanel.module.css'
@@ -24,6 +24,11 @@ type PrintSettingsPanelProps = {
   isSubmitting: boolean
   onSubmit: (input: BusinessPrintSettingsInput) => Promise<void>
 }
+
+const ticketWidths = [
+  { value: '80mm', label: '80 mm', description: 'Estándar' },
+  { value: '58mm', label: '58 mm', description: 'Compacto' },
+] as const
 
 const defaultPrintSettings: PrintSettings = {
   ticketWidth: '80mm',
@@ -61,6 +66,8 @@ export function PrintSettingsPanel({
     tone: 'success' | 'error'
     text: string
   } | null>(null)
+  const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null)
+  const logoUrl = resolveApiAssetUrl(businessSettings?.logoUrl)
   const sampleSubtotal = 42000
   const sampleTax =
     businessSettings && businessSettings.taxRate > 0
@@ -119,9 +126,11 @@ export function PrintSettingsPanel({
   return (
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
+        <span className={styles.headerIcon} aria-hidden="true">
+          <Printer />
+        </span>
         <div>
-          <p className={styles.eyebrow}>Impresion POS</p>
-          <h2 className={styles.title}>Formato de tickets y comprobantes</h2>
+          <h2 className={styles.title}>Formato del ticket</h2>
           <p className={styles.description}>
             Ajusta el ticket que se imprime desde caja, ventas y documentos.
           </p>
@@ -130,22 +139,26 @@ export function PrintSettingsPanel({
 
       <form className={styles.workspace} onSubmit={handleSubmit}>
         <div className={styles.controls}>
-          <label className={styles.field}>
-            <span>Ancho del ticket</span>
-            <SearchableSelect
-              className={styles.input}
-              value={settings.ticketWidth}
-              onChange={(event) =>
-                updateSetting(
-                  'ticketWidth',
-                  event.target.value === '58mm' ? '58mm' : '80mm',
-                )
-              }
-            >
-              <option value="80mm">80 mm</option>
-              <option value="58mm">58 mm</option>
-            </SearchableSelect>
-          </label>
+          <fieldset className={styles.widthField}>
+            <legend>Ancho del papel</legend>
+            <div className={styles.widthOptions}>
+              {ticketWidths.map(({ value, label, description }) => (
+                <label className={styles.widthOption} key={value}>
+                  <input
+                    checked={settings.ticketWidth === value}
+                    name="ticketWidth"
+                    type="radio"
+                    value={value}
+                    onChange={() => updateSetting('ticketWidth', value)}
+                  />
+                  <span>
+                    <strong>{label}</strong>
+                    <small>{description}</small>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           <label className={styles.checkField}>
             <input
@@ -216,44 +229,58 @@ export function PrintSettingsPanel({
           </div>
         </div>
 
-        <div
-          className={
-            settings.ticketWidth === '58mm' ? styles.previewNarrow : styles.preview
-          }
-        >
-          {settings.showLogo ? (
-            <div className={styles.logoMark}>
-              {(businessSettings?.businessName ?? 'C').charAt(0).toUpperCase()}
-            </div>
-          ) : null}
-          <h3>{businessSettings?.businessName ?? 'Nombre del negocio'}</h3>
-          <p>{businessSettings?.taxId ?? 'NIT o documento sin configurar'}</p>
-          <p>{businessSettings?.address ?? 'Direccion del negocio'}</p>
+        <section aria-labelledby="ticket-preview-heading" className={styles.previewArea}>
+          <h3 id="ticket-preview-heading" className={styles.previewHeading}>
+            <Eye aria-hidden="true" size={18} />
+            Vista previa
+          </h3>
+          <div className={settings.ticketWidth === '58mm' ? styles.previewNarrow : styles.preview}>
+            {settings.showLogo ? (
+              logoUrl && logoUrl !== failedLogoUrl ? (
+                <img
+                  alt="Logo del negocio"
+                  className={styles.ticketLogo}
+                  src={logoUrl}
+                  onError={() => setFailedLogoUrl(logoUrl)}
+                />
+              ) : (
+                <div className={styles.logoMark}>
+                  {(businessSettings?.businessName ?? 'C').charAt(0).toUpperCase()}
+                </div>
+              )
+            ) : null}
+            <h3>{businessSettings?.businessName ?? 'Nombre del negocio'}</h3>
+            <p>{businessSettings?.taxId ?? 'NIT o documento sin configurar'}</p>
+            <p>{businessSettings?.address ?? 'Dirección del negocio'}</p>
 
-          <div className={styles.ticketDivider} />
+            <div className={styles.ticketDivider} />
 
-          <div className={styles.ticketRow}>
-            <span>Venta POS</span>
-            <strong>#000128</strong>
-          </div>
-          <div className={styles.ticketRow}>
-            <span>Producto ejemplo</span>
-            <strong>{formatCurrency(sampleSubtotal)}</strong>
-          </div>
-          {settings.showTaxDetail ? (
             <div className={styles.ticketRow}>
-              <span>{businessSettings?.taxLabel ?? 'Impuesto'}</span>
-              <strong>{formatCurrency(sampleTax)}</strong>
+              <span className={styles.ticketReference}>
+                <ReceiptText aria-hidden="true" size={14} />
+                Venta POS
+              </span>
+              <strong>#000128</strong>
             </div>
-          ) : null}
-          <div className={styles.ticketTotal}>
-            <span>Total</span>
-            <strong>{formatCurrency(sampleTotal)}</strong>
-          </div>
+            <div className={styles.ticketRow}>
+              <span>Producto ejemplo</span>
+              <strong>{formatCurrency(sampleSubtotal)}</strong>
+            </div>
+            {settings.showTaxDetail ? (
+              <div className={styles.ticketRow}>
+                <span>{businessSettings?.taxLabel ?? 'Impuesto'}</span>
+                <strong>{formatCurrency(sampleTax)}</strong>
+              </div>
+            ) : null}
+            <div className={styles.ticketTotal}>
+              <span>Total</span>
+              <strong>{formatCurrency(sampleTotal)}</strong>
+            </div>
 
-          <div className={styles.ticketDivider} />
-          <p>{settings.footerMessage || 'Gracias por tu compra.'}</p>
-        </div>
+            <div className={styles.ticketDivider} />
+            <p>{settings.footerMessage || 'Gracias por tu compra.'}</p>
+          </div>
+        </section>
       </form>
     </SurfaceCard>
   )

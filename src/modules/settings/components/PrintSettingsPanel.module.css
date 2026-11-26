@@ -1,22 +1,31 @@
 .card {
   display: grid;
-  gap: 1rem;
-  padding: 1rem;
+  gap: 1.15rem;
+  padding: clamp(0.85rem, 2.3vw, 1.4rem);
 }
 
 .header {
   display: flex;
-  justify-content: space-between;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--ui-border);
 }
 
-.eyebrow {
-  margin: 0 0 0.3rem;
-  color: #5b6b7f;
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+.headerIcon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: 0.75rem;
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.headerIcon svg {
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 .title {
@@ -47,14 +56,14 @@
   gap: 0.45rem;
 }
 
-.field span,
-.checkField span {
+.field > span,
+.checkField > span,
+.widthField legend {
   color: #24344d;
   font-size: 0.88rem;
   font-weight: 800;
 }
 
-.input,
 .textarea {
   width: 100%;
   border: 1px solid #cbd5e1;
@@ -64,9 +73,58 @@
   font: inherit;
 }
 
-.input {
-  min-height: 3rem;
-  padding: 0.75rem 0.9rem;
+.widthField {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.widthField legend {
+  margin-bottom: 0.45rem;
+}
+
+.widthOptions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.widthOption {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 3.5rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.75rem;
+  background: var(--ui-surface);
+  cursor: pointer;
+}
+
+.widthOption:has(input:checked) {
+  border-color: var(--ui-primary);
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary);
+}
+
+.widthOption > span {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.widthOption small {
+  color: var(--ui-text-secondary);
+  font-size: 0.73rem;
+  overflow-wrap: anywhere;
+}
+
+.widthOption input,
+.checkField input {
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--ui-primary);
 }
 
 .textarea {
@@ -75,7 +133,6 @@
   padding: 0.85rem 0.95rem;
 }
 
-.input:focus,
 .textarea:focus {
   border-color: #1f5fcf;
   outline: 3px solid rgba(31, 95, 207, 0.14);
@@ -89,12 +146,12 @@
   border-radius: 0.75rem;
   padding: 0.85rem 0.9rem;
   background: #f8fafc;
+  cursor: pointer;
 }
 
 .checkField input {
   width: 1.05rem;
   height: 1.05rem;
-  accent-color: #172635;
 }
 
 .feedback {
@@ -121,27 +178,45 @@
   display: flex;
   gap: 0.75rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.primaryButton,
-.secondaryButton {
-  min-height: 3rem;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1rem;
-  font-weight: 900;
-  cursor: pointer;
+.actions > button {
+  min-height: 2.75rem;
 }
 
-.primaryButton {
-  border: 0;
-  background: #172635;
-  color: #ffffff;
+.previewArea {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 0.9rem;
+  min-width: 0;
+  min-height: 100%;
+  padding: clamp(0.65rem, 2vw, 1.25rem);
+  border: 1px solid #dce7f4;
+  border-radius: 0.95rem;
+  background: linear-gradient(155deg, #eaf3ff, #f7faff 75%);
 }
 
-.secondaryButton {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #172635;
+.previewHeading,
+.ticketReference {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.previewHeading {
+  margin: 0;
+  color: #265786;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.ticketLogo {
+  justify-self: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  object-fit: contain;
 }
 
 .preview,
@@ -162,7 +237,7 @@
 }
 
 .previewNarrow {
-  width: min(100%, 15rem);
+  width: min(76%, 15rem);
 }
 
 .preview h3,
@@ -171,6 +246,7 @@
 .previewNarrow p {
   margin: 0;
   text-align: center;
+  overflow-wrap: anywhere;
 }
 
 .preview h3,
@@ -207,8 +283,13 @@
 .ticketTotal {
   display: flex;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.5rem;
   font-size: 0.82rem;
+}
+
+.ticketRow strong,
+.ticketTotal strong {
+  flex: 0 0 auto;
 }
 
 .ticketTotal {
@@ -217,18 +298,23 @@
   font-weight: 900;
 }
 
-@media (min-width: 900px) {
+@container retail-page (min-width: 48rem) {
   .workspace {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 0.8fr);
     align-items: start;
   }
 }
 
-@media (max-width: 560px) {
-  .actions,
-  .primaryButton,
-  .secondaryButton {
-    width: 100%;
+@container retail-page (max-width: 34rem) {
+  .actions > button {
+    flex: 1 1 8rem;
+  }
+}
+
+@container retail-page (max-width: 25rem) {
+  .preview,
+  .previewNarrow {
+    padding: 0.65rem;
   }
 }
 

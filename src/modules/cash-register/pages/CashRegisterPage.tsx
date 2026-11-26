@@ -1,10 +1,15 @@
+import { WorkspaceBusinessTitle } from "@/shared/components/retail/WorkspaceBusinessTitle";
+import workspaceVisual from "@/shared/components/retail/WorkspaceVisual.module.css";
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
+  ArrowLeftRight,
   ArrowRight,
+  Banknote,
   BarChart3,
   Calendar,
+  Clock3,
   History,
   LockKeyhole,
   CircleDollarSign,
@@ -18,9 +23,15 @@ import {
   Sparkles,
   Store,
   TrendingUp,
+  Vault,
   Wallet,
+  ArrowDownLeft,
+  ArrowUpRight,
+  ReceiptText,
 } from "lucide-react";
+import { CashRegisterSummaryPanel } from "@/modules/cash-register/components/CashRegisterSummaryPanel";
 import { CashRegisterHistoryList } from "@/modules/cash-register/components/CashRegisterHistoryList";
+import { CashRegisterOperatorAvatar } from "@/modules/cash-register/components/CashRegisterOperatorAvatar";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
 import { CashRegisterRetailTransactionsTable } from "@/modules/cash-register/components/CashRegisterRetailTransactionsTable";
 import {
@@ -34,6 +45,7 @@ import {
 import {
   CashRegisterSessionDrawer,
   type CashRegisterDrawerMode,
+  type CashRegisterManagementSection,
 } from "@/modules/cash-register/components/CashRegisterSessionDrawer";
 import {
   useCashRegisterAssigneesQuery,
@@ -138,13 +150,19 @@ const saleOriginOptions: FilterOption[] = [
   { id: "DIDI", label: "Domicilio Didi" },
 ];
 
-const ledgerTabs: Array<{ id: LedgerTab; label: string }> = [
-  { id: "income", label: "Ingresos" },
-  { id: "expenses", label: "Egresos" },
-  { id: "receivables", label: "Por cobrar" },
-  { id: "payables", label: "Por pagar" },
-  { id: "transfers", label: "Transferencias" },
+const ledgerTabs: Array<{ id: LedgerTab; label: string; Icon: typeof Wallet }> = [
+  { id: "income", label: "Ingresos", Icon: ArrowDownLeft },
+  { id: "expenses", label: "Egresos", Icon: ArrowUpRight },
+  { id: "receivables", label: "Por cobrar", Icon: HandCoins },
+  { id: "payables", label: "Por pagar", Icon: ReceiptText },
+  { id: "transfers", label: "Transferencias", Icon: ArrowLeftRight },
 ];
+
+const shiftOperations = [
+  { section: "movement", label: "Ingreso o retiro", detail: "Registra efectivo que entra o sale.", Icon: Banknote },
+  { section: "transfer", label: "Traslado entre medios", detail: "Ej. pasar efectivo a Nequi.", Icon: ArrowLeftRight },
+  { section: "reserve", label: "Gestionar reserva", detail: "Guarda dinero o devuélvelo a caja.", Icon: Vault },
+] as const;
 
 function addDays(date: Date, days: number) {
   const nextDate = new Date(date);
@@ -347,7 +365,7 @@ function SummaryCard({
     tone === "balance" ? TrendingUp : tone === "expenses" ? Wallet : CircleDollarSign;
 
   return (
-    <article className={styles.summaryCard}>
+    <article className={styles.summaryCard} data-tone={tone}>
       <span className={joinClassNames(styles.summaryIcon, styles[`summaryIcon_${tone}`])}>
         <Icon />
       </span>
@@ -737,6 +755,8 @@ export function CashRegisterPage({
   const [isSessionDrawerOpen, setSessionDrawerOpen] = useState(false);
   const [sessionDrawerMode, setSessionDrawerMode] =
     useState<CashRegisterDrawerMode>("manage");
+  const [managementSection, setManagementSection] =
+    useState<CashRegisterManagementSection>("movement");
   const [closureReportError, setClosureReportError] = useState<string | null>(null);
   const [isFilterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [selectionDrawerType, setSelectionDrawerType] =
@@ -1077,6 +1097,7 @@ export function CashRegisterPage({
 
     if (canManageShift) {
       setSessionDrawerMode("manage");
+      setManagementSection("movement");
       setSessionDrawerOpen(true);
     }
 
@@ -1085,8 +1106,12 @@ export function CashRegisterPage({
     setSearchParams(nextSearchParams, { replace: true });
   }, [canManageShift, isCashRegister, navigate, searchParams, setSearchParams]);
 
-  function openSessionDrawer(mode: CashRegisterDrawerMode) {
+  function openSessionDrawer(
+    mode: CashRegisterDrawerMode,
+    section: CashRegisterManagementSection = "movement",
+  ) {
     setSessionDrawerMode(mode);
+    setManagementSection(section);
     setSessionDrawerOpen(true);
   }
 
@@ -1205,6 +1230,31 @@ export function CashRegisterPage({
     });
   }
 
+  const periodFields = (
+    <>
+      <SearchableSelect
+        aria-label="Periodo"
+        className={styles.periodSelect}
+        value={periodOption}
+        onChange={(event) => setPeriodOption(event.target.value as PeriodOption)}
+      >
+        <option value="daily">Diario</option>
+        <option value="weekly">Semanal</option>
+        <option value="monthly">Mensual</option>
+      </SearchableSelect>
+
+      <label className={styles.dateShell}>
+        <input
+          aria-label={`Fecha del periodo: ${formatPeriodLabel(dateRange.from, dateRange.to, periodOption)}`}
+          type="date"
+          value={selectedDate}
+          onChange={(event) => setSelectedDate(event.target.value)}
+        />
+        <Calendar />
+      </label>
+    </>
+  );
+
   return (
     <>
       <RetailPageLayout
@@ -1212,8 +1262,8 @@ export function CashRegisterPage({
         bodyClassName={styles.retailBody}
         bodyVariant="flush"
         className={styles.page}
-        headerClassName={styles.topBar}
-        title={isCashRegister ? "Caja" : "Movimientos"}
+        headerClassName={isCashRegister ? styles.topBar : joinClassNames(styles.topBar, workspaceVisual.hero, styles.movementsHero)}
+        title={isCashRegister ? "Caja" : <WorkspaceBusinessTitle>Movimientos</WorkspaceBusinessTitle>}
         actions={
           !isCashRegister ? (
             <button
@@ -1227,21 +1277,32 @@ export function CashRegisterPage({
           ) : undefined
         }
       >
-
-      <section className={styles.workspace}>
+      <section className={joinClassNames(styles.workspace, isCashRegister && styles.cashWorkspace)}>
         {isCashRegister ? (
           <section className={styles.shiftCard} aria-labelledby="cash-shift-title">
             <div className={styles.shiftHeader}>
-              <span className={styles.shiftIcon}><Store aria-hidden="true" /></span>
+              {currentSession ? (
+                <CashRegisterOperatorAvatar name={currentSession.responsibleUserName} />
+              ) : (
+                <span className={styles.shiftIcon}><Store aria-hidden="true" /></span>
+              )}
               <div>
-                <h2 id="cash-shift-title">Turno de caja</h2>
+                <div className={styles.shiftTitle}>
+                  <h2 id="cash-shift-title">Turno de caja</h2>
+                  {!currentSessionQuery.isError && !currentSessionQuery.isLoading ? (
+                    <span className={styles.shiftStatus} data-open={Boolean(currentSession)}>
+                      {currentSession ? "Abierta" : "Cerrada"}
+                    </span>
+                  ) : null}
+                </div>
                 {currentSessionQuery.isError ? (
                   <p role="alert">No pudimos consultar el turno actual.</p>
                 ) : currentSessionQuery.isLoading ? (
                   <p>Consultando estado de caja…</p>
                 ) : currentSession ? (
-                  <p>Abierta desde {formatCashRegisterDateTime(currentSession.openedAt)}
-                    {currentSession.responsibleUserName ? ` · ${currentSession.responsibleUserName}` : ""}
+                  <p className={styles.shiftMeta}>
+                    <strong>{currentSession.responsibleUserName || "Responsable sin asignar"}</strong>
+                    <span><Clock3 aria-hidden="true" /> Desde {formatCashRegisterDateTime(currentSession.openedAt)}</span>
                   </p>
                 ) : (
                   <p>No hay un turno abierto.</p>
@@ -1253,32 +1314,48 @@ export function CashRegisterPage({
                 </button>
               ) : !currentSessionQuery.isLoading && canManageShift ? (
                 <div className={styles.shiftActions}>
-                  <button className={styles.cashButton} type="button" onClick={() => openSessionDrawer("manage")}>
-                    <Store aria-hidden="true" />
-                    {currentSession ? "Gestionar caja" : "Abrir caja"}
-                  </button>
                   {currentSession ? (
-                    <button className={styles.topReportButton} type="button" onClick={() => openSessionDrawer("close")}>
+                    <button className={joinClassNames(styles.topReportButton, styles.closeShiftButton)} type="button" onClick={() => openSessionDrawer("close")}>
                       <LockKeyhole aria-hidden="true" /> Cerrar caja
                     </button>
-                  ) : null}
+                  ) : (
+                    <button className={styles.cashButton} type="button" onClick={() => openSessionDrawer("manage")}>
+                      <Store aria-hidden="true" /> Abrir caja
+                    </button>
+                  )}
                 </div>
               ) : null}
             </div>
-            {currentSession ? (
-              <>
-                <dl className={styles.shiftBalances}>
-                  {currentSession.paymentMethods.map((method) => (
-                    <div key={method.method}>
-                      <dt>{getPaymentMethodLabel(method.method)}</dt>
-                      <dd>{formatCashRegisterCurrency(method.expectedAmount)}</dd>
+            {!currentSessionQuery.isError && currentSession ? (
+              <CashRegisterSummaryPanel
+                key={currentSession.id}
+                reserveSummary={reserveSummaryQuery.isError ? undefined : reserveSummaryQuery.data}
+                session={currentSession}
+              >
+                {canManageShift ? (
+                  <section className={styles.shiftOperations} aria-labelledby="cash-operations-title">
+                    <div className={styles.shiftOperationsHeader}>
+                      <h3 id="cash-operations-title">Operaciones de caja</h3>
+                      <Link className={styles.transferHistoryLink} to={`${routePaths.movements}?tab=transfers`}>
+                        <History aria-hidden="true" /> Historial de transferencias
+                      </Link>
                     </div>
-                  ))}
-                </dl>
-                <button className={styles.topReportButton} type="button" onClick={() => openSessionDrawer("summary")}>
-                  <BarChart3 aria-hidden="true" /> Ver resumen del turno
-                </button>
-              </>
+                    <div className={styles.shiftOperationGrid}>
+                      {shiftOperations.map(({ section, label, detail, Icon }) => (
+                        <button data-operation={section} key={section} type="button" onClick={() => openSessionDrawer("manage", section)}>
+                          <span className={styles.shiftOperationIcon} data-operation={section}>
+                            <Icon aria-hidden="true" />
+                          </span>
+                          <span className={styles.shiftOperationText}>
+                            <strong>{label}</strong><small>{detail}</small>
+                          </span>
+                          <ArrowRight aria-hidden="true" className={styles.shiftOperationArrow} />
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                ) : null}
+              </CashRegisterSummaryPanel>
             ) : null}
           </section>
         ) : (
@@ -1301,65 +1378,29 @@ export function CashRegisterPage({
           </div>
         )}
 
-        {isCashRegister ? (
-          <div className={styles.closureHeader}>
-            <h2><History aria-hidden="true" /> Cierres de caja</h2>
-            <button
-              className={styles.topReportButton}
-              disabled={downloadReportMutation.isPending}
-              type="button"
-              onClick={() => void downloadClosures()}
-            >
-              <Download aria-hidden="true" />
-              {downloadReportMutation.isPending ? "Descargando…" : "Descargar cierres"}
-            </button>
-          </div>
-        ) : null}
-        {isCashRegister && closureReportError ? <p role="alert">{closureReportError}</p> : null}
-
-        <div
-          className={joinClassNames(
-            styles.filtersBar,
-            isCashRegister && styles.filtersBarClosures,
-            !isCashRegister && activeLedgerTab === "transfers" && styles.filtersBarWithoutButton,
-          )}
-        >
-          {!isCashRegister && activeLedgerTab !== "transfers" ? (
-            <button
-              className={styles.filterButton}
-              type="button"
-              onClick={() => setFilterDrawerOpen(true)}
-            >
-              <SlidersHorizontal />
-              Filtrar
-              {activeFiltersCount > 0 ? (
-                <strong className={styles.filterCount}>{activeFiltersCount}</strong>
-              ) : null}
-            </button>
-          ) : null}
-
-          <SearchableSelect
-            aria-label="Periodo"
-            className={styles.periodSelect}
-            value={periodOption}
-            onChange={(event) => setPeriodOption(event.target.value as PeriodOption)}
+        {!isCashRegister ? (
+          <div
+            className={joinClassNames(
+              styles.filtersBar,
+              activeLedgerTab === "transfers" && styles.filtersBarWithoutButton,
+            )}
           >
-            <option value="daily">Diario</option>
-            <option value="weekly">Semanal</option>
-            <option value="monthly">Mensual</option>
-          </SearchableSelect>
+            {activeLedgerTab !== "transfers" ? (
+              <button
+                className={styles.filterButton}
+                type="button"
+                onClick={() => setFilterDrawerOpen(true)}
+              >
+                <SlidersHorizontal />
+                Filtrar
+                {activeFiltersCount > 0 ? (
+                  <strong className={styles.filterCount}>{activeFiltersCount}</strong>
+                ) : null}
+              </button>
+            ) : null}
 
-          <label className={styles.dateShell}>
-            <input
-              aria-label={`Fecha del periodo: ${formatPeriodLabel(dateRange.from, dateRange.to, periodOption)}`}
-              type="date"
-              value={selectedDate}
-              onChange={(event) => setSelectedDate(event.target.value)}
-            />
-            <Calendar />
-          </label>
+            {periodFields}
 
-          {!isCashRegister ? (
             <label className={styles.searchShell}>
               <Search />
               <input
@@ -1370,8 +1411,8 @@ export function CashRegisterPage({
                 onChange={(event) => setSearchValue(event.target.value)}
               />
             </label>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
 
         {!isCashRegister ? (
           <section className={styles.ledgerCard}>
@@ -1384,7 +1425,7 @@ export function CashRegisterPage({
                   type="button"
                   onClick={() => setSearchParams({ tab: tab.id }, { replace: true })}
                 >
-                  {tab.label}
+                  <tab.Icon aria-hidden="true" /> {tab.label}
                 </button>
               ))}
             </div>
@@ -1485,7 +1526,21 @@ export function CashRegisterPage({
             )}
           </section>
         ) : (
-          <>
+          <section className={styles.closureCard} aria-labelledby="cash-closures-title">
+            <div className={styles.closureHeader}>
+              <h2 id="cash-closures-title"><History aria-hidden="true" /> Cierres de caja</h2>
+              <button
+                className={styles.topReportButton}
+                disabled={downloadReportMutation.isPending}
+                type="button"
+                onClick={() => void downloadClosures()}
+              >
+                <Download aria-hidden="true" />
+                {downloadReportMutation.isPending ? "Descargando…" : "Descargar cierres"}
+              </button>
+            </div>
+            <div className={styles.closureFilters}>{periodFields}</div>
+            {closureReportError ? <p role="alert">{closureReportError}</p> : null}
             {hasClosuresError ? (
               <div className={styles.feedbackPanel}>
                 <RetailEmptyState
@@ -1509,7 +1564,7 @@ export function CashRegisterPage({
             ) : (
               <CashRegisterHistoryList sessions={closedSessions} />
             )}
-          </>
+          </section>
         )}
       </section>
       </RetailPageLayout>
@@ -1522,6 +1577,7 @@ export function CashRegisterPage({
         latestClosedSession={latestClosedSession}
         reserveSummary={reserveSummaryQuery.data ?? null}
         initialMode={sessionDrawerMode}
+        initialManagementSection={managementSection}
         isOpen={isSessionDrawerOpen}
         isSubmitting={isSubmitting}
         onClose={() => setSessionDrawerOpen(false)}

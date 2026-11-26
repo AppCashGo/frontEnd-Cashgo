@@ -166,14 +166,14 @@ export function RetailSalesComparisonChart({
         <XAxis
           axisLine={false}
           dataKey="label"
-          interval={0}
+          minTickGap={14}
           tick={{ fill: '#475569', fontSize: 11, fontWeight: 700 }}
           tickLine={false}
         />
         <Tooltip
           formatter={(value, name) => [
             formatReportCurrency(Number(value), languageCode),
-            name === 'currentRevenue' ? currentLabel : previousLabel,
+            name === 'currentRevenue' ? currentLabel : name === 'previousRevenue' ? previousLabel : name,
           ]}
           labelStyle={{ color: '#0f172a', fontWeight: 800 }}
           contentStyle={{
@@ -191,7 +191,7 @@ export function RetailSalesComparisonChart({
         <Bar
           barSize={22}
           dataKey="previousRevenue"
-          fill="#dff8ef"
+          fill="#5279ad"
           name={previousLabel}
           radius={[8, 8, 0, 0]}
         />

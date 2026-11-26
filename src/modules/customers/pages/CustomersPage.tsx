@@ -1,17 +1,23 @@
-import { useDeferredValue, useEffect, useState } from 'react'
+import { useDeferredValue, useEffect, useRef, useState } from 'react'
 import {
   BellRing,
   CalendarCheck,
+  CalendarClock,
   ChevronLeft,
   ChevronRight,
   CircleAlert,
   CircleCheckBig,
+  CircleDollarSign,
   Crown,
   Download,
+  Eye,
   History,
+  Pencil,
   ReceiptText,
+  Search,
   Trash2,
   TrendingUp,
+  UserPlus,
   Users,
 } from 'lucide-react'
 import { CustomerDetailPanel } from '@/modules/customers/components/CustomerDetailPanel'
@@ -51,6 +57,9 @@ import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashR
 import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
 import { useSalesQuery } from '@/modules/sales/hooks/use-create-sale-mutation'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
+import { SalesCustomerAvatar } from '@/modules/sales/components/SalesVisuals'
+import { WorkspaceBusinessTitle } from '@/shared/components/retail/WorkspaceBusinessTitle'
+import workspaceVisual from '@/shared/components/retail/WorkspaceVisual.module.css'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { RetailTableShell } from '@/shared/components/retail/RetailTableShell'
 import { TableStateRow } from '@/shared/components/retail/TableStateRow'
@@ -64,7 +73,6 @@ import { exportCustomerAgingReport } from '@/modules/customers/services/customer
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
-import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import styles from './CustomersPage.module.css'
 
 type CustomerPortfolioFilter =
@@ -168,6 +176,7 @@ export function CustomersPage() {
   const [isCashRegisterFlowOpen, setCashRegisterFlowOpen] = useState(false)
   const [managedSaleId, setManagedSaleId] = useState<string | null>(null)
   const [resumeManagedSaleId, setResumeManagedSaleId] = useState<string | null>(null)
+  const customerListRef = useRef<HTMLDivElement>(null)
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false)
   const [portfolioFilter, setPortfolioFilter] = useState<CustomerPortfolioFilter>('ALL')
   const [customerPage, setCustomerPage] = useState(1)
@@ -246,6 +255,7 @@ export function CustomersPage() {
     value: customers.reduce((sum, customer) => sum + customer[bucket.field], 0),
     customerCount: customers.filter((customer) => customer[bucket.field] > 0).length,
   }))
+  const selectedAgingBucket = agingTotals.find((bucket) => bucket.filter === portfolioFilter)
   const totalPurchases = customers.reduce((sum, customer) => sum + customer.purchaseCount, 0)
   const collectionAgenda = collectionAgendaQuery.data
   const visibleAgendaPromises = (collectionAgenda?.promises ?? []).filter((promise) => {
@@ -483,13 +493,13 @@ export function CustomersPage() {
     return (
       <>
         <RetailPageLayout
-          accent="success"
-          bodyVariant="flush"
-          title="Clientes"
+          headerClassName={`${workspaceVisual.hero} ${workspaceVisual.catalogHeader} ${styles.customersHeader}`}
+          title={<WorkspaceBusinessTitle>Clientes</WorkspaceBusinessTitle>}
+          meta={<span>Consulta compras, saldos y compromisos de pago.</span>}
           actions={
-            <div className={styles.pageActions}>
+            <>
               <button
-                className={retailStyles.buttonOutline}
+                className={`${retailStyles.buttonOutline} ${workspaceVisual.catalogAction}`}
                 disabled={isExporting}
                 type="button"
                 onClick={() => void handleExportAgingReport()}
@@ -498,35 +508,29 @@ export function CustomersPage() {
                 {isExporting ? 'Exportando...' : 'Exportar cartera'}
               </button>
               <button
-                className={retailStyles.buttonDark}
+                className={`${retailStyles.buttonDark} ${workspaceVisual.catalogAction} ${workspaceVisual.catalogPrimary}`}
                 type="button"
                 onClick={openCreateCustomer}
               >
+                <UserPlus aria-hidden="true" size={18} />
                 Crear cliente
               </button>
-            </div>
+            </>
           }
         >
           <section className={styles.retailWorkspace}>
-            <button
-              className={styles.premiumCard}
-              type="button"
-              onClick={() => setPremiumModalOpen(true)}
-            >
-              <Crown aria-hidden="true" />
-              <div>
-                <strong>Clientes premium, control total en un solo lugar.</strong>
-                <span>Registra deudas, envia recordatorios y manten todo bajo control.</span>
-              </div>
-              <span>Ver beneficios</span>
-            </button>
-
-            <div className={styles.retailMetricsGrid}>
-              <RetailStatCard label="Total clientes" value={customers.length.toString()} />
-              <RetailStatCard label="Total por cobrar" value={formatCurrency(totalBalance)} />
-              <RetailStatCard label="Cartera vencida" value={formatCurrency(overdueBalance)} />
-              <RetailStatCard label="Clientes vencidos" value={overdueCustomers.toString()} />
-            </div>
+            <section className={styles.retailMetricsGrid} aria-label="Resumen de clientes y cartera">
+              {([
+                { label: 'Total clientes', value: customers.length.toLocaleString('es-CO'), icon: Users, tone: 'contacts' },
+                { label: 'Total por cobrar', value: formatCurrency(totalBalance), icon: CircleDollarSign, tone: 'balance' },
+                { label: 'Cartera vencida', value: formatCurrency(overdueBalance), icon: CircleAlert, tone: 'overdue' },
+                { label: 'Clientes con deuda vencida', value: overdueCustomers.toLocaleString('es-CO'), icon: CalendarClock, tone: 'review' },
+              ] as const).map(({ label, value, icon: Icon, tone }) => (
+                <div className={styles.portfolioMetric} data-tone={tone} key={label}>
+                  <RetailStatCard icon={<Icon aria-hidden="true" />} label={label} value={value} />
+                </div>
+              ))}
+            </section>
 
             <section className={styles.agingSection} aria-labelledby="aging-title">
               <div className={styles.agingHeading}>
@@ -534,11 +538,9 @@ export function CustomersPage() {
                   <h2 id="aging-title">Antigüedad de cartera</h2>
                   <p>Selecciona un rango para identificar los clientes que requieren gestión.</p>
                 </div>
-                {portfolioFilter !== 'ALL' ? (
-                  <button type="button" onClick={() => setPortfolioFilter('ALL')}>
-                    Limpiar filtro
-                  </button>
-                ) : null}
+                <button className={styles.benefitsButton} type="button" onClick={() => setPremiumModalOpen(true)}>
+                  <Crown aria-hidden="true" size={16} /> Ver beneficios
+                </button>
               </div>
               <div className={styles.agingGrid}>
                 {agingTotals.map((bucket) => (
@@ -549,7 +551,11 @@ export function CustomersPage() {
                     }`}
                     key={bucket.filter}
                     type="button"
-                    onClick={() => setPortfolioFilter(bucket.filter)}
+                    onClick={() => {
+                      setPortfolioFilter(bucket.filter)
+                      customerListRef.current?.scrollIntoView({ block: 'start' })
+                      customerListRef.current?.focus({ preventScroll: true })
+                    }}
                   >
                     <span>{bucket.label}</span>
                     <strong>{formatCurrency(bucket.value)}</strong>
@@ -565,8 +571,7 @@ export function CustomersPage() {
             <section className={styles.collectionAgenda} aria-labelledby="collection-agenda-title">
               <div className={styles.agendaHeading}>
                 <div>
-                  <span>Seguimiento diario</span>
-                  <h2 id="collection-agenda-title">Agenda de cobranza</h2>
+                  <h2 id="collection-agenda-title"><CalendarCheck aria-hidden="true" /> Agenda de cobranza</h2>
                   <p>Revisa compromisos de pago y clientes que necesitan un nuevo recordatorio.</p>
                 </div>
                 <button
@@ -580,6 +585,7 @@ export function CustomersPage() {
 
               <div className={styles.agendaSummary}>
                 <button
+                  aria-pressed={agendaFilter === 'UPCOMING'}
                   className={
                     agendaFilter === 'UPCOMING' ? styles.agendaCardActive : styles.agendaCard
                   }
@@ -592,6 +598,7 @@ export function CustomersPage() {
                   <small>{collectionAgenda?.summary.dueToday ?? 0} para hoy</small>
                 </button>
                 <button
+                  aria-pressed={agendaFilter === 'REMINDERS'}
                   className={
                     agendaFilter === 'REMINDERS' ? styles.agendaCardActive : styles.agendaCard
                   }
@@ -604,6 +611,7 @@ export function CustomersPage() {
                   <small>Sin contacto reciente</small>
                 </button>
                 <button
+                  aria-pressed={agendaFilter === 'BROKEN'}
                   className={
                     agendaFilter === 'BROKEN' ? styles.agendaCardActive : styles.agendaCard
                   }
@@ -616,6 +624,7 @@ export function CustomersPage() {
                   <small>Requieren seguimiento</small>
                 </button>
                 <button
+                  aria-pressed={agendaFilter === 'FULFILLED'}
                   className={
                     agendaFilter === 'FULFILLED' ? styles.agendaCardActive : styles.agendaCard
                   }
@@ -779,12 +788,12 @@ export function CustomersPage() {
               isRefreshing={customersQuery.isFetching && !customersQuery.isLoading}
               title={`Clientes registrados · ${visibleCustomers.length.toLocaleString('es-CO')}`}
               toolbar={
-                <div className={styles.retailSearchRow}>
-                  <label className={`${retailStyles.searchField} ${listPageStyles.searchField}`}>
+                <div className={styles.retailSearchRow} ref={customerListRef} tabIndex={-1}>
+                  <label className={styles.customerSearch}>
+                    <Search aria-hidden="true" size={18} />
                     <input
                       aria-label="Buscar cliente"
-                      className={retailStyles.input}
-                      placeholder="Buscar cliente"
+                      placeholder="Nombre, celular o documento"
                       type="search"
                       value={searchValue}
                       onChange={(event) => setSearchValue(event.target.value)}
@@ -807,6 +816,11 @@ export function CustomersPage() {
                       </button>
                     ))}
                   </div>
+                  {selectedAgingBucket ? (
+                    <button className={styles.appliedBucket} type="button" onClick={() => setPortfolioFilter('ALL')}>
+                      {selectedAgingBucket.label} · Quitar filtro
+                    </button>
+                  ) : null}
                 </div>
               }
             >
@@ -852,7 +866,7 @@ export function CustomersPage() {
                   !customersQuery.isError &&
                   visibleCustomers.length > 0
                     ? paginatedCustomers.map((customer) => {
-                        const avatarUrl = resolveApiAssetUrl(customer.avatarUrl)
+                        const priority = getCollectionPriority(customer)
                         const cannotDelete = customer.openReceivablesCount > 0
                         const deleteTooltip = cannotDelete
                           ? 'No se puede eliminar mientras tenga deudas pendientes. Registra el pago o una nota crédito primero.'
@@ -860,25 +874,20 @@ export function CustomersPage() {
 
                         return (
                           <tr key={customer.id}>
-                            <td>
+                            <td data-label="Cliente">
                               <span className={styles.customerIdentity}>
-                                <span aria-hidden="true" className={styles.customerAvatar}>
-                                  {avatarUrl ? (
-                                    <img alt="" decoding="async" loading="lazy" src={avatarUrl} />
-                                  ) : (
-                                    customer.name.trim().charAt(0).toUpperCase() || '?'
-                                  )}
-                                </span>
+                                <SalesCustomerAvatar name={customer.name} avatarUrl={customer.avatarUrl} />
                                 <strong className={styles.customerName}>{customer.name}</strong>
                               </span>
                             </td>
-                            <td>{customer.phone ?? 'Sin celular'}</td>
-                            <td>
+                            <td data-label="Celular">{customer.phone ?? 'Sin celular'}</td>
+                            <td data-label="Documento">
                               {customer.documentNumber
                                 ? `${customer.documentType ?? 'Doc.'} ${customer.documentNumber}`
                                 : 'Sin documento'}
                             </td>
                             <td
+                              data-label="Por cobrar"
                               className={
                                 customer.balance > 0
                                   ? listPageStyles.statusNegative
@@ -887,32 +896,32 @@ export function CustomersPage() {
                             >
                               {formatCurrency(customer.balance)}
                             </td>
-                            <td>
+                            <td data-label="Vencimiento">
                               {customer.overdueReceivablesCount > 0
                                 ? `${customer.overdueReceivablesCount} vencida${customer.overdueReceivablesCount === 1 ? '' : 's'}`
                                 : formatPortfolioDate(customer.nextDueDate)}
                             </td>
-                            <td>{customer.purchaseCount.toString()}</td>
-                            <td>
-                              <span className={getCollectionPriority(customer).className}>
-                                {getCollectionPriority(customer).label}
+                            <td data-label="Compras">{customer.purchaseCount.toString()}</td>
+                            <td data-label="Prioridad">
+                              <span className={priority.className}>
+                                {priority.label}
                               </span>
                             </td>
-                            <td>
+                            <td data-label="Acciones">
                               <div className={styles.rowActions}>
                                 <button
-                                  className={listPageStyles.detailLink}
+                                  className={styles.customerRowAction}
                                   type="button"
                                   onClick={() => openCustomerDetail(customer.id)}
                                 >
-                                  Detalle
+                                  <Eye aria-hidden="true" /> Detalle
                                 </button>
                                 <button
-                                  className={listPageStyles.detailLink}
+                                  className={styles.customerRowAction}
                                   type="button"
                                   onClick={() => openEditCustomer(customer.id)}
                                 >
-                                  Editar
+                                  <Pencil aria-hidden="true" /> Editar
                                 </button>
                                 <span className={styles.deleteAction}>
                                   <button
@@ -951,7 +960,7 @@ export function CustomersPage() {
                     <TableStateRow
                       colSpan={8}
                       description="Crea un cliente o limpia los filtros para ver más resultados."
-                      title="No encontramos clientes con esa busqueda."
+                      title="No encontramos clientes con estos filtros."
                     />
                   ) : null}
                 </tbody>

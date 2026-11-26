@@ -1,14 +1,20 @@
+import { RecordActions } from '@/shared/components/ui/RecordActions'
+import { CustomerPurchaseProduct } from '@/modules/customers/components/CustomerPurchaseProduct'
+import { SalesCustomerAvatar } from '@/modules/sales/components/SalesVisuals'
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from 'react'
 import {
   Banknote,
+  BellRing,
   CalendarClock,
   CalendarDays,
+  Camera,
   CheckCircle2,
   ChevronDown,
   Download,
   Handshake,
   Hash,
+  LayoutGrid,
   Mail,
   MapPin,
   MessageCircle,
@@ -16,9 +22,13 @@ import {
   Printer,
   Phone,
   ReceiptText,
+  Save,
   Send,
   Share2,
   ShieldCheck,
+  ShoppingBag,
+  UserRound,
+  Wallet,
   TrendingUp,
 } from 'lucide-react'
 import type {
@@ -430,6 +440,7 @@ export function RetailCustomerDrawer({
     reference: '',
     notes: '',
   })
+  const [isPaymentFormOpen, setPaymentFormOpen] = useState(false)
   const [paymentError, setPaymentError] = useState<string | null>(null)
   const [lastReceipt, setLastReceipt] = useState<PaymentReceiptState | null>(null)
   const [detailTab, setDetailTab] = useState<CustomerDetailTab>('summary')
@@ -627,29 +638,29 @@ export function RetailCustomerDrawer({
     }
 
     setLastReceipt(null)
+    setPaymentFormOpen(false)
     setDetailTab('summary')
   }, [customer?.id, isOpen, mode])
 
-  function handlePayAll() {
-    if (totalOutstanding <= 0) {
-      return
-    }
+  function focusDetailSection(sectionId: string) {
+    requestAnimationFrame(() => {
+      const section = document.getElementById(sectionId)
+      section?.scrollIntoView({ block: 'start' })
+      section?.focus({ preventScroll: true })
+    })
+  }
 
+  function openPaymentForm(receivableId: string, amount: number) {
     setDetailTab('receivables')
     setPaymentError(null)
     setLastReceipt(null)
-    setPaymentForm((currentForm) => ({
-      ...currentForm,
-      receivableId: OLDEST_RECEIVABLE_OPTION,
-      amount: String(totalOutstanding),
-    }))
+    setPaymentFormOpen(true)
+    setPaymentForm((currentForm) => ({ ...currentForm, receivableId, amount: String(amount) }))
+    focusDetailSection('customer-payment-form')
+  }
 
-    window.setTimeout(() => {
-      document.getElementById('customer-payment-form')?.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      })
-    }, 0)
+  function handlePayAll() {
+    if (totalOutstanding > 0) openPaymentForm(OLDEST_RECEIVABLE_OPTION, totalOutstanding)
   }
 
   function handleStartGeneralReminder() {
@@ -676,6 +687,7 @@ export function RetailCustomerDrawer({
       notes: receivable.notes ?? '',
     })
     setTermsError(null)
+    focusDetailSection('customer-terms-form')
   }
 
   function handleStartPromise(receivable: CustomerReceivable) {
@@ -686,6 +698,7 @@ export function RetailCustomerDrawer({
       notes: '',
     })
     setPromiseError(null)
+    focusDetailSection('customer-promise-form')
   }
 
   async function handleSubmitPromise(event: FormEvent<HTMLFormElement>) {
@@ -1279,11 +1292,13 @@ export function RetailCustomerDrawer({
       return
     }
 
+    setPaymentFormOpen(false)
     setLastReceipt({
       paymentIds,
       saleNumbers,
       amount,
     })
+    focusDetailSection('customer-payment-receipt')
     setPaymentForm((currentForm) => ({
       ...currentForm,
       amount: '',
@@ -1294,114 +1309,126 @@ export function RetailCustomerDrawer({
 
   function renderForm() {
     return (
-      <form className={styles.form} onSubmit={handleSubmitCustomer}>
+      <form className={styles.form} id="customer-profile-form" onSubmit={handleSubmitCustomer}>
         <AvatarUploadField
-          alt="Avatar del cliente"
+          alt="Foto del cliente"
+          changeLabel="Cambiar foto"
+          className={styles.profilePhotoField}
           disabled={isSubmitting}
+          hint="Se muestra junto al nombre en la ficha y el listado."
           imageUrl={visibleAvatarUrl}
+          placeholderIcon={<UserRound />}
+          trailingIcon={<Camera />}
+          uploadLabel="Agregar foto"
+          variant="card"
           onSelectFile={handleAvatarChange}
         />
 
-        <label className={styles.field}>
-          <span>Nombre *</span>
-          <input
-            className={styles.input}
-            placeholder="Nombre del cliente"
-            value={form.name}
-            onChange={(event) => updateFormValue('name', event.target.value)}
-          />
-        </label>
-
-        <div className={styles.twoColumns}>
+        <section className={styles.profileFormSection}>
+          <h4><UserRound aria-hidden="true" /> Datos del cliente</h4>
           <label className={styles.field}>
-            <span>Celular</span>
+            <span>Nombre *</span>
             <input
               className={styles.input}
-              placeholder="+57 300 000 0000"
-              value={form.phone}
-              onChange={(event) => updateFormValue('phone', event.target.value)}
+              autoComplete="name"
+              placeholder="Nombre del cliente"
+              type="text"
+              value={form.name}
+              onChange={(event) => updateFormValue('name', event.target.value)}
+            />
+          </label>
+
+          <div className={styles.twoColumns}>
+            <label className={styles.field}>
+              <span>Celular</span>
+              <input
+                className={styles.input}
+                autoComplete="tel"
+                placeholder="+57 300 000 0000"
+                type="tel"
+                value={form.phone}
+                onChange={(event) => updateFormValue('phone', event.target.value)}
+              />
+            </label>
+
+            <label className={styles.field}>
+              <span>Correo</span>
+              <input
+                className={styles.input}
+                placeholder="cliente@correo.com"
+                type="email"
+                value={form.email}
+                onChange={(event) => updateFormValue('email', event.target.value)}
+              />
+            </label>
+          </div>
+
+          <div className={styles.twoColumns}>
+            <label className={styles.field}>
+              <span>Tipo de documento</span>
+              <SearchableSelect
+                className={styles.input}
+                value={form.documentType}
+                onChange={(event) => updateFormValue('documentType', event.target.value)}
+              >
+                <option value="CC">CC</option>
+                <option value="NIT">NIT</option>
+                <option value="CE">CE</option>
+                <option value="PASAPORTE">Pasaporte</option>
+              </SearchableSelect>
+            </label>
+
+            <label className={styles.field}>
+              <span>Número de documento</span>
+              <input
+                className={styles.input}
+                placeholder="Documento"
+                value={form.documentNumber}
+                onChange={(event) => updateFormValue('documentNumber', event.target.value)}
+              />
+            </label>
+          </div>
+
+          <label className={styles.field}>
+            <span>Dirección</span>
+            <input
+              className={styles.input}
+              placeholder="Dirección del cliente"
+              value={form.address}
+              onChange={(event) => updateFormValue('address', event.target.value)}
+            />
+          </label>
+        </section>
+
+        <section className={styles.profileFormSection}>
+          <h4><Wallet aria-hidden="true" /> Saldo y notas</h4>
+          <label className={styles.field}>
+            <span>Saldo por cobrar</span>
+            <input
+              className={styles.input}
+              inputMode="decimal"
+              placeholder="$ 0"
+              value={form.balance}
+              onChange={(event) => updateFormValue('balance', event.target.value)}
             />
           </label>
 
           <label className={styles.field}>
-            <span>Correo</span>
-            <input
-              className={styles.input}
-              placeholder="cliente@correo.com"
-              type="email"
-              value={form.email}
-              onChange={(event) => updateFormValue('email', event.target.value)}
+            <span>Notas</span>
+            <textarea
+              className={styles.textarea}
+              placeholder="Notas internas del cliente"
+              value={form.notes}
+              onChange={(event) => updateFormValue('notes', event.target.value)}
             />
           </label>
-        </div>
-
-        <div className={styles.twoColumns}>
-          <label className={styles.field}>
-            <span>Tipo de documento</span>
-            <SearchableSelect
-              className={styles.input}
-              value={form.documentType}
-              onChange={(event) => updateFormValue('documentType', event.target.value)}
-            >
-              <option value="CC">CC</option>
-              <option value="NIT">NIT</option>
-              <option value="CE">CE</option>
-              <option value="PASAPORTE">Pasaporte</option>
-            </SearchableSelect>
-          </label>
-
-          <label className={styles.field}>
-            <span>Numero de documento</span>
-            <input
-              className={styles.input}
-              placeholder="Documento"
-              value={form.documentNumber}
-              onChange={(event) => updateFormValue('documentNumber', event.target.value)}
-            />
-          </label>
-        </div>
-
-        <label className={styles.field}>
-          <span>Direccion</span>
-          <input
-            className={styles.input}
-            placeholder="Direccion del cliente"
-            value={form.address}
-            onChange={(event) => updateFormValue('address', event.target.value)}
-          />
-        </label>
-
-        <label className={styles.field}>
-          <span>Saldo por cobrar</span>
-          <input
-            className={styles.input}
-            inputMode="decimal"
-            placeholder="$ 0"
-            value={form.balance}
-            onChange={(event) => updateFormValue('balance', event.target.value)}
-          />
-        </label>
-
-        <label className={styles.field}>
-          <span>Notas</span>
-          <textarea
-            className={styles.textarea}
-            placeholder="Notas internas del cliente"
-            value={form.notes}
-            onChange={(event) => updateFormValue('notes', event.target.value)}
-          />
-        </label>
-
+        </section>
         {formError ? <p className={styles.errorMessage}>{formError}</p> : null}
         {submitError ? (
           <p className={styles.errorMessage}>
             {getErrorMessage(submitError, 'No pudimos guardar el cliente. Intenta otra vez.')}
           </p>
         ) : null}
-
-        <button className={styles.primaryButton} disabled={isSubmitting} type="submit">
-          {isSubmitting ? 'Guardando...' : mode === 'create' ? 'Crear cliente' : 'Guardar cambios'}
-        </button>
       </form>
     )
   }
@@ -1429,19 +1456,15 @@ export function RetailCustomerDrawer({
     return (
       <div className={styles.detail}>
         <section className={styles.profileCard}>
-          <div className={styles.avatar} aria-hidden="true">
-            {visibleAvatarUrl ? (
-              <img alt="" className={styles.avatarImage} src={visibleAvatarUrl} />
-            ) : (
-              customer.name.charAt(0).toUpperCase()
-            )}
-          </div>
+          <span className={styles.profileAvatar}>
+            <SalesCustomerAvatar name={customer.name} avatarUrl={visibleAvatarUrl} />
+          </span>
           <div>
             <h4>{customer.name}</h4>
             <p>
               {customer.balance > 0
                 ? `${formatCurrency(customer.balance)} pendiente por cobrar`
-                : 'Cliente al dia'}
+                : 'Cliente al día'}
             </p>
           </div>
         </section>
@@ -1454,7 +1477,7 @@ export function RetailCustomerDrawer({
             type="button"
             onClick={() => setDetailTab('summary')}
           >
-            Resumen
+            <LayoutGrid aria-hidden="true" /> Resumen
           </button>
           <button
             aria-selected={detailTab === 'receivables'}
@@ -1463,7 +1486,7 @@ export function RetailCustomerDrawer({
             type="button"
             onClick={() => setDetailTab('receivables')}
           >
-            Por cobrar
+            <Wallet aria-hidden="true" /> Por cobrar
             <span>{pendingReceivables.length}</span>
           </button>
           <button
@@ -1473,7 +1496,7 @@ export function RetailCustomerDrawer({
             type="button"
             onClick={() => setDetailTab('payments')}
           >
-            Abonos
+            <Banknote aria-hidden="true" /> Abonos
             <span>{paymentMovements.length + pendingPaymentReports.length}</span>
           </button>
           <button
@@ -1483,14 +1506,36 @@ export function RetailCustomerDrawer({
             type="button"
             onClick={() => setDetailTab('history')}
           >
-            Historial
+            <ShoppingBag aria-hidden="true" /> Compras
             <span>{customer.purchaseHistory.length}</span>
           </button>
         </nav>
+        {documentFeedback || activeDocumentId ? (
+          <p className={styles.documentFeedback} role="status">
+            {activeDocumentId ? 'Preparando documento…' : documentFeedback}
+          </p>
+        ) : null}
+
 
         {detailTab === 'summary' ? (
           <>
-            <section className={styles.infoGrid} aria-label="Informacion de contacto">
+            <section className={styles.accountSummary}>
+              <div>
+                <span>Saldo pendiente</span>
+                <strong>{formatCurrency(totalOutstanding)}</strong>
+                <small>
+                  {pendingReceivables.length}{' '}
+                  {pendingReceivables.length === 1 ? 'factura pendiente' : 'facturas pendientes'}
+                </small>
+              </div>
+              {pendingReceivables.length > 0 ? (
+                <button className={styles.payAllButton} type="button" onClick={handlePayAll}>
+                  <Banknote aria-hidden="true" /> Cobrar saldo
+                </button>
+              ) : null}
+            </section>
+
+            <section className={styles.infoGrid} aria-label="Información de contacto">
               <InfoItem icon={<Phone />} label="Celular" value={customer.phone} />
               <InfoItem icon={<Mail />} label="Correo" value={customer.email} />
               <InfoItem
@@ -1502,7 +1547,7 @@ export function RetailCustomerDrawer({
                     : null
                 }
               />
-              <InfoItem icon={<MapPin />} label="Direccion" value={customer.address} />
+              <InfoItem icon={<MapPin />} label="Dirección" value={customer.address} />
             </section>
 
             <section className={styles.behaviorGrid} aria-label="Comportamiento">
@@ -1523,40 +1568,13 @@ export function RetailCustomerDrawer({
               />
               <MetricTile
                 icon={<CalendarClock />}
-                label="Ultima compra"
+                label="Última compra"
                 value={
-                  customer.lastPurchaseAt ? formatDate(customer.lastPurchaseAt) : 'Sin compras'
+                  customer.lastPurchaseAt ? formatDate(customer.lastPurchaseAt, 'es-CO') : 'Sin compras'
                 }
               />
             </section>
 
-            <section className={styles.accountSummary}>
-              <div>
-                <span>Saldo pendiente</span>
-                <strong>{formatCurrency(totalOutstanding)}</strong>
-                <small>
-                  {pendingReceivables.length}{' '}
-                  {pendingReceivables.length === 1 ? 'factura pendiente' : 'facturas pendientes'}
-                </small>
-              </div>
-              <div className={styles.accountSummaryActions}>
-                {pendingReceivables.length > 0 ? (
-                  <button className={styles.payAllButton} type="button" onClick={handlePayAll}>
-                    <Banknote aria-hidden="true" />
-                    Pagar todo
-                  </button>
-                ) : null}
-                <button type="button" onClick={() => setDetailTab('receivables')}>
-                  Ver cuentas
-                </button>
-                <button type="button" onClick={() => setDetailTab('history')}>
-                  Ver historial
-                </button>
-                <button type="button" onClick={() => setDetailTab('payments')}>
-                  Ver abonos
-                </button>
-              </div>
-            </section>
           </>
         ) : null}
 
@@ -1565,20 +1583,23 @@ export function RetailCustomerDrawer({
             <div className={styles.sectionHeader}>
               <h4>Cuentas por cobrar</h4>
               <div className={styles.sectionHeaderActions}>
-                <span>{pendingReceivables.length.toString()} pendientes</span>
+                <span>
+                  {pendingReceivables.length}{' '}
+                  {pendingReceivables.length === 1 ? 'factura pendiente' : 'facturas pendientes'}
+                </span>
                 {pendingReceivables.length > 0 ? (
                   <>
                     <button className={styles.payAllButton} type="button" onClick={handlePayAll}>
                       <Banknote aria-hidden="true" />
-                      Pagar todo · {formatCurrency(totalOutstanding)}
+                      Cobrar saldo
                     </button>
                     <button
                       className={styles.generalReminderButton}
                       type="button"
                       onClick={handleStartGeneralReminder}
                     >
-                      <MessageCircle aria-hidden="true" />
-                      Recordatorio general
+                      <BellRing aria-hidden="true" />
+                      Recordatorio
                     </button>
                   </>
                 ) : null}
@@ -1627,33 +1648,15 @@ export function RetailCustomerDrawer({
                       números de factura.
                     </p>
                   </div>
-                  <div className={styles.statementActions}>
-                    <button
-                      className={styles.shareStatementButton}
-                      disabled={Boolean(activeDocumentId)}
-                      type="button"
-                      onClick={() => void handleShareCustomerStatement()}
-                    >
-                      <Share2 aria-hidden="true" />
-                      {activeDocumentId === 'statement:share' ? 'Preparando…' : 'Compartir PDF'}
-                    </button>
-                    <button
-                      disabled={Boolean(activeDocumentId)}
-                      type="button"
-                      onClick={() => void handleCustomerStatement('download')}
-                    >
-                      <Download aria-hidden="true" />
-                      {activeDocumentId === 'statement:download' ? 'Generando…' : 'Descargar PDF'}
-                    </button>
-                    <button
-                      disabled={Boolean(activeDocumentId)}
-                      type="button"
-                      onClick={() => void handleCustomerStatement('print')}
-                    >
-                      <Printer aria-hidden="true" />
-                      {activeDocumentId === 'statement:print' ? 'Generando…' : 'Imprimir'}
-                    </button>
-                  </div>
+                  <RecordActions className={styles.customerActions}
+                    label="Estado de cuenta"
+                    context="PDF del cliente"
+                    actions={[
+                      { label: 'Compartir PDF', icon: Share2, tone: 'green', disabled: Boolean(activeDocumentId), run: () => void handleShareCustomerStatement() },
+                      { label: 'Descargar PDF', icon: Download, disabled: Boolean(activeDocumentId), run: () => void handleCustomerStatement('download') },
+                      { label: 'Imprimir', icon: Printer, disabled: Boolean(activeDocumentId), run: () => void handleCustomerStatement('print') },
+                    ]}
+                  />
                 </div>
 
                 <div className={styles.reminderActions}>
@@ -1729,6 +1732,7 @@ export function RetailCustomerDrawer({
                 {pendingReceivables.map((receivable) => (
                   <ReceivableCard
                     key={receivable.id}
+                    onPay={() => openPaymentForm(receivable.id, receivable.balance)}
                     receivable={receivable}
                     purchase={purchasesBySaleId.get(receivable.saleId) ?? null}
                     isDocumentBusy={activeDocumentId?.startsWith(`${receivable.saleId}:`) ?? false}
@@ -1793,14 +1797,8 @@ export function RetailCustomerDrawer({
               </details>
             ) : null}
 
-            {documentFeedback ? (
-              <p className={styles.documentFeedback} aria-live="polite">
-                {documentFeedback}
-              </p>
-            ) : null}
-
             {promiseReceivable ? (
-              <form className={styles.promiseComposer} onSubmit={handleSubmitPromise}>
+              <form className={styles.promiseComposer} id="customer-promise-form" tabIndex={-1} onSubmit={handleSubmitPromise}>
                 <div className={styles.reminderHeader}>
                   <div>
                     <h4>Compromiso de pago</h4>
@@ -1899,7 +1897,7 @@ export function RetailCustomerDrawer({
             ) : null}
 
             {termsReceivable ? (
-              <form className={styles.termsComposer} onSubmit={handleSubmitTerms}>
+              <form className={styles.termsComposer} id="customer-terms-form" tabIndex={-1} onSubmit={handleSubmitTerms}>
                 <div className={styles.reminderHeader}>
                   <div>
                     <h4>Condiciones de cobro</h4>
@@ -1990,7 +1988,7 @@ export function RetailCustomerDrawer({
                     <div>
                       <span>{receivable.saleNumber}</span>
                       <strong>{formatCurrency(report.amount)}</strong>
-                      <small>{formatDateTime(report.createdAt)} · Nequi / Daviplata</small>
+                      <small>{formatDateTime(report.createdAt, 'es-CO')} · Nequi / Daviplata</small>
                     </div>
                     <a
                       href={resolveApiAssetUrl(report.proofUrl) ?? undefined}
@@ -2051,7 +2049,7 @@ export function RetailCustomerDrawer({
                           <strong>{formatCurrency(movement.amount)}</strong>
                         </div>
                         <div>
-                          <span>{formatDateTime(movement.createdAt)}</span>
+                          <span>{formatDateTime(movement.createdAt, 'es-CO')}</span>
                           <strong>{movementMethodLabel}</strong>
                           <small>
                             Cubrió {movement.entries.length}{' '}
@@ -2067,208 +2065,184 @@ export function RetailCustomerDrawer({
                           {movement.notes ? <span>Nota: {movement.notes}</span> : null}
                         </div>
                       ) : null}
-                      <div className={styles.paymentMovementInvoices}>
-                        {movement.entries.map(
-                          ({
-                            payment,
-                            receivable,
-                            purchase,
-                            productAllocations,
-                            unassignedAmount,
-                            balanceAfterPayment,
-                          }) => {
-                            const isReceiptBusy =
-                              activeDocumentId?.startsWith(`saved-payment:${payment.id}:`) ?? false
-                            const methodLabel =
-                              COLLECTED_PAYMENT_METHOD_OPTIONS.find(
-                                (option) => option.value === payment.method,
-                              )?.label ?? payment.method
+                      <details className={styles.paymentMovementDisclosure}>
+                        <summary>
+                          <ReceiptText aria-hidden="true" />
+                          Ver facturas y comprobantes
+                          <ChevronDown aria-hidden="true" />
+                        </summary>
+                        <div className={styles.paymentMovementInvoices}>
+                          {movement.entries.map(
+                            ({
+                              payment,
+                              receivable,
+                              purchase,
+                              productAllocations,
+                              unassignedAmount,
+                              balanceAfterPayment,
+                            }) => {
+                              const isReceiptBusy =
+                                activeDocumentId?.startsWith(`saved-payment:${payment.id}:`) ?? false
+                              const methodLabel =
+                                COLLECTED_PAYMENT_METHOD_OPTIONS.find(
+                                  (option) => option.value === payment.method,
+                                )?.label ?? payment.method
 
-                            return (
-                              <section className={styles.customerPaymentCard} key={payment.id}>
-                                <div className={styles.customerPaymentHeader}>
-                                  <div>
-                                    <span>Aplicado a {receivable.saleNumber}</span>
-                                    <strong>{formatCurrency(payment.amount)}</strong>
-                                  </div>
-                                  <span className={styles.paymentStatusPill}>Registrado</span>
-                                </div>
-
-                                <div className={styles.customerPaymentDetails}>
-                                  <div>
-                                    <span>Fecha y hora</span>
-                                    <strong>{formatDateTime(payment.createdAt)}</strong>
-                                  </div>
-                                  <div>
-                                    <span>Medio de pago</span>
-                                    <strong>{methodLabel}</strong>
-                                  </div>
-                                  <div>
-                                    <span>Total de la factura</span>
-                                    <strong>{formatCurrency(receivable.amount)}</strong>
-                                  </div>
-                                  <div>
-                                    <span>Saldo después del abono</span>
-                                    <strong>{formatCurrency(balanceAfterPayment)}</strong>
-                                  </div>
-                                </div>
-
-                                {payment.reference || payment.notes ? (
-                                  <div className={styles.customerPaymentNotes}>
-                                    {payment.reference ? (
-                                      <p>
-                                        <strong>Referencia:</strong> {payment.reference}
-                                      </p>
-                                    ) : null}
-                                    {payment.notes ? (
-                                      <p>
-                                        <strong>Nota:</strong> {payment.notes}
-                                      </p>
-                                    ) : null}
-                                  </div>
-                                ) : null}
-
-                                {productAllocations.length > 0 ? (
-                                  <div className={styles.paymentApplication}>
-                                    <div className={styles.paymentApplicationHeader}>
-                                      <div>
-                                        <strong>Qué cubrió este abono</strong>
-                                        <span>
-                                          Distribución automática siguiendo el orden de los
-                                          productos de la factura.
-                                        </span>
-                                      </div>
+                              return (
+                                <section className={styles.customerPaymentCard} key={payment.id}>
+                                  <div className={styles.customerPaymentHeader}>
+                                    <div>
+                                      <span>Aplicado a {receivable.saleNumber}</span>
                                       <strong>{formatCurrency(payment.amount)}</strong>
                                     </div>
-                                    <div className={styles.paymentApplicationList}>
-                                      {productAllocations.map((allocation) => (
-                                        <div
-                                          className={styles.paymentApplicationItem}
-                                          key={`${payment.id}:allocation:${allocation.product.productId}`}
-                                        >
-                                          <div>
-                                            <strong>{allocation.product.name}</strong>
-                                            <span>
-                                              {allocation.product.quantity} ×{' '}
-                                              {formatCurrency(allocation.product.unitPrice)}
-                                            </span>
-                                          </div>
-                                          <div>
-                                            <strong>
-                                              {formatCurrency(allocation.appliedAmount)}
-                                            </strong>
-                                            <span
-                                              className={
-                                                allocation.remainingAfterPayment > 0
-                                                  ? styles.paymentCoveragePartial
-                                                  : styles.paymentCoverageComplete
-                                              }
-                                            >
-                                              {allocation.remainingAfterPayment > 0
-                                                ? `Parcial · faltan ${formatCurrency(allocation.remainingAfterPayment)}`
-                                                : 'Cubierto completamente'}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      ))}
-                                      {unassignedAmount > 0 ? (
-                                        <div className={styles.paymentApplicationItem}>
-                                          <div>
-                                            <strong>Otros cargos de la factura</strong>
-                                            <span>Impuestos, domicilio u otros conceptos.</span>
-                                          </div>
-                                          <div>
-                                            <strong>{formatCurrency(unassignedAmount)}</strong>
-                                            <span>Cubierto con este abono</span>
-                                          </div>
-                                        </div>
-                                      ) : null}
+                                    <span className={styles.paymentStatusPill}>Registrado</span>
+                                  </div>
+
+                                  <div className={styles.customerPaymentDetails}>
+                                    <div>
+                                      <span>Fecha y hora</span>
+                                      <strong>{formatDateTime(payment.createdAt, 'es-CO')}</strong>
+                                    </div>
+                                    <div>
+                                      <span>Medio de pago</span>
+                                      <strong>{methodLabel}</strong>
+                                    </div>
+                                    <div>
+                                      <span>Total de la factura</span>
+                                      <strong>{formatCurrency(receivable.amount)}</strong>
+                                    </div>
+                                    <div>
+                                      <span>Saldo después del abono</span>
+                                      <strong>{formatCurrency(balanceAfterPayment)}</strong>
                                     </div>
                                   </div>
-                                ) : null}
 
-                                {purchase && purchase.products.length > 0 ? (
-                                  <details className={styles.receivableProducts}>
-                                    <summary>
-                                      <span className={styles.receivableProductsTitle}>
-                                        <ReceiptText aria-hidden="true" />
-                                        Productos de la factura
-                                      </span>
-                                      <span>
-                                        {purchase.itemCount}{' '}
-                                        {purchase.itemCount === 1 ? 'producto' : 'productos'}
-                                      </span>
-                                      <ChevronDown aria-hidden="true" />
-                                    </summary>
-                                    <div className={styles.receivableProductList}>
-                                      {purchase.products.map((product) => (
-                                        <div
-                                          className={styles.receivableProduct}
-                                          key={`${payment.id}:${product.productId}`}
-                                        >
-                                          <div>
-                                            <strong>
-                                              {product.quantity} × {product.name}
-                                            </strong>
-                                            <span>
-                                              {formatCurrency(product.unitPrice)} c/u
-                                              {product.sku ? ` · SKU ${product.sku}` : ''}
-                                            </span>
-                                          </div>
-                                          <strong>{formatCurrency(product.subtotal)}</strong>
-                                        </div>
-                                      ))}
+                                  {payment.reference || payment.notes ? (
+                                    <div className={styles.customerPaymentNotes}>
+                                      {payment.reference ? (
+                                        <p>
+                                          <strong>Referencia:</strong> {payment.reference}
+                                        </p>
+                                      ) : null}
+                                      {payment.notes ? (
+                                        <p>
+                                          <strong>Nota:</strong> {payment.notes}
+                                        </p>
+                                      ) : null}
                                     </div>
-                                  </details>
-                                ) : null}
+                                  ) : null}
 
-                                <div className={styles.customerPaymentActions}>
-                                  <button
-                                    disabled={isReceiptBusy}
-                                    type="button"
-                                    onClick={() =>
-                                      void handleSavedPaymentReceipt(
-                                        payment.id,
-                                        receivable.saleNumber,
-                                        'share',
-                                      )
-                                    }
-                                  >
-                                    <Share2 aria-hidden="true" /> Compartir
-                                  </button>
-                                  <button
-                                    disabled={isReceiptBusy}
-                                    type="button"
-                                    onClick={() =>
-                                      void handleSavedPaymentReceipt(
-                                        payment.id,
-                                        receivable.saleNumber,
-                                        'print',
-                                      )
-                                    }
-                                  >
-                                    <Printer aria-hidden="true" /> Imprimir
-                                  </button>
-                                  <button
-                                    disabled={isReceiptBusy}
-                                    type="button"
-                                    onClick={() =>
-                                      void handleSavedPaymentReceipt(
-                                        payment.id,
-                                        receivable.saleNumber,
-                                        'download',
-                                      )
-                                    }
-                                  >
-                                    <Download aria-hidden="true" />
-                                    {isReceiptBusy ? 'Preparando…' : 'Descargar PDF'}
-                                  </button>
-                                </div>
-                              </section>
-                            )
-                          },
-                        )}
-                      </div>
+                                  {productAllocations.length > 0 ? (
+                                    <div className={styles.paymentApplication}>
+                                      <div className={styles.paymentApplicationHeader}>
+                                        <div>
+                                          <strong>Qué cubrió este abono</strong>
+                                          <span>
+                                            Distribución automática siguiendo el orden de los
+                                            productos de la factura.
+                                          </span>
+                                        </div>
+                                        <strong>{formatCurrency(payment.amount)}</strong>
+                                      </div>
+                                      <div className={styles.paymentApplicationList}>
+                                        {productAllocations.map((allocation) => (
+                                          <div
+                                            className={styles.paymentApplicationItem}
+                                            key={`${payment.id}:allocation:${allocation.product.productId}`}
+                                          >
+                                            <CustomerPurchaseProduct product={allocation.product} />
+                                            <div>
+                                              <strong>
+                                                {formatCurrency(allocation.appliedAmount)}
+                                              </strong>
+                                              <span
+                                                className={
+                                                  allocation.remainingAfterPayment > 0
+                                                    ? styles.paymentCoveragePartial
+                                                    : styles.paymentCoverageComplete
+                                                }
+                                              >
+                                                {allocation.remainingAfterPayment > 0
+                                                  ? `Parcial · faltan ${formatCurrency(allocation.remainingAfterPayment)}`
+                                                  : 'Cubierto completamente'}
+                                              </span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                        {unassignedAmount > 0 ? (
+                                          <div className={styles.paymentApplicationItem}>
+                                            <div>
+                                              <strong>Otros cargos de la factura</strong>
+                                              <span>Impuestos, domicilio u otros conceptos.</span>
+                                            </div>
+                                            <div>
+                                              <strong>{formatCurrency(unassignedAmount)}</strong>
+                                              <span>Cubierto con este abono</span>
+                                            </div>
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                    </div>
+                                  ) : null}
+
+                                  {purchase && purchase.products.length > 0 ? (
+                                    <details className={styles.receivableProducts}>
+                                      <summary>
+                                        <span className={styles.receivableProductsTitle}>
+                                          <ReceiptText aria-hidden="true" />
+                                          Productos de la factura
+                                        </span>
+                                        <span>
+                                          {purchase.itemCount}{' '}
+                                          {purchase.itemCount === 1 ? 'producto' : 'productos'}
+                                        </span>
+                                        <ChevronDown aria-hidden="true" />
+                                      </summary>
+                                      <div className={styles.receivableProductList}>
+                                        {purchase.products.map((product) => (
+                                          <div
+                                            className={styles.receivableProduct}
+                                            key={`${payment.id}:${product.productId}`}
+                                          >
+                                            <CustomerPurchaseProduct product={product} />
+                                            <strong>{formatCurrency(product.subtotal)}</strong>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </details>
+                                  ) : null}
+
+                                  <RecordActions className={styles.customerActions}
+                                    label="Comprobante"
+                                    context={receivable.saleNumber}
+                                    actions={[
+                                      {
+                                        label: 'Compartir comprobante',
+                                        icon: Share2,
+                                        tone: 'green',
+                                        disabled: isReceiptBusy,
+                                        run: () => void handleSavedPaymentReceipt(payment.id, receivable.saleNumber, 'share'),
+                                      },
+                                      {
+                                        label: 'Descargar comprobante',
+                                        icon: Download,
+                                        disabled: isReceiptBusy,
+                                        run: () => void handleSavedPaymentReceipt(payment.id, receivable.saleNumber, 'download'),
+                                      },
+                                      {
+                                        label: 'Imprimir comprobante',
+                                        icon: Printer,
+                                        disabled: isReceiptBusy,
+                                        run: () => void handleSavedPaymentReceipt(payment.id, receivable.saleNumber, 'print'),
+                                      },
+                                    ]}
+                                  />
+                                </section>
+                              )
+                            },
+                          )}
+                        </div>
+                      </details>
                     </article>
                   )
                 })}
@@ -2281,35 +2255,32 @@ export function RetailCustomerDrawer({
 
         {detailTab === 'history' ? (
           <section className={styles.section}>
-            <div className={styles.sectionHeader}>
+            <div className={`${styles.sectionHeader} ${styles.historySectionHeader}`}>
               <h4>Historial de compras</h4>
               <div className={styles.sectionHeaderActions}>
-                <span>{customer.purchaseHistory.length.toString()} ventas</span>
+                <span>
+                  {customer.purchaseHistory.length}{' '}
+                  {customer.purchaseHistory.length === 1 ? 'venta' : 'ventas'}
+                </span>
                 {customer.purchaseHistory.length > 0 ? (
-                  <>
-                    <button
-                      className={styles.generalReminderButton}
-                      disabled={Boolean(activeDocumentId)}
-                      type="button"
-                      onClick={() => void handleCustomerPurchaseHistory('download')}
-                    >
-                      <Download aria-hidden="true" />
-                      {activeDocumentId === 'purchase-history:download'
-                        ? 'Generando…'
-                        : 'Descargar historial'}
-                    </button>
-                    <button
-                      className={styles.generalReminderButton}
-                      disabled={Boolean(activeDocumentId)}
-                      type="button"
-                      onClick={() => void handleCustomerPurchaseHistory('print')}
-                    >
-                      <Printer aria-hidden="true" />
-                      {activeDocumentId === 'purchase-history:print'
-                        ? 'Generando…'
-                        : 'Imprimir historial'}
-                    </button>
-                  </>
+                  <RecordActions className={styles.customerActions}
+                    label="Exportar historial"
+                    context="Compras del cliente"
+                    actions={[
+                      {
+                        label: 'Descargar historial',
+                        icon: Download,
+                        disabled: Boolean(activeDocumentId),
+                        run: () => void handleCustomerPurchaseHistory('download'),
+                      },
+                      {
+                        label: 'Imprimir historial',
+                        icon: Printer,
+                        disabled: Boolean(activeDocumentId),
+                        run: () => void handleCustomerPurchaseHistory('print'),
+                      },
+                    ]}
+                  />
                 ) : null}
               </div>
             </div>
@@ -2322,7 +2293,7 @@ export function RetailCustomerDrawer({
                       <div>
                         <strong>{purchase.saleNumber}</strong>
                         <span>
-                          {formatDateTime(purchase.createdAt)} · {purchase.itemCount}{' '}
+                          {formatDateTime(purchase.createdAt, 'es-CO')} · {purchase.itemCount}{' '}
                           {purchase.itemCount === 1 ? 'producto' : 'productos'}
                         </span>
                       </div>
@@ -2334,39 +2305,29 @@ export function RetailCustomerDrawer({
                           className={styles.historyProduct}
                           key={`${purchase.saleId}:${product.productId}`}
                         >
-                          <div>
-                            <strong>{product.name}</strong>
-                            <span>
-                              {product.quantity} × {formatCurrency(product.unitPrice)}
-                              {product.sku ? ` · SKU ${product.sku}` : ''}
-                            </span>
-                          </div>
+                          <CustomerPurchaseProduct product={product} />
                           <strong>{formatCurrency(product.subtotal)}</strong>
                         </div>
                       ))}
                     </div>
-                    <div className={styles.invoiceActions}>
-                      <button
-                        disabled={activeDocumentId?.startsWith(`${purchase.saleId}:`) ?? false}
-                        type="button"
-                        onClick={() =>
-                          void handleSaleDocument(purchase.saleId, purchase.saleNumber, 'download')
-                        }
-                      >
-                        <Download aria-hidden="true" />
-                        Descargar factura
-                      </button>
-                      <button
-                        disabled={activeDocumentId?.startsWith(`${purchase.saleId}:`) ?? false}
-                        type="button"
-                        onClick={() =>
-                          void handleSaleDocument(purchase.saleId, purchase.saleNumber, 'print')
-                        }
-                      >
-                        <Printer aria-hidden="true" />
-                        Imprimir factura
-                      </button>
-                    </div>
+                    <RecordActions className={styles.customerActions}
+                      label="Factura"
+                      context={purchase.saleNumber}
+                      actions={[
+                        {
+                          label: 'Descargar factura',
+                          icon: Download,
+                          disabled: Boolean(activeDocumentId),
+                          run: () => void handleSaleDocument(purchase.saleId, purchase.saleNumber, 'download'),
+                        },
+                        {
+                          label: 'Imprimir factura',
+                          icon: Printer,
+                          disabled: Boolean(activeDocumentId),
+                          run: () => void handleSaleDocument(purchase.saleId, purchase.saleNumber, 'print'),
+                        },
+                      ]}
+                    />
                   </article>
                 ))}
               </div>
@@ -2376,10 +2337,11 @@ export function RetailCustomerDrawer({
           </section>
         ) : null}
 
-        {detailTab === 'receivables' && pendingReceivables.length > 0 ? (
+        {detailTab === 'receivables' && isPaymentFormOpen && pendingReceivables.length > 0 ? (
           <form
             className={styles.paymentForm}
             id="customer-payment-form"
+            tabIndex={-1}
             onSubmit={handleRegisterPayment}
           >
             <div className={styles.sectionHeader}>
@@ -2489,72 +2451,39 @@ export function RetailCustomerDrawer({
               </p>
             ) : null}
 
-            <button className={styles.primaryButton} disabled={isPaymentSubmitting} type="submit">
-              {isPaymentSubmitting ? 'Registrando...' : 'Registrar abono'}
-            </button>
+            <div className={styles.compactFooter}>
+              <button className={styles.secondaryButton} disabled={isPaymentSubmitting} type="button" onClick={() => setPaymentFormOpen(false)}>
+                Cancelar
+              </button>
+              <button className={styles.payAllButton} disabled={isPaymentSubmitting} type="submit">
+                <Banknote aria-hidden="true" />
+                {isPaymentSubmitting ? 'Registrando…' : 'Guardar abono'}
+              </button>
+            </div>
           </form>
         ) : null}
 
-        {detailTab === 'receivables' ? (
-          <section className={styles.receiptPanel}>
-            {lastReceipt ? (
-              <div className={styles.paymentSuccess} role="status">
-                <CheckCircle2 aria-hidden="true" />
-                <div>
-                  <strong>Abono guardado correctamente</strong>
-                  <span>
-                    {formatCurrency(lastReceipt.amount)} aplicado a {lastReceipt.saleNumbers.length}{' '}
-                    {lastReceipt.saleNumbers.length === 1 ? 'factura' : 'facturas'}.
-                  </span>
-                </div>
+        {detailTab === 'receivables' && lastReceipt ? (
+          <section className={styles.receiptPanel} id="customer-payment-receipt" tabIndex={-1}>
+            <div className={styles.paymentSuccess} role="status">
+              <CheckCircle2 aria-hidden="true" />
+              <div>
+                <strong>Abono registrado</strong>
+                <span>
+                  {formatCurrency(lastReceipt.amount)} aplicado a {lastReceipt.saleNumbers.length}{' '}
+                  {lastReceipt.saleNumbers.length === 1 ? 'factura' : 'facturas'}.
+                </span>
               </div>
-            ) : null}
-            <div>
-              <h4>Comprobantes de pago</h4>
-              <p>
-                {lastReceipt
-                  ? 'El comprobante del ultimo abono esta listo.'
-                  : 'Registra un abono para imprimir o descargar el comprobante.'}
-              </p>
             </div>
-
-            <div className={styles.receiptActions}>
-              <button
-                className={styles.secondaryButton}
-                disabled={!lastReceipt || activeDocumentId === 'payment:share'}
-                type="button"
-                onClick={() => void handleShareLatestPaymentReceipt()}
-              >
-                <Share2 aria-hidden="true" />
-                {activeDocumentId === 'payment:share'
-                  ? 'Preparando...'
-                  : 'Compartir con el cliente'}
-              </button>
-              <button
-                className={styles.secondaryButton}
-                disabled={!lastReceipt}
-                type="button"
-                onClick={() => {
-                  if (lastReceipt) {
-                    void handlePaymentReceipts('print')
-                  }
-                }}
-              >
-                Imprimir comprobante
-              </button>
-              <button
-                className={styles.secondaryButton}
-                disabled={!lastReceipt}
-                type="button"
-                onClick={() => {
-                  if (lastReceipt) {
-                    void handlePaymentReceipts('download')
-                  }
-                }}
-              >
-                Descargar comprobante
-              </button>
-            </div>
+            <RecordActions className={styles.customerActions}
+              label="Comprobante"
+              context="Último abono"
+              actions={[
+                { label: 'Compartir con el cliente', icon: Share2, tone: 'green', disabled: Boolean(activeDocumentId), run: () => void handleShareLatestPaymentReceipt() },
+                { label: 'Descargar comprobante', icon: Download, disabled: Boolean(activeDocumentId), run: () => void handlePaymentReceipts('download') },
+                { label: 'Imprimir comprobante', icon: Printer, disabled: Boolean(activeDocumentId), run: () => void handlePaymentReceipts('print') },
+              ]}
+            />
           </section>
         ) : null}
       </div>
@@ -2563,24 +2492,33 @@ export function RetailCustomerDrawer({
 
   return (
     <SideDrawer
+      key={mode}
       bodyClassName={styles.drawerBody}
       confirmClose={mode !== 'detail'}
       footer={
         mode === 'detail' && customer ? (
-          <DrawerActionFooter>
+          <DrawerActionFooter className={styles.compactFooter} layout="inline">
             <button
               className={styles.secondaryButton}
               type="button"
               onClick={() => onModeChange('edit')}
             >
-              Editar cliente
+              <Pencil aria-hidden="true" /> Editar cliente
             </button>
             <button className={styles.primaryButton} type="button" onClick={onClose}>
-              Listo
+              <CheckCircle2 aria-hidden="true" /> Listo
+            </button>
+          </DrawerActionFooter>
+        ) : mode !== 'detail' ? (
+          <DrawerActionFooter className={styles.compactFooter} layout="inline">
+            <button className={styles.primaryButton} disabled={isSubmitting} form="customer-profile-form" type="submit">
+              <Save aria-hidden="true" />
+              {isSubmitting ? 'Guardando…' : mode === 'create' ? 'Crear cliente' : 'Guardar cambios'}
             </button>
           </DrawerActionFooter>
         ) : null
       }
+      isCloseDisabled={isSubmitting}
       isOpen={isOpen && !isSuspended}
       panelClassName={styles.drawerPanel}
       title={drawerTitle}
@@ -2629,6 +2567,7 @@ function ReceivableCard({
   onDownload,
   onEditTerms,
   onManage,
+  onPay,
   onPrint,
   onPaymentReceipt,
   onPromise,
@@ -2642,6 +2581,7 @@ function ReceivableCard({
   onDownload: () => void
   onEditTerms: (receivable: CustomerReceivable) => void
   onManage: () => void
+  onPay?: () => void
   onPrint: () => void
   onPaymentReceipt: (paymentId: string, action: 'download' | 'print' | 'share') => void
   onPromise: (receivable: CustomerReceivable) => void
@@ -2708,7 +2648,7 @@ function ReceivableCard({
       <div className={styles.receivableTop}>
         <div>
           <strong>{receivable.saleNumber}</strong>
-          <span>{formatDateTime(receivable.saleDate)}</span>
+          <span>{formatDateTime(receivable.saleDate, 'es-CO')}</span>
         </div>
         <span className={joinClassNames(styles.statusPill, isPaid && styles.statusPillPaid)}>
           {getStatusLabel(receivable.status)}
@@ -2739,15 +2679,7 @@ function ReceivableCard({
                 className={styles.receivableProduct}
                 key={`${purchase.saleId}:${product.productId}`}
               >
-                <div>
-                  <strong>
-                    {product.quantity} × {product.name}
-                  </strong>
-                  <span>
-                    {formatCurrency(product.unitPrice)} c/u
-                    {product.sku ? ` · SKU ${product.sku}` : ''}
-                  </span>
-                </div>
+                <CustomerPurchaseProduct product={product} />
                 <strong>{formatCurrency(product.subtotal)}</strong>
               </div>
             ))}
@@ -2761,52 +2693,27 @@ function ReceivableCard({
         </p>
       ) : null}
 
-      <div className={styles.invoiceActions}>
-        {!isPaid ? (
-          <button disabled={isDocumentBusy} type="button" onClick={onShare}>
-            <Share2 aria-hidden="true" />
-            Compartir por WhatsApp
+      <div className={styles.invoiceToolbar}>
+        {onPay ? (
+          <button className={styles.invoicePayButton} type="button" onClick={onPay}>
+            <Banknote aria-hidden="true" /> Registrar abono
           </button>
         ) : null}
-        <button disabled={isDocumentBusy} type="button" onClick={onDownload}>
-          <Download aria-hidden="true" />
-          Descargar factura
-        </button>
-        <button disabled={isDocumentBusy} type="button" onClick={onPrint}>
-          <Printer aria-hidden="true" />
-          Imprimir factura
-        </button>
+        <RecordActions className={styles.customerActions}
+          label="Factura"
+          context={receivable.saleNumber}
+          actions={[
+            ...(!isPaid ? [
+              { label: 'Compartir por WhatsApp', icon: Share2, tone: 'green' as const, disabled: isDocumentBusy, run: onShare },
+              { label: 'Editar vencimiento', icon: CalendarDays, run: () => onEditTerms(receivable) },
+              { label: 'Registrar compromiso', icon: Handshake, tone: 'violet' as const, run: () => onPromise(receivable) },
+            ] : []),
+            { label: 'Descargar factura', icon: Download, disabled: isDocumentBusy, run: onDownload },
+            { label: 'Imprimir factura', icon: Printer, disabled: isDocumentBusy, run: onPrint },
+            { label: isPaid ? 'Gestionar factura' : 'Editar o anular factura', icon: Pencil, run: onManage },
+          ]}
+        />
       </div>
-
-      {!isPaid ? (
-        <div className={styles.receivableActions}>
-          <button className={styles.manageInvoiceButton} type="button" onClick={onManage}>
-            <Pencil aria-hidden="true" /> Editar o anular factura
-          </button>
-          <button
-            className={styles.termsButton}
-            type="button"
-            onClick={() => onEditTerms(receivable)}
-          >
-            <CalendarDays aria-hidden="true" />
-            Editar vencimiento
-          </button>
-          <button
-            className={styles.promiseButton}
-            type="button"
-            onClick={() => onPromise(receivable)}
-          >
-            <Handshake aria-hidden="true" />
-            Registrar compromiso
-          </button>
-        </div>
-      ) : (
-        <div className={styles.receivableActions}>
-          <button className={styles.manageInvoiceButton} type="button" onClick={onManage}>
-            <Pencil aria-hidden="true" /> Gestionar factura
-          </button>
-        </div>
-      )}
 
       {receivable.payments.length > 0 ? (
         <div className={styles.paymentHistory}>
@@ -2816,33 +2723,22 @@ function ReceivableCard({
               <div>
                 <strong>{formatCurrency(payment.amount)}</strong>
                 <span>
-                  {formatDateTime(payment.createdAt)} ·{' '}
+                  {formatDateTime(payment.createdAt, 'es-CO')} ·{' '}
                   {COLLECTED_PAYMENT_METHOD_OPTIONS.find(
                     (option) => option.value === payment.method,
                   )?.label ?? payment.method}
                 </span>
               </div>
-              <div className={styles.paymentReceiptActions}>
-                <button type="button" onClick={() => onPaymentReceipt(payment.id, 'share')}>
-                  <Share2 aria-hidden="true" />
-                  Compartir
-                </button>
-                <button
-                  type="button"
-                  onClick={() => startPaymentMethodCorrection(payment.id, payment.method)}
-                >
-                  <Pencil aria-hidden="true" />
-                  Corregir
-                </button>
-                <button type="button" onClick={() => onPaymentReceipt(payment.id, 'print')}>
-                  <Printer aria-hidden="true" />
-                  Imprimir
-                </button>
-                <button type="button" onClick={() => onPaymentReceipt(payment.id, 'download')}>
-                  <Download aria-hidden="true" />
-                  PDF
-                </button>
-              </div>
+              <RecordActions className={styles.customerActions}
+                label="Comprobante"
+                context={formatCurrency(payment.amount)}
+                actions={[
+                  { label: 'Compartir comprobante', icon: Share2, tone: 'green', run: () => onPaymentReceipt(payment.id, 'share') },
+                  { label: 'Descargar comprobante', icon: Download, run: () => onPaymentReceipt(payment.id, 'download') },
+                  { label: 'Imprimir comprobante', icon: Printer, run: () => onPaymentReceipt(payment.id, 'print') },
+                  { label: 'Corregir medio de pago', icon: Pencil, tone: 'violet', run: () => startPaymentMethodCorrection(payment.id, payment.method) },
+                ]}
+              />
               {correctionPaymentId === payment.id ? (
                 <form
                   className={styles.paymentCorrectionForm}
@@ -2934,7 +2830,7 @@ function ReceivableCard({
                     } · `
                   : ''}
                 {activity.promisedDate ? `Para ${formatDate(activity.promisedDate)} · ` : ''}
-                {activity.createdByName ?? 'Usuario'} · {formatDateTime(activity.createdAt)}
+                {activity.createdByName ?? 'Usuario'} · {formatDateTime(activity.createdAt, 'es-CO')}
               </small>
             </div>
           ))}

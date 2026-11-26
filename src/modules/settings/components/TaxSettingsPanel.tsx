@@ -168,7 +168,7 @@ function RetailTaxSettingsPanel({
     () => categoriesQuery.data ?? [],
     [categoriesQuery.data],
   )
-  const [isAccordionOpen, setAccordionOpen] = useState(true)
+  const [isAccordionOpen, setAccordionOpen] = useState(false)
   const [isDrawerOpen, setDrawerOpen] = useState(false)
   const [isProductSelectorOpen, setProductSelectorOpen] = useState(false)
   const [selectedTaxOptionId, setSelectedTaxOptionId] = useState<TaxOptionId | ''>(
@@ -384,11 +384,15 @@ function RetailTaxSettingsPanel({
           ) : null}
 
           <div className={styles.retailTaxGrid}>
-            <span className={styles.retailLabel}>Impuesto base</span>
-            <label className={styles.selectWrapper}>
+            <div className={styles.retailTaxField}>
+              <label className={styles.retailLabel} htmlFor="settings-base-tax">
+                Impuesto base
+              </label>
+              <p>Se aplica por defecto a los productos.</p>
               <SearchableSelect
                 className={styles.retailSelect}
                 disabled={isLoading || isSubmitting || businessSettings === null}
+                id="settings-base-tax"
                 value={baseTaxOptionId}
                 onChange={(event) => {
                   void handleBaseTaxChange(event.target.value as TaxOptionId | '')
@@ -401,17 +405,22 @@ function RetailTaxSettingsPanel({
                   </option>
                 ))}
               </SearchableSelect>
-            </label>
+            </div>
 
-            <span className={styles.retailLabel}>Impuesto por producto</span>
-            <button
-              className={styles.selectProductsButton}
-              disabled={isLoading || businessSettings === null}
-              type="button"
-              onClick={handleOpenDrawer}
-            >
-              Seleccionar productos
-            </button>
+            <div className={styles.retailTaxField}>
+              <strong className={styles.retailLabel}>Impuesto por producto</strong>
+              <p>Configura un impuesto específico para los artículos que elijas.</p>
+              <AppButton
+                className={styles.selectProductsButton}
+                disabled={isLoading || businessSettings === null}
+                startIcon={<PackageCheck aria-hidden="true" size={18} />}
+                type="button"
+                variant="secondary"
+                onClick={handleOpenDrawer}
+              >
+                Seleccionar productos
+              </AppButton>
+            </div>
           </div>
         </div>
       </details>

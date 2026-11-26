@@ -1,5 +1,6 @@
 import { useDeferredValue, useEffect, useState } from 'react'
 import {
+  Eye,
   Mail,
   PackageCheck,
   Pencil,
@@ -7,6 +8,9 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Truck,
+  UsersRound,
+  Wallet,
 } from 'lucide-react'
 import { SupplierDetailPanel } from '@/modules/suppliers/components/SupplierDetailPanel'
 import { SupplierMetricCard } from '@/modules/suppliers/components/SupplierMetricCard'
@@ -34,7 +38,11 @@ import type {
   SupplierPurchaseReturnInput,
   SupplierPurchaseUpdateInput,
 } from '@/modules/suppliers/types/supplier'
-import { RetailPremiumBanner } from '@/shared/components/retail/RetailPremiumBanner'
+import { SalesCustomerAvatar } from '@/modules/sales/components/SalesVisuals'
+import { WorkspaceBusinessTitle } from '@/shared/components/retail/WorkspaceBusinessTitle'
+import workspaceVisual from '@/shared/components/retail/WorkspaceVisual.module.css'
+import { AppButton } from '@/shared/components/ui/AppButton'
+import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { RetailStatCard } from '@/shared/components/retail/RetailStatCard'
 import { RetailTableShell } from '@/shared/components/retail/RetailTableShell'
@@ -47,7 +55,6 @@ import { matchesSupplierSearch } from '@/modules/suppliers/utils/matches-supplie
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
-import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import styles from './SuppliersPage.module.css'
 
 type RetailSupplierFilter = 'all' | 'outstanding' | 'active' | 'withoutPurchases'
@@ -231,6 +238,7 @@ export function SuppliersPage() {
       setPurchaseActionError(
         getErrorMessage(error, 'No pudimos registrar el abono.'),
       )
+      throw error
     }
   }
 
@@ -269,6 +277,7 @@ export function SuppliersPage() {
       setPurchaseActionError(
         getErrorMessage(error, 'No pudimos anular la compra.'),
       )
+      throw error
     }
   }
 
@@ -314,6 +323,7 @@ export function SuppliersPage() {
       setPurchaseActionError(
         getErrorMessage(error, 'No pudimos registrar la devolución.'),
       )
+      throw error
     }
   }
 
@@ -350,14 +360,13 @@ export function SuppliersPage() {
     return (
       <>
         <RetailPageLayout
-          accent="success"
-          bodyVariant="flush"
-          title="Proveedores"
-          meta="Administra contactos, compras y saldos de tu red de abastecimiento."
+          headerClassName={`${workspaceVisual.hero} ${workspaceVisual.catalogHeader} ${styles.suppliersHeader}`}
+          title={<WorkspaceBusinessTitle>Proveedores</WorkspaceBusinessTitle>}
+          meta="Consulta compras, pagos y contactos de abastecimiento."
           actions={
-            <div className={styles.pageActions}>
+            <>
               <button
-                className={retailStyles.buttonOutline}
+                className={`${retailStyles.buttonOutline} ${workspaceVisual.catalogAction}`}
                 disabled={suppliersQuery.isFetching}
                 type="button"
                 onClick={() => void suppliersQuery.refetch()}
@@ -366,29 +375,41 @@ export function SuppliersPage() {
                 {suppliersQuery.isFetching ? 'Actualizando...' : 'Actualizar'}
               </button>
               <button
-                className={retailStyles.buttonDark}
+                className={`${retailStyles.buttonDark} ${workspaceVisual.catalogAction} ${workspaceVisual.catalogPrimary}`}
                 type="button"
                 onClick={handleStartCreateSupplier}
               >
                 <Plus aria-hidden="true" size={19} />
                 Crear proveedor
               </button>
-            </div>
+            </>
           }
         >
           <section className={styles.retailWorkspace}>
-            <RetailPremiumBanner
-              title="Proveedores premium, toda tu red de abastecimiento en un solo lugar."
-              description="Registra contactos, agrega su avatar y consulta rapidamente su historial de compras."
-              linkLabel="Ver beneficios"
-            />
+            <section className={styles.retailMetricsGrid} aria-label="Resumen de abastecimiento">
+              {([
+                { icon: UsersRound, label: 'Proveedores', value: suppliers.length.toString(), tone: 'team' },
+                { icon: Truck, label: 'Con compras', value: activeSuppliers.toString(), tone: 'partners' },
+                { icon: PackageCheck, label: 'Compras registradas', value: trackedRestocks.toString(), tone: 'purchases' },
+                { icon: Wallet, label: 'Total por pagar', value: formatCurrency(totalOutstandingBalance), tone: 'balance' },
+              ] as const).map(({ icon: Icon, label, value, tone }) => (
+                <div className={styles.supplierMetric} data-tone={tone} key={label}>
+                  <RetailStatCard
+                    icon={<Icon aria-hidden="true" />}
+                    label={label}
+                    value={value}
+                    hint={tone === 'balance' ? `${suppliersWithOutstandingBalance} con saldo pendiente` : undefined}
+                  />
+                </div>
+              ))}
+            </section>
 
             <div className={styles.controlsCard}>
               <label className={styles.searchField}>
                 <Search aria-hidden="true" size={20} />
                 <input
-                  className={retailStyles.input}
-                  placeholder="Buscar por nombre, celular o correo..."
+                  aria-label="Buscar proveedores"
+                  placeholder="Nombre, celular o correo"
                   type="search"
                   value={searchValue}
                   onChange={(event) => setSearchValue(event.target.value)}
@@ -419,32 +440,9 @@ export function SuppliersPage() {
               </div>
             </div>
 
-            <div className={styles.retailMetricsGrid}>
-              <RetailStatCard
-                label="Total proveedores"
-                value={suppliers.length.toString()}
-                hint="Contactos registrados"
-              />
-              <RetailStatCard
-                label="Proveedores activos"
-                value={activeSuppliers.toString()}
-                hint="Con compras registradas"
-              />
-              <RetailStatCard
-                label="Compras registradas"
-                value={trackedRestocks.toString()}
-                hint="Movimientos de abastecimiento"
-              />
-              <RetailStatCard
-                label="Total por pagar"
-                value={formatCurrency(totalOutstandingBalance)}
-                hint={`${suppliersWithOutstandingBalance.toString()} proveedores con saldo`}
-              />
-            </div>
-
             <RetailTableShell
               isRefreshing={suppliersQuery.isFetching && !suppliersQuery.isLoading}
-              title="Proveedores registrados"
+              title={`Proveedores registrados · ${visibleSuppliers.length}`}
             >
               <table className={retailStyles.table}>
                 <thead>
@@ -498,13 +496,7 @@ export function SuppliersPage() {
                             type="button"
                             onClick={() => handleOpenSupplierDetail(supplier.id)}
                           >
-                            <span className={styles.supplierAvatar} aria-hidden="true">
-                              {resolveApiAssetUrl(supplier.avatarUrl) ? (
-                                <img src={resolveApiAssetUrl(supplier.avatarUrl) ?? ''} alt="" />
-                              ) : (
-                                supplier.name.charAt(0).toUpperCase()
-                              )}
-                            </span>
+                            <span className={styles.supplierAvatar}><SalesCustomerAvatar name={supplier.name} avatarUrl={supplier.avatarUrl} /></span>
                             <span>
                               <strong>{supplier.name}</strong>
                               <small>{supplier.email ?? 'Sin correo registrado'}</small>
@@ -540,7 +532,7 @@ export function SuppliersPage() {
                               type="button"
                               onClick={() => handleOpenSupplierDetail(supplier.id)}
                             >
-                              Detalle
+                              <Eye aria-hidden="true" size={16} /> Detalle
                             </button>
                             <button
                               aria-label={`Editar ${supplier.name}`}
@@ -574,13 +566,7 @@ export function SuppliersPage() {
                 {visibleSuppliers.map((supplier) => (
                   <article key={supplier.id} className={styles.mobileSupplierCard}>
                     <div className={styles.mobileSupplierHeader}>
-                      <span className={styles.supplierAvatar} aria-hidden="true">
-                        {resolveApiAssetUrl(supplier.avatarUrl) ? (
-                          <img src={resolveApiAssetUrl(supplier.avatarUrl) ?? ''} alt="" />
-                        ) : (
-                          supplier.name.charAt(0).toUpperCase()
-                        )}
-                      </span>
+                      <span className={styles.supplierAvatar}><SalesCustomerAvatar name={supplier.name} avatarUrl={supplier.avatarUrl} /></span>
                       <div>
                         <h3>{supplier.name}</h3>
                         <span className={supplier.outstandingBalance > 0 ? styles.statusDue : styles.statusClear}>
@@ -601,8 +587,8 @@ export function SuppliersPage() {
                     </div>
 
                     <div className={styles.mobileActions}>
-                      <button type="button" onClick={() => handleOpenSupplierDetail(supplier.id)}>Ver detalle</button>
-                      <button type="button" onClick={() => handleStartEditSupplier(supplier.id)}>Editar</button>
+                      <button type="button" onClick={() => handleOpenSupplierDetail(supplier.id)}><Eye aria-hidden="true" size={16} /> Detalle</button>
+                      <button type="button" onClick={() => handleStartEditSupplier(supplier.id)}><Pencil aria-hidden="true" size={16} /> Editar</button>
                     </div>
                   </article>
                 ))}
@@ -619,7 +605,23 @@ export function SuppliersPage() {
 
         <SideDrawer
           bodyClassName={styles.detailDrawerBody}
-          description="Consulta sus datos, compras, saldos, abonos y devoluciones."
+          description="Compras, pagos y saldo del proveedor."
+          footer={selectedSupplier ? (
+            <DrawerActionFooter className={styles.detailFooter} layout="inline">
+              <AppButton
+                size="sm"
+                startIcon={<Pencil aria-hidden="true" size={16} />}
+                type="button"
+                variant="secondary"
+                onClick={() => handleStartEditSupplier(selectedSupplier.id)}
+              >
+                Editar proveedor
+              </AppButton>
+              <AppButton size="sm" type="button" onClick={() => setRetailDetailOpen(false)}>
+                Listo
+              </AppButton>
+            </DrawerActionFooter>
+          ) : null}
           isOpen={isRetailDetailOpen}
           panelClassName={styles.detailDrawer}
           title="Detalle del proveedor"
@@ -638,7 +640,7 @@ export function SuppliersPage() {
               }
               isLoading={supplierDetailQuery.isLoading}
               selectedSupplierName={selectedSupplierSummary?.name ?? null}
-              onEdit={(supplier) => handleStartEditSupplier(supplier.id)}
+              compact
               onRetry={() => void supplierDetailQuery.refetch()}
             />
             <SupplierSupplyHistoryPanel
@@ -650,12 +652,12 @@ export function SuppliersPage() {
               returningPurchaseId={createPurchaseReturnMutation.isPending ? createPurchaseReturnMutation.variables?.purchaseId ?? null : null}
               paymentError={purchaseActionError}
               purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
-              onCancelPurchase={(purchaseId, reason) => void handleCancelPurchase(purchaseId, reason)}
+              onCancelPurchase={handleCancelPurchase}
               onUpdatePurchase={handleUpdatePurchase}
               onDownloadReceipt={(purchaseId) => void handleDownloadPurchaseReceipt(purchaseId)}
               onDownloadCreditNote={(purchaseId, returnId) => void handleDownloadCreditNote(purchaseId, returnId)}
-              onCreateReturn={(purchaseId, input) => void handleCreatePurchaseReturn(purchaseId, input)}
-              onRegisterPayment={(purchaseId, input) => void handleRegisterPurchasePayment(purchaseId, input)}
+              onCreateReturn={handleCreatePurchaseReturn}
+              onRegisterPayment={handleRegisterPurchasePayment}
             />
           </div>
         </SideDrawer>
@@ -809,9 +811,7 @@ export function SuppliersPage() {
             }
             paymentError={purchaseActionError}
             purchaseHistory={selectedSupplier?.purchaseHistory ?? []}
-            onCancelPurchase={(purchaseId, reason) => {
-              void handleCancelPurchase(purchaseId, reason)
-            }}
+            onCancelPurchase={handleCancelPurchase}
             onUpdatePurchase={handleUpdatePurchase}
             onDownloadReceipt={(purchaseId) => {
               void handleDownloadPurchaseReceipt(purchaseId)
@@ -819,12 +819,8 @@ export function SuppliersPage() {
             onDownloadCreditNote={(purchaseId, returnId) => {
               void handleDownloadCreditNote(purchaseId, returnId)
             }}
-            onCreateReturn={(purchaseId, input) => {
-              void handleCreatePurchaseReturn(purchaseId, input)
-            }}
-            onRegisterPayment={(purchaseId, input) => {
-              void handleRegisterPurchasePayment(purchaseId, input)
-            }}
+            onCreateReturn={handleCreatePurchaseReturn}
+            onRegisterPayment={handleRegisterPurchasePayment}
           />
         </div>
       </div>

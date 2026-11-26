@@ -1,15 +1,15 @@
+import { ArrowRight, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { DashboardProductPhoto } from '@/modules/dashboard/components/DashboardProductPhoto'
 import type { BestSellingProduct } from '@/modules/dashboard/types/dashboard-summary'
 import { routePaths } from '@/routes/route-paths'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
-import styles from './BestSellingProductsPanel.module.css'
+import styles from './DashboardProductLists.module.css'
 
 type BestSellingProductsPanelProps = {
   products: BestSellingProduct[]
   isLoading: boolean
 }
-
-const loadingKeys = ['best-selling-1', 'best-selling-2', 'best-selling-3'] as const
 
 export function BestSellingProductsPanel({
   products,
@@ -17,62 +17,44 @@ export function BestSellingProductsPanel({
 }: BestSellingProductsPanelProps) {
   return (
     <SurfaceCard className={styles.card}>
-      <div className={styles.header}>
-        <div>
-          <h2 className={styles.title}>Productos con mejor salida</h2>
-          <p className={styles.description}>
-            Análisis de rendimiento por volumen de venta hoy.
-          </p>
+      <header className={styles.header}>
+        <div className={styles.heading}>
+          <span data-tone="best">
+            <Trophy aria-hidden="true" />
+          </span>
+          <h2>Productos con mejor salida</h2>
         </div>
-        <Link className={styles.reportLink} to={routePaths.reports}>
-          Reporte completo
+        <Link className={styles.headerLink} to={routePaths.reports}>
+          Ver reporte <ArrowRight aria-hidden="true" />
         </Link>
-      </div>
+      </header>
 
-      {isLoading ? (
-        <div className={styles.loadingList} aria-live="polite">
-          {loadingKeys.map((loadingKey) => (
-            <div className={styles.loadingRow} key={loadingKey}>
-              <span className={styles.loadingBarWide} />
-              <span className={styles.loadingBarShort} />
-            </div>
-          ))}
-        </div>
-      ) : products.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p className={styles.emptyTitle}>Todavia no hay destacados</p>
-          <p className={styles.emptyDescription}>
-            En cuanto entren ventas, aqui apareceran los productos mas fuertes.
-          </p>
-        </div>
+      {isLoading || products.length === 0 ? (
+        <p className={styles.emptyState} aria-live="polite">
+          {isLoading
+            ? 'Cargando productos…'
+            : 'Todavía no hay ventas de productos hoy.'}
+        </p>
       ) : (
         <ol className={styles.list}>
           {products.map((product, index) => (
-            <li className={styles.item} key={product.productId}>
-              <div className={styles.rankBadge}>{index + 1}</div>
-
-              <div className={styles.copy}>
-                <h3 className={styles.name}>{product.name}</h3>
-                <p className={styles.meta}>Ventas del día</p>
-              </div>
-
-              <div className={styles.amountBlock}>
-                <strong>
-                  {product.quantitySold} unidad
-                  {product.quantitySold === 1 ? '' : 'es'}
-                </strong>
-                <span>Total unidades</span>
-              </div>
+            <li key={product.productId}>
+              <Link
+                className={styles.item}
+                to={`${routePaths.products}?productId=${encodeURIComponent(product.productId)}`}
+              >
+                <span className={styles.rankBadge}>{index + 1}</span>
+                <DashboardProductPhoto imageUrl={product.imageUrl} />
+                <span className={styles.name}>{product.name}</span>
+                <span className={styles.amount}>
+                  {product.quantitySold}{' '}
+                  {product.quantitySold === 1 ? 'unidad' : 'unidades'}
+                </span>
+              </Link>
             </li>
           ))}
         </ol>
       )}
-
-      {products.length > 0 && !isLoading ? (
-        <Link className={styles.rankingLink} to={routePaths.reports}>
-          Ver ranking completo
-        </Link>
-      ) : null}
     </SurfaceCard>
   )
 }

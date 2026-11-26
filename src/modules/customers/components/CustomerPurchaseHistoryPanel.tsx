@@ -1,3 +1,4 @@
+import { CustomerPurchaseProduct } from '@/modules/customers/components/CustomerPurchaseProduct'
 import type { CustomerPurchaseHistoryItem } from '@/modules/customers/types/customer'
 import { ShoppingBag } from 'lucide-react'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
@@ -66,7 +67,7 @@ export function CustomerPurchaseHistoryPanel({
                 <div>
                   <p className={styles.saleId}>{purchase.saleNumber}</p>
                   <p className={styles.saleDate}>
-                    {formatDateTime(purchase.createdAt)}
+                    {formatDateTime(purchase.createdAt, 'es-CO')}
                   </p>
                 </div>
 
@@ -89,13 +90,7 @@ export function CustomerPurchaseHistoryPanel({
                     className={styles.productRow}
                     key={`${purchase.saleId}:${product.productId}`}
                   >
-                    <div>
-                      <strong>{product.name}</strong>
-                      <span>
-                        {product.quantity} × {formatCurrency(product.unitPrice)}
-                        {product.sku ? ` · SKU ${product.sku}` : ''}
-                      </span>
-                    </div>
+                    <CustomerPurchaseProduct product={product} />
                     <strong>{formatCurrency(product.subtotal)}</strong>
                   </div>
                 ))}

@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Printer, Settings2 } from "lucide-react";
+import { type ReactNode, useState } from "react";
+import { Bell, Building2, LayoutGrid, Package, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AdditionalSettingsPanel } from "@/modules/settings/components/AdditionalSettingsPanel";
 import { BusinessSettingsPanel } from "@/modules/settings/components/BusinessSettingsPanel";
@@ -32,6 +32,8 @@ import { useBusinessNavigationPreset } from "@/shared/hooks/use-business-navigat
 import { isAdminWorkspaceRole } from "@/shared/constants/user-roles";
 import { SurfaceCard } from "@/shared/components/ui/SurfaceCard";
 import { RetailPageLayout } from "@/shared/components/retail/RetailPageLayout";
+import { WorkspaceBusinessTitle } from "@/shared/components/retail/WorkspaceBusinessTitle";
+import workspaceVisual from "@/shared/components/retail/WorkspaceVisual.module.css";
 import { routePaths } from "@/routes/route-paths";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import styles from "./SettingsPage.module.css";
@@ -42,6 +44,33 @@ const defaultBusinessTaxSetup = {
   taxRate: 0,
   taxLabel: "IVA",
 };
+
+const settingsTabs = [
+  { id: "general", label: "General", icon: LayoutGrid },
+  { id: "print", label: "Impresión", icon: Printer },
+] as const;
+
+function SettingsGroup({
+  id,
+  title,
+  icon,
+  children,
+}: {
+  id: string;
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <section aria-labelledby={id} className={retailStyles.group} data-group={id}>
+      <h2 id={id} className={retailStyles.groupTitle}>
+        <span aria-hidden="true">{icon}</span>
+        {title}
+      </h2>
+      <div className={retailStyles.panels}>{children}</div>
+    </section>
+  );
+}
 
 export function SettingsPage() {
   const navigate = useNavigate();
@@ -169,134 +198,160 @@ export function SettingsPage() {
     return (
       <RetailPageLayout
         bodyClassName={retailStyles.body}
-        headerClassName={retailStyles.header}
-        title="Configuraciones"
-        meta="Administra tu negocio y comprobantes desde un solo lugar."
+        headerClassName={`${workspaceVisual.hero} ${retailStyles.header}`}
+        title={<WorkspaceBusinessTitle>Configuraciones</WorkspaceBusinessTitle>}
+        meta="Ajusta los datos, la operación y los comprobantes de tu negocio."
         actions={
           <div aria-label="Secciones de configuración" className={retailStyles.tabs} role="tablist">
-            <button
-              aria-selected={retailTab === "general"}
-              className={
-                retailTab === "general" ? retailStyles.tabActive : retailStyles.tab
-              }
-              role="tab"
-              type="button"
-              onClick={() => setRetailTab("general")}
-            >
-              <Settings2 aria-hidden="true" />
-              General
-            </button>
-            <button
-              aria-selected={retailTab === "print"}
-              className={
-                retailTab === "print" ? retailStyles.tabActive : retailStyles.tab
-              }
-              role="tab"
-              type="button"
-              onClick={() => setRetailTab("print")}
-            >
-              <Printer aria-hidden="true" />
-              Impresión
-            </button>
+            {settingsTabs.map(({ id, label, icon: Icon }, index) => (
+              <button
+                aria-controls={`settings-panel-${id}`}
+                aria-selected={retailTab === id}
+                className={retailStyles.tab}
+                id={`settings-tab-${id}`}
+                key={id}
+                role="tab"
+                tabIndex={retailTab === id ? 0 : -1}
+                type="button"
+                onClick={() => setRetailTab(id)}
+                onKeyDown={(event) => {
+                  const nextIndex = {
+                    ArrowLeft: 1 - index,
+                    ArrowRight: 1 - index,
+                    Home: 0,
+                    End: settingsTabs.length - 1,
+                  }[event.key];
+                  if (nextIndex === undefined) return;
+
+                  event.preventDefault();
+                  const nextTab = settingsTabs[nextIndex].id;
+                  setRetailTab(nextTab);
+                  document.getElementById(`settings-tab-${nextTab}`)?.focus();
+                }}
+              >
+                <Icon aria-hidden="true" />
+                {label}
+              </button>
+            ))}
           </div>
         }
       >
+        <div
+          aria-labelledby="settings-tab-general"
+          className={retailStyles.stack}
+          hidden={retailTab !== "general"}
+          id="settings-panel-general"
+          role="tabpanel"
+        >
+          {retailTab === "general" ? (
+            <>
+              <SettingsGroup id="settings-business" title="Negocio" icon={<Building2 />}>
+                <BusinessSettingsPanel
+                  businessSettings={businessSettings}
+                  errorMessage={businessSettingsError}
+                  initialOpen={false}
+                  isLoading={businessSettingsQuery.isLoading}
+                  isSubmitting={
+                    createBusinessSettingsMutation.isPending ||
+                    updateBusinessProfileMutation.isPending
+                  }
+                  isLogoUploading={uploadBusinessLogoMutation.isPending}
+                  variant="retail"
+                  onLogoUpload={async (file) => {
+                    const settings = await uploadBusinessLogoMutation.mutateAsync(file);
+                    syncBusinessSession(settings);
+                  }}
+                  onRetry={() => {
+                    void businessSettingsQuery.refetch();
+                  }}
+                  onSubmit={handleBusinessProfileSubmit}
+                />
 
-        {retailTab === "general" ? (
-          <div className={retailStyles.stack}>
-            <BusinessSettingsPanel
+                <TaxSettingsPanel
+                  businessSettings={businessSettings}
+                  errorMessage={businessSettingsError}
+                  isLoading={businessSettingsQuery.isLoading}
+                  isSubmitting={updateTaxSettingsMutation.isPending}
+                  variant="retail"
+                  onRetry={() => {
+                    void businessSettingsQuery.refetch();
+                  }}
+                  onSubmit={handleBusinessTaxSubmit}
+                />
+              </SettingsGroup>
+
+              <SettingsGroup id="settings-operation" title="Operación" icon={<Package />}>
+                <VirtualCatalogSettingsPanel
+                  businessSettings={businessSettings}
+                  errorMessage={businessSettingsError}
+                  isLoading={businessSettingsQuery.isLoading}
+                  isSubmitting={updateVirtualCatalogSettingsMutation.isPending}
+                  isPaymentQrUploading={uploadBusinessManualPaymentQrMutation.isPending}
+                  onPaymentQrUpload={async (file) => {
+                    await uploadBusinessManualPaymentQrMutation.mutateAsync(file);
+                  }}
+                  onRetry={() => {
+                    void businessSettingsQuery.refetch();
+                  }}
+                  onSubmit={handleVirtualCatalogSettingsSubmit}
+                />
+
+                <InventorySettingsPanel
+                  businessSettings={businessSettings}
+                  errorMessage={businessSettingsError}
+                  isLoading={businessSettingsQuery.isLoading}
+                  isSubmitting={updateOperationalSettingsMutation.isPending}
+                  onRetry={() => {
+                    void businessSettingsQuery.refetch();
+                  }}
+                  onSubmit={handleOperationalSettingsSubmit}
+                />
+              </SettingsGroup>
+
+              <SettingsGroup id="settings-preferences" title="Preferencias" icon={<Bell />}>
+                <ReminderSettingsPanel
+                  businessSettings={businessSettings}
+                  errorMessage={businessSettingsError}
+                  isLoading={businessSettingsQuery.isLoading}
+                  isSubmitting={updateReminderSettingsMutation.isPending}
+                  onRetry={() => {
+                    void businessSettingsQuery.refetch();
+                  }}
+                  onSubmit={handleReminderSettingsSubmit}
+                />
+
+                <AdditionalSettingsPanel
+                  businessSettings={businessSettings}
+                  canDeleteBusiness={currentUser.role === "OWNER"}
+                  errorMessage={businessSettingsError}
+                  isDeleting={deleteBusinessSettingsMutation.isPending}
+                  isLoading={businessSettingsQuery.isLoading}
+                  isSubmitting={updateAdditionalSettingsMutation.isPending}
+                  onDeleteBusiness={handleDeleteBusinessSettings}
+                  onRetry={() => {
+                    void businessSettingsQuery.refetch();
+                  }}
+                  onSubmit={handleAdditionalSettingsSubmit}
+                />
+              </SettingsGroup>
+            </>
+          ) : null}
+        </div>
+
+        <div
+          aria-labelledby="settings-tab-print"
+          hidden={retailTab !== "print"}
+          id="settings-panel-print"
+          role="tabpanel"
+        >
+          {retailTab === "print" ? (
+            <PrintSettingsPanel
               businessSettings={businessSettings}
-              errorMessage={businessSettingsError}
-              initialOpen={false}
-              isLoading={businessSettingsQuery.isLoading}
-              isSubmitting={
-                createBusinessSettingsMutation.isPending ||
-                updateBusinessProfileMutation.isPending
-              }
-              isLogoUploading={uploadBusinessLogoMutation.isPending}
-              variant="retail"
-              onLogoUpload={async (file) => {
-                const settings = await uploadBusinessLogoMutation.mutateAsync(file)
-                syncBusinessSession(settings)
-              }}
-              onRetry={() => {
-                void businessSettingsQuery.refetch();
-              }}
-              onSubmit={handleBusinessProfileSubmit}
+              isSubmitting={updatePrintSettingsMutation.isPending}
+              onSubmit={handlePrintSettingsSubmit}
             />
-
-            <TaxSettingsPanel
-              businessSettings={businessSettings}
-              errorMessage={businessSettingsError}
-              isLoading={businessSettingsQuery.isLoading}
-              isSubmitting={updateTaxSettingsMutation.isPending}
-              variant="retail"
-              onRetry={() => {
-                void businessSettingsQuery.refetch();
-              }}
-              onSubmit={handleBusinessTaxSubmit}
-            />
-
-            <VirtualCatalogSettingsPanel
-              businessSettings={businessSettings}
-              errorMessage={businessSettingsError}
-              isLoading={businessSettingsQuery.isLoading}
-              isSubmitting={updateVirtualCatalogSettingsMutation.isPending}
-              isPaymentQrUploading={uploadBusinessManualPaymentQrMutation.isPending}
-              onPaymentQrUpload={async (file) => {
-                await uploadBusinessManualPaymentQrMutation.mutateAsync(file);
-              }}
-              onRetry={() => {
-                void businessSettingsQuery.refetch();
-              }}
-              onSubmit={handleVirtualCatalogSettingsSubmit}
-            />
-
-            <InventorySettingsPanel
-              businessSettings={businessSettings}
-              errorMessage={businessSettingsError}
-              isLoading={businessSettingsQuery.isLoading}
-              isSubmitting={updateOperationalSettingsMutation.isPending}
-              onRetry={() => {
-                void businessSettingsQuery.refetch();
-              }}
-              onSubmit={handleOperationalSettingsSubmit}
-            />
-
-            <ReminderSettingsPanel
-              businessSettings={businessSettings}
-              errorMessage={businessSettingsError}
-              isLoading={businessSettingsQuery.isLoading}
-              isSubmitting={updateReminderSettingsMutation.isPending}
-              onRetry={() => {
-                void businessSettingsQuery.refetch();
-              }}
-              onSubmit={handleReminderSettingsSubmit}
-            />
-
-            <AdditionalSettingsPanel
-              businessSettings={businessSettings}
-              canDeleteBusiness={currentUser.role === "OWNER"}
-              errorMessage={businessSettingsError}
-              isDeleting={deleteBusinessSettingsMutation.isPending}
-              isLoading={businessSettingsQuery.isLoading}
-              isSubmitting={updateAdditionalSettingsMutation.isPending}
-              onDeleteBusiness={handleDeleteBusinessSettings}
-              onRetry={() => {
-                void businessSettingsQuery.refetch();
-              }}
-              onSubmit={handleAdditionalSettingsSubmit}
-            />
-          </div>
-        ) : null}
-
-        {retailTab === "print" ? (
-          <PrintSettingsPanel
-            businessSettings={businessSettings}
-            isSubmitting={updatePrintSettingsMutation.isPending}
-            onSubmit={handlePrintSettingsSubmit}
-          />
-        ) : null}
+          ) : null}
+        </div>
       </RetailPageLayout>
     );
   }
@@ -306,12 +361,11 @@ export function SettingsPage() {
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <p className={styles.eyebrow}>Centro administrativo</p>
-          <h2 className={styles.title}>
-            Mantén negocio, impuestos y operación organizados en un solo panel.
-          </h2>
+          <h1 className={styles.title}>
+            <WorkspaceBusinessTitle>Configuraciones</WorkspaceBusinessTitle>
+          </h1>
           <p className={styles.description}>
-            Este espacio concentra la configuracion estructural de la
-            operación: identidad del negocio, impuestos e inventario.
+            Administra los datos, los impuestos y el inventario de tu negocio.
           </p>
         </div>
 

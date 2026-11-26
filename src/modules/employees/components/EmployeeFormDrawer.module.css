@@ -240,3 +240,20 @@
     align-items: center;
   }
 }
+.invitationTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  color: #254970;
+  font-size: 0.95rem;
+}
+
+.invitationSuccess {
+  margin: 0;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.55rem;
+  background: #e4f5ed;
+  color: #126647;
+  overflow-wrap: anywhere;
+}

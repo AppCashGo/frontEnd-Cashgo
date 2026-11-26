@@ -1,0 +1,18 @@
+.avatar {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 2.6rem;
+  block-size: 2.6rem;
+  border: 1px solid #cae4fc;
+  border-radius: 0.8rem;
+  background: linear-gradient(145deg, #d8f4fa, #dce9ff 65%, #e8e7fd);
+  color: #1e4978;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.avatar svg {
+  inline-size: 1.16rem;
+  block-size: 1.16rem;
+}

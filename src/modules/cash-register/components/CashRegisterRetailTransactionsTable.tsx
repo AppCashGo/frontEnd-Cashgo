@@ -1,4 +1,4 @@
-import { ArrowRight, Wallet } from "lucide-react";
+import { ArrowDownLeft, ArrowLeftRight, ArrowRight, ArrowUpRight, Wallet } from "lucide-react";
 import type { MovementLedgerItem } from "@/modules/cash-register/types/cash-register";
 import {
   formatCashRegisterCurrency,
@@ -7,6 +7,7 @@ import {
 } from "@/modules/cash-register/utils/format-cash-register";
 import { joinClassNames } from "@/shared/utils/join-class-names";
 import { formatSystemGeneratedText } from "@/shared/utils/format-system-generated-text";
+import { SalesPaymentIcon } from "@/modules/sales/components/SalesVisuals";
 import styles from "./CashRegisterRetailTransactionsTable.module.css";
 
 type CashRegisterRetailTransactionsTableProps = {
@@ -53,15 +54,8 @@ function getStatusLabel(status: string) {
 }
 
 function getKindIcon(direction: MovementLedgerItem["direction"]) {
-  if (direction === "IN") {
-    return "+";
-  }
-
-  if (direction === "OUT") {
-    return "-";
-  }
-
-  return "~";
+  const Icon = direction === "IN" ? ArrowDownLeft : direction === "OUT" ? ArrowUpRight : ArrowLeftRight;
+  return <Icon aria-hidden="true" />;
 }
 
 function getPaymentColumnLabel(transaction: MovementLedgerItem) {
@@ -187,6 +181,12 @@ export function CashRegisterRetailTransactionsTable({
         <tbody>
           {transactions.map((transaction) => {
             const saleId = getSaleId(transaction);
+            const method = transaction.paymentMethods?.length === 1
+              ? transaction.paymentMethods[0]
+              : transaction.paymentMethods?.length
+                ? null
+                : transaction.paymentMethod ??
+                  (transaction.source === "SALE" && transaction.status === "PENDING_PAYMENT" ? "CREDIT" : null);
 
             return (
               <tr key={transaction.id}>
@@ -220,7 +220,7 @@ export function CashRegisterRetailTransactionsTable({
                     </span>
                   )}
                 </td>
-                <td>
+                <td data-label="Concepto">
                   <div className={styles.conceptCell}>
                     <strong className={styles.conceptTitle}>
                       {formatSystemGeneratedText(transaction.concept)}
@@ -232,7 +232,7 @@ export function CashRegisterRetailTransactionsTable({
                     ) : null}
                   </div>
                 </td>
-                <td>
+                <td data-label="Productos">
                   <span
                     className={styles.productsCell}
                     title={getProductsLabel(transaction)}
@@ -240,7 +240,7 @@ export function CashRegisterRetailTransactionsTable({
                     {getProductsLabel(transaction)}
                   </span>
                 </td>
-                <td>
+                <td data-label="Valor">
                   <div className={styles.valueCell}>
                     <strong>{getValueLabel(transaction)}</strong>
                     {shouldShowSaleBreakdown(transaction) ? (
@@ -253,9 +253,14 @@ export function CashRegisterRetailTransactionsTable({
                     ) : null}
                   </div>
                 </td>
-                <td>{getPaymentColumnLabel(transaction)}</td>
-                <td>{formatCashRegisterDateTime(transaction.createdAt)}</td>
-                <td>
+                <td data-label="Medio de pago">
+                  <span className={styles.paymentCell}>
+                    {method ? <SalesPaymentIcon method={method} /> : null}
+                    {getPaymentColumnLabel(transaction)}
+                  </span>
+                </td>
+                <td data-label="Fecha y hora">{formatCashRegisterDateTime(transaction.createdAt)}</td>
+                <td data-label="Estado">
                   <span
                     className={joinClassNames(
                       styles.statusPill,
@@ -279,7 +284,7 @@ export function CashRegisterRetailTransactionsTable({
                   </span>
                 </td>
                 {onOpenSale ? (
-                  <td>
+                  <td className={styles.actionsCell}>
                     {saleId ? (
                       <button
                         className={styles.saleAction}

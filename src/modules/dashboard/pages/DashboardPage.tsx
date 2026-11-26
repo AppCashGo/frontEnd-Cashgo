@@ -2,19 +2,24 @@ import type { FormEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
+  ArrowUpRight,
   Bell,
+  CalendarDays,
   CircleHelp,
   Coins,
-  PackageCheck,
+  Package,
   Plus,
   RefreshCw,
   Search,
   ShoppingCart,
-  TrendingUp,
+  Ticket,
+  Trophy,
+  Users,
   TriangleAlert,
 } from 'lucide-react'
 import { BestSellingProductsPanel } from '@/modules/dashboard/components/BestSellingProductsPanel'
 import { BusinessSetupChecklist } from '@/modules/dashboard/components/BusinessSetupChecklist'
+import { DashboardProductPhoto } from '@/modules/dashboard/components/DashboardProductPhoto'
 import { DashboardMetricCard } from '@/modules/dashboard/components/DashboardMetricCard'
 import { InventoryAlertsPanel } from '@/modules/dashboard/components/InventoryAlertsPanel'
 import { BakeryOperationsDashboard } from '@/modules/dashboard/components/BakeryOperationsDashboard'
@@ -24,12 +29,28 @@ import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
-import { getActiveBusinessCategory } from '@/modules/auth/utils/get-active-business'
+import { BrandLogo } from '@/shared/components/brand/BrandLogo'
+import { resolveApiAssetUrl } from '@/shared/services/api-client'
+import {
+  getActiveBusiness,
+  getActiveBusinessCategory,
+} from '@/modules/auth/utils/get-active-business'
 import styles from './DashboardPage.module.css'
+
+const dateFormatter = new Intl.DateTimeFormat('es-CO', {
+  weekday: 'long',
+  day: 'numeric',
+  month: 'long',
+})
 
 export function DashboardPage() {
   const navigate = useNavigate()
   const user = useAuthSessionStore((state) => state.user)
+  const business = getActiveBusiness(user)
+  const businessName =
+    business?.businessName || user?.businessName || 'Mi negocio'
+  const logoUrl = resolveApiAssetUrl(business?.logoUrl ?? user?.logoUrl)
+  const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null)
   const isBakery = getActiveBusinessCategory(user) === 'bakery_pastry'
   const [globalSearch, setGlobalSearch] = useState('')
   const globalSearchRef = useRef<HTMLInputElement>(null)
@@ -43,29 +64,15 @@ export function DashboardPage() {
   const averageSale = salesToday > 0 ? revenueToday / salesToday : 0
   const registeredCustomers = summary?.customersCount ?? 0
   const activeProducts = summary?.activeProductsCount ?? 0
-  const totalBestSellerUnits = bestSellingProducts.reduce(
-    (total, product) => total + product.quantitySold,
-    0,
-  )
-  const topSellerShare =
-    topSeller && totalBestSellerUnits > 0
-      ? Math.round((topSeller.quantitySold / totalBestSellerUnits) * 100)
-      : 0
   const featuredStock = topSeller
     ? lowStockAlerts.find((alert) => alert.productId === topSeller.productId)
         ?.stock
     : undefined
-  const inventoryHealth = Math.max(18, Math.min(94, 94 - lowStockAlerts.length * 12))
-  const demandTrackClass =
-    topSellerShare >= 70
-      ? styles.demandTrackHigh
-      : topSellerShare >= 40
-        ? styles.demandTrackMedium
-        : styles.demandTrackLow
 
   useEffect(() => {
     function focusGlobalSearch(event: KeyboardEvent) {
-      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k') return
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k')
+        return
       event.preventDefault()
       globalSearchRef.current?.focus()
     }
@@ -101,22 +108,30 @@ export function DashboardPage() {
         </form>
 
         <div className={styles.topbarActions}>
-          <Link aria-label="Alertas de inventario" className={styles.iconButton} to={routePaths.inventory}>
+          <Link
+            aria-label="Alertas de inventario"
+            className={styles.iconButton}
+            to={routePaths.inventory}
+          >
             <Bell aria-hidden="true" />
           </Link>
-          <Link aria-label="Ayuda" className={styles.iconButton} to={routePaths.help}>
+          <Link
+            aria-label="Ayuda"
+            className={styles.iconButton}
+            to={routePaths.help}
+          >
             <CircleHelp aria-hidden="true" />
           </Link>
           <Link className={styles.saleButton} to={routePaths.salesNew}>
             <Plus aria-hidden="true" />
-            Nueva Venta
+            Nueva venta
           </Link>
         </div>
       </header>
 
       <BusinessSetupChecklist
-        businessCategory={user?.businessCategory}
-        businessName={user?.businessName}
+        businessCategory={business?.businessCategory ?? user?.businessCategory}
+        businessName={business?.businessName ?? user?.businessName}
         summary={summary}
       />
 
@@ -130,135 +145,138 @@ export function DashboardPage() {
         />
       ) : null}
 
-      <section className={styles.heroGrid}>
+      <section className={styles.heroGrid} aria-label="Resumen del negocio">
         <div className={styles.hero}>
           <div className={styles.heroCopy}>
-            <p className={styles.eyebrow}>Resumen del negocio</p>
-            <h2 className={styles.title}>
-              Una lectura clara del negocio para{' '}
-              <span>empezar el día con contexto.</span>
-            </h2>
-            <p className={styles.description}>
-              Mira qué se está vendiendo, cuánto dinero entra y qué productos
-              necesitan atención antes de quedarse sin stock.
+            <div className={styles.businessIdentity}>
+              {logoUrl && logoUrl !== failedLogoUrl ? (
+                <img
+                  alt=""
+                  className={styles.businessLogo}
+                  src={logoUrl}
+                  onError={() => setFailedLogoUrl(logoUrl)}
+                />
+              ) : (
+                <BrandLogo
+                  className={styles.brandFallback}
+                  size="sm"
+                  variant="mark"
+                />
+              )}
+              <span>{businessName}</span>
+            </div>
+            <h1 className={styles.title}>Tu negocio hoy</h1>
+            <p className={styles.heroDate}>
+              <CalendarDays aria-hidden="true" />{' '}
+              {dateFormatter.format(new Date())}
             </p>
 
             <div className={styles.heroActions}>
+              <Link className={styles.secondaryAction} to={routePaths.products}>
+                <Package aria-hidden="true" /> Ver catálogo
+              </Link>
               <button
                 className={styles.primaryAction}
                 disabled={dashboardSummaryQuery.isFetching}
                 type="button"
-                onClick={() => {
-                  void dashboardSummaryQuery.refetch()
-                }}
+                onClick={() => void dashboardSummaryQuery.refetch()}
               >
                 <RefreshCw aria-hidden="true" />
                 {dashboardSummaryQuery.isFetching
-                  ? 'Actualizando resumen...'
+                  ? 'Actualizando…'
                   : 'Actualizar resumen'}
               </button>
-
-              <Link className={styles.secondaryAction} to={routePaths.salesNew}>
-                Nueva venta
-              </Link>
-
-              <Link className={styles.linkAction} to={routePaths.products}>
-                Ver productos
-              </Link>
             </div>
           </div>
 
-          <div className={styles.heroStats}>
+          <dl className={styles.heroStats}>
             <div>
-              <span>Promedio venta</span>
-              <strong>{formatCurrency(averageSale)}</strong>
+              <Users aria-hidden="true" />
+              <dt>Clientes registrados</dt>
+              <dd>{summary ? registeredCustomers : '—'}</dd>
             </div>
             <div>
-              <span>Clientes registrados</span>
-              <strong>+{registeredCustomers}</strong>
+              <Package aria-hidden="true" />
+              <dt>Productos activos</dt>
+              <dd>{summary ? activeProducts : '—'}</dd>
             </div>
-            <div>
-              <span>Productos activos</span>
-              <strong className={styles.heroHighlight}>{activeProducts}</strong>
-            </div>
-          </div>
+          </dl>
         </div>
 
-        <aside className={styles.spotlightCard}>
-          <div className={styles.spotlightHeader}>
-            <p className={styles.spotlightLabel}>Producto destacado</p>
-            {topSeller ? <span>Hot sell</span> : null}
-          </div>
-
-          <div className={styles.productMedia}>
-            <PackageCheck aria-hidden="true" />
-          </div>
-
-          <h3 className={styles.spotlightValue}>
-            {topSeller ? topSeller.name : 'Esperando ventas'}
-          </h3>
-          <p className={styles.spotlightHint}>
-            {topSeller
-              ? `${topSeller.quantitySold} unidad${topSeller.quantitySold === 1 ? '' : 'es'} vendida${topSeller.quantitySold === 1 ? '' : 's'} hasta ahora. ${
-                  typeof featuredStock === 'number'
-                    ? `Quedan ${featuredStock} en stock.`
-                    : 'Sin alerta de stock activa.'
-                }`
-              : 'Cuando empiecen a entrar ventas, aquí verás el producto más fuerte del momento.'}
-          </p>
-
-          <div className={styles.demandBlock}>
-            <div className={styles.demandHeader}>
-              <span>Participación hoy</span>
-              <strong>{topSeller ? `${topSellerShare}%` : '0%'}</strong>
-            </div>
-            <span className={styles.demandTrack}>
-              <span className={topSeller ? demandTrackClass : undefined} />
-            </span>
-          </div>
+        <aside
+          className={styles.spotlightCard}
+          aria-labelledby="dashboard-featured"
+        >
+          <h2 className={styles.spotlightLabel} id="dashboard-featured">
+            <span>
+              <Trophy aria-hidden="true" />
+            </span>{' '}
+            Más vendido hoy
+          </h2>
+          <DashboardProductPhoto imageUrl={topSeller?.imageUrl} featured />
+          {topSeller ? (
+            <Link
+              className={styles.spotlightProduct}
+              to={`${routePaths.products}?productId=${encodeURIComponent(topSeller.productId)}`}
+            >
+              <div>
+                <h3>{topSeller.name}</h3>
+                <p>
+                  {topSeller.quantitySold}{' '}
+                  {topSeller.quantitySold === 1
+                    ? 'unidad vendida'
+                    : 'unidades vendidas'}
+                </p>
+                {featuredStock !== undefined ? (
+                  <p className={styles.spotlightStock}>
+                    {featuredStock === 0
+                      ? 'Sin stock'
+                      : `${featuredStock} en existencias`}
+                  </p>
+                ) : null}
+              </div>
+              <ArrowUpRight aria-hidden="true" />
+            </Link>
+          ) : (
+            <p className={styles.spotlightEmpty}>
+              {dashboardSummaryQuery.isLoading
+                ? 'Cargando ventas…'
+                : dashboardSummaryQuery.isError
+                  ? 'No pudimos consultar el producto más vendido.'
+                  : 'Todavía no hay ventas de productos hoy.'}
+            </p>
+          )}
         </aside>
       </section>
 
-      <div className={styles.metricsGrid}>
+      <div
+        className={styles.metricsGrid}
+        aria-busy={dashboardSummaryQuery.isLoading}
+      >
         <DashboardMetricCard
-          hint="Ventas registradas desde que comenzó el día."
           icon={<ShoppingCart aria-hidden="true" />}
           label="Ventas de hoy"
-          meta="Hoy"
           tone="primary"
-          value={salesToday.toString()}
+          value={summary ? String(salesToday) : '—'}
         />
         <DashboardMetricCard
-          hint="Ingresos registrados desde que comenzó el día."
+          hint="Incluye ventas a crédito"
           icon={<Coins aria-hidden="true" />}
-          label="Ingresos de hoy"
-          meta="Hoy"
+          label="Valor vendido hoy"
           tone="secondary"
-          value={formatCurrency(revenueToday)}
+          value={summary ? formatCurrency(revenueToday) : '—'}
         />
         <DashboardMetricCard
-          hint={
-            topSeller
-              ? `${topSeller.name} lidera por cantidad vendida hoy.`
-              : 'Todavía no se han vendido productos.'
-          }
-          icon={<TrendingUp aria-hidden="true" />}
-          label="Más vendido"
-          meta="Ranking #1"
+          icon={<Ticket aria-hidden="true" />}
+          label="Ticket promedio"
           tone="warning"
-          value={topSeller ? topSeller.name : 'Sin datos'}
+          value={summary ? formatCurrency(averageSale) : '—'}
         />
         <DashboardMetricCard
-          hint={
-            lowStockAlerts.length > 0
-              ? `${lowStockAlerts.length} producto${lowStockAlerts.length === 1 ? '' : 's'} necesita${lowStockAlerts.length === 1 ? '' : 'n'} atención inmediata.`
-              : 'Las alertas de inventario están bajo control.'
-          }
           icon={<TriangleAlert aria-hidden="true" />}
           label="Alertas de stock"
-          meta={lowStockAlerts.length > 0 ? 'Prioritario' : 'En orden'}
           tone={lowStockAlerts.length > 0 ? 'danger' : 'success'}
-          value={lowStockAlerts.length.toString()}
+          value={summary ? String(lowStockAlerts.length) : '—'}
         />
       </div>
 
@@ -283,18 +301,18 @@ export function DashboardPage() {
         </SurfaceCard>
       ) : null}
 
-      <div className={styles.panelsGrid}>
-        <BestSellingProductsPanel
-          isLoading={dashboardSummaryQuery.isLoading}
-          products={bestSellingProducts}
-        />
-        <InventoryAlertsPanel
-          alerts={lowStockAlerts}
-          inventoryHealth={inventoryHealth}
-          isLoading={dashboardSummaryQuery.isLoading}
-        />
-      </div>
-
+      {!dashboardSummaryQuery.isError || summary ? (
+        <div className={styles.panelsGrid}>
+          <BestSellingProductsPanel
+            isLoading={dashboardSummaryQuery.isLoading}
+            products={bestSellingProducts}
+          />
+          <InventoryAlertsPanel
+            alerts={lowStockAlerts}
+            isLoading={dashboardSummaryQuery.isLoading}
+          />
+        </div>
+      ) : null}
     </div>
   )
 }

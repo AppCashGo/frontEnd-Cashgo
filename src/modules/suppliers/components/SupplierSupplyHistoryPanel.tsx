@@ -1,13 +1,17 @@
+import { SalesPaymentIcon, SalesProductPhoto } from '@/modules/sales/components/SalesVisuals'
+import { RecordActions, type RecordAction } from '@/shared/components/ui/RecordActions'
 import { SearchableSelect } from '@/shared/components/ui/SearchableSelect'
 import { useMemo, useState } from 'react'
 import {
   Ban,
+  ChevronDown,
   Download,
   FileCheck2,
   Pencil,
   ReceiptText,
   RotateCcw,
   Save,
+  ShoppingBag,
   WalletCards,
   X,
 } from 'lucide-react'
@@ -49,9 +53,9 @@ type SupplierSupplyHistoryPanelProps = {
   onRegisterPayment?: (
     purchaseId: string,
     input: SupplierPurchasePaymentInput,
-  ) => void
+  ) => Promise<void>
   onDownloadReceipt?: (purchaseId: string) => void
-  onCancelPurchase?: (purchaseId: string, reason: string) => void
+  onCancelPurchase?: (purchaseId: string, reason: string) => Promise<void>
   onUpdatePurchase?: (
     purchaseId: string,
     input: SupplierPurchaseUpdateInput,
@@ -59,7 +63,7 @@ type SupplierSupplyHistoryPanelProps = {
   onCreateReturn?: (
     purchaseId: string,
     input: SupplierPurchaseReturnInput,
-  ) => void
+  ) => Promise<void>
   onDownloadCreditNote?: (purchaseId: string, returnId: string) => void
 }
 
@@ -83,7 +87,7 @@ type PurchaseEditDraft = {
   fundSource: PaymentFundSource
 }
 
-type HistoryView = 'PURCHASES' | 'PAYMENTS'
+type HistoryView = 'PURCHASES' | 'PENDING' | 'PAYMENTS'
 
 const englishPaymentMethodLabels = {
   CASH: 'Cash',
@@ -151,7 +155,7 @@ export function SupplierSupplyHistoryPanel({
             purchaseReference: purchase.reference,
             purchaseTotal: purchase.netTotal,
             purchaseBalance: purchase.balance,
-            products: purchase.items.map((item) => item.productName),
+            products: purchase.items,
           })),
         )
         .sort(
@@ -166,6 +170,18 @@ export function SupplierSupplyHistoryPanel({
     0,
   )
 
+  const pendingPurchases = purchaseHistory.filter((purchase) => purchase.status === 'PENDING' && purchase.balance > 0)
+  const visiblePurchases = historyView === 'PENDING' ? pendingPurchases : purchaseHistory
+  const actionsBusy = [payingPurchaseId, cancellingPurchaseId, editingPurchaseId, returningPurchaseId].some(Boolean)
+
+  function focusPurchaseForm(formId: string) {
+    requestAnimationFrame(() => {
+      const form = document.getElementById(formId)
+      form?.scrollIntoView({ block: 'nearest' })
+      form?.focus({ preventScroll: true })
+    })
+  }
+
   function getPaymentMethodLabel(method: ExpensePaymentMethod) {
     return isEnglish
       ? englishPaymentMethodLabels[method]
@@ -174,14 +190,17 @@ export function SupplierSupplyHistoryPanel({
 
   function startPayment(purchase: SupplierSupplyHistoryItem) {
     setEditDraft(null)
+    setCancellationDraft(null)
+    setReturnDraft(null)
     setPaymentDraft({
       purchaseId: purchase.purchaseId,
       amount: String(purchase.balance),
-      method: purchase.paymentMethod,
+      method: purchase.paymentMethod === 'CREDIT' ? 'CASH' : purchase.paymentMethod,
       fundSource: 'REGISTER',
       reference: '',
       paymentDate: toExpenseDateInputValue(new Date()),
     })
+    focusPurchaseForm(`supplier-payment-${purchase.purchaseId}`)
   }
 
   function startEditing(purchase: SupplierSupplyHistoryItem) {
@@ -205,6 +224,7 @@ export function SupplierSupplyHistoryPanel({
         ]),
       ),
     })
+    focusPurchaseForm(`supplier-edit-${purchase.purchaseId}`)
   }
 
   return (
@@ -215,70 +235,37 @@ export function SupplierSupplyHistoryPanel({
             <ReceiptText size={20} />
           </span>
           <div>
-            <p className={styles.eyebrow}>
-              {isEnglish ? 'Accounts payable' : 'Cuentas por pagar'}
-            </p>
             <h3 className={styles.title}>
-              {supplierName
-                ? isEnglish
-                  ? `${supplierName}'s purchase history`
-                  : `Compras registradas a ${supplierName}`
-                : isEnglish
-                  ? 'Purchase history'
-                  : 'Compras registradas'}
+              {isEnglish ? 'Purchase and payment activity' : 'Compras y pagos'}
             </h3>
+            {supplierName ? <p className={styles.historySubtitle}>{supplierName}</p> : null}
           </div>
         </div>
-
-        <span className={styles.countPill}>
-          {purchaseHistory.length.toString()}{' '}
-          {purchaseHistory.length === 1
-            ? isEnglish
-              ? 'entry'
-              : 'registro'
-            : isEnglish
-              ? 'entries'
-              : 'registros'}
-        </span>
       </div>
 
       <div
-        aria-label={
-          isEnglish
-            ? 'Supplier history sections'
-            : 'Secciones del historial del proveedor'
-        }
+        aria-label={isEnglish ? 'Supplier activity' : 'Actividad del proveedor'}
         className={styles.historyTabs}
         role="tablist"
       >
-        <button
-          aria-selected={historyView === 'PURCHASES'}
-          className={
-            historyView === 'PURCHASES'
-              ? styles.historyTabActive
-              : styles.historyTab
-          }
-          role="tab"
-          type="button"
-          onClick={() => setHistoryView('PURCHASES')}
-        >
-          <span>{isEnglish ? 'Purchases' : 'Compras'}</span>
-          <strong>{purchaseHistory.length}</strong>
-        </button>
-        <button
-          aria-selected={historyView === 'PAYMENTS'}
-          className={
-            historyView === 'PAYMENTS'
-              ? styles.historyTabActive
-              : styles.historyTab
-          }
-          role="tab"
-          type="button"
-          onClick={() => setHistoryView('PAYMENTS')}
-        >
-          <span>{isEnglish ? 'Payment history' : 'Historial de abonos'}</span>
-          <strong>{paymentHistory.length}</strong>
-        </button>
+        {([
+          { view: 'PURCHASES', label: isEnglish ? 'Purchases' : 'Compras', count: purchaseHistory.length, Icon: ShoppingBag },
+          { view: 'PENDING', label: isEnglish ? 'To pay' : 'Por pagar', count: pendingPurchases.length, Icon: ReceiptText },
+          { view: 'PAYMENTS', label: isEnglish ? 'Payments' : 'Pagos', count: paymentHistory.length, Icon: WalletCards },
+        ] as const).map(({ view, label, count, Icon }) => (
+          <button
+            aria-selected={historyView === view}
+            className={historyView === view ? styles.historyTabActive : styles.historyTab}
+            key={view}
+            role="tab"
+            type="button"
+            onClick={() => setHistoryView(view)}
+          >
+            <Icon aria-hidden="true" />
+            <span>{label}</span>
+            <strong>{count}</strong>
+          </button>
+        ))}
       </div>
 
       {isLoading ? (
@@ -296,15 +283,17 @@ export function SupplierSupplyHistoryPanel({
         </div>
       ) : null}
 
-      {!isLoading && historyView === 'PURCHASES' && purchaseHistory.length === 0 ? (
+      {!isLoading && historyView !== 'PAYMENTS' && visiblePurchases.length === 0 ? (
         <div className={styles.emptyState}>
           <p className={styles.emptyTitle}>
-            {isEnglish ? 'No purchases yet' : 'Aún no hay compras registradas'}
+            {historyView === 'PENDING'
+              ? isEnglish ? 'No outstanding purchases' : 'El proveedor está al día'
+              : isEnglish ? 'No purchases yet' : 'Aún no hay compras registradas'}
           </p>
           <p className={styles.emptyDescription}>
-            {isEnglish
-              ? 'Inventory purchases for this supplier will appear here.'
-              : 'Las compras de inventario asociadas con este proveedor aparecerán aquí.'}
+            {historyView === 'PENDING'
+              ? isEnglish ? 'Purchases with a balance appear here.' : 'Aquí aparecen las compras con saldo pendiente.'
+              : isEnglish ? 'Inventory purchases for this supplier will appear here.' : 'Aquí aparecen las compras de inventario de este proveedor.'}
           </p>
         </div>
       ) : null}
@@ -366,7 +355,10 @@ export function SupplierSupplyHistoryPanel({
                 <div className={styles.paymentHistoryDetails}>
                   <div>
                     <span>{isEnglish ? 'Payment method' : 'Medio de pago'}</span>
-                    <strong>{getPaymentMethodLabel(payment.method)}</strong>
+                    <strong className={styles.paymentMethod}>
+                      <SalesPaymentIcon method={payment.method} />
+                      {getPaymentMethodLabel(payment.method)}
+                    </strong>
                   </div>
                   <div>
                     <span>{isEnglish ? 'Money source' : 'Origen del dinero'}</span>
@@ -389,16 +381,20 @@ export function SupplierSupplyHistoryPanel({
                   </div>
                 </div>
 
-                <div className={styles.paymentHistoryProducts}>
-                  <span>{isEnglish ? 'Purchase products' : 'Productos de la compra'}</span>
-                  <p>
-                    {payment.products.length > 0
-                      ? payment.products.join(', ')
-                      : isEnglish
-                        ? 'No product detail'
-                        : 'Sin detalle de productos'}
-                  </p>
-                </div>
+                {payment.products.length > 0 ? (
+                  <details className={styles.purchaseDisclosure}>
+                    <summary>
+                      <ShoppingBag aria-hidden="true" />
+                      {isEnglish ? 'Purchase products' : 'Productos de la compra'}
+                      <ChevronDown aria-hidden="true" />
+                    </summary>
+                    <div className={styles.purchaseItemsList}>
+                      {payment.products.map((item) => (
+                        <SupplierPurchaseProduct key={item.id} item={item} isEnglish={isEnglish} />
+                      ))}
+                    </div>
+                  </details>
+                ) : null}
 
                 {payment.notes ? (
                   <p className={styles.paymentHistoryNotes}>{payment.notes}</p>
@@ -409,12 +405,12 @@ export function SupplierSupplyHistoryPanel({
         </div>
       ) : null}
 
-      {!isLoading && historyView === 'PURCHASES' && purchaseHistory.length > 0 ? (
+      {!isLoading && historyView !== 'PAYMENTS' && visiblePurchases.length > 0 ? (
         <div className={styles.historyList}>
           {paymentError ? (
-            <p className={styles.paymentError}>{paymentError}</p>
+            <p className={styles.paymentError} role="alert">{paymentError}</p>
           ) : null}
-          {purchaseHistory.map((purchase) => {
+          {visiblePurchases.map((purchase) => {
             const invoiceImageUrl = resolveApiAssetUrl(purchase.invoiceImageUrl)
             const isPaymentOpen =
               paymentDraft?.purchaseId === purchase.purchaseId
@@ -476,6 +472,59 @@ export function SupplierSupplyHistoryPanel({
                 })
               : false
 
+            const purchaseActions: RecordAction[] = []
+            if (onDownloadReceipt) {
+              purchaseActions.push({
+                label: isEnglish ? 'Download receipt' : 'Descargar comprobante',
+                icon: Download,
+                run: () => onDownloadReceipt(purchase.purchaseId),
+              })
+            }
+            if (purchase.status !== 'CANCELLED' && purchase.returns.length === 0 && onUpdatePurchase) {
+              purchaseActions.push({
+                label: isEnglish ? 'Edit purchase' : 'Editar compra',
+                icon: Pencil,
+                disabled: actionsBusy,
+                run: () => startEditing(purchase),
+              })
+            }
+            if (purchase.status !== 'CANCELLED' && purchase.items.some((item) => item.availableToReturn > 0) && onCreateReturn) {
+              purchaseActions.push({
+                label: isEnglish ? 'Return products' : 'Devolver productos',
+                icon: RotateCcw,
+                tone: 'amber',
+                disabled: actionsBusy,
+                run: () => {
+                  setPaymentDraft(null)
+                  setCancellationDraft(null)
+                  setEditDraft(null)
+                  setReturnDraft({
+                    purchaseId: purchase.purchaseId,
+                    quantities: {},
+                    reason: '',
+                    refundMethod: purchase.paymentMethod === 'CREDIT' ? 'OTHER' : purchase.paymentMethod,
+                    returnDate: toExpenseDateInputValue(new Date()),
+                  })
+                  focusPurchaseForm(`supplier-return-${purchase.purchaseId}`)
+                },
+              })
+            }
+            if (purchase.status !== 'CANCELLED' && onCancelPurchase) {
+              purchaseActions.push({
+                label: isEnglish ? 'Cancel purchase' : 'Anular compra',
+                icon: Ban,
+                tone: 'danger',
+                disabled: actionsBusy,
+                run: () => {
+                  setPaymentDraft(null)
+                  setReturnDraft(null)
+                  setEditDraft(null)
+                  setCancellationDraft({ purchaseId: purchase.purchaseId, reason: '' })
+                  focusPurchaseForm(`supplier-cancel-${purchase.purchaseId}`)
+                },
+              })
+            }
+
             return (
               <article key={purchase.purchaseId} className={styles.historyItem}>
                 <div className={styles.historyTopRow}>
@@ -531,50 +580,45 @@ export function SupplierSupplyHistoryPanel({
                   </span>
                 </div>
 
-                <div className={styles.purchaseItemsList}>
-                  {purchase.items.map((item) => (
-                    <div key={item.id}>
-                      <span>
-                        {item.productName} × {item.quantity}
-                        {item.unitCost === 0 ? (
-                          <small className={styles.giftItemBadge}>
-                            {isEnglish ? 'Gift' : 'Obsequio'}
-                          </small>
-                        ) : null}
-                      </span>
-                      <strong>
-                        {item.unitCost === 0
-                          ? isEnglish
-                            ? 'Gift · $0'
-                            : 'Obsequio · $0'
-                          : formatCurrency(item.subtotal)}
-                      </strong>
+                {purchase.items.length > 0 ? (
+                  <details className={styles.purchaseDisclosure}>
+                    <summary>
+                      <ShoppingBag aria-hidden="true" />
+                      {isEnglish ? 'Products and costs' : 'Productos y costos'}
+                      <small>{purchase.items.length}</small>
+                      <ChevronDown aria-hidden="true" />
+                    </summary>
+                    <div className={styles.purchaseItemsList}>
+                      {purchase.items.map((item) => (
+                        <SupplierPurchaseProduct key={item.id} item={item} isEnglish={isEnglish} />
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </details>
+                ) : null}
 
                 {purchase.payments.length > 0 ? (
-                  <div className={styles.paymentsList}>
-                    <strong>
-                      {isEnglish ? 'Payments' : 'Pagos registrados'}
-                    </strong>
-                    {purchase.payments.map((payment) => (
-                      <div key={payment.id}>
-                        <span>
-                          {getPaymentMethodLabel(payment.method)} ·{' '}
-                          {payment.fundSource === 'RESERVE'
-                            ? isEnglish
-                              ? 'Reserve'
-                              : 'Reserva'
-                            : isEnglish
-                              ? 'Open register'
-                              : 'Caja abierta'}{' '}
-                          · {formatLocalizedDateTime(payment.paymentDate)}
-                        </span>
-                        <strong>{formatCurrency(payment.amount)}</strong>
-                      </div>
-                    ))}
-                  </div>
+                  <details className={styles.purchaseDisclosure}>
+                    <summary>
+                      <WalletCards aria-hidden="true" />
+                      {isEnglish ? 'Recorded payments' : 'Pagos registrados'}
+                      <small>{purchase.payments.length}</small>
+                      <ChevronDown aria-hidden="true" />
+                    </summary>
+                    <div className={styles.paymentsList}>
+                      {purchase.payments.map((payment) => (
+                        <div key={payment.id}>
+                          <span className={styles.paymentMethod}>
+                            <SalesPaymentIcon method={payment.method} />
+                            {getPaymentMethodLabel(payment.method)} · {formatLocalizedDateTime(payment.paymentDate)}
+                            {' · '}{payment.fundSource === 'RESERVE'
+                              ? isEnglish ? 'Reserve' : 'Reserva'
+                              : isEnglish ? 'Open register' : 'Caja abierta'}
+                          </span>
+                          <strong>{formatCurrency(payment.amount)}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
                 ) : null}
 
                 {purchase.returns.length > 0 ? (
@@ -662,19 +706,9 @@ export function SupplierSupplyHistoryPanel({
                 ) : null}
 
                 <div className={styles.purchaseActions}>
-                  {onDownloadReceipt ? (
+                  {purchase.status === 'PENDING' && purchase.balance > 0 && onRegisterPayment ? (
                     <AppButton
-                      size="sm"
-                      startIcon={<Download aria-hidden="true" size={16} />}
-                      type="button"
-                      variant="secondary"
-                      onClick={() => onDownloadReceipt(purchase.purchaseId)}
-                    >
-                      {isEnglish ? 'Download receipt' : 'Descargar comprobante'}
-                    </AppButton>
-                  ) : null}
-                  {purchase.status === 'PENDING' && onRegisterPayment ? (
-                    <AppButton
+                      disabled={actionsBusy}
                       size="sm"
                       startIcon={<WalletCards aria-hidden="true" size={16} />}
                       type="button"
@@ -684,68 +718,17 @@ export function SupplierSupplyHistoryPanel({
                       {isEnglish ? 'Register payment' : 'Registrar abono'}
                     </AppButton>
                   ) : null}
-                  {purchase.status !== 'CANCELLED' &&
-                  purchase.returns.length === 0 &&
-                  onUpdatePurchase ? (
-                    <AppButton
-                      size="sm"
-                      startIcon={<Pencil aria-hidden="true" size={16} />}
-                      type="button"
-                      variant="secondary"
-                      onClick={() => startEditing(purchase)}
-                    >
-                      {isEnglish ? 'Edit purchase' : 'Editar compra'}
-                    </AppButton>
-                  ) : null}
-                  {purchase.status !== 'CANCELLED' &&
-                  purchase.items.some((item) => item.availableToReturn > 0) &&
-                  onCreateReturn ? (
-                    <AppButton
-                      size="sm"
-                      startIcon={<RotateCcw aria-hidden="true" size={16} />}
-                      type="button"
-                      variant="warning"
-                      onClick={() => {
-                        setPaymentDraft(null)
-                        setCancellationDraft(null)
-                        setEditDraft(null)
-                        setReturnDraft({
-                          purchaseId: purchase.purchaseId,
-                          quantities: {},
-                          reason: '',
-                          refundMethod:
-                            purchase.paymentMethod === 'CREDIT'
-                              ? 'OTHER'
-                              : purchase.paymentMethod,
-                          returnDate: toExpenseDateInputValue(new Date()),
-                        })
-                      }}
-                    >
-                      {isEnglish ? 'Return products' : 'Devolver productos'}
-                    </AppButton>
-                  ) : null}
-                  {purchase.status !== 'CANCELLED' && onCancelPurchase ? (
-                    <AppButton
-                      size="sm"
-                      startIcon={<Ban aria-hidden="true" size={16} />}
-                      type="button"
-                      variant="danger"
-                      onClick={() => {
-                        setPaymentDraft(null)
-                        setEditDraft(null)
-                        setCancellationDraft({
-                          purchaseId: purchase.purchaseId,
-                          reason: '',
-                        })
-                      }}
-                    >
-                      {isEnglish ? 'Cancel purchase' : 'Anular compra'}
-                    </AppButton>
+                  {purchaseActions.length > 0 ? (
+                    <RecordActions
+                      label={isEnglish ? 'Purchase' : 'Compra'}
+                      context={purchase.reference || String(purchase.purchaseId)}
+                      actions={purchaseActions}
+                    />
                   ) : null}
                 </div>
 
                 {isEditing && editDraft ? (
-                  <div className={styles.editPurchaseForm}>
+                  <div className={styles.editPurchaseForm} id={`supplier-edit-${purchase.purchaseId}`} tabIndex={-1}>
                     <div className={styles.editPurchaseHeader}>
                       <div>
                         <strong>
@@ -1005,7 +988,7 @@ export function SupplierSupplyHistoryPanel({
                 ) : null}
 
                 {returnDraft?.purchaseId === purchase.purchaseId ? (
-                  <div className={styles.returnForm}>
+                  <div className={styles.returnForm} id={`supplier-return-${purchase.purchaseId}`} tabIndex={-1}>
                     <div className={styles.returnFormHeader}>
                       <div>
                         <strong>
@@ -1146,26 +1129,30 @@ export function SupplierSupplyHistoryPanel({
                         startIcon={<FileCheck2 aria-hidden="true" size={16} />}
                         type="button"
                         variant="warning"
-                        onClick={() => {
-                          onCreateReturn?.(purchase.purchaseId, {
-                            items: purchase.items
-                              .map((item) => ({
-                                purchaseItemId: Number(item.id),
-                                quantity: Number(
-                                  returnDraft.quantities[item.id] ?? 0,
-                                ),
-                              }))
-                              .filter((item) => item.quantity > 0),
-                            reason: returnDraft.reason.trim(),
-                            refundMethod:
-                              refundRequired > 0
-                                ? returnDraft.refundMethod
-                                : undefined,
-                            returnDate: toExpenseRequestDate(
-                              returnDraft.returnDate,
-                            ),
-                          })
-                          setReturnDraft(null)
+                        onClick={async () => {
+                          try {
+                            await onCreateReturn?.(purchase.purchaseId, {
+                              items: purchase.items
+                                .map((item) => ({
+                                  purchaseItemId: Number(item.id),
+                                  quantity: Number(
+                                    returnDraft.quantities[item.id] ?? 0,
+                                  ),
+                                }))
+                                .filter((item) => item.quantity > 0),
+                              reason: returnDraft.reason.trim(),
+                              refundMethod:
+                                refundRequired > 0
+                                  ? returnDraft.refundMethod
+                                  : undefined,
+                              returnDate: toExpenseRequestDate(
+                                returnDraft.returnDate,
+                              ),
+                            })
+                            setReturnDraft(null)
+                          } catch {
+                            // The purchase alert shows the API error and the draft stays open.
+                          }
                         }}
                       >
                         {isEnglish ? 'Create credit note' : 'Crear nota crédito'}
@@ -1175,7 +1162,7 @@ export function SupplierSupplyHistoryPanel({
                 ) : null}
 
                 {cancellationDraft?.purchaseId === purchase.purchaseId ? (
-                  <div className={styles.cancellationForm}>
+                  <div className={styles.cancellationForm} id={`supplier-cancel-${purchase.purchaseId}`} tabIndex={-1}>
                     <div>
                       <strong>
                         {isEnglish
@@ -1225,12 +1212,16 @@ export function SupplierSupplyHistoryPanel({
                         startIcon={<Ban aria-hidden="true" size={16} />}
                         type="button"
                         variant="danger"
-                        onClick={() => {
-                          onCancelPurchase?.(
-                            purchase.purchaseId,
-                            cancellationDraft.reason.trim(),
-                          )
-                          setCancellationDraft(null)
+                        onClick={async () => {
+                          try {
+                            await onCancelPurchase?.(
+                              purchase.purchaseId,
+                              cancellationDraft.reason.trim(),
+                            )
+                            setCancellationDraft(null)
+                          } catch {
+                            // The purchase alert shows the API error and the draft stays open.
+                          }
                         }}
                       >
                         {isEnglish ? 'Confirm cancellation' : 'Confirmar anulación'}
@@ -1240,7 +1231,7 @@ export function SupplierSupplyHistoryPanel({
                 ) : null}
 
                 {isPaymentOpen && paymentDraft ? (
-                  <div className={styles.paymentForm}>
+                  <div className={styles.paymentForm} id={`supplier-payment-${purchase.purchaseId}`} tabIndex={-1}>
                     <label>
                       <span>{isEnglish ? 'Amount' : 'Valor del abono'}</span>
                       <input
@@ -1379,18 +1370,22 @@ export function SupplierSupplyHistoryPanel({
                         startIcon={<WalletCards aria-hidden="true" size={16} />}
                         type="button"
                         variant="success"
-                        onClick={() => {
-                          onRegisterPayment?.(purchase.purchaseId, {
-                            amount: Number(paymentDraft.amount),
-                            method: paymentDraft.method,
-                            fundSource: paymentDraft.fundSource,
-                            reference:
-                              paymentDraft.reference.trim() || undefined,
-                            paymentDate: toExpenseRequestDate(
-                              paymentDraft.paymentDate,
-                            ),
-                          })
-                          setPaymentDraft(null)
+                        onClick={async () => {
+                          try {
+                            await onRegisterPayment?.(purchase.purchaseId, {
+                              amount: Number(paymentDraft.amount),
+                              method: paymentDraft.method,
+                              fundSource: paymentDraft.fundSource,
+                              reference:
+                                paymentDraft.reference.trim() || undefined,
+                              paymentDate: toExpenseRequestDate(
+                                paymentDraft.paymentDate,
+                              ),
+                            })
+                            setPaymentDraft(null)
+                          } catch {
+                            // The purchase alert shows the API error and the draft stays open.
+                          }
                         }}
                       >
                         {isEnglish ? 'Save payment' : 'Guardar abono'}
@@ -1404,5 +1399,30 @@ export function SupplierSupplyHistoryPanel({
         </div>
       ) : null}
     </SurfaceCard>
+  )
+}
+
+function SupplierPurchaseProduct({
+  item,
+  isEnglish,
+}: {
+  item: SupplierSupplyHistoryItem['items'][number]
+  isEnglish: boolean
+}) {
+  return (
+    <div className={styles.purchaseProduct}>
+      <SalesProductPhoto compact src={resolveApiAssetUrl(item.imageUrl)} />
+      <div className={styles.purchaseProductCopy}>
+        <strong>{item.productName}</strong>
+        <small>
+          {item.quantity} × {formatCurrency(item.unitCost)}
+          {item.sku ? ` · SKU ${item.sku}` : ''}
+        </small>
+        {item.unitCost === 0 ? (
+          <span className={styles.giftItemBadge}>{isEnglish ? 'Gift' : 'Obsequio'}</span>
+        ) : null}
+      </div>
+      <strong className={styles.purchaseProductTotal}>{formatCurrency(item.subtotal)}</strong>
+    </div>
   )
 }

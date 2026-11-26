@@ -5,10 +5,8 @@ import styles from './DashboardMetricCard.module.css'
 type DashboardMetricCardProps = {
   label: string
   value: string
-  hint: string
+  hint?: string
   icon: ReactNode
-  meta?: string
-  trend?: string
   tone?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
 }
 
@@ -17,8 +15,6 @@ export function DashboardMetricCard({
   value,
   hint,
   icon,
-  meta,
-  trend,
   tone = 'primary',
 }: DashboardMetricCardProps) {
   return (
@@ -31,18 +27,12 @@ export function DashboardMetricCard({
         tone === 'danger' && styles.cardDanger,
       )}
     >
-      <div className={styles.header}>
-        <span className={styles.iconBox}>{icon}</span>
-        {meta ? <span className={styles.meta}>{meta}</span> : null}
-      </div>
+      <span className={styles.iconBox}>{icon}</span>
 
       <div className={styles.copy}>
         <p className={styles.label}>{label}</p>
-        <div className={styles.valueRow}>
-          <p className={styles.value}>{value}</p>
-          {trend ? <span className={styles.trend}>{trend}</span> : null}
-        </div>
-        <p className={styles.hint}>{hint}</p>
+        <p className={styles.value}>{value}</p>
+        {hint ? <p className={styles.hint}>{hint}</p> : null}
       </div>
     </article>
   )

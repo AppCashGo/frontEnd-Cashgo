@@ -297,10 +297,6 @@
   text-align: left;
 }
 
-.dropdownButtonMuted {
-  color: #95a2b4;
-}
-
 .chipsRow {
   display: flex;
   flex-wrap: wrap;
@@ -372,27 +368,6 @@
   display: flex;
   align-items: center;
   gap: 0.9rem;
-}
-
-.productAvatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.55rem;
-  background: #f0f4fa;
-  color: #b9c3d0;
-  font-size: 1.5rem;
-  font-weight: 900;
-}
-
-.productAvatarImage {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 0.55rem;
-  background: #f0f4fa;
-  object-fit: cover;
 }
 
 .productCopy {
@@ -471,12 +446,6 @@
 .inlineEditInput:disabled {
   color: #8492a6;
   cursor: progress;
-}
-
-.valueBoxWarning {
-  border-color: #f2c94c;
-  background: #fff9e6;
-  color: #7c5f0d;
 }
 
 .gainCell {
@@ -903,48 +872,65 @@
 /* Inventory dashboard refresh */
 .dashboardBody {
   container: inventory-dashboard / inline-size;
-  gap: 1.55rem;
-  background: #f8fafc;
+  gap: 1.25rem;
 }
 
-.headerCoreButton {
-  min-width: 10rem;
+.inventoryHeader.inventoryHeader {
+  z-index: 2;
+  overflow: visible;
 }
 
-.buttonPlus {
-  font-size: 1.45rem;
-  font-weight: 400;
-  line-height: 0.8;
+.inventoryHeader .dropdownButton {
+  gap: 0.6rem;
+  border: 0;
+  background: transparent;
 }
 
-.buttonChevron {
-  margin-left: 0.45rem;
-  font-size: 0.9rem;
+.inventoryHeader .dropdownButton:hover,
+.inventoryHeader .dropdownButton:focus-visible {
+  background: #edf4ff;
+  outline-color: #2962a5;
+}
+
+.dropdownButton svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
 }
 
 .banner {
   position: relative;
   align-items: center;
-  padding: 1.15rem 4.25rem 1.15rem 1.25rem;
-  border: 1px solid #ff9e91;
-  border-radius: 0.75rem;
-  background: #ffded9;
-  color: #a71818;
+  padding: 0.85rem 3.4rem 0.85rem 1rem;
+  border: 1px solid #e9d6aa;
+  border-radius: 0.95rem;
+  background: #fffaed;
+  color: #714410;
 }
 
 .bannerLead {
   display: flex;
-  align-items: flex-start;
-  gap: 1rem;
+  align-items: center;
+  gap: 0.75rem;
   min-width: 0;
 }
 
+.bannerIcon {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.7rem;
+  background: #f9ebc8;
+}
+
 .alertIcon {
-  width: 1.8rem;
-  height: 1.8rem;
+  width: 1.3rem;
+  height: 1.3rem;
   flex: 0 0 auto;
   fill: none;
-  stroke: #d11d1d;
+  stroke: currentColor;
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.8;
@@ -957,7 +943,7 @@
 
 .bannerDescription {
   max-width: 62rem;
-  color: #b83232;
+  color: #74572f;
 }
 
 .bannerClose {
@@ -967,7 +953,34 @@
   width: 1.6rem;
   height: 1.6rem;
   background: transparent;
-  color: #a71818;
+  color: #714410;
+}
+
+.restockButton {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ead8ad;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #714410;
+  font-weight: 800;
+}
+
+.restockButton:hover {
+  background: #fbefcf;
+}
+
+.restockButton svg,
+.compactSelectWrap > svg,
+.summaryIcon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  flex: 0 0 auto;
 }
 
 .summaryGrid {
@@ -978,7 +991,7 @@
 
 .summaryCard,
 .promoCard {
-  min-height: 11.5rem;
+  min-height: 9.6rem;
   border: 1px solid #dce3ed;
   border-radius: 0.8rem;
   overflow: hidden;
@@ -989,9 +1002,13 @@
   align-content: center;
   gap: 0.8rem;
   min-width: 0;
-  padding: 1.45rem 1.7rem;
-  background: #ffffff;
+  padding: clamp(1rem, 2cqi, 1.5rem);
+  background: linear-gradient(145deg, #f2f7ff, #fff 60%);
   box-shadow: 0 3px 8px rgba(15, 23, 42, 0.04);
+}
+
+.summaryCard:nth-child(2) {
+  background: linear-gradient(145deg, #eaf8f3, #fff 60%);
 }
 
 .summaryCardHeader {
@@ -1017,15 +1034,15 @@
   width: 2.65rem;
   height: 2.65rem;
   border-radius: 0.55rem;
-  background: #efeafd;
-  color: #0758d1;
+  background: #dfedff;
+  color: #22569b;
   font-size: 1.2rem;
   font-weight: 900;
 }
 
 .summaryIconGreen {
   background: #e5f7ef;
-  color: #0aa56c;
+  color: #0a7554;
 }
 
 .summaryCard > strong {
@@ -1035,7 +1052,7 @@
   font-weight: 900;
   letter-spacing: -0.04em;
   line-height: 1;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .summaryCard > small {
@@ -1049,31 +1066,24 @@
   align-content: center;
   gap: 0.45rem;
   padding: 1.4rem;
-  border-color: #c7d7fe;
-  background: #eef4ff;
-  color: #173b7a;
+  border-color: #203b5b;
+  background:
+    linear-gradient(90deg, #122f4c 30%, #122f4cd9 53%, #122f4c2b),
+    url('../assets/inventory-count.webp') right 48% / 70% auto no-repeat,
+    #122f4c;
+  color: #fff;
 }
 
-.promoBadge {
-  width: fit-content;
-  padding: 0.28rem 0.55rem;
-  border-radius: 0.35rem;
-  background: #dbeafe;
-  color: #1d4ed8;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.05em;
-}
-
-.promoCard > strong {
-  font-size: 1.65rem;
-  font-weight: 900;
+.promoCard > h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.3cqi, 1.65rem);
+  font-weight: 850;
 }
 
 .promoCard > p {
   margin: 0;
-  max-width: 26rem;
-  color: #526581;
+  max-width: 24ch;
+  color: #e0ecf8;
 }
 
 .auditButton {
@@ -1108,7 +1118,14 @@
   background: #ffffff;
 }
 
-.tableFilters,
+.tableFilters {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) auto repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
 .tableToolbarRight {
   display: flex;
   align-items: center;
@@ -1124,9 +1141,10 @@
 .compactSelectWrap {
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.5rem;
+  min-width: 0;
   min-height: 2.75rem;
-  padding: 0 0.75rem;
+  padding: 0 0.65rem;
   border: 1px solid #c7d0df;
   border-radius: 0.58rem;
   background: #ffffff;
@@ -1138,7 +1156,7 @@
   align-items: center;
   gap: 0.5rem;
   min-height: 2.75rem;
-  width: min(16rem, 100%);
+  flex: 1 1 15rem;
   padding: 0 0.75rem;
   border: 1px solid #c7d0df;
   border-radius: 0.58rem;
@@ -1154,6 +1172,11 @@
   background: transparent;
   color: #1c2739;
   font: inherit;
+}
+
+.tableSearch:focus-within {
+  border-color: #3168ae;
+  box-shadow: 0 0 0 3px #3168ae24;
 }
 
 .inventoryScanButton {
@@ -1200,12 +1223,24 @@
   font-weight: 800;
 }
 
-.compactSelect {
+.compactSelectWrap .compactSelect {
+  min-height: 2.65rem;
+  gap: 0.35rem;
+  padding: 0.45rem 0;
   border: 0;
-  outline: 0;
   background: transparent;
   color: #1c2739;
-  font: inherit;
+  font-size: 0.83rem;
+}
+
+.compactSelectWrap:focus-within {
+  border-color: #3168ae;
+  box-shadow: 0 0 0 3px #3168ae24;
+}
+
+.compactSelectWrap .compactSelect:focus-visible,
+.compactSelectWrap .compactSelect[aria-expanded="true"] {
+  box-shadow: none;
 }
 
 .resultsCount {
@@ -1230,10 +1265,6 @@
   vertical-align: middle;
 }
 
-.tableRowLowStock {
-  background: #fffafa;
-}
-
 .inlineEditBox {
   min-width: 5.5rem;
   padding-left: 0;
@@ -1247,8 +1278,33 @@
   background: #ffffff;
 }
 
-.valueBoxWarning {
-  color: #d11d1d;
+.stockCell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  font-weight: 800;
+}
+
+.inlineEditBox.stockInput {
+  width: 4.25rem;
+  min-width: 0;
+}
+
+.stockBadge {
+  width: fit-content;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.4rem;
+  background: #fff0cf;
+  color: #794607;
+  font-size: 0.73rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.stockBadge[data-empty] {
+  background: #ffe7e5;
+  color: #a52625;
 }
 
 .stockNotApplicable {
@@ -1281,21 +1337,25 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 999px;
-  color: #778195;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  padding: 0 0.65rem;
+  border: 1px solid #d5e1ed;
+  border-radius: 0.55rem;
+  background: #f3f7fc;
+  color: #255181;
+  font-weight: 750;
+  cursor: pointer;
 }
 
 .rowActionButton:hover {
-  background: #edf2f8;
+  background: #e6f0fb;
   color: #172033;
 }
 
-.moreIcon {
-  width: 1.1rem;
-  height: 1.1rem;
-  fill: currentColor;
+.rowActionButton svg {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 .drawerBackdrop {
@@ -1985,6 +2045,12 @@
     flex-direction: column;
   }
 
+  .tableFilters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
   .tableFilters,
   .tableToolbarRight {
     width: 100%;
@@ -2011,6 +2077,10 @@
 
   .promoCard {
     grid-column: auto;
+    background-size: auto, cover, auto;
+    background-image:
+      linear-gradient(90deg, #122f4cf5 0%, #122f4cd6 50%, #122f4c48),
+      url('../assets/inventory-count.webp');
   }
 
   .banner,
@@ -2065,10 +2135,6 @@
     box-shadow: 1px 0 #e6ecf3;
   }
 
-  .tableRowLowStock td:first-child {
-    background: #fffafa;
-  }
-
   .selectorBackdrop {
     padding: 0;
   }
@@ -2108,6 +2174,10 @@
     width: 100%;
   }
 
+  .inventoryHeader .dropdownMenu {
+    min-width: 0;
+  }
+
   .drawerBody {
     padding-right: 1rem;
     padding-left: 1rem;
@@ -2130,7 +2200,7 @@
   }
 }
 
-@container inventory-dashboard (max-width: 68rem) {
+@container inventory-dashboard (max-width: 56rem) {
   .summaryGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2143,6 +2213,12 @@
   .tableToolbarRight {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .tableFilters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
   }
 
   .tableFilters,
@@ -2162,11 +2238,16 @@
 
 @container inventory-dashboard (max-width: 46rem) {
   .summaryGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem;
   }
 
   .promoCard {
-    grid-column: auto;
+    grid-column: 1 / -1;
+    background-size: auto, cover, auto;
+    background-image:
+      linear-gradient(90deg, #122f4cf5 0%, #122f4cd6 50%, #122f4c48),
+      url('../assets/inventory-count.webp');
   }
 
   .banner,
@@ -2177,8 +2258,12 @@
     flex-direction: column;
   }
 
+  .banner {
+    padding-right: 2.5rem;
+  }
+
   .bannerLead {
-    padding-right: 0.4rem;
+    align-items: flex-start;
   }
 
   .banner > button:not(.bannerClose) {
@@ -2190,6 +2275,11 @@
   .tableSearch,
   .tableActions {
     width: 100%;
+  }
+
+  .tableSearch,
+  .compactSelectWrap {
+    flex: 0 1 auto;
   }
 
   .tableActions {
@@ -2229,11 +2319,6 @@
     border: 1px solid #dce3ed;
     border-radius: 0.8rem;
     background: #ffffff;
-  }
-
-  .table tbody tr.tableRowLowStock {
-    border-color: #f4c4be;
-    background: #fffafa;
   }
 
   .table tbody td {
@@ -2290,6 +2375,24 @@
 }
 
 @container inventory-dashboard (max-width: 28rem) {
+  .summaryCard {
+    align-content: start;
+    min-height: 0;
+    gap: 0.6rem;
+    padding: 0.7rem;
+  }
+
+  .summaryCardHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45rem;
+    font-size: 0.69rem;
+  }
+
+  .summaryIcon { width: 2rem; height: 2rem; }
+  .summaryCard > strong { font-size: clamp(1.05rem, 5cqi, 1.6rem); }
+  .summaryCard > small { font-size: 0.73rem; }
+
   .table tbody tr {
     grid-template-columns: 1fr;
   }
@@ -2304,7 +2407,5 @@
 
   .rowActionButton {
     width: 100%;
-    border: 1px solid #d5deea;
-    border-radius: 0.65rem;
   }
 }

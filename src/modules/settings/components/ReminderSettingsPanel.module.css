@@ -37,7 +37,7 @@
   outline-offset: -3px;
 }
 
-.accordionSummary svg {
+.accordionSummary > svg {
   width: 1.05rem;
   height: 1.05rem;
   color: #111827;
@@ -300,13 +300,10 @@
   }
 
   .settingRow {
-    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.55rem;
+    padding-inline: 0.65rem;
   }
 
-  .toggleInput {
-    grid-column: 1 / -1;
-    justify-self: end;
-  }
 
   .scheduleGrid {
     grid-template-columns: 1fr;

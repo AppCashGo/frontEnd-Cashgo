@@ -1,13 +1,14 @@
 import type { SupplierDetail } from '@/modules/suppliers/types/supplier'
-import { Pencil, RefreshCw } from 'lucide-react'
+import { CalendarClock, ChevronDown, ContactRound, Hash, Mail, Pencil, Phone, RefreshCw, Wallet } from 'lucide-react'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { AppButton } from '@/shared/components/ui/AppButton'
-import { resolveApiAssetUrl } from '@/shared/services/api-client'
+import { SalesCustomerAvatar } from '@/modules/sales/components/SalesVisuals'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { formatDate } from '@/shared/utils/format-date'
 import styles from './SupplierDetailPanel.module.css'
 
 type SupplierDetailPanelProps = {
+  compact?: boolean
   supplier: SupplierDetail | null
   isLoading: boolean
   errorMessage: string | null
@@ -17,6 +18,7 @@ type SupplierDetailPanelProps = {
 }
 
 export function SupplierDetailPanel({
+  compact = false,
   supplier,
   isLoading,
   errorMessage,
@@ -30,21 +32,17 @@ export function SupplierDetailPanel({
     supplier && supplier.purchaseHistory.length > 0
       ? procurementTotal / supplier.purchaseHistory.length
       : 0
-  const avatarUrl = resolveApiAssetUrl(supplier?.avatarUrl)
+  const supplierName = supplier?.name ?? selectedSupplierName
 
   return (
-    <SurfaceCard className={styles.card}>
+    <SurfaceCard className={compact ? `${styles.card} ${styles.compactCard}` : styles.card}>
       <div className={styles.header}>
         <div className={styles.profileHeading}>
-          <span className={styles.profileAvatar} aria-hidden="true">
-            {avatarUrl ? (
-              <img src={avatarUrl} alt="" />
-            ) : (
-              (supplier?.name ?? selectedSupplierName ?? 'P').charAt(0).toUpperCase()
-            )}
+          <span className={styles.profileAvatar}>
+            <SalesCustomerAvatar name={supplierName ?? 'Proveedor'} avatarUrl={supplier?.avatarUrl} />
           </span>
           <div>
-            <p className={styles.eyebrow}>Perfil del proveedor</p>
+            {!compact ? <p className={styles.eyebrow}>Perfil del proveedor</p> : null}
             <h3 className={styles.title}>
               {supplier?.name ?? selectedSupplierName ?? 'Selecciona un proveedor'}
             </h3>
@@ -55,10 +53,16 @@ export function SupplierDetailPanel({
           <div className={styles.headerActions}>
             <span
               className={
-                supplier.purchaseCount > 0 ? styles.statusPillActive : styles.statusPill
+                compact
+                  ? supplier.outstandingBalance > 0 ? styles.balanceDue : styles.statusPillActive
+                  : supplier.purchaseCount > 0 ? styles.statusPillActive : styles.statusPill
               }
             >
-              {supplier.purchaseCount > 0 ? 'Abastecimiento activo' : 'Sin historial'}
+              {compact
+                ? supplier.outstandingBalance > 0
+                  ? `${formatCurrency(supplier.outstandingBalance)} por pagar`
+                  : 'Al día'
+                : supplier.purchaseCount > 0 ? 'Abastecimiento activo' : 'Sin historial'}
             </span>
             {onEdit ? (
               <AppButton
@@ -110,7 +114,27 @@ export function SupplierDetailPanel({
         </div>
       ) : null}
 
-      {!isLoading && !errorMessage && supplier ? (
+      {!isLoading && !errorMessage && supplier && compact ? (
+        <details className={styles.contactDetails}>
+          <summary><ContactRound aria-hidden="true" /> Datos del proveedor <ChevronDown aria-hidden="true" /></summary>
+          <div className={styles.detailsGrid}>
+            {[
+              { label: 'Correo', value: supplier.email, Icon: Mail },
+              { label: 'Celular', value: supplier.phone, Icon: Phone },
+              { label: 'Documento', value: supplier.documentNumber, Icon: Hash },
+              { label: 'Última compra', value: supplier.lastPurchaseAt ? formatDate(supplier.lastPurchaseAt, 'es-CO') : null, Icon: CalendarClock },
+              { label: 'Total comprado', value: formatCurrency(procurementTotal), Icon: Wallet },
+            ].map(({ label, value, Icon }) => (
+              <div className={styles.detailBlock} key={label}>
+                <span className={styles.contactLabel}><Icon aria-hidden="true" /> {label}</span>
+                <strong className={styles.detailValue}>{value ?? 'Sin registrar'}</strong>
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
+
+      {!isLoading && !errorMessage && supplier && !compact ? (
         <>
           <div className={styles.summaryGrid}>
             <div className={styles.summaryCard}>

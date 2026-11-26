@@ -106,78 +106,72 @@
 .retailWorkspace {
   display: grid;
   gap: 1.15rem;
-  padding: 0 clamp(1rem, 2.2vw, 2rem) 2rem;
+  container: customer-workspace / inline-size;
+  min-width: 0;
 }
 
-.pageActions {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.65rem;
-  flex-wrap: wrap;
-}
-
-.pageActions svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-.premiumCard {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 1rem;
-  width: 100%;
-  min-height: 4.65rem;
-  border: 0;
-  border-radius: 0.95rem;
-  background: #1473d2;
-  color: #ffffff;
-  padding: 1rem 1.15rem;
-  text-align: left;
-  cursor: pointer;
-}
-
-.premiumCard svg {
-  width: 1.35rem;
-  height: 1.35rem;
-  flex: 0 0 auto;
-}
-
-.premiumCard strong,
-.premiumCard span {
-  display: block;
-}
-
-.premiumCard strong {
-  font-weight: 900;
-}
-
-.premiumCard div span {
-  margin-top: 0.25rem;
-  color: rgba(255, 255, 255, 0.86);
-  font-size: 0.93rem;
-}
-
-.premiumCard > span {
-  font-weight: 900;
-  text-decoration: underline;
-  white-space: nowrap;
+.customersHeader.customersHeader.customersHeader {
+  background:
+    linear-gradient(90deg, #112541 26%, #112541ed 42%, #1125418c 76%, #112541ad),
+    url('../assets/customer-portfolio.webp') right 51% / 72% auto no-repeat,
+    #112541;
 }
 
 .retailSearchRow {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
+  scroll-margin-top: 4rem;
 }
 
-.retailSearchRow > label {
-  flex: 1 1 19rem;
+.customerSearch {
+  display: flex;
+  align-items: center;
+  flex: 1 1 16rem;
+  gap: 0.65rem;
+  min-width: 0;
+  min-height: 2.65rem;
+  padding: 0 0.8rem;
+  border: 1px solid #cad9eb;
+  border-radius: 0.65rem;
+  background: #fff;
+  color: #426489;
+}
+
+.customerSearch:focus-within {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
+}
+
+.customerSearch input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ui-text);
+  font: inherit;
+}
+
+.customerSearch > svg {
+  flex: 0 0 auto;
+}
+
+.appliedBucket {
+  align-self: center;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #c4d8f1;
+  border-radius: 0.55rem;
+  background: #eaf3fd;
+  color: #244d7c;
+  font-size: 0.8rem;
+  font-weight: 750;
+  cursor: pointer;
 }
 
 .portfolioFilters {
   display: flex;
-  flex: 1 1 22rem;
+  flex: 1 1 19rem;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
@@ -185,9 +179,9 @@
 
 .portfolioFilter,
 .portfolioFilterActive {
-  min-height: 2.8rem;
-  border: 1px solid #c0ccda;
-  border-radius: 999px;
+  min-height: 2.55rem;
+  border: 1px solid #cbd9e9;
+  border-radius: 0.6rem;
   background: #ffffff;
   color: #526175;
   padding: 0 0.9rem;
@@ -198,14 +192,56 @@
 }
 
 .portfolioFilterActive {
-  border-color: #1f2a37;
-  background: #1f2a37;
+  border-color: #244d7c;
+  background: #244d7c;
   color: #ffffff;
 }
 
 .retailMetricsGrid {
   display: grid;
-  gap: 0.85rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.portfolioMetric {
+  --card-tint: #edf5ff;
+  --icon-tint: #dcecff;
+  --icon-ink: #255588;
+  min-width: 0;
+}
+
+.portfolioMetric[data-tone="balance"] {
+  --card-tint: #edf9f4;
+  --icon-tint: #dbf3e8;
+  --icon-ink: #126647;
+}
+
+.portfolioMetric[data-tone="overdue"] {
+  --card-tint: #fff1ef;
+  --icon-tint: #fde4df;
+  --icon-ink: #a32d27;
+}
+
+.portfolioMetric[data-tone="review"] {
+  --card-tint: #fff7e7;
+  --icon-tint: #faeac7;
+  --icon-ink: #75490c;
+}
+
+.portfolioMetric > article {
+  height: 100%;
+  padding: clamp(0.65rem, 1.4cqi, 1.05rem);
+  background: linear-gradient(145deg, var(--card-tint), #fff 70%);
+}
+
+.portfolioMetric > article > div > span {
+  background: var(--icon-tint);
+  color: var(--icon-ink);
+}
+
+.portfolioMetric > article > p {
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .agingSection {
@@ -241,15 +277,21 @@
   font-size: 0.85rem;
 }
 
-.agingHeading button {
-  border: 0;
-  background: transparent;
-  color: #1269df;
+.benefitsButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid #d5e1ef;
+  border-radius: 0.55rem;
+  background: #f6f9fd;
+  color: #305381;
   font: inherit;
-  font-size: 0.82rem;
-  font-weight: 900;
+  font-size: 0.8rem;
+  font-weight: 750;
   cursor: pointer;
-  white-space: nowrap;
 }
 
 .agingGrid {
@@ -329,19 +371,20 @@
   margin: 0;
 }
 
-.agendaHeading > div > span {
-  color: #1269df;
-  font-size: 0.72rem;
-  font-weight: 900;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-
 .agendaHeading h2 {
-  margin-top: 0.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
   color: #172235;
   font-size: 1.08rem;
   font-weight: 900;
+}
+
+.agendaHeading h2 svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  color: #24578f;
 }
 
 .agendaHeading p {
@@ -430,7 +473,7 @@
 .agendaCard small,
 .agendaCardActive small {
   grid-column: 2 / -1;
-  color: #7b8798;
+  color: #536983;
   font-size: 0.72rem;
 }
 
@@ -497,7 +540,7 @@
 }
 
 .agendaItemMeta small {
-  color: #7b8798;
+  color: #536983;
   font-size: 0.72rem;
 }
 
@@ -561,8 +604,8 @@
   font-weight: 800;
 }
 
-.customersTable {
-  min-width: 76rem;
+.customersTable.customersTable {
+  min-width: 0;
   table-layout: auto;
 }
 
@@ -605,68 +648,34 @@
   height: 1.1rem;
 }
 
-.customersTable th:first-child,
-.customersTable td:first-child {
-  min-width: 14rem;
+.customersTable th,
+.customersTable td {
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
-.customersTable th:nth-child(2),
-.customersTable td:nth-child(2) {
-  min-width: 9.5rem;
-}
-
-.customersTable th:nth-child(3),
-.customersTable td:nth-child(3) {
-  min-width: 10.5rem;
-}
-
-.customersTable th:nth-child(4),
 .customersTable td:nth-child(4),
-.customersTable th:nth-child(5),
-.customersTable td:nth-child(5) {
-  min-width: 10.5rem;
-}
-
-.customersTable th:last-child,
-.customersTable td:last-child {
-  min-width: 10.5rem;
+.customersTable td:nth-child(6) {
+  font-variant-numeric: tabular-nums;
 }
 
 .customerIdentity {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.7rem;
-  min-width: 12rem;
+  gap: 0.65rem;
+  min-width: 0;
 }
 
-.customerAvatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.35rem;
-  height: 2.35rem;
-  flex: 0 0 auto;
-  overflow: hidden;
-  border: 1px solid #dce7f7;
-  border-radius: 999px;
-  background: linear-gradient(145deg, #eef4ff, #e1ebff);
-  color: #2457b8;
-  font-size: 0.9rem;
-  font-weight: 900;
-  box-shadow: 0 2px 8px rgba(36, 87, 184, 0.1);
-}
-
-.customerAvatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+.customerIdentity > span {
+  width: 2.55rem;
+  height: 2.55rem;
+  border-radius: 0.75rem;
 }
 
 .customerName {
   min-width: 0;
   color: #1f2a37;
-  overflow-wrap: normal;
-  word-break: normal;
+  overflow-wrap: anywhere;
 }
 
 .statusPending,
@@ -711,7 +720,33 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.7rem;
+  gap: 0.35rem;
+}
+
+.customerRowAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  min-height: 2.15rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid #d5e1ed;
+  border-radius: 0.55rem;
+  background: #f3f7fc;
+  color: #255181;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.customerRowAction svg {
+  flex: 0 0 auto;
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.customerRowAction:hover {
+  background: #e6f0fb;
 }
 
 .deleteAction {
@@ -929,9 +964,6 @@
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .retailMetricsGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
 
   .agingGrid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -970,13 +1002,7 @@
     width: 100%;
   }
 
-  .premiumCard {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
 
-  .premiumCard > span {
-    grid-column: 2;
-  }
 
   .premiumModal {
     padding: 1.5rem 1.25rem 1.2rem;
@@ -1006,10 +1032,6 @@
     width: 100%;
   }
 
-  .pageActions,
-  .pageActions button {
-    width: 100%;
-  }
 
   .agingHeading {
     display: grid;
@@ -1039,5 +1061,100 @@
 
   .agendaItemMeta {
     justify-items: start;
+  }
+}
+
+@container customer-workspace (max-width: 55rem) {
+  .retailMetricsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .customersTable.customersTable {
+    display: block;
+    padding: 0.7rem;
+  }
+
+  .customersTable thead { display: none; }
+
+  .customersTable tbody {
+    display: grid;
+    gap: 0.65rem;
+  }
+
+  .customersTable tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.65rem;
+    padding: 0.8rem;
+    border: 1px solid #dce6f2;
+    border-radius: 0.75rem;
+  }
+
+  .customersTable tbody td {
+    display: grid;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .customersTable td[data-label]::before {
+    content: attr(data-label);
+    color: #536983;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .customersTable tbody td:first-child,
+  .customersTable tbody td:last-child {
+    grid-column: 1 / -1;
+  }
+
+  .customersTable td:first-child::before,
+  .customersTable td:last-child::before {
+    content: none;
+  }
+
+  .customersTable .rowActions {
+    padding-top: 0.45rem;
+    border-top: 1px solid #e7edf6;
+  }
+}
+
+@container customer-workspace (max-width: 28rem) {
+  .agendaSummary,
+  .agingGrid {
+    gap: 0.45rem;
+  }
+
+  .agendaCard,
+  .agendaCardActive {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.3rem;
+    padding: 0.5rem;
+  }
+
+  .agendaCard strong,
+  .agendaCardActive strong {
+    grid-column: 1 / -1;
+    font-size: 1.1rem;
+  }
+
+  .agendaCard small,
+  .agendaCardActive small {
+    grid-column: 1 / -1;
+  }
+
+  .agingCard { padding: 0.55rem; }
+  .agingCard:last-child { grid-column: 1 / -1; }
+  .agingCard strong { font-size: 1rem; }
+
+  .portfolioMetric > article > div {
+    display: grid;
+    gap: 0.3rem;
+  }
+
+  .portfolioMetric > article > p {
+    font-size: clamp(1.05rem, 5.5cqi, 1.4rem);
   }
 }

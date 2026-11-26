@@ -7,7 +7,24 @@ import type { PaymentFundSource } from '@/modules/cash-register/types/cash-regis
 import type { KeyboardEvent, ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Camera, ClipboardCheck, Plus, ScanBarcode, Store, Trash2, Truck } from 'lucide-react'
+import {
+  ArrowDownUp,
+  ArrowRight,
+  Camera,
+  ChevronDown,
+  CircleDollarSign,
+  ClipboardCheck,
+  FileUp,
+  Layers3,
+  Pencil,
+  Plus,
+  ScanBarcode,
+  SlidersHorizontal,
+  Store,
+  Tags,
+  Trash2,
+  Truck,
+} from 'lucide-react'
 import { BakeryDailyOperationsPanel } from '@/modules/inventory/components/BakeryDailyOperationsPanel'
 import { PurchaseProductPicker } from '@/modules/inventory/components/PurchaseProductPicker'
 import { InventoryCountDrawer } from '@/modules/inventory/components/InventoryCountDrawer'
@@ -59,6 +76,8 @@ import type {
   ProductMutationInput,
 } from '@/modules/products/types/product'
 import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
+import { getProductStockStatus } from '@/modules/products/utils/product-stock-status'
+import { SalesProductPhoto } from '@/modules/sales/components/SalesVisuals'
 import {
   useBusinessSettingsQuery,
   useUpdateBusinessSettingsMutation,
@@ -67,11 +86,14 @@ import { buildConfiguredCatalogUrl } from '@/modules/settings/utils/virtual-cata
 import { useSuppliersQuery } from '@/modules/suppliers/hooks/use-suppliers-query'
 import { QuickCreateSupplierDrawer } from '@/modules/suppliers/components/QuickCreateSupplierDrawer'
 import { routePaths, routeSegments } from '@/routes/route-paths'
+import { getModuleNavigationRoutes } from '@/routes/module-navigation-routes'
 import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
+import { WorkspaceBusinessTitle } from '@/shared/components/retail/WorkspaceBusinessTitle'
+import workspaceVisual from '@/shared/components/retail/WorkspaceVisual.module.css'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
 import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
@@ -332,8 +354,9 @@ function normalizePhone(value: string) {
   return value.replace(/\D/g, '')
 }
 
-function isProductLowStock(product: Product) {
-  return product.stock <= Math.max(product.minStock, 5)
+function isProductLowStock(product: Product, defaultThreshold?: number) {
+  const status = getProductStockStatus(product, defaultThreshold)
+  return status === 'low' || status === 'out'
 }
 
 function clampPercentage(value: number) {
@@ -447,16 +470,6 @@ function AlertIcon() {
   )
 }
 
-function MoreIcon() {
-  return (
-    <svg aria-hidden="true" className={styles.moreIcon} viewBox="0 0 24 24">
-      <circle cx="12" cy="5" r="1.5" />
-      <circle cx="12" cy="12" r="1.5" />
-      <circle cx="12" cy="19" r="1.5" />
-    </svg>
-  )
-}
-
 function SearchIcon() {
   return (
     <svg aria-hidden="true" className={styles.searchIcon} viewBox="0 0 24 24">
@@ -474,9 +487,15 @@ export function RetailInventoryWorkspace() {
   const [searchParams, setSearchParams] = useSearchParams()
   const productsQuery = useProductsQuery()
   const authUser = useAuthSessionStore((state) => state.user)
-  const isBakery = getActiveBusinessCategory(authUser) === 'bakery_pastry'
+  const businessCategory = getActiveBusinessCategory(authUser)
+  const isBakery = businessCategory === 'bakery_pastry'
   const activeBusinessRole = getActiveBusinessRole(authUser)
   const canManageInventory = isTeamManagementRole(activeBusinessRole)
+  const canOpenProductImport = getModuleNavigationRoutes(
+    languageCode,
+    businessCategory,
+    activeBusinessRole,
+  ).some((route) => route.segment === routeSegments.products && route.isVisible)
   const canOperateBakery = canManageInventory || activeBusinessRole === 'STAFF'
   const suppliersQuery = useSuppliersQuery()
   const categoriesQuery = useInventoryCategoriesQuery()
@@ -517,9 +536,10 @@ export function RetailInventoryWorkspace() {
     [categoriesQuery.data],
   )
   const businessSettings = businessSettingsQuery.data
-  const lowStockAlerts = useMemo(
-    () => lowStockQuery.data ?? [],
-    [lowStockQuery.data],
+  const defaultStockThreshold = businessSettings?.defaultLowStockThreshold
+  const lowStockCount = useMemo(
+    () => products.filter((product) => isProductLowStock(product, defaultStockThreshold)).length,
+    [defaultStockThreshold, products],
   )
   const [isPremiumBannerVisible, setPremiumBannerVisible] = useState(true)
   const [feedbackMessage, setFeedbackMessage] =
@@ -860,7 +880,7 @@ export function RetailInventoryWorkspace() {
         activeCategoryId ? product.categoryId === activeCategoryId : true,
       )
       .filter((product) =>
-        activeInventoryFilter === 'LOW' ? isProductLowStock(product) : true,
+        activeInventoryFilter === 'LOW' ? isProductLowStock(product, defaultStockThreshold) : true,
       )
       .sort((firstProduct, secondProduct) => {
         const stockDifference = firstProduct.stock - secondProduct.stock
@@ -876,6 +896,7 @@ export function RetailInventoryWorkspace() {
   }, [
     activeCategoryId,
     activeInventoryFilter,
+    defaultStockThreshold,
     inventorySort,
     products,
     searchTerm,
@@ -1658,32 +1679,33 @@ export function RetailInventoryWorkspace() {
   return (
     <RetailPageLayout
       bodyClassName={styles.dashboardBody}
-      title={copy.title}
+      headerClassName={`${workspaceVisual.hero} ${workspaceVisual.catalogHeader} ${styles.inventoryHeader}`}
+      title={<WorkspaceBusinessTitle>{copy.title}</WorkspaceBusinessTitle>}
       meta={<span>{copy.pageDescription}</span>}
       actions={
         <>
           {canManageInventory ? (
             <button
-              className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
+              className={`${retailStyles.buttonOutline} ${styles.headerCoreButton} ${workspaceVisual.catalogAction}`}
               type="button"
               onClick={() => navigate(routePaths.inventoryPurchaseOrders)}
             >
               <Truck aria-hidden="true" />
-              <span>Órdenes de compra</span>
+              <span>{copy.purchaseOrders}</span>
             </button>
           ) : null}
           {canManageInventory ? (
             <button
-              className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
+              className={`${retailStyles.buttonOutline} ${styles.headerCoreButton} ${workspaceVisual.catalogAction}`}
               type="button"
               onClick={() => setInventoryCountOpen(true)}
             >
               <ClipboardCheck aria-hidden="true" />
-              <span>Inventario físico</span>
+              <span>{copy.physicalInventory}</span>
             </button>
           ) : null}
           {canManageInventory ? <button
-            className={`${retailStyles.buttonOutline} ${styles.headerCoreButton}`}
+            className={`${retailStyles.buttonOutline} ${styles.headerCoreButton} ${workspaceVisual.catalogAction}`}
             type="button"
             onClick={() => {
               resetFeedback()
@@ -1698,13 +1720,13 @@ export function RetailInventoryWorkspace() {
             <button
               aria-expanded={isCreateMenuOpen}
               aria-haspopup="menu"
-              className={`${retailStyles.buttonDark} ${styles.headerCoreButton}`}
+              className={`${retailStyles.buttonDark} ${styles.headerCoreButton} ${workspaceVisual.catalogAction} ${workspaceVisual.catalogPrimary}`}
               type="button"
               onClick={() => setCreateMenuOpen((currentValue) => !currentValue)}
             >
-              <span className={styles.buttonPlus}>+</span>
+              <Plus aria-hidden="true" />
               <span>{copy.createProduct}</span>
-              <span className={styles.buttonChevron}>⌄</span>
+              <ChevronDown aria-hidden="true" />
             </button>
 
             {isCreateMenuOpen ? (
@@ -1715,16 +1737,23 @@ export function RetailInventoryWorkspace() {
                   type="button"
                   onClick={handleOpenManualCreateDrawer}
                 >
+                  <Plus aria-hidden="true" />
                   {copy.createProductsManual}
                 </button>
-                <button
-                  className={`${styles.dropdownButton} ${styles.dropdownButtonMuted}`}
-                  disabled
-                  role="menuitem"
-                  type="button"
-                >
-                  {copy.uploadProductsExcel}
-                </button>
+                {canOpenProductImport ? (
+                  <button
+                    className={styles.dropdownButton}
+                    role="menuitem"
+                    type="button"
+                    onClick={() => {
+                      setCreateMenuOpen(false)
+                      navigate(`${routePaths.products}?mode=import`)
+                    }}
+                  >
+                    <FileUp aria-hidden="true" />
+                    {copy.uploadProductsExcel}
+                  </button>
+                ) : null}
               </div>
             ) : null}
           </div> : null}
@@ -1764,27 +1793,27 @@ export function RetailInventoryWorkspace() {
         />
       ) : null}
 
-      {isPremiumBannerVisible && lowStockAlerts.length > 0 ? (
+      {isPremiumBannerVisible && lowStockCount > 0 && Boolean(lowStockQuery.data?.length) ? (
         <section className={styles.banner}>
           <div className={styles.bannerLead}>
-            <AlertIcon />
+            <span className={styles.bannerIcon}><AlertIcon /></span>
             <div className={styles.bannerCopy}>
               <p className={styles.bannerTitle}>{copy.lowStockAlertTitle}</p>
               <p className={styles.bannerDescription}>
-                {copy.lowStockAlertDescription.replace(
-                  '{count}',
-                  lowStockAlerts.length.toString(),
-                )}
+                {lowStockCount === 1
+                  ? copy.lowStockSingleDescription
+                  : copy.lowStockAlertDescription.replace('{count}', lowStockCount.toLocaleString(languageCode))}
               </p>
             </div>
           </div>
 
           <button
-            className={retailStyles.buttonDanger}
+            className={styles.restockButton}
             type="button"
             onClick={() => {
               setActiveInventoryFilter('LOW')
               setActiveCategoryId(null)
+              setSearchTerm('')
               window.requestAnimationFrame(() => {
                 tableSectionRef.current?.scrollIntoView({
                   behavior: 'smooth',
@@ -1795,6 +1824,7 @@ export function RetailInventoryWorkspace() {
             }}
           >
             {copy.viewProducts}
+            <ArrowRight aria-hidden="true" />
           </button>
           <button
             aria-label="Cerrar alerta"
@@ -1811,11 +1841,11 @@ export function RetailInventoryWorkspace() {
         <article className={styles.summaryCard}>
           <div className={styles.summaryCardHeader}>
             <span className={styles.summaryIcon}>
-              <BoxIcon />
+              <Layers3 aria-hidden="true" />
             </span>
             <span>{copy.totalReferences}</span>
           </div>
-          <strong>{products.length.toLocaleString()}</strong>
+          <strong>{products.length.toLocaleString(languageCode)}</strong>
           <small>{copy.referencesHint}</small>
         </article>
 
@@ -1824,7 +1854,7 @@ export function RetailInventoryWorkspace() {
             <span
               className={`${styles.summaryIcon} ${styles.summaryIconGreen}`}
             >
-              <span>$</span>
+              <CircleDollarSign aria-hidden="true" />
             </span>
             <span>{copy.totalInventoryCost}</span>
           </div>
@@ -1833,8 +1863,7 @@ export function RetailInventoryWorkspace() {
         </article>
 
         <article className={styles.promoCard}>
-          <span className={styles.promoBadge}>{copy.newModule}</span>
-          <strong>{copy.auditTitle}</strong>
+          <h2>{copy.auditTitle}</h2>
           <p>{copy.auditDescription}</p>
           {canManageInventory ? (
             <button
@@ -1843,7 +1872,7 @@ export function RetailInventoryWorkspace() {
               onClick={() => setInventoryCountOpen(true)}
             >
               <ClipboardCheck aria-hidden="true" />
-              Comenzar conteo
+              {copy.startCount}
             </button>
           ) : null}
         </article>
@@ -1860,7 +1889,8 @@ export function RetailInventoryWorkspace() {
               <SearchIcon />
               <input
                 data-barcode-scanner="true"
-                placeholder="Buscar por nombre, SKU o código"
+                aria-label={copy.inventorySearch}
+                placeholder={copy.inventorySearchHint}
                 type="search"
                 value={searchTerm}
                 onChange={(event) => setSearchTerm(event.target.value)}
@@ -1885,7 +1915,7 @@ export function RetailInventoryWorkspace() {
               <span>Escanear</span>
             </button>
             <label className={styles.compactSelectWrap}>
-              <span aria-hidden="true">≡</span>
+              <Tags aria-hidden="true" />
               <SearchableSelect
                 aria-label={copy.categories}
                 className={styles.compactSelect}
@@ -1905,7 +1935,7 @@ export function RetailInventoryWorkspace() {
             </label>
 
             <label className={styles.compactSelectWrap}>
-              <span aria-hidden="true">●</span>
+              <SlidersHorizontal aria-hidden="true" />
               <SearchableSelect
                 aria-label={copy.stockStatus}
                 className={styles.compactSelect}
@@ -1922,7 +1952,7 @@ export function RetailInventoryWorkspace() {
             </label>
 
             <label className={styles.compactSelectWrap}>
-              <span aria-hidden="true">↕</span>
+              <ArrowDownUp aria-hidden="true" />
               <SearchableSelect
                 aria-label={copy.stockOrder}
                 className={styles.compactSelect}
@@ -2018,34 +2048,20 @@ export function RetailInventoryWorkspace() {
               {visibleProducts.map((product) => {
                 const productDraft =
                   productDrafts[product.id] ?? createInlineProductDraft(product)
-                const productImageUrl = resolveProductImageUrl(
-                  product.imageUrls,
-                )
+                const productImageUrl = resolveProductImageUrl(product.imageUrls) ??
+                  resolveProductImageUrl(product.variantGroup?.imageUrls)
                 const gain = product.price - product.cost
                 const margin =
                   product.price > 0
                     ? clampPercentage((gain / product.price) * 100)
                     : 0
-                const isLowStock = isProductLowStock(product)
+                const isLowStock = isProductLowStock(product, defaultStockThreshold)
 
                 return (
-                  <tr
-                    key={product.id}
-                    className={isLowStock ? styles.tableRowLowStock : undefined}
-                  >
+                  <tr key={product.id}>
                     <td data-label={copy.productColumn}>
                       <div className={styles.productCell}>
-                        {productImageUrl ? (
-                          <img
-                            alt=""
-                            className={styles.productAvatarImage}
-                            decoding="async"
-                            loading="lazy"
-                            src={productImageUrl}
-                          />
-                        ) : (
-                          <span className={styles.productAvatar}>t</span>
-                        )}
+                        <SalesProductPhoto compact src={productImageUrl} />
                         <div className={styles.productCopy}>
                           <p className={styles.productName}>{product.name}</p>
                           <p className={styles.productMeta}>
@@ -2119,47 +2135,53 @@ export function RetailInventoryWorkspace() {
                       </label> : <span>{formatCurrency(product.cost)}</span>}
                     </td>
                     <td data-label={copy.stockColumn}>
-                      {product.inventoryBehavior === 'MADE_TO_ORDER' ? (
-                        <span className={styles.stockNotApplicable}>
-                          {getProductAvailabilityLabel(product)}
-                        </span>
-                      ) : canManageInventory ? (
-                        <label
-                          className={
-                            isLowStock
-                              ? `${styles.inlineEditBox} ${styles.valueBoxWarning}`
-                              : styles.inlineEditBox
-                          }
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <input
-                            aria-label={`Cantidad disponible de ${product.name}`}
-                            className={styles.inlineEditInput}
-                            disabled={
-                              savingProductField === `${product.id}:stock`
-                            }
-                            inputMode="numeric"
-                            min="0"
-                            step="1"
-                            type="text"
-                            value={productDraft.stock}
-                            onBlur={() => {
-                              void handleCommitProductDraft(product, 'stock')
-                            }}
-                            onChange={(event) =>
-                              handleProductDraftChange(
-                                product.id,
-                                'stock',
-                                event.target.value,
-                              )
-                            }
-                            onFocus={(event) => event.stopPropagation()}
-                            onKeyDown={(event) =>
-                              handleInlineProductKeyDown(event, product, 'stock')
-                            }
-                          />
-                        </label>
-                      ) : <span>{product.stock}</span>}
+                      <div className={styles.stockCell}>
+                        {product.inventoryBehavior === 'MADE_TO_ORDER' ? (
+                          <span className={styles.stockNotApplicable}>
+                            {getProductAvailabilityLabel(product)}
+                          </span>
+                        ) : canManageInventory ? (
+                          <label
+                            className={`${styles.inlineEditBox} ${styles.stockInput}`}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            <input
+                              aria-label={`Cantidad disponible de ${product.name}`}
+                              className={styles.inlineEditInput}
+                              disabled={
+                                savingProductField === `${product.id}:stock`
+                              }
+                              inputMode="numeric"
+                              min="0"
+                              step="1"
+                              type="text"
+                              value={productDraft.stock}
+                              onBlur={() => {
+                                void handleCommitProductDraft(product, 'stock')
+                              }}
+                              onChange={(event) =>
+                                handleProductDraftChange(
+                                  product.id,
+                                  'stock',
+                                  event.target.value,
+                                )
+                              }
+                              onFocus={(event) => event.stopPropagation()}
+                              onKeyDown={(event) =>
+                                handleInlineProductKeyDown(event, product, 'stock')
+                              }
+                            />
+                          </label>
+                        ) : <span>{product.stock}</span>}
+                        {isLowStock ? (
+                          <span
+                            className={styles.stockBadge}
+                            data-empty={product.stock <= 0 || undefined}
+                          >
+                            {product.stock <= 0 ? copy.outOfStock : copy.lowStockChip}
+                          </span>
+                        ) : null}
+                      </div>
                     </td>
                     <td data-label={copy.marginColumn}>
                       <div className={styles.gainCell}>
@@ -2178,7 +2200,8 @@ export function RetailInventoryWorkspace() {
                           handleOpenEditProduct(product.id)
                         }}
                       >
-                        <MoreIcon />
+                        <Pencil aria-hidden="true" />
+                        {copy.editAction}
                       </button> : <span>Solo lectura</span>}
                     </td>
                   </tr>

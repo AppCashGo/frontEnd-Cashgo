@@ -223,6 +223,7 @@ export function BusinessSettingsPanel({
             <label className={styles.logoUploader}>
               <input
                 accept={IMAGE_UPLOAD_ACCEPT}
+                aria-label={visibleLogoUrl ? 'Cambiar logo del negocio' : 'Cargar logo del negocio'}
                 className={styles.logoInput}
                 disabled={isDisabled || isLogoUploading}
                 type="file"
@@ -231,18 +232,23 @@ export function BusinessSettingsPanel({
                   event.currentTarget.value = ''
                 }}
               />
-              {visibleLogoUrl ? (
-                <img
-                  alt="Logo del negocio"
-                  className={styles.logoPreview}
-                  src={visibleLogoUrl}
-                />
-              ) : (
-                <>
-                  <Upload aria-hidden="true" className={styles.logoIcon} />
-                  <span>{isLogoUploading ? 'Subiendo...' : 'Cargar logo'}</span>
-                </>
-              )}
+              <span aria-hidden="true" className={styles.logoTile}>
+                {visibleLogoUrl ? (
+                  <img alt="" className={styles.logoPreview} src={visibleLogoUrl} />
+                ) : (
+                  <Building2 className={styles.logoIcon} />
+                )}
+              </span>
+              <span className={styles.logoCopy}>
+                <strong>Logo del negocio</strong>
+                <span>PNG, JPG o WEBP · hasta 2 MB</span>
+                <span className={styles.logoAction}>
+                  <Upload aria-hidden="true" size={16} />
+                  {isLogoUploading
+                    ? 'Subiendo…'
+                    : visibleLogoUrl ? 'Cambiar logo' : 'Cargar logo'}
+                </span>
+              </span>
             </label>
             {logoError ? (
               <div className={styles.errorBanner} role="alert">
@@ -251,28 +257,30 @@ export function BusinessSettingsPanel({
             ) : null}
 
             <div className={styles.retailGrid}>
-              <label className={styles.retailField}>
-                <span className={styles.retailLabel}>Tipo de negocio*</span>
-                <span className={styles.selectWrap}>
-                  <SearchableSelect
-                    aria-invalid={Boolean(errors.businessCategory)}
-                    className={styles.retailInput}
-                    disabled={isDisabled}
-                    {...register('businessCategory')}
-                  >
-                    {businessCategoryOptions.map((category) => (
-                      <option key={category} value={category}>
-                        {dictionary.categories[category]}
-                      </option>
-                    ))}
-                  </SearchableSelect>
-                </span>
+              <div className={styles.retailField}>
+                <label className={styles.retailLabel} htmlFor="settings-business-category">
+                  Tipo de negocio*
+                </label>
+                <SearchableSelect
+                  id="settings-business-category"
+                  aria-invalid={Boolean(errors.businessCategory)}
+                  className={styles.retailInput}
+                  disabled={isDisabled}
+                  value={selectedBusinessCategory}
+                  {...register('businessCategory')}
+                >
+                  {businessCategoryOptions.map((category) => (
+                    <option key={category} value={category}>
+                      {dictionary.categories[category]}
+                    </option>
+                  ))}
+                </SearchableSelect>
                 {errors.businessCategory ? (
                   <span className={styles.errorMessage}>
                     {errors.businessCategory.message}
                   </span>
                 ) : null}
-              </label>
+              </div>
 
               <label className={styles.retailField}>
                 <span className={styles.retailLabel}>Nombre del negocio*</span>
@@ -375,18 +383,18 @@ export function BusinessSettingsPanel({
                   <span className={styles.errorMessage}>{errors.taxId.message}</span>
                 ) : null}
               </label>
+            </div>
 
-              <div className={styles.retailButtonField}>
-                <AppButton
-                  disabled={isSubmitDisabled}
-                  isLoading={isSubmitting}
-                  loadingLabel="Guardando cambios..."
-                  startIcon={<Save aria-hidden="true" size={17} />}
-                  type="submit"
-                >
-                  Guardar cambios
-                </AppButton>
-              </div>
+            <div className={styles.retailButtonField}>
+              <AppButton
+                disabled={isSubmitDisabled}
+                isLoading={isSubmitting}
+                loadingLabel="Guardando cambios..."
+                startIcon={<Save aria-hidden="true" size={17} />}
+                type="submit"
+              >
+                Guardar cambios
+              </AppButton>
             </div>
 
             {errors.root?.message ? (

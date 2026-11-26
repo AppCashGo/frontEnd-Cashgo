@@ -1,5 +1,6 @@
 import { type FormEvent, useEffect, useState } from 'react'
 import { ImagePlus, Truck } from 'lucide-react'
+import { DrawerActionFooter } from '@/shared/components/ui/DrawerActionFooter'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import type {
   SupplierMutationInput,
@@ -117,13 +118,30 @@ export function RetailSupplierDrawer({
     <SideDrawer
       bodyClassName={styles.drawerBody}
       confirmClose
+      footer={
+        <DrawerActionFooter className={styles.formFooter} layout="inline">
+          <AppButton
+            disabled={isSubmitting}
+            form="supplier-profile-form"
+            isLoading={isSubmitting}
+            loadingLabel={supplier ? 'Guardando proveedor…' : 'Creando proveedor…'}
+            startIcon={<Truck aria-hidden="true" size={17} />}
+            type="submit"
+          >
+            {supplier ? 'Guardar cambios' : 'Crear proveedor'}
+          </AppButton>
+        </DrawerActionFooter>
+      }
+      isCloseDisabled={isSubmitting}
       isOpen={isOpen}
       title={supplier ? 'Editar proveedor' : 'Crear proveedor'}
       onClose={onClose}
     >
-      <form className={styles.form} onSubmit={handleSubmit}>
+      <form className={styles.form} id="supplier-profile-form" onSubmit={handleSubmit}>
         <AvatarUploadField
-          alt="Avatar del proveedor"
+          alt="Logo del proveedor"
+          changeLabel="Cambiar foto o logo"
+          uploadLabel="Agregar foto o logo"
           disabled={isSubmitting}
           hint="PNG, JPG o WebP hasta 2MB."
           imageUrl={avatarUpload.visibleImageUrl}
@@ -190,15 +208,6 @@ export function RetailSupplierDrawer({
           </p>
         ) : null}
 
-        <AppButton
-          fullWidth
-          isLoading={isSubmitting}
-          loadingLabel={supplier ? 'Guardando proveedor…' : 'Creando proveedor…'}
-          startIcon={<Truck aria-hidden="true" />}
-          type="submit"
-        >
-          {supplier ? 'Guardar cambios' : 'Crear proveedor'}
-        </AppButton>
       </form>
     </SideDrawer>
   )

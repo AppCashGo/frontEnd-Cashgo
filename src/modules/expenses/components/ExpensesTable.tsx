@@ -1,5 +1,6 @@
 import type { Expense } from '@/modules/expenses/types/expense'
-import { MoreVertical } from 'lucide-react'
+import { CircleCheck, CircleX, Pencil, ReceiptText } from 'lucide-react'
+import { SalesPaymentIcon } from '@/modules/sales/components/SalesVisuals'
 import {
   formatExpenseCurrency,
   formatExpenseDate,
@@ -17,9 +18,9 @@ type ExpensesTableProps = {
   expenses: Expense[]
   isLoading: boolean
   isRefreshing: boolean
+  isUpdating: boolean
   selectedExpenseId: string | null
   onDeleteExpense: (expense: Expense) => void
-  onManageCategories: () => void
   onMarkPaid: (expense: Expense) => void
   onRetry: () => void
   onSelectExpense: (expenseId: string) => void
@@ -42,32 +43,64 @@ export function ExpensesTable({
   expenses,
   isLoading,
   isRefreshing,
+  isUpdating,
   selectedExpenseId,
   onDeleteExpense,
-  onManageCategories,
   onMarkPaid,
   onRetry,
   onSelectExpense,
 }: ExpensesTableProps) {
+  function renderActions(expense: Expense) {
+    return (
+      <>
+        <button
+          aria-label={`Editar ${expense.concept}`}
+          className={styles.editButton}
+          disabled={isUpdating}
+          type="button"
+          onClick={() => onSelectExpense(expense.id)}
+        >
+          <Pencil aria-hidden="true" size={15} />
+          Editar
+        </button>
+        {expense.status === 'PENDING' ? (
+          <button
+            aria-label={`Marcar pagado ${expense.concept}`}
+            className={styles.payButton}
+            disabled={isUpdating}
+            type="button"
+            onClick={() => onMarkPaid(expense)}
+          >
+            <CircleCheck aria-hidden="true" size={15} />
+            Marcar pagado
+          </button>
+        ) : null}
+        {expense.status !== 'CANCELLED' ? (
+          <button
+            aria-label={`Cancelar ${expense.concept}`}
+            className={styles.deleteButton}
+            disabled={isUpdating}
+            title="Cancelar gasto"
+            type="button"
+            onClick={() => onDeleteExpense(expense)}
+          >
+            <CircleX aria-hidden="true" size={16} />
+          </button>
+        ) : null}
+      </>
+    )
+  }
+
   return (
     <SurfaceCard className={styles.card}>
       <div className={styles.header}>
-        <h3 className={styles.title}>Gastos registrados</h3>
-
-        <div className={styles.headerMeta}>
-          {isRefreshing ? (
-            <span className={styles.refreshingLabel}>Actualizando...</span>
-          ) : null}
-          <button
-            aria-label="Administrar categorías de gastos"
-            className={styles.menuButton}
-            title="Administrar categorías"
-            type="button"
-            onClick={onManageCategories}
-          >
-            <MoreVertical aria-hidden="true" size={21} />
-          </button>
-        </div>
+        <h2 className={styles.title}>
+          <span className={styles.receiptIcon}><ReceiptText aria-hidden="true" /></span>
+          Gastos registrados
+        </h2>
+        {isRefreshing ? (
+          <span className={styles.refreshingLabel} role="status">Actualizando...</span>
+        ) : null}
       </div>
 
       {errorMessage ? (
@@ -149,22 +182,7 @@ export function ExpensesTable({
                 </button>
 
                 <div className={styles.mobileActions}>
-                  {expense.status === 'PENDING' ? (
-                    <button
-                      className={styles.payButton}
-                      type="button"
-                      onClick={() => onMarkPaid(expense)}
-                    >
-                      Pagar
-                    </button>
-                  ) : null}
-                  <button
-                    className={styles.cancelLink}
-                    type="button"
-                    onClick={() => onDeleteExpense(expense)}
-                  >
-                    Cancelar registro
-                  </button>
+                  {renderActions(expense)}
                 </div>
               </article>
             ))}
@@ -199,12 +217,15 @@ export function ExpensesTable({
                         onClick={() => onSelectExpense(expense.id)}
                       >
                         <div className={styles.conceptCell}>
-                          <p className={styles.concept}>{expense.concept}</p>
-                          <p className={styles.meta}>
-                            {expense.supplier?.name ??
-                              expense.notes ??
-                              `Creado ${formatExpenseDateTime(expense.createdAt)}`}
-                          </p>
+                          <span className={styles.rowIcon}><ReceiptText aria-hidden="true" /></span>
+                          <div>
+                            <p className={styles.concept}>{expense.concept}</p>
+                            <p className={styles.meta}>
+                              {expense.supplier?.name ??
+                                expense.notes ??
+                                `Creado ${formatExpenseDateTime(expense.createdAt)}`}
+                            </p>
+                          </div>
                         </div>
                       </button>
                     </td>
@@ -218,7 +239,12 @@ export function ExpensesTable({
                     <td className={styles.amountCell}>
                       {formatExpenseCurrency(expense.amount)}
                     </td>
-                    <td>{getExpensePaymentMethodLabel(expense.paymentMethod)}</td>
+                    <td>
+                      <span className={styles.paymentCell}>
+                        <SalesPaymentIcon method={expense.paymentMethod} />
+                        {getExpensePaymentMethodLabel(expense.paymentMethod)}
+                      </span>
+                    </td>
                     <td>
                       <span
                         className={joinClassNames(
@@ -231,37 +257,7 @@ export function ExpensesTable({
                     </td>
                     <td>{formatExpenseDate(expense.expenseDate)}</td>
                     <td>
-                      <div className={styles.rowActions}>
-                        {expense.status === 'PENDING' ? (
-                          <button
-                            className={styles.payButton}
-                            type="button"
-                            onClick={() => onMarkPaid(expense)}
-                          >
-                            Pagar
-                          </button>
-                        ) : (
-                          <button
-                            className={styles.editButton}
-                            type="button"
-                            onClick={() => onSelectExpense(expense.id)}
-                          >
-                            Editar
-                          </button>
-                        )}
-                        <button
-                          aria-label={`Cancelar ${expense.concept}`}
-                          className={styles.deleteButton}
-                          title="Cancelar registro"
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            onDeleteExpense(expense)
-                          }}
-                        >
-                          &times;
-                        </button>
-                      </div>
+                      <div className={styles.rowActions}>{renderActions(expense)}</div>
                     </td>
                   </tr>
                 ))}
@@ -270,8 +266,7 @@ export function ExpensesTable({
           </div>
           <div className={styles.tableFooter}>
             <span>
-              Mostrando {expenses.length > 0 ? '1' : '0'} - {expenses.length} de{' '}
-              {expenses.length} gastos
+              {expenses.length} {expenses.length === 1 ? 'gasto' : 'gastos'}
             </span>
           </div>
         </>

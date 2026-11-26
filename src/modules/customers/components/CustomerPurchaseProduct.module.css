@@ -1,0 +1,24 @@
+.product {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.copy {
+  display: grid;
+  gap: 0.18rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.copy small {
+  color: #536983;
+  font-size: 0.76rem;
+}
+
+@media (max-width: 420px) {
+  .product {
+    gap: 0.45rem;
+  }
+}

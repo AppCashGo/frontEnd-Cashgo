@@ -1,21 +1,21 @@
 import {
-  Banknote,
   BarChart3,
-  CreditCard,
+  CalendarDays,
   Eye,
-  Landmark,
   Plus,
+  ReceiptText,
   Search,
-  Smartphone,
   WalletCards,
 } from 'lucide-react'
-import {
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import { getActiveBusiness } from '@/modules/auth/utils/get-active-business'
+import {
+  SalesBusinessMark,
+  SalesCustomerAvatar,
+  SalesPaymentIcon,
+} from '@/modules/sales/components/SalesVisuals'
 import { SaleDetailDrawer } from '@/modules/sales/components/SaleDetailDrawer'
 import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashRegisterFlowDrawer'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
@@ -82,6 +82,10 @@ const statusLabels: Record<SalesHistoryStatus, string> = {
 
 export function SalesOverviewPage() {
   const navigate = useNavigate()
+  const user = useAuthSessionStore((state) => state.user)
+  const business = getActiveBusiness(user)
+  const businessName = business?.businessName ?? user?.businessName
+  const logoUrl = business?.logoUrl ?? user?.logoUrl
   const { saleId } = useParams<{ saleId?: string }>()
   const initialRange = useMemo(() => periodRange('TODAY'), [])
   const [preset, setPreset] = useState<PeriodPreset>('TODAY')
@@ -122,21 +126,11 @@ export function SalesOverviewPage() {
   }
 
   const methodTotals = new Map(
-    (data?.summary.paymentMethods ?? []).map((item) => [item.method, item.amount]),
+    (data?.summary.paymentMethods ?? []).map((item) => [
+      item.method,
+      item.amount,
+    ]),
   )
-  const paymentRows = [
-    { label: 'Efectivo', amount: methodTotals.get('CASH') ?? 0, icon: <Banknote /> },
-    { label: 'Nequi / Daviplata', amount: methodTotals.get('DIGITAL_WALLET') ?? 0, icon: <Smartphone /> },
-    { label: 'Transferencia', amount: methodTotals.get('TRANSFER') ?? 0, icon: <Landmark /> },
-    { label: 'Tarjeta', amount: methodTotals.get('CARD') ?? 0, icon: <CreditCard /> },
-    {
-      label: 'Otros',
-      amount:
-        (methodTotals.get('BANK_DEPOSIT') ?? 0) +
-        (methodTotals.get('OTHER') ?? 0),
-      icon: <WalletCards />,
-    },
-  ]
 
   async function handleRegisterSale() {
     const session = await currentCashRegisterQuery.refetch()
@@ -161,10 +155,13 @@ export function SalesOverviewPage() {
 
   return (
     <RetailPageLayout
-      accent="success"
+      headerClassName={styles.hero}
       actions={
         <div className={styles.headerActions}>
-          <Link className={styles.statisticsLink} to={`${routePaths.reports}?tab=sales`}>
+          <Link
+            className={styles.statisticsLink}
+            to={`${routePaths.reports}?tab=sales`}
+          >
             <BarChart3 /> Ver estadísticas
           </Link>
           <button
@@ -177,18 +174,28 @@ export function SalesOverviewPage() {
         </div>
       }
       bodyClassName={styles.body}
-      meta="Consulta y administra las ventas realizadas."
-      title="Ventas"
+      meta={businessName}
+      title={
+        <span className={styles.brandTitle}>
+          <SalesBusinessMark logoUrl={logoUrl} /> Ventas
+        </span>
+      }
     >
-      <section className={styles.periodBar}>
+      <section className={styles.periodBar} aria-label="Período de ventas">
+        <span className={styles.periodLabel}>
+          <CalendarDays aria-hidden="true" /> Período
+        </span>
         <div className={styles.presetButtons}>
-          {([
-            ['TODAY', 'Hoy'],
-            ['WEEK', 'Esta semana'],
-            ['MONTH', 'Este mes'],
-          ] as const).map(([value, label]) => (
+          {(
+            [
+              ['TODAY', 'Hoy'],
+              ['WEEK', 'Esta semana'],
+              ['MONTH', 'Este mes'],
+            ] as const
+          ).map(([value, label]) => (
             <button
-              className={preset === value ? styles.presetActive : styles.preset}
+              aria-pressed={preset === value}
+              className={styles.preset}
               key={value}
               type="button"
               onClick={() => selectPreset(value)}
@@ -197,7 +204,8 @@ export function SalesOverviewPage() {
             </button>
           ))}
           <button
-            className={preset === 'CUSTOM' ? styles.presetActive : styles.preset}
+            aria-pressed={preset === 'CUSTOM'}
+            className={styles.preset}
             type="button"
             onClick={() => setPreset('CUSTOM')}
           >
@@ -206,76 +214,279 @@ export function SalesOverviewPage() {
         </div>
         {preset === 'CUSTOM' ? (
           <div className={styles.customDates}>
-            <label><span>Desde</span><input type="date" value={from} onChange={(event) => setFrom(event.target.value)} /></label>
-            <label><span>Hasta</span><input type="date" value={to} onChange={(event) => setTo(event.target.value)} /></label>
+            <label>
+              <span>Desde</span>
+              <input
+                type="date"
+                value={from}
+                onChange={(event) => setFrom(event.target.value)}
+              />
+            </label>
+            <label>
+              <span>Hasta</span>
+              <input
+                type="date"
+                value={to}
+                onChange={(event) => setTo(event.target.value)}
+              />
+            </label>
           </div>
         ) : null}
       </section>
 
       <div className={styles.metricsGrid}>
-        <MetricCard label="Ventas totales" value={formatCurrency(data?.summary.salesTotal ?? 0)} hint="Valor neto vendido en el período." tone="accent" />
-        <MetricCard label="Ganancias totales" value={formatCurrency(data?.summary.grossProfit ?? 0)} hint="Utilidad bruta de las ventas del período." tone="success" />
-        <MetricCard label="N.º de ventas" value={(data?.summary.salesCount ?? 0).toString()} hint="Ventas activas registradas." />
-        <MetricCard label="Cobrado" value={formatCurrency(data?.summary.collectedTotal ?? 0)} hint="Pagado sobre las ventas del período." />
-        <MetricCard label="Por cobrar" value={formatCurrency(data?.summary.outstandingTotal ?? 0)} hint="Saldo actual de esas ventas." tone={(data?.summary.outstandingTotal ?? 0) > 0 ? 'alert' : 'default'} />
+        <MetricCard
+          label="Ventas totales"
+          value={data ? formatCurrency(data.summary.salesTotal) : '—'}
+          hint="Valor neto vendido en el período."
+          tone="accent"
+        />
+        <MetricCard
+          label="Ganancias totales"
+          value={data ? formatCurrency(data.summary.grossProfit) : '—'}
+          hint="Utilidad bruta de las ventas del período."
+          tone="success"
+        />
+        <MetricCard
+          label="N.º de ventas"
+          value={data ? String(data.summary.salesCount) : '—'}
+          hint="Ventas activas registradas."
+        />
+        <MetricCard
+          label="Cobrado"
+          value={data ? formatCurrency(data.summary.collectedTotal) : '—'}
+          hint="Pagado sobre las ventas del período."
+        />
+        <MetricCard
+          label="Por cobrar"
+          value={data ? formatCurrency(data.summary.outstandingTotal) : '—'}
+          hint="Saldo actual de esas ventas."
+          tone={(data?.summary.outstandingTotal ?? 0) > 0 ? 'alert' : 'default'}
+        />
       </div>
 
       <section className={styles.paymentCard}>
-        <div><h2>Medios de pago</h2><p>Cómo fueron cobradas las ventas seleccionadas.</p></div>
-        <div className={styles.paymentGrid}>
-          {paymentRows.map((row) => <div key={row.label}><span className={styles.paymentIcon} aria-hidden="true">{row.icon}</span><span>{row.label}</span><strong>{formatCurrency(row.amount)}</strong></div>)}
+        <div className={styles.sectionHeading}>
+          <WalletCards aria-hidden="true" />
+          <h2>Medios de pago</h2>
         </div>
+        <dl className={styles.paymentGrid}>
+          {COLLECTED_PAYMENT_METHOD_OPTIONS.map(({ value, label }) => (
+            <div key={value}>
+              <SalesPaymentIcon method={value} />
+              <dt>{label}</dt>
+              <dd>
+                {data ? formatCurrency(methodTotals.get(value) ?? 0) : '—'}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section className={styles.historySection}>
         <div className={styles.sectionHeading}>
-          <div><h2>Historial de ventas</h2><p>Busca, filtra y abre cualquier venta.</p></div>
+          <ReceiptText aria-hidden="true" />
+          <h2>Historial de ventas</h2>
         </div>
         <div className={styles.filters}>
           <label className={styles.filterField}>
             <span className={styles.filterLabel}>Buscar</span>
-            <span className={styles.searchField}><Search /><input placeholder="Venta, cliente o vendedor…" type="search" value={search} onChange={(event) => setSearch(event.target.value)} /></span>
+            <span className={styles.searchField}>
+              <Search />
+              <input
+                placeholder="Venta, cliente o vendedor…"
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+            </span>
           </label>
           <label className={styles.filterField}>
             <span className={styles.filterLabel}>Vendedor</span>
-            <SearchableSelect className={styles.filterSelect} value={sellerUserId} onChange={(event) => setSellerUserId(event.target.value)}><option value="">Todos los vendedores</option>{(data?.facets.sellers ?? []).map((seller) => <option key={seller.id} value={seller.id}>{seller.name}</option>)}</SearchableSelect>
+            <SearchableSelect
+              className={styles.filterSelect}
+              value={sellerUserId}
+              onChange={(event) => setSellerUserId(event.target.value)}
+            >
+              <option value="">Todos los vendedores</option>
+              {(data?.facets.sellers ?? []).map((seller) => (
+                <option key={seller.id} value={seller.id}>
+                  {seller.name}
+                </option>
+              ))}
+            </SearchableSelect>
           </label>
           <label className={styles.filterField}>
             <span className={styles.filterLabel}>Estado</span>
-            <SearchableSelect className={styles.filterSelect} value={status} onChange={(event) => setStatus(event.target.value as 'ALL' | SalesHistoryStatus)}><option value="ALL">Todos los estados</option>{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</SearchableSelect>
+            <SearchableSelect
+              className={styles.filterSelect}
+              value={status}
+              onChange={(event) =>
+                setStatus(event.target.value as 'ALL' | SalesHistoryStatus)
+              }
+            >
+              <option value="ALL">Todos los estados</option>
+              {Object.entries(statusLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </SearchableSelect>
           </label>
           <label className={styles.filterField}>
             <span className={styles.filterLabel}>Medio de pago</span>
-            <SearchableSelect className={styles.filterSelect} value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value as SalePaymentMethod | '')}><option value="">Todos los medios</option><option value="CREDIT">Crédito</option>{COLLECTED_PAYMENT_METHOD_OPTIONS.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</SearchableSelect>
+            <SearchableSelect
+              className={styles.filterSelect}
+              value={paymentMethod}
+              onChange={(event) =>
+                setPaymentMethod(event.target.value as SalePaymentMethod | '')
+              }
+            >
+              <option value="">Todos los medios</option>
+              <option value="CREDIT">Crédito</option>
+              {COLLECTED_PAYMENT_METHOD_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </SearchableSelect>
           </label>
         </div>
 
-        {historyQuery.isError ? <div className={styles.error}><strong>No pudimos cargar las ventas.</strong><span>{getErrorMessage(historyQuery.error, 'Intenta nuevamente.')}</span><button type="button" onClick={() => void historyQuery.refetch()}>Reintentar</button></div> : null}
+        {historyQuery.isError ? (
+          <div className={styles.error}>
+            <strong>No pudimos cargar las ventas.</strong>
+            <span>
+              {getErrorMessage(historyQuery.error, 'Intenta nuevamente.')}
+            </span>
+            <button type="button" onClick={() => void historyQuery.refetch()}>
+              Reintentar
+            </button>
+          </div>
+        ) : null}
 
-        <RetailTableShell isRefreshing={historyQuery.isFetching} title={`${data?.pagination.totalItems ?? 0} ventas`}>
+        <RetailTableShell
+          isRefreshing={historyQuery.isFetching}
+          title={
+            data
+              ? `${data.pagination.totalItems} ${data.pagination.totalItems === 1 ? 'venta' : 'ventas'}`
+              : undefined
+          }
+        >
           <table className={styles.table}>
-            <thead><tr><th>Venta</th><th>Cliente</th><th>Productos</th><th>Vendedor</th><th>Total</th><th>Medio de pago</th><th>Fecha y hora</th><th>Estado</th><th>Acciones</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Venta</th>
+                <th>Cliente</th>
+                <th>Productos</th>
+                <th>Vendedor</th>
+                <th>Total</th>
+                <th>Medio de pago</th>
+                <th>Fecha y hora</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
             <tbody>
               {(data?.items ?? []).map((sale) => (
                 <tr key={sale.id}>
-                  <td><strong>{sale.saleNumber}</strong>{sale.invoice ? <small>{sale.invoice.documentNumber}</small> : null}</td>
-                  <td><strong>{sale.customer?.name ?? 'Venta de mostrador'}</strong></td>
-                  <td>{sale.itemCount} {sale.itemCount === 1 ? 'producto' : 'productos'}</td>
-                  <td>{sale.seller?.name ?? 'Sin asignar'}</td>
-                  <td><strong>{formatCurrency(sale.total)}</strong>{sale.balance > 0 ? <small>Saldo {formatCurrency(sale.balance)}</small> : null}</td>
-                  <td>{sale.paymentMethods.map(getSharedPaymentMethodLabel).join(' · ') || 'Sin pago'}</td>
-                  <td>{formatDateTime(sale.saleDate)}</td>
-                  <td><span className={`${styles.status} ${styles[`status${sale.status}`]}`}>{statusLabels[sale.status]}</span></td>
-                  <td><button className={styles.viewButton} type="button" onClick={() => navigate(`${routePaths.sales}/${sale.id}`)}><Eye /> Ver detalle</button></td>
+                  <td data-label="Venta">
+                    <strong>{sale.saleNumber}</strong>
+                    {sale.invoice ? (
+                      <small>{sale.invoice.documentNumber}</small>
+                    ) : null}
+                  </td>
+                  <td data-label="Cliente">
+                    <span className={styles.customerCell}>
+                      {sale.customer ? (
+                          <SalesCustomerAvatar name={sale.customer.name} avatarUrl={sale.customer.avatarUrl} />
+                      ) : null}
+                      <strong>
+                        {sale.customer?.name ?? 'Venta de mostrador'}
+                      </strong>
+                    </span>
+                  </td>
+                  <td data-label="Productos">
+                    {sale.itemCount}{' '}
+                    {sale.itemCount === 1 ? 'producto' : 'productos'}
+                  </td>
+                  <td data-label="Vendedor">
+                    {sale.seller?.name ?? 'Sin asignar'}
+                  </td>
+                  <td data-label="Total">
+                    <strong>{formatCurrency(sale.total)}</strong>
+                    {sale.balance > 0 ? (
+                      <small>Saldo {formatCurrency(sale.balance)}</small>
+                    ) : null}
+                  </td>
+                  <td data-label="Medio de pago">
+                    <span className={styles.methodCell}>
+                      {sale.paymentMethods.map((method) => (
+                        <span key={method}>
+                          <SalesPaymentIcon method={method} />{' '}
+                          {getSharedPaymentMethodLabel(method)}
+                        </span>
+                      ))}
+                      {!sale.paymentMethods.length ? 'Sin pago' : null}
+                    </span>
+                  </td>
+                  <td data-label="Fecha y hora">
+                    {formatDateTime(sale.saleDate)}
+                  </td>
+                  <td data-label="Estado">
+                    <span
+                      className={`${styles.status} ${styles[`status${sale.status}`]}`}
+                    >
+                      {statusLabels[sale.status]}
+                    </span>
+                  </td>
+                  <td data-label="Acciones">
+                    <button
+                      className={styles.viewButton}
+                      type="button"
+                      onClick={() => navigate(`${routePaths.sales}/${sale.id}`)}
+                    >
+                      <Eye /> Ver detalle
+                    </button>
+                  </td>
                 </tr>
               ))}
-              {!historyQuery.isLoading && (data?.items.length ?? 0) === 0 ? <tr><td colSpan={9}><RetailEmptyState title="No hay ventas para mostrar" description="Cambia el período o los filtros para consultar otros registros." /></td></tr> : null}
+              {!historyQuery.isLoading &&
+              !historyQuery.isError &&
+              (data?.items.length ?? 0) === 0 ? (
+                <tr>
+                  <td colSpan={9}>
+                    <RetailEmptyState
+                      title="No hay ventas para mostrar"
+                      description="Cambia el período o los filtros para consultar otros registros."
+                    />
+                  </td>
+                </tr>
+              ) : null}
             </tbody>
           </table>
         </RetailTableShell>
 
         {(data?.pagination.totalPages ?? 0) > 1 ? (
-          <div className={styles.pagination}><button disabled={page <= 1} type="button" onClick={() => setPage((current) => current - 1)}>Anterior</button><span>Página {page} de {data?.pagination.totalPages}</span><button disabled={page >= (data?.pagination.totalPages ?? 1)} type="button" onClick={() => setPage((current) => current + 1)}>Siguiente</button></div>
+          <div className={styles.pagination}>
+            <button
+              disabled={page <= 1}
+              type="button"
+              onClick={() => setPage((current) => current - 1)}
+            >
+              Anterior
+            </button>
+            <span>
+              Página {page} de {data?.pagination.totalPages}
+            </span>
+            <button
+              disabled={page >= (data?.pagination.totalPages ?? 1)}
+              type="button"
+              onClick={() => setPage((current) => current + 1)}
+            >
+              Siguiente
+            </button>
+          </div>
         ) : null}
       </section>
 

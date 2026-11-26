@@ -37,7 +37,7 @@
   outline-offset: -3px;
 }
 
-.accordionSummary svg,
+.accordionSummary > svg,
 .innerSummary > svg {
   width: 1.05rem;
   height: 1.05rem;

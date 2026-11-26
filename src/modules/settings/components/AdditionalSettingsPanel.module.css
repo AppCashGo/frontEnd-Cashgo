@@ -37,7 +37,7 @@
   outline-offset: -3px;
 }
 
-.accordionSummary svg {
+.accordionSummary > svg {
   width: 1.05rem;
   height: 1.05rem;
   color: #111827;
@@ -74,8 +74,14 @@
 
 .dangerRow {
   grid-template-columns: auto minmax(0, 1fr);
-  background: #f1f3f5;
+  border: 1px solid #f2cdca;
+  background: #fff6f5;
   cursor: pointer;
+}
+
+.dangerRow:hover:not(:disabled) {
+  border-color: #dc8780;
+  background: #feeeec;
 }
 
 .dangerRow:disabled {
@@ -234,11 +240,8 @@
   }
 
   .settingRow {
-    grid-template-columns: auto minmax(0, 1fr);
+    gap: 0.55rem;
+    padding-inline: 0.65rem;
   }
 
-  .toggleInput {
-    grid-column: 1 / -1;
-    justify-self: end;
-  }
 }

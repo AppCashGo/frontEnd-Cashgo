@@ -1,3 +1,6 @@
+import { FileText } from "lucide-react";
+import { WorkspaceBusinessTitle } from "@/shared/components/retail/WorkspaceBusinessTitle";
+import workspaceVisual from "@/shared/components/retail/WorkspaceVisual.module.css";
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { Eye, Plus } from "lucide-react";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
@@ -33,7 +36,6 @@ import { useCurrentCashRegisterQuery } from "@/modules/cash-register/hooks/use-c
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
 import { routePaths } from "@/routes/route-paths";
 import { RetailEmptyState } from "@/shared/components/retail/RetailEmptyState";
-import { RetailPremiumBanner } from "@/shared/components/retail/RetailPremiumBanner";
 import { AppButton } from "@/shared/components/ui/AppButton";
 import retailStyles from "@/shared/components/retail/RetailUI.module.css";
 import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
@@ -364,9 +366,9 @@ export function QuotesPage() {
     <>
       {confirmationDialog}
       <div className={styles.page}>
-        <section className={styles.hero}>
+        <section className={`${styles.hero} ${workspaceVisual.hero}`}>
           <div className={styles.heroCopy}>
-            <h2 className={styles.title}>{copy.pageTitle}</h2>
+            <h1 className={styles.title}><WorkspaceBusinessTitle>{copy.pageTitle}</WorkspaceBusinessTitle></h1>
             <p className={styles.description}>{copy.pageDescription}</p>
           </div>
 
@@ -380,12 +382,6 @@ export function QuotesPage() {
             </AppButton>
           </div>
         </section>
-
-        <RetailPremiumBanner
-          description={copy.premiumDescription}
-          linkLabel={languageCode === "en" ? "View benefits" : "Ver beneficios"}
-          title={copy.premiumTitle}
-        />
 
         {hasLoadError ? (
           <div className={styles.errorBanner}>
@@ -532,8 +528,10 @@ export function QuotesPage() {
                   <tr>
                     <td colSpan={6}>
                       <RetailEmptyState
+                        icon={<FileText aria-hidden="true" />}
                         description={copy.emptyDescription}
                         title={copy.emptyTitle}
+                        action={<AppButton startIcon={<Plus aria-hidden="true" />} onClick={openCreatePage}>{copy.createButton}</AppButton>}
                       />
                     </td>
                   </tr>

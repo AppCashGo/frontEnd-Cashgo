@@ -36,6 +36,7 @@ export type SupplierSupplyHistoryItem = {
     productId: string
     productName: string
     sku: string | null
+    imageUrl?: string | null
     quantity: number
     unitCost: number
     subtotal: number

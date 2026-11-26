@@ -1,0 +1,77 @@
+.actions {
+  min-width: 0;
+  max-width: 100%;
+  color: #254970;
+  text-align: left;
+}
+
+.actions > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  width: fit-content;
+  min-height: 2.45rem;
+  padding: 0.44rem 0.65rem;
+  border: 1px solid #cbdcee;
+  border-radius: 0.6rem;
+  background: #edf4fc;
+  color: #245181;
+  font-size: 0.8rem;
+  font-weight: 800;
+  list-style: none;
+  cursor: pointer;
+}
+
+.actions > summary::-webkit-details-marker {
+  display: none;
+}
+
+.actions > summary:hover,
+.actions[open] > summary {
+  background: #e2eefb;
+}
+
+.actions svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+}
+
+.actions[open] > summary svg:last-child {
+  transform: rotate(180deg);
+}
+
+.choices {
+  display: grid;
+  gap: 0.15rem;
+  margin-top: 0.35rem;
+  padding: 0.3rem;
+  border: 1px solid #dbe5f1;
+  border-radius: 0.65rem;
+  background: #fff;
+}
+
+.choices button {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.15rem;
+  padding: 0.35rem 0.55rem;
+  border: 0;
+  border-radius: 0.4rem;
+  background: transparent;
+  color: #254970;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choices button[data-tone="green"] { color: #146a4a; }
+.choices button[data-tone="violet"] { color: #653da0; }
+.choices button:hover:not(:disabled) { background: #edf4fc; }
+.choices button:disabled { opacity: 0.55; cursor: wait; }
+
+.choices button[data-tone="amber"] { color: #84500c; }
+.choices button[data-tone="danger"] { color: #a52625; }

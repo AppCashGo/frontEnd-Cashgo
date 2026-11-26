@@ -40,15 +40,102 @@
 .form {
   display: grid;
   align-content: start;
-  gap: 1.25rem;
+  gap: 0.85rem;
   min-height: 0;
 }
 
 .drawerBody {
-  padding: 1.25rem 1.35rem 7rem;
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  padding: 1rem 1.35rem 1.35rem;
+}
+
+.formSection,
+.accessPanel {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid #dbe6f2;
+  border-radius: 0.85rem;
+  background: #fff;
+}
+
+.formSection h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: #254970;
+  font-size: 0.93rem;
+}
+
+.formSection h3 svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.accessPanel {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  background: #f6f9fd;
+}
+
+.accessPanel strong,
+.accessPanel p {
+  overflow-wrap: anywhere;
+}
+
+.accessPanel p {
+  margin: 0.2rem 0 0;
+  color: #536983;
+  font-size: 0.82rem;
+}
+
+.accessIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.65rem;
+  background: #fff0cf;
+  color: #75490c;
+}
+
+.accessIcon[data-active="true"] {
+  background: #e4f5ed;
+  color: #126647;
+}
+
+.accessIcon svg,
+.phoneIcon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.avatarCard.avatarCard {
+  width: 100%;
+  min-width: 0;
+  border-color: #dbe6f2;
+  background: #eef5fc;
+}
+
+.phoneIcon {
+  display: grid;
+  align-items: center;
+  padding-left: 0.8rem;
+  color: #436a96;
+}
+
+.fieldHint {
+  color: #536983;
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
 
 .field {
+  min-width: 0;
   display: grid;
   gap: 0.55rem;
 }
@@ -62,14 +149,14 @@
 .phoneField,
 .roleSelectButton {
   width: 100%;
-  min-height: 4rem;
+  min-height: 2.85rem;
   border: 1px solid var(--ui-border-strong);
-  border-radius: var(--ui-radius-lg);
+  border-radius: 0.65rem;
   background: var(--ui-surface);
   color: var(--ui-text);
   font: inherit;
-  font-size: 1.08rem;
-  font-weight: 700;
+  font-size: 0.93rem;
+  font-weight: 650;
 }
 
 .input {
@@ -77,7 +164,7 @@
 }
 
 .input:focus,
-.phoneInput:focus,
+.phoneField:focus-within,
 .roleSelectButton:focus-visible {
   outline: none;
   border-color: var(--ui-primary);
@@ -87,47 +174,21 @@
 .phoneField {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  overflow: hidden;
 }
 
-.countrySelect {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  min-width: 6.5rem;
-  padding: 0 1rem;
-  border-right: 1px solid var(--ui-border);
-}
-
-.countrySelect svg {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-.flagColombia {
-  width: 2rem;
-  height: 2rem;
-  border-radius: 999px;
-  background:
-    linear-gradient(
-      to bottom,
-      #f4d21f 0 50%,
-      #224eb2 50% 75%,
-      #d32f2f 75% 100%
-    );
-  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.12);
-}
-
-.phoneInput {
+.drawer .formSection .phoneField .phoneInput[type="tel"] {
   width: 100%;
   min-width: 0;
   border: 0;
-  padding: 0 1.05rem;
+  border-radius: 0.65rem;
+  padding: 0 0.75rem;
+  outline: 0;
+  box-shadow: none;
   background: transparent;
   color: var(--ui-text);
   font: inherit;
-  font-size: 1.08rem;
-  font-weight: 700;
+  font-size: 0.93rem;
+  font-weight: 650;
 }
 
 .roleSelectWrapper {
@@ -192,7 +253,7 @@
 }
 
 .roleSelectCopy small {
-  color: #94a3b8;
+  color: #5a708c;
   font-size: 0.75rem;
   font-weight: 700;
 }
@@ -338,7 +399,7 @@
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 1rem;
   width: min(100%, 42rem);
-  max-height: min(92vh, 52rem);
+  max-height: min(92dvh, 52rem);
   overflow: hidden;
   padding: 1.5rem;
   border: 1px solid rgba(226, 232, 240, 0.9);
@@ -395,14 +456,6 @@
   display: grid;
   gap: 0.3rem;
   min-width: 0;
-}
-
-.modalEyebrow {
-  color: #2563eb;
-  font-size: 0.7rem;
-  font-weight: 900;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
 }
 
 .modalTitle {
@@ -494,16 +547,29 @@
   font-weight: 800;
 }
 
-.roleBadge {
+.selectedPermissionLink,
+.expandPermissions {
   display: inline-flex;
   align-items: center;
-  min-height: 1.9rem;
-  padding: 0.2rem 0.75rem;
-  border-radius: 999px;
-  background: #dbeafe;
-  color: #1d4ed8;
-  font-size: 0.76rem;
-  font-weight: 900;
+  justify-content: center;
+  gap: 0.4rem;
+  width: fit-content;
+  min-height: 2.25rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid #c9def5;
+  border-radius: 0.55rem;
+  background: #f0f6fe;
+  color: #1f548c;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.selectedPermissionLink:hover,
+.expandPermissions:hover {
+  background: #e4effc;
 }
 
 .permissionsList {
@@ -539,52 +605,13 @@
 
 .permissionGroupHeader {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.75rem;
-  min-height: 4.35rem;
-  padding: 0 0.85rem;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0 0.7rem;
   background: #ffffff;
 }
 
 .permissionGroupCardExpanded .permissionGroupHeader {
   background: #f8fbff;
-}
-
-.permissionCheckActive,
-.permissionItemCheckActive {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #c6d0dc;
-  border-radius: 0.25rem;
-  background: #ffffff;
-  color: #ffffff;
-}
-
-.permissionCheckActive {
-  width: 1.55rem;
-  height: 1.55rem;
-  border-radius: 0.48rem;
-}
-
-.permissionItemCheckActive {
-  width: 1.05rem;
-  height: 1.05rem;
-  margin-top: 0.1rem;
-}
-
-.permissionCheckActive,
-.permissionItemCheckActive {
-  border-color: #16a36a;
-  background: #16a36a;
-  box-shadow: 0 0.35rem 0.8rem rgba(22, 163, 106, 0.18);
-}
-
-.permissionCheckActive svg,
-.permissionItemCheckActive svg {
-  width: 0.85rem;
-  height: 0.85rem;
 }
 
 .permissionGroupToggle {
@@ -593,7 +620,7 @@
   justify-content: space-between;
   gap: 1rem;
   width: 100%;
-  min-height: 4.35rem;
+  min-height: 3.5rem;
   border: 0;
   background: transparent;
   color: #1f2a37;
@@ -645,7 +672,7 @@
 }
 
 .permissionGroupCopy small {
-  color: #94a3b8;
+  color: #5a708c;
   font-size: 0.72rem;
   font-weight: 750;
 }
@@ -669,9 +696,15 @@
 .permissionItems {
   display: grid;
   gap: 0.5rem;
-  padding: 0.75rem 0.85rem 0.85rem 3.95rem;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  list-style: none;
   border-top: 1px solid #eaf0f7;
   background: #fbfdff;
+}
+
+.permissionItems[hidden] {
+  display: none;
 }
 
 .permissionItem {
@@ -680,32 +713,22 @@
   gap: 0.7rem;
   align-items: center;
   width: 100%;
-  min-height: 2.7rem;
+  min-height: 2rem;
   padding: 0.5rem 0.65rem;
   border: 1px solid transparent;
   border-radius: 0.75rem;
   background: transparent;
-  color: #64748b;
-  font: inherit;
-  font-weight: 700;
-  text-align: left;
-}
-
-.permissionItemSelected {
   color: #334155;
+  font: inherit;
+  font-size: 0.87rem;
+  font-weight: 650;
+  text-align: left;
 }
 
 .permissionsFooter {
   display: grid;
   gap: 0.65rem;
   padding-top: 0.15rem;
-}
-
-.permissionsFooter > span {
-  color: #94a3b8;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-align: center;
 }
 
 @media (max-width: 560px) {
@@ -730,7 +753,7 @@
   }
 
   .permissionsModal {
-    max-height: 92vh;
+    max-height: 92dvh;
     padding: 1.1rem;
     border-radius: 1.25rem;
   }
@@ -755,10 +778,24 @@
   }
 
   .permissionGroupIcon {
-    display: none;
+    width: 1.8rem;
+    height: 1.8rem;
+    flex-basis: 1.8rem;
   }
 
   .permissionItems {
-    padding-left: 2.8rem;
+    padding-left: 0.7rem;
   }
+}
+
+.permissionItem > svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  color: #13704f;
+}
+
+@media (max-width: 420px) {
+  .permissionsSummary { flex-wrap: wrap; gap: 0.5rem; }
+  .permissionsModal { padding: 0.85rem; }
+  .modalBackdrop { padding: 0.55rem; }
 }

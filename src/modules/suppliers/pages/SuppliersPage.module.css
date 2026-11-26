@@ -106,10 +106,10 @@
 .retailWorkspace {
   display: grid;
   gap: 1.15rem;
-  padding: 0 clamp(1rem, 2.2vw, 2rem) 2rem;
+  container: supplier-workspace / inline-size;
+  min-width: 0;
 }
 
-.pageActions,
 .filterGroup,
 .mobileActions {
   display: flex;
@@ -118,9 +118,6 @@
   flex-wrap: wrap;
 }
 
-.pageActions button {
-  gap: 0.5rem;
-}
 
 .controlsCard {
   display: grid;
@@ -147,9 +144,9 @@
   min-height: 2.55rem;
   padding: 0.62rem 1rem;
   border: 1px solid #d5deea;
-  border-radius: 999px;
+  border-radius: 0.6rem;
   background: #ffffff;
-  color: #58677a;
+  color: #425d7c;
   font: inherit;
   font-size: 0.9rem;
   font-weight: 800;
@@ -157,8 +154,8 @@
 }
 
 .filterButtonActive {
-  border-color: #1f2a37;
-  background: #1f2a37;
+  border-color: #245486;
+  background: #245486;
   color: #ffffff;
 }
 
@@ -199,24 +196,10 @@
   white-space: nowrap;
 }
 
-.supplierAvatar {
+.supplierAvatar > span {
   width: 2.65rem;
   height: 2.65rem;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #315fd5;
-  font-weight: 900;
-}
-
-.supplierAvatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  border-radius: 0.7rem;
 }
 
 .contactValue {
@@ -276,7 +259,12 @@
 }
 
 .rowAction {
-  padding: 0.55rem 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.65rem;
+  background: #edf5fc;
+  color: #245181;
 }
 
 .iconAction {
@@ -297,7 +285,7 @@
 }
 
 .detailDrawer {
-  width: min(100vw, 52rem);
+  width: min(100vw, 61rem);
 }
 
 .detailDrawerBody {
@@ -355,26 +343,15 @@
     padding: 0 0 1.25rem;
   }
 
-  .pageActions,
-  .pageActions button {
-    width: 100%;
-  }
-
   .filterGroup {
-    flex-wrap: nowrap;
-    margin: 0 -1rem -0.2rem;
-    padding: 0 1rem 0.2rem;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-
-  .filterGroup::-webkit-scrollbar {
-    display: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.4rem;
   }
 
   .filterButton,
   .filterButtonActive {
-    flex: 0 0 auto;
+    padding: 0.35rem;
   }
 
   .retailMetricsGrid {
@@ -479,28 +456,28 @@
   }
 
   .mobileActions button {
-    min-height: 2.75rem;
-    border: 1px solid #1f2a37;
-    border-radius: 0.75rem;
-    background: #ffffff;
-    color: #1f2a37;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 2.45rem;
+    border: 1px solid #c8dbed;
+    border-radius: 0.6rem;
+    background: #eef5fc;
+    color: #245181;
     font: inherit;
-    font-weight: 900;
+    font-size: 0.85rem;
+    font-weight: 800;
   }
 
   .mobileActions button:first-child {
-    background: #1f2a37;
-    color: #ffffff;
+    border-color: #215b9d;
+    background: #215b9d;
+    color: #fff;
   }
 
   .detailDrawer {
     width: 100vw;
-  }
-}
-
-@media (max-width: 440px) {
-  .retailMetricsGrid {
-    grid-template-columns: 1fr;
   }
 }
 
@@ -513,5 +490,90 @@
   .heroButton,
   .heroGhostButton {
     width: 100%;
+  }
+}
+
+.suppliersHeader.suppliersHeader.suppliersHeader {
+  background:
+    linear-gradient(90deg, #112541 25%, #112541eb 42%, #1125418f 76%, #112541b0),
+    url('../assets/supplier-delivery.webp') right 48% / 73% auto no-repeat,
+    #112541;
+}
+
+.searchField {
+  min-width: 0;
+  min-height: 2.65rem;
+  border-color: #cad9eb;
+  border-radius: 0.65rem;
+}
+
+.searchField:focus-within {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
+}
+
+.searchField input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ui-text);
+  font: inherit;
+}
+
+.searchField svg { flex: 0 0 auto; }
+
+.supplierMetric {
+  --metric-background: #edf5ff;
+  --metric-icon: #dceafd;
+  --metric-ink: #245486;
+  min-width: 0;
+}
+
+.supplierMetric[data-tone="partners"] {
+  --metric-background: #edf9f4;
+  --metric-icon: #dcf1e8;
+  --metric-ink: #116647;
+}
+
+.supplierMetric[data-tone="purchases"] {
+  --metric-background: #f2edff;
+  --metric-icon: #e8dffc;
+  --metric-ink: #65359c;
+}
+
+.supplierMetric[data-tone="balance"] {
+  --metric-background: #fff7e8;
+  --metric-icon: #faeac7;
+  --metric-ink: #78470c;
+}
+
+.supplierMetric > article {
+  height: 100%;
+  padding: clamp(0.6rem, 1.35cqi, 1.05rem);
+  background: linear-gradient(130deg, var(--metric-background), #fff 76%);
+}
+
+.supplierMetric > article > div > span {
+  background: var(--metric-icon);
+  color: var(--metric-ink);
+}
+
+.supplierMetric > article > p { overflow-wrap: anywhere; }
+
+.detailFooter.detailFooter > button {
+  flex: 0 1 auto;
+  min-height: 2.4rem;
+}
+
+@container supplier-workspace (max-width: 28rem) {
+  .supplierMetric > article > div {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .supplierMetric > article > p:first-of-type {
+    font-size: clamp(1.05rem, 5cqi, 1.4rem);
   }
 }

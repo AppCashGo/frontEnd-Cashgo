@@ -1,66 +1,51 @@
 .card {
-  --metric-accent: #1d5fa7;
-  --metric-accent-soft: rgba(29, 95, 167, 0.12);
+  --metric-tint: #edf5ff;
+  --metric-accent: #205c9c;
+  --metric-border: #d6e6fa;
   display: grid;
-  align-content: space-between;
-  gap: 1rem;
-  min-height: 10.65rem;
-  padding: 1.15rem;
-  border: 1px solid rgba(203, 213, 225, 0.88);
-  border-left: 4px solid var(--metric-accent);
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 1.2rem 2.5rem rgba(15, 23, 42, 0.06);
+  align-content: start;
+  gap: 0.65rem;
+  min-width: 0;
+  min-height: 7.95rem;
+  padding: clamp(0.65rem, 1.5vw, 1rem);
+  border: 1px solid var(--metric-border);
+  border-radius: 0.9rem;
+  background: linear-gradient(140deg, var(--metric-tint), #fff 90%);
 }
 
-.cardSecondary {
-  --metric-accent: #174a82;
-  --metric-accent-soft: rgba(23, 74, 130, 0.12);
-}
-
+.cardSecondary,
 .cardSuccess {
-  --metric-accent: #16a34a;
-  --metric-accent-soft: rgba(22, 163, 74, 0.12);
+  --metric-tint: #ebf8f2;
+  --metric-accent: #17684d;
+  --metric-border: #d7eee5;
 }
 
 .cardWarning {
-  --metric-accent: #f97316;
-  --metric-accent-soft: rgba(249, 115, 22, 0.14);
+  --metric-tint: #f2eeff;
+  --metric-accent: #6851a0;
+  --metric-border: #e8dffd;
 }
 
 .cardDanger {
-  --metric-accent: #dc2626;
-  --metric-accent-soft: rgba(220, 38, 38, 0.12);
-}
-
-.header,
-.valueRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  --metric-tint: #fff1eb;
+  --metric-accent: #a44232;
+  --metric-border: #f4ded4;
 }
 
 .iconBox {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 0.7rem;
-  background: var(--metric-accent-soft);
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 0.55rem;
+  background: var(--metric-tint);
   color: var(--metric-accent);
+  box-shadow: inset 0 0 0 1px var(--metric-border);
 }
 
 .iconBox svg {
-  width: 1.15rem;
-  height: 1.15rem;
-}
-
-.meta {
-  color: #64748b;
-  font-size: 0.76rem;
-  font-weight: 700;
+  width: 1rem;
+  height: 1rem;
 }
 
 .copy {
@@ -69,33 +54,23 @@
 
 .label {
   margin: 0;
-  color: #64748b;
-  font-size: 0.73rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  color: #435976;
+  font-size: 0.8rem;
+  font-weight: 750;
 }
 
 .value {
-  margin: 0.2rem 0 0;
-  color: #0f172a;
-  font-size: clamp(1.6rem, 3vw, 2rem);
-  font-weight: 900;
-  line-height: 1.05;
+  margin: 0.25rem 0 0;
+  color: #132644;
+  font-size: clamp(1.14rem, 2.4vw, 1.85rem);
+  font-weight: 850;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.12;
   overflow-wrap: anywhere;
 }
 
-.trend {
-  flex: 0 0 auto;
-  align-self: end;
-  color: #16a34a;
-  font-size: 0.85rem;
-  font-weight: 800;
-}
-
 .hint {
-  margin: 0.55rem 0 0;
-  color: #64748b;
-  font-size: 0.78rem;
-  line-height: 1.45;
+  margin: 0.22rem 0 0;
+  color: #506480;
+  font-size: 0.7rem;
 }

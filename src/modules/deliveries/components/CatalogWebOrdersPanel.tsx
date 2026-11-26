@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
+  ChevronDown,
   MessageSquareText,
   PackageSearch,
   RefreshCw,
@@ -65,9 +66,9 @@ export function CatalogWebOrdersPanel() {
   return (
     <section className={styles.panel}>
       <div className={styles.heading}>
-        <div>
-          <span>Catálogo virtual</span>
-          <h3>Pedidos web</h3>
+        <div className={styles.headingTitle}>
+          <span className={styles.headingIcon}><Store aria-hidden="true" /></span>
+          <div><h2>Pedidos web</h2><span>Catálogo virtual</span></div>
         </div>
         <button
           aria-label="Actualizar pedidos web"
@@ -113,14 +114,12 @@ export function CatalogWebOrdersPanel() {
       ) : null}
 
       {(reviewsQuery.data?.length ?? 0) > 0 ? (
-        <section className={styles.reviewsSection}>
-          <div className={styles.reviewsHeading}>
+        <details className={styles.reviewsSection}>
+          <summary className={styles.reviewsHeading}>
             <MessageSquareText aria-hidden="true" />
-            <div>
-              <span>Opiniones verificadas</span>
-              <strong>Lo que dicen tus clientes</strong>
-            </div>
-          </div>
+            <strong>Opiniones de clientes</strong>
+            <ChevronDown className={styles.reviewChevron} aria-hidden="true" />
+          </summary>
           <div className={styles.reviewList}>
             {reviewsQuery.data?.slice(0, 8).map((review) => (
               <article key={review.id}>
@@ -148,7 +147,7 @@ export function CatalogWebOrdersPanel() {
               </article>
             ))}
           </div>
-        </section>
+        </details>
       ) : null}
     </section>
   );

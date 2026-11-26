@@ -197,7 +197,9 @@ export async function registerSupplierPurchasePayment(
   const supplier = await postJson<
     SupplierDetailApiRecord,
     SupplierPurchasePaymentInput
-  >(`/suppliers/${supplierId}/purchases/${purchaseId}/payments`, input)
+  >(`/suppliers/${supplierId}/purchases/${purchaseId}/payments`, input, {
+    suppressWriteErrorNotification: true,
+  })
 
   return normalizeSupplierDetailRecord(supplier)
 }
@@ -210,7 +212,9 @@ export async function cancelSupplierPurchase(
   const supplier = await patchJson<
     SupplierDetailApiRecord,
     SupplierPurchaseCancellationInput
-  >(`/suppliers/${supplierId}/purchases/${purchaseId}/cancel`, input)
+  >(`/suppliers/${supplierId}/purchases/${purchaseId}/cancel`, input, {
+    suppressWriteErrorNotification: true,
+  })
 
   return normalizeSupplierDetailRecord(supplier)
 }
@@ -223,7 +227,9 @@ export async function updateSupplierPurchase(
   const supplier = await patchJson<
     SupplierDetailApiRecord,
     SupplierPurchaseUpdateInput
-  >(`/suppliers/${supplierId}/purchases/${purchaseId}`, input)
+  >(`/suppliers/${supplierId}/purchases/${purchaseId}`, input, {
+    suppressWriteErrorNotification: true,
+  })
 
   return normalizeSupplierDetailRecord(supplier)
 }
@@ -236,7 +242,9 @@ export async function createSupplierPurchaseReturn(
   const supplier = await postJson<
     SupplierDetailApiRecord,
     SupplierPurchaseReturnInput
-  >(`/suppliers/${supplierId}/purchases/${purchaseId}/returns`, input)
+  >(`/suppliers/${supplierId}/purchases/${purchaseId}/returns`, input, {
+    suppressWriteErrorNotification: true,
+  })
 
   return normalizeSupplierDetailRecord(supplier)
 }

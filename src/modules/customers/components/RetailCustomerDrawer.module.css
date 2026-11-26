@@ -13,10 +13,6 @@
   gap: 1rem;
 }
 
-.avatarImage {
-  object-fit: cover;
-}
-
 .field {
   display: grid;
   gap: 0.45rem;
@@ -122,7 +118,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  background: linear-gradient(135deg, #ffffff 0%, #f6f9ff 100%);
+  background: linear-gradient(135deg, #edf5ff, #fbfdff 74%);
 }
 
 .detailTabs {
@@ -157,6 +153,12 @@
   cursor: pointer;
 }
 
+.detailTabs button svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
 .detailTabs button span {
   min-width: 1.45rem;
   border-radius: 999px;
@@ -168,9 +170,9 @@
 }
 
 .detailTabs .detailTabActive {
-  background: #1f2a37;
+  background: #215b9d;
   color: #ffffff;
-  box-shadow: 0 0.35rem 0.85rem rgba(31, 42, 55, 0.14);
+  box-shadow: 0 0.3rem 0.7rem rgba(33, 91, 157, 0.16);
 }
 
 .detailTabs .detailTabActive span {
@@ -204,24 +206,11 @@
   line-height: 1.55;
 }
 
-.avatar {
+.profileAvatar > span {
   width: 3.5rem;
   height: 3.5rem;
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: #eef4ff;
-  color: #2457b8;
-  font-size: 1.35rem;
-  font-weight: 900;
-  overflow: hidden;
-}
-
-.avatarImage {
-  width: 100%;
-  height: 100%;
+  border-radius: 0.9rem;
+  font-size: 1rem;
 }
 
 .infoGrid,
@@ -298,6 +287,12 @@
   padding: 1rem;
 }
 
+@media (min-width: 850px) {
+  .detail .behaviorGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .accountSummary > div:first-child {
   display: grid;
   gap: 0.25rem;
@@ -315,32 +310,22 @@
   line-height: 1.15;
 }
 
-.accountSummaryActions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.accountSummaryActions button,
-.payAllButton {
-  min-height: 2.75rem;
+.payAllButton,
+.invoicePayButton {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: start;
+  justify-self: start;
   gap: 0.45rem;
-  border: 1px solid #bfd1ea;
-  border-radius: 0.8rem;
-  background: #ffffff;
-  color: #2457b8;
-  padding: 0.55rem 0.85rem;
+  min-height: 2.45rem;
+  padding: 0.48rem 0.7rem;
+  border: 1px solid;
+  border-radius: 0.6rem;
   font: inherit;
-  font-size: 0.84rem;
-  font-weight: 900;
+  font-size: 0.82rem;
+  font-weight: 800;
   cursor: pointer;
-}
-
-.accountSummaryActions .payAllButton {
-  grid-column: 1 / -1;
 }
 
 .payAllButton {
@@ -349,7 +334,18 @@
   color: #ffffff;
 }
 
-.payAllButton svg {
+.invoicePayButton {
+  border-color: #b8e1d0;
+  background: #eaf7f0;
+  color: #126747;
+}
+
+.payAllButton:hover { background: #0e7049; }
+.invoicePayButton:hover { background: #dcf2e6; }
+.payAllButton:disabled { opacity: 0.55; cursor: wait; }
+
+.payAllButton svg,
+.invoicePayButton svg {
   width: 1rem;
   height: 1rem;
 }
@@ -443,55 +439,7 @@
   background: #f0fdf4;
 }
 
-.receivableActions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.6rem;
-}
-
-.reminderButton,
-.manageInvoiceButton,
-.termsButton,
-.promiseButton {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  justify-self: end;
-  gap: 0.45rem;
-  min-height: 2.6rem;
-  padding: 0 0.9rem;
-  border: 1px solid #bfd1ea;
-  border-radius: 0.8rem;
-  background: #ffffff;
-  color: #2457b8;
-  font: inherit;
-  font-size: 0.84rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.termsButton {
-  border-color: #c0ccda;
-  color: #41516a;
-}
-
-.manageInvoiceButton {
-  border-color: #9cb8e8;
-  color: #174ea6;
-}
-
-.promiseButton {
-  border-color: #cbbcf6;
-  color: #6646b8;
-}
-
-.reminderButton svg,
-.manageInvoiceButton svg,
-.termsButton svg,
-.promiseButton svg,
 .reminderActions svg,
-.statementActions svg,
 .sendEmailButton svg {
   width: 1rem;
   height: 1rem;
@@ -633,41 +581,6 @@
   color: #526b5e;
   font-size: 0.78rem;
   line-height: 1.45;
-}
-
-.statementActions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.statementActions button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  min-height: 2.65rem;
-  padding: 0 0.75rem;
-  border: 1px solid #a9c9b6;
-  border-radius: 0.75rem;
-  background: #ffffff;
-  color: #176b46;
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.statementActions .shareStatementButton {
-  grid-column: 1 / -1;
-  border-color: #168c58;
-  background: #168c58;
-  color: #ffffff;
-}
-
-.statementActions button:disabled {
-  opacity: 0.62;
-  cursor: wait;
 }
 
 .reminderActions {
@@ -897,13 +810,6 @@
   padding-top: 0.5rem;
 }
 
-.receivableProduct span {
-  display: block;
-  margin-top: 0.15rem;
-  color: #66758c;
-  font-size: 0.74rem;
-}
-
 .receivableProduct > strong {
   flex: 0 0 auto;
   white-space: nowrap;
@@ -912,8 +818,11 @@
 .historyItem {
   display: grid;
   gap: 0.75rem;
-  border-bottom: 1px solid #e5ebf2;
-  padding-bottom: 0.75rem;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #dce7f3;
+  border-radius: 0.8rem;
+  background: #fff;
 }
 
 .historyHeader,
@@ -940,13 +849,6 @@
 .historyProduct + .historyProduct {
   border-top: 1px solid #e2e8f0;
   padding-top: 0.55rem;
-}
-
-.historyProduct span {
-  display: block;
-  margin-top: 0.18rem;
-  color: #66758c;
-  font-size: 0.76rem;
 }
 
 .historyProduct > strong {
@@ -1119,7 +1021,7 @@
 }
 
 .paymentApplicationHeader span,
-.paymentApplicationItem span {
+.paymentApplicationItem > div:last-child > span {
   display: block;
   margin-top: 0.15rem;
   color: #587265;
@@ -1163,45 +1065,6 @@
 .paymentApplicationItem .paymentCoveragePartial {
   color: #9a6b12;
   font-weight: 800;
-}
-
-.customerPaymentActions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.55rem;
-}
-
-.customerPaymentActions button {
-  min-height: 2.55rem;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  border: 1px solid #bfd0ed;
-  border-radius: 0.7rem;
-  background: #ffffff;
-  color: #2457b8;
-  padding: 0.5rem 0.65rem;
-  font: inherit;
-  font-size: 0.74rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.customerPaymentActions button:first-child {
-  border-color: #b7e4ca;
-  background: #effbf4;
-  color: #168653;
-}
-
-.customerPaymentActions button:disabled {
-  cursor: wait;
-  opacity: 0.55;
-}
-
-.customerPaymentActions svg {
-  width: 0.95rem;
-  height: 0.95rem;
 }
 
 .paymentAllocationNotice {
@@ -1252,64 +1115,6 @@
   display: grid;
   gap: 1rem;
   background: #f4f7fb;
-}
-
-.receiptActions {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.receiptActions button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-}
-
-.receiptActions svg {
-  width: 1rem;
-  height: 1rem;
-}
-
-.invoiceActions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.55rem;
-  margin-top: 0.85rem;
-}
-
-.invoiceActions button {
-  min-height: 2.55rem;
-  display: inline-flex;
-  flex: 1 1 9.5rem;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  border: 1px solid #bfd0ed;
-  border-radius: 0.75rem;
-  background: #f7faff;
-  color: #2457b8;
-  padding: 0.55rem 0.75rem;
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.invoiceActions button:first-child:not(:only-child) {
-  border-color: #b7e4ca;
-  background: #effbf4;
-  color: #168653;
-}
-
-.invoiceActions button:disabled {
-  cursor: wait;
-  opacity: 0.55;
-}
-
-.invoiceActions svg {
-  width: 1rem;
-  height: 1rem;
 }
 
 .documentFeedback {
@@ -1483,32 +1288,6 @@
   font-size: 0.72rem;
 }
 
-.paymentReceiptActions {
-  display: flex;
-  gap: 0.4rem;
-}
-
-.paymentReceiptActions button {
-  min-height: 2rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  border: 1px solid #bfd0ed;
-  border-radius: 0.6rem;
-  background: #ffffff;
-  color: #2457b8;
-  padding: 0.35rem 0.55rem;
-  font: inherit;
-  font-size: 0.7rem;
-  font-weight: 900;
-  cursor: pointer;
-}
-
-.paymentReceiptActions svg {
-  width: 0.85rem;
-  height: 0.85rem;
-}
-
 @media (min-width: 560px) {
   .twoColumns,
   .infoGrid,
@@ -1516,27 +1295,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .receiptActions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
   .reminderActions {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .accountSummary {
-    grid-template-columns: minmax(12rem, 0.75fr) minmax(18rem, 1.25fr);
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-  }
-}
-
-@media (min-width: 720px) {
-  .statementActions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .statementActions .shareStatementButton {
-    grid-column: auto;
   }
 }
 
@@ -1564,37 +1329,22 @@
 
   .detailTabs {
     position: static;
-    grid-template-columns: repeat(4, minmax(7rem, 1fr));
-    overflow-x: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .detailTabs button {
-    font-size: 0.78rem;
-    padding-inline: 0.4rem;
+    gap: 0.3rem;
+    font-size: 0.76rem;
+    padding-inline: 0.35rem;
   }
 
-  .sectionHeaderActions .payAllButton {
-    width: 100%;
-  }
-
-  .receivableActions,
-  .reminderButton,
-  .termsButton,
-  .promiseButton {
-    width: 100%;
-    justify-self: stretch;
-  }
+  .detailTabs button span { min-width: 1.2rem; padding-inline: 0.3rem; }
 
   .promiseFields {
     grid-template-columns: 1fr;
   }
 
   .termsActions {
-    grid-template-columns: 1fr;
-  }
-
-  .invoiceActions {
-    display: grid;
     grid-template-columns: 1fr;
   }
 
@@ -1607,13 +1357,7 @@
     grid-template-columns: 1fr;
   }
 
-  .paymentReceiptActions button {
-    flex: 1;
-    justify-content: center;
-  }
-
-  .customerPaymentDetails,
-  .customerPaymentActions {
+  .customerPaymentDetails {
     grid-template-columns: 1fr;
   }
 
@@ -1624,5 +1368,174 @@
 
   .receivableProduct {
     gap: 0.65rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .historySectionHeader {
+    display: grid;
+    gap: 0.55rem;
+  }
+}
+
+.profileFormSection {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+  padding: 0.9rem;
+  border: 1px solid #dbe6f2;
+  border-radius: 0.85rem;
+  background: #fff;
+}
+
+.profileFormSection h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0;
+  color: #254970;
+  font-size: 0.95rem;
+  font-weight: 850;
+}
+
+.profileFormSection h4 svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.profilePhotoField.profilePhotoField {
+  width: 100%;
+  min-width: 0;
+  border-color: #cfdfef;
+  background: #edf5fd;
+  color: #254970;
+}
+
+.compactFooter.compactFooter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.compactFooter.compactFooter > button {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.55rem;
+  padding: 0.45rem 0.8rem;
+  border-radius: 0.6rem;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.compactFooter .primaryButton {
+  background: #215b9d;
+}
+
+.compactFooter .primaryButton:hover {
+  background: #174b87;
+}
+
+.compactFooter .secondaryButton {
+  border: 1px solid #c7d8e9;
+  background: #f1f6fc;
+  color: #254970;
+}
+
+.compactFooter button svg {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+}
+
+.invoiceToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.paymentMovementDisclosure > summary {
+  display: flex;
+  align-items: center;
+  gap: 0.38rem;
+  width: fit-content;
+  min-height: 2.45rem;
+  padding: 0.44rem 0.65rem;
+  border: 1px solid #cbdcee;
+  border-radius: 0.6rem;
+  background: #edf4fc;
+  color: #245181;
+  font-size: 0.8rem;
+  font-weight: 800;
+  list-style: none;
+  cursor: pointer;
+}
+
+.paymentMovementDisclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.paymentMovementDisclosure > summary:hover {
+  background: #e2eefb;
+}
+
+.paymentMovementDisclosure > summary svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex: 0 0 auto;
+}
+
+.paymentMovementDisclosure[open] > summary svg:last-child {
+  transform: rotate(180deg);
+}
+
+.paymentMovementDisclosure[open] > summary {
+  margin-bottom: 0.65rem;
+}
+
+.historyItem > .customerActions {
+  justify-self: end;
+}
+
+.paymentForm,
+.termsComposer,
+.promiseComposer {
+  scroll-margin-top: 4.75rem;
+}
+
+@media (max-width: 559px) {
+  .sectionHeader:has(.payAllButton) {
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .sectionHeader:has(.payAllButton) .sectionHeaderActions,
+  .historySectionHeader .sectionHeaderActions {
+    align-items: flex-start;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.4rem;
+  }
+
+  .sectionHeader:has(.payAllButton) .sectionHeaderActions > span {
+    flex-basis: 100%;
+  }
+
+  .sectionHeaderActions .generalReminderButton {
+    width: auto;
+  }
+
+  .invoiceToolbar .customerActions[open] {
+    flex-basis: 100%;
+  }
+
+  .paymentForm,
+  .termsComposer,
+  .promiseComposer {
+    scroll-margin-top: 0.5rem;
   }
 }

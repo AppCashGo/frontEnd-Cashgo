@@ -38,6 +38,7 @@ export type CustomerPurchaseHistoryProduct = {
   productId: string
   name: string
   sku: string | null
+  imageUrl?: string | null
   quantity: number
   unitPrice: number
   subtotal: number

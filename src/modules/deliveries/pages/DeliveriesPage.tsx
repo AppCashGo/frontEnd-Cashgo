@@ -1,6 +1,10 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { useEffect, useMemo, useState } from 'react'
-import { CheckCircle2, Plus, Truck, X } from 'lucide-react'
+import { CheckCircle2, MapPin, PackageCheck, Plus, Truck, X } from 'lucide-react'
+import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import { getActiveBusiness } from '@/modules/auth/utils/get-active-business'
+import { resolveProductImageUrl } from '@/modules/products/utils/resolve-product-image-url'
+import { SalesBusinessMark, SalesCustomerAvatar, SalesProductPhoto } from '@/modules/sales/components/SalesVisuals'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
 import { useInventoryCategoriesQuery } from '@/modules/inventory/hooks/use-inventory-query'
@@ -46,14 +50,14 @@ const boardColumns: Array<{
   {
     value: 'PREPARING',
     label: 'En preparación',
-    emptyTitle: 'Sin pedidos',
-    emptyDescription: 'Aquí se listarán los pedidos en preparación',
+    emptyTitle: 'Sin pedidos en preparación',
+    emptyDescription: 'Los pedidos nuevos aparecen en esta columna.',
   },
   {
     value: 'ON_ROUTE',
     label: 'Órdenes en reparto',
-    emptyTitle: 'Sin órdenes',
-    emptyDescription: 'Aquí se listarán las órdenes en reparto',
+    emptyTitle: 'Sin pedidos en reparto',
+    emptyDescription: 'Los pedidos aparecen aquí al enviarlos.',
   },
 ]
 
@@ -94,15 +98,6 @@ function normalizeOptionalText(value: string) {
 
 function normalizeDigits(value: string) {
   return value.replace(/\D/g, '')
-}
-
-function getProductInitials(product: Product) {
-  return product.name
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase() ?? '')
-    .join('')
 }
 
 function getPaymentLabel(method: SalePaymentMethod) {
@@ -192,6 +187,8 @@ function createDeliverySaleNotes(order: DeliveryOrder) {
 }
 
 export function DeliveriesPage() {
+  const user = useAuthSessionStore((state) => state.user)
+  const business = getActiveBusiness(user)
   const currentCashRegisterQuery = useCurrentCashRegisterQuery()
   const customersQuery = useCustomersQuery()
   const productsQuery = useProductsQuery()
@@ -220,6 +217,7 @@ export function DeliveriesPage() {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null)
 
   const products = useMemo(() => productsQuery.data ?? [], [productsQuery.data])
+  const productsById = useMemo(() => new Map(products.map((product) => [product.id, product])), [products])
   const customers = useMemo(() => customersQuery.data ?? [], [customersQuery.data])
   const categories = useMemo(
     () => categoriesQuery.data ?? [],
@@ -526,26 +524,31 @@ export function DeliveriesPage() {
     return (
       <article className={styles.deliveryCard} key={order.id}>
         <div className={styles.deliveryCardHeader}>
-          <span className={styles.orderAvatar}>C</span>
+          <SalesCustomerAvatar name={order.customerName || 'Domicilio'} />
           <div>
-            <strong>Origen: {getDeliverySourceLabel(order.source)}</strong>
-            <span>{getRelativeOrderTime(order)}</span>
+            <strong>{order.customerName || 'Sin cliente registrado'}</strong>
+            <span>{getDeliverySourceLabel(order.source)} · {getRelativeOrderTime(order)}</span>
           </div>
+          <strong className={styles.orderTotal}>{formatCurrency(orderTotal)}</strong>
         </div>
-
-        <strong className={styles.orderTotal}>{formatCurrency(orderTotal)}</strong>
+        {order.address ? <p className={styles.orderAddress}><MapPin aria-hidden="true" /> {order.address}</p> : null}
         <ul className={styles.itemSummary}>
           {order.items.slice(0, 3).map((item) => (
             <li key={item.id}>
-              {item.quantity} {item.productName}
+              <SalesProductPhoto src={resolveProductImageUrl(productsById.get(item.productId)?.imageUrls)} compact />
+              <span>{item.quantity} × {item.productName}</span>
             </li>
           ))}
         </ul>
         {order.items.length > 3 ? (
-          <button className={styles.inlineLink} type="button">
-            {order.items.length - 3} producto
-            {order.items.length - 3 === 1 ? '' : 's'} mas
-          </button>
+          <details className={styles.moreItems}>
+            <summary>{order.items.length - 3} {order.items.length === 4 ? 'producto más' : 'productos más'}</summary>
+            <ul className={styles.itemSummary}>
+              {order.items.slice(3).map((item) => (
+                <li key={item.id}>{item.quantity} × {item.productName}</li>
+              ))}
+            </ul>
+          </details>
         ) : null}
 
         <div className={styles.cardActions}>
@@ -712,7 +715,7 @@ export function DeliveriesPage() {
                         {quantity > 0 ? (
                           <span className={styles.productQuantityBadge}>{quantity}</span>
                         ) : null}
-                        <span className={styles.productVisual}>{getProductInitials(product)}</span>
+                        <SalesProductPhoto src={resolveProductImageUrl(product.imageUrls)} />
                         <strong>{formatCurrency(product.price)}</strong>
                         <span>{product.name}</span>
                       </button>
@@ -935,8 +938,14 @@ export function DeliveriesPage() {
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <h2>Domicilios</h2>
+      <header className={joinClassNames(styles.header, styles.dashboardHeader)}>
+        <div className={styles.deliveryBrand}>
+          <SalesBusinessMark logoUrl={business?.logoUrl ?? user?.logoUrl} />
+          <div>
+            <h1>Domicilios</h1>
+            <span>{business?.businessName ?? user?.businessName}</span>
+          </div>
+        </div>
         <AppButton
           size="lg"
           startIcon={<Plus aria-hidden="true" size={19} />}
@@ -955,7 +964,16 @@ export function DeliveriesPage() {
 
       <CatalogWebOrdersPanel />
 
-      <main className={styles.board}>
+      {deliveryOrdersQuery.isError ? (
+        <div className={styles.boardError} role="alert">
+          {getErrorMessage(deliveryOrdersQuery.error, 'No pudimos consultar los domicilios.')}
+          <AppButton size="sm" variant="secondary" onClick={() => void deliveryOrdersQuery.refetch()}>
+            Reintentar
+          </AppButton>
+        </div>
+      ) : null}
+
+      <main className={styles.board} aria-label="Domicilios activos" aria-busy={deliveryOrdersQuery.isLoading}>
         {boardColumns.map((column) => {
           const columnOrders = orders.filter((order) =>
             column.value === 'PREPARING'
@@ -964,18 +982,20 @@ export function DeliveriesPage() {
           )
 
           return (
-            <section className={styles.column} key={column.value}>
+            <section className={styles.column} data-phase={column.value} key={column.value}>
               <div className={styles.columnHeader}>
-                <h3>{column.label}</h3>
+                <h3>{column.value === 'PREPARING' ? <PackageCheck aria-hidden="true" /> : <Truck aria-hidden="true" />}{column.label}</h3>
                 <strong>{columnOrders.length}</strong>
               </div>
 
               <div className={styles.orderList}>
                 {columnOrders.length > 0 ? (
                   columnOrders.map((order) => renderOrderCard(order))
+                ) : deliveryOrdersQuery.isLoading || deliveryOrdersQuery.isError ? (
+                  <p className={styles.boardQueryState}>{deliveryOrdersQuery.isLoading ? 'Cargando pedidos…' : 'Pedidos no disponibles.'}</p>
                 ) : (
                   <div className={styles.emptyColumn}>
-                    <AppIcon name="deliveries" />
+                    {column.value === 'PREPARING' ? <PackageCheck aria-hidden="true" /> : <Truck aria-hidden="true" />}
                     <strong>{column.emptyTitle}</strong>
                     <span>{column.emptyDescription}</span>
                   </div>

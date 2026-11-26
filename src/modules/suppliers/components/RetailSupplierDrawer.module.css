@@ -34,3 +34,8 @@
   font-size: 0.9rem;
   font-weight: 700;
 }
+
+.formFooter.formFooter > button {
+  flex: 0 1 auto;
+  min-height: 2.55rem;
+}

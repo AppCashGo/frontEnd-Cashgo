@@ -2,6 +2,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   AlertTriangle,
+  ArrowUpRight,
   CheckCircle2,
   Layers3,
   Plus,
@@ -32,6 +33,8 @@ import {
   toExpenseDateInputValue,
 } from '@/modules/expenses/utils/format-expense'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
+import { WorkspaceBusinessTitle } from '@/shared/components/retail/WorkspaceBusinessTitle'
+import workspaceVisual from '@/shared/components/retail/WorkspaceVisual.module.css'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { routePaths } from '@/routes/route-paths'
 import styles from './ExpensesPage.module.css'
@@ -132,20 +135,17 @@ export function ExpensesPage() {
       toDate,
     ],
   )
-  const totalExpenses = visibleExpenses.reduce(
-    (sum, expense) => sum + expense.amount,
-    0,
-  )
   const totalPaid = visibleExpenses
     .filter((expense) => expense.status === 'PAID')
     .reduce((sum, expense) => sum + expense.amount, 0)
   const totalPending = visibleExpenses
     .filter((expense) => expense.status === 'PENDING')
     .reduce((sum, expense) => sum + expense.amount, 0)
+  const totalExpenses = totalPaid + totalPending
   const categoriesInView = new Set(
     visibleExpenses
-      .map((expense) => expense.category?.name ?? null)
-      .filter((categoryName): categoryName is string => Boolean(categoryName)),
+      .map((expense) => expense.categoryId)
+      .filter((categoryId): categoryId is string => Boolean(categoryId)),
   ).size
   const isSubmitting =
     createExpenseMutation.isPending ||
@@ -197,15 +197,15 @@ export function ExpensesPage() {
       return
     }
 
-    await deleteExpenseMutation.mutateAsync(expense.id)
-
-    if (selectedExpenseId === expense.id) {
-      setSelectedExpenseId(null)
-    }
+    deleteExpenseMutation.mutate(expense.id, {
+      onSuccess: () => {
+        setSelectedExpenseId((current) => current === expense.id ? null : current)
+      },
+    })
   }
 
-  async function handleMarkExpensePaid(expense: Expense) {
-    await updateExpenseMutation.mutateAsync({
+  function handleMarkExpensePaid(expense: Expense) {
+    updateExpenseMutation.mutate({
       expenseId: expense.id,
       input: {
         concept: expense.concept,
@@ -247,9 +247,9 @@ export function ExpensesPage() {
     <>
       {confirmationDialog}
       <div className={styles.page}>
-        <section className={styles.hero}>
+        <section className={`${styles.hero} ${workspaceVisual.hero} ${workspaceVisual.catalogHeader}`}>
           <div className={styles.heroCopy}>
-            <h1 className={styles.title}>Gastos</h1>
+            <h1 className={styles.title}><WorkspaceBusinessTitle>Gastos</WorkspaceBusinessTitle></h1>
             <p className={styles.description}>
               Controla y clasifica cada salida de dinero en una sola vista.
             </p>
@@ -257,7 +257,8 @@ export function ExpensesPage() {
 
           <div className={styles.heroActions}>
             <button
-              className={styles.secondaryButton}
+              className={`${styles.heroButton} ${workspaceVisual.catalogAction}`}
+              disabled={expensesQuery.isFetching || categoriesQuery.isFetching}
               type="button"
               onClick={() => void handleRefresh()}
             >
@@ -265,7 +266,7 @@ export function ExpensesPage() {
               Actualizar
             </button>
             <button
-              className={styles.primaryButton}
+              className={`${styles.heroButton} ${workspaceVisual.catalogAction} ${workspaceVisual.catalogPrimary}`}
               type="button"
               onClick={handleStartCreate}
             >
@@ -278,8 +279,8 @@ export function ExpensesPage() {
         <div className={styles.metricsGrid}>
           <article className={styles.metricCard}>
             <div className={styles.metricHeader}>
-              <span>Salida total (mes)</span>
-              <TrendingDown className={styles.metricIconDanger} size={34} />
+              <span>Gastos activos</span>
+              <span className={styles.metricIcon}><TrendingDown aria-hidden="true" /></span>
             </div>
             <strong className={styles.metricValue}>
               {formatExpenseCurrency(totalExpenses)}
@@ -287,15 +288,15 @@ export function ExpensesPage() {
             <p className={styles.metricHint}>Según los filtros seleccionados</p>
           </article>
 
-          <article className={styles.metricCard}>
+          <article className={styles.metricCard} data-tone="paid">
             <div className={styles.metricHeader}>
               <span>Pagados</span>
-              <CheckCircle2 className={styles.metricIconPaid} size={23} />
+              <span className={styles.metricIcon}><CheckCircle2 aria-hidden="true" /></span>
             </div>
             <strong className={styles.metricValueSmall}>
               {formatExpenseCurrency(totalPaid)}
             </strong>
-            <div className={styles.progressTrack}>
+            <div className={styles.progressTrack} aria-hidden="true">
               <span
                 className={styles.progressPaid}
                 style={{
@@ -305,15 +306,15 @@ export function ExpensesPage() {
             </div>
           </article>
 
-          <article className={styles.metricCard}>
+          <article className={styles.metricCard} data-tone="pending">
             <div className={styles.metricHeader}>
               <span>Pendientes</span>
-              <AlertTriangle className={styles.metricIconPending} size={23} />
+              <span className={styles.metricIcon}><AlertTriangle aria-hidden="true" /></span>
             </div>
             <strong className={styles.metricValueSmallDanger}>
               {formatExpenseCurrency(totalPending)}
             </strong>
-            <div className={styles.progressTrack}>
+            <div className={styles.progressTrack} aria-hidden="true">
               <span
                 className={styles.progressPending}
                 style={{
@@ -330,10 +331,13 @@ export function ExpensesPage() {
           >
             <div className={styles.metricHeader}>
               <span>Categorías en uso</span>
-              <Layers3 className={styles.metricIconCategories} size={24} />
+              <span className={styles.metricIcon}><Layers3 aria-hidden="true" /></span>
             </div>
             <strong className={styles.metricValue}>{categoriesInView}</strong>
-            <p className={styles.metricHint}>Administrar categorías</p>
+            <span className={styles.categoryLink}>
+              Administrar categorías
+              <ArrowUpRight aria-hidden="true" size={16} />
+            </span>
           </button>
         </div>
 
@@ -361,6 +365,12 @@ export function ExpensesPage() {
           </div>
         ) : null}
 
+        {!isExpenseDrawerOpen && (deleteExpenseMutation.error || updateExpenseMutation.error) ? (
+          <div className={styles.feedbackBanner} role="alert">
+            {getErrorMessage(deleteExpenseMutation.error ?? updateExpenseMutation.error, 'No se pudo actualizar el gasto.')}
+          </div>
+        ) : null}
+
         <ExpensesTable
           errorMessage={
             expensesQuery.isError
@@ -373,14 +383,12 @@ export function ExpensesPage() {
           expenses={visibleExpenses}
           isLoading={expensesQuery.isLoading}
           isRefreshing={expensesQuery.isFetching && !expensesQuery.isLoading}
+          isUpdating={updateExpenseMutation.isPending || deleteExpenseMutation.isPending}
           selectedExpenseId={selectedExpenseId}
           onDeleteExpense={(expense) => {
             void handleDeleteExpense(expense)
           }}
-          onManageCategories={() => setIsCategoriesDrawerOpen(true)}
-          onMarkPaid={(expense) => {
-            void handleMarkExpensePaid(expense)
-          }}
+          onMarkPaid={handleMarkExpensePaid}
           onRetry={() => {
             void expensesQuery.refetch()
           }}

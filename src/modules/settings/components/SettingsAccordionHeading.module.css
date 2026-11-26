@@ -13,8 +13,8 @@
   height: 2.55rem;
   flex: 0 0 auto;
   border-radius: var(--ui-radius-md);
-  background: var(--ui-primary-soft);
-  color: var(--ui-primary);
+  background: var(--settings-tint, var(--ui-primary-soft));
+  color: var(--settings-ink, var(--ui-primary));
 }
 
 .icon svg {
@@ -36,17 +36,8 @@
 }
 
 .copy small {
-  overflow: hidden;
   color: var(--ui-text-secondary);
   font-size: 0.76rem;
   font-weight: 600;
   line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 520px) {
-  .copy small {
-    white-space: normal;
-  }
 }

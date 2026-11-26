@@ -1,6 +1,6 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ReceiptText, Search, X } from "lucide-react";
+import { CalendarDays, Circle, CircleCheck, ReceiptText, Search, X } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { useForm } from "react-hook-form";
 import { CashRegisterRetailDrawer } from "@/modules/cash-register/components/CashRegisterRetailDrawer";
@@ -62,6 +62,7 @@ export function CreateBillingInvoiceDrawer({
   const copy = getBillingCopy(languageCode);
   const formId = "billing-create-invoice-form";
   const [searchValue, setSearchValue] = useState("");
+  const [selectedSnapshot, setSelectedSnapshot] = useState<BillingAvailableSale | null>(null);
   const deferredSearchValue = useDeferredValue(searchValue.trim());
   const availableSalesQuery = useAvailableBillingSalesQuery(
     deferredSearchValue,
@@ -83,7 +84,8 @@ export function CreateBillingInvoiceDrawer({
 
   const selectedSaleId = watch("saleId");
   const selectedSale =
-    availableSales.find((sale) => sale.id === selectedSaleId) ?? null;
+    availableSales.find((sale) => sale.id === selectedSaleId) ??
+    (selectedSnapshot?.id === selectedSaleId ? selectedSnapshot : null);
 
   async function submitInvoice(values: CreateBillingInvoiceFormValues) {
     try {
@@ -94,6 +96,7 @@ export function CreateBillingInvoiceDrawer({
       });
       reset(defaultValues);
       setSearchValue("");
+      setSelectedSnapshot(null);
     } catch (error) {
       setError("root", {
         message:
@@ -107,6 +110,7 @@ export function CreateBillingInvoiceDrawer({
   function handleClose() {
     reset(defaultValues);
     setSearchValue("");
+    setSelectedSnapshot(null);
     onClose();
   }
 
@@ -151,7 +155,7 @@ export function CreateBillingInvoiceDrawer({
           <label className={styles.field}>
             <span className={styles.fieldLabel}>{copy.createInvoiceSearch}</span>
             <div className={styles.searchInput}>
-              <Search />
+              <Search aria-hidden="true" />
               <input
                 placeholder={
                   languageCode === "en"
@@ -181,43 +185,21 @@ export function CreateBillingInvoiceDrawer({
             </SearchableSelect>
           </label>
 
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>{copy.createInvoiceNote}</span>
-            <textarea className={styles.textarea} rows={4} {...register("note")} />
+          <details className={styles.noteDisclosure} open={errors.note ? true : undefined}>
+            <summary>{copy.createInvoiceNote}</summary>
+            <textarea aria-label={copy.createInvoiceNote} className={styles.textarea} rows={3} {...register("note")} />
             {errors.note ? (
               <p className={styles.errorMessage}>{errors.note.message}</p>
             ) : null}
-          </label>
+          </details>
         </section>
 
         {selectedSale ? (
-          <section className={styles.section}>
-            <h4 className={styles.sectionTitle}>{copy.createInvoiceSelected}</h4>
-            <div className={styles.summaryGrid}>
-              <div className={styles.summaryCard}>
-                <p className={styles.summaryLabel}>{copy.columns.document}</p>
-                <p className={styles.summaryValue}>{selectedSale.saleNumber}</p>
-              </div>
-              <div className={styles.summaryCard}>
-                <p className={styles.summaryLabel}>{copy.availableSaleCustomer}</p>
-                <p className={styles.summaryValue}>
-                  {selectedSale.customerName ?? copy.noCustomer}
-                </p>
-              </div>
-              <div className={styles.summaryCard}>
-                <p className={styles.summaryLabel}>{copy.columns.total}</p>
-                <p className={styles.summaryValue}>
-                  {formatBillingCurrency(selectedSale.total, languageCode)}
-                </p>
-              </div>
-              <div className={styles.summaryCard}>
-                <p className={styles.summaryLabel}>{copy.availableSaleBalance}</p>
-                <p className={styles.summaryValue}>
-                  {formatBillingCurrency(selectedSale.balance, languageCode)}
-                </p>
-              </div>
-            </div>
-          </section>
+          <div className={styles.invoiceSelection}>
+            <CircleCheck aria-hidden="true" />
+            <span><small>{copy.createInvoiceSelected}</small><strong>{getSaleLabel(selectedSale)}</strong></span>
+            <strong>{formatBillingCurrency(selectedSale.total, languageCode)}</strong>
+          </div>
         ) : null}
 
         <section className={styles.section}>
@@ -229,6 +211,13 @@ export function CreateBillingInvoiceDrawer({
                 {languageCode === "en" ? "Loading sales..." : "Cargando ventas..."}
               </p>
             </div>
+          ) : availableSalesQuery.isError ? (
+            <div className={styles.availableSalesError} role="alert">
+              <span>{languageCode === "en" ? "We could not load sales." : "No pudimos consultar las ventas."}</span>
+              <AppButton size="sm" type="button" variant="secondary" onClick={() => void availableSalesQuery.refetch()}>
+                {languageCode === "en" ? "Retry" : "Reintentar"}
+              </AppButton>
+            </div>
           ) : availableSales.length > 0 ? (
             <div className={styles.list}>
               {availableSales.map((sale) => {
@@ -236,17 +225,19 @@ export function CreateBillingInvoiceDrawer({
 
                 return (
                   <button
+                    aria-pressed={isSelected}
                     key={sale.id}
                     className={`${styles.optionCard} ${
                       isSelected ? styles.optionCardSelected : ""
                     }`}
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
+                      setSelectedSnapshot(sale);
                       setValue("saleId", sale.id, {
                         shouldDirty: true,
                         shouldValidate: true,
-                      })
-                    }
+                      });
+                    }}
                   >
                     <div className={styles.optionHeader}>
                       <div>
@@ -257,11 +248,11 @@ export function CreateBillingInvoiceDrawer({
                           {formatBillingCurrency(sale.total, languageCode)}
                         </p>
                       </div>
-                      <input readOnly checked={isSelected} type="radio" />
+                      {isSelected ? <CircleCheck aria-hidden="true" /> : <Circle aria-hidden="true" />}
                     </div>
                     <div className={styles.optionMeta}>
                       <span>
-                        {copy.availableSaleDate}:{" "}
+                        <CalendarDays aria-hidden="true" />
                         {formatBillingDateTime(sale.createdAt, languageCode)}
                       </span>
                       <span>

@@ -4,38 +4,11 @@
   padding: 0;
 }
 
-.header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #d9deea;
-}
-
-.eyebrow {
-  margin: 0 0 0.35rem;
-  color: #667086;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.title {
-  color: #1d2237;
-  font-size: 0.88rem;
+.count {
   margin: 0;
-}
-
-.countPill {
-  border-radius: 999px;
-  background: #eef2ff;
-  color: #495ccc;
-  font-size: 0.68rem;
-  font-weight: 800;
-  padding: 0.45rem 0.75rem;
-  white-space: nowrap;
+  color: #52637b;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .list {
@@ -58,9 +31,23 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 1rem;
   padding: 1rem 1.15rem;
   border-bottom: 1px solid #e2e7f0;
+  background: linear-gradient(100deg, #f3f7ff, #fff);
+}
+
+.cardOperator {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.cardOperator > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .cardTitle {
@@ -71,18 +58,36 @@
 }
 
 .cardDate {
-  color: #78809a;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #52637b;
+  font-size: 0.82rem;
   margin: 0.25rem 0 0;
 }
 
 .differencePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   border-radius: 999px;
   background: #edf2ff;
   color: #4658a5;
   font-size: 0.76rem;
   font-weight: 800;
   padding: 0.45rem 0.75rem;
-  white-space: nowrap;
+}
+
+.cardDate svg,
+.differencePill svg {
+  flex: 0 0 auto;
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.differencePillMatched {
+  background: #e1f6eb;
+  color: #19694e;
 }
 
 .differencePillAlert {
@@ -145,11 +150,11 @@
   gap: 0.5rem;
   align-content: center;
   justify-items: center;
-  min-height: 12rem;
+  min-height: 8.5rem;
   padding: 1.5rem 1.25rem;
   border: 1px solid #d7deea;
   border-radius: 0.8rem;
-  background: #fff;
+  background: #f7f9fd;
   text-align: center;
 }
 
