@@ -347,3 +347,8 @@
     min-height: 2.75rem;
   }
 }
+
+.retailDeleteButton {
+  margin-inline-start: 0.45rem;
+  color: #a62f24;
+}

@@ -37,6 +37,7 @@ export type Employee = {
   name: string;
   role: AppUserRole;
   activationStatus: EmployeeActivationStatus;
+  canRemove: boolean;
   canInviteAccess: boolean;
   invitationEmailSent?: boolean;
   recommendedPresetId: string;

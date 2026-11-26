@@ -1408,8 +1408,11 @@ export const appDictionary = {
         },
         movements: {
           label: "Movimientos",
-          description:
-            "Caja diaria, arqueo operativo y control de transacciones en efectivo.",
+          description: "Historial de transacciones del negocio.",
+        },
+        "cash-register": {
+          label: "Caja",
+          description: "Turnos, saldos por medio de pago y cierres.",
         },
         expenses: {
           label: "Gastos",
@@ -1682,8 +1685,11 @@ export const appDictionary = {
         },
         movements: {
           label: "Movements",
-          description:
-            "Daily cash control, reconciliation and operational money tracking.",
+          description: "Business transaction history.",
+        },
+        "cash-register": {
+          label: "Cash register",
+          description: "Shifts, payment balances and cash closures.",
         },
         expenses: {
           label: "Expenses",

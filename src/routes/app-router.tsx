@@ -230,7 +230,16 @@ export const appRouter = createBrowserRouter([
               routeSegments.movements,
               <CashRegisterPage />,
               "Cargando movimientos",
-              "Preparando la caja diaria y el flujo de arqueo.",
+              "Preparando el historial de transacciones.",
+            ),
+          },
+          {
+            path: routeSegments.cashRegister,
+            element: withModuleRouteSuspense(
+              routeSegments.cashRegister,
+              <CashRegisterPage view="cash-register" />,
+              "Cargando caja",
+              "Preparando el turno y el historial de cierres.",
             ),
           },
           {

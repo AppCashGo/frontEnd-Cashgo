@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
-import { getJson, postJson, putJson } from "@/shared/services/api-client";
+import type { Employee } from "@/modules/employees/types/employee";
+import { deleteJson, getJson, postJson, putJson } from "@/shared/services/api-client";
 import { getAuthAccessToken } from "@/shared/services/auth-session";
 
 export const planModules = {
@@ -95,5 +96,19 @@ export function createPlatformBusiness(input: CreatePlatformBusiness) {
 export function renewOwnerInvitation(businessId: number) {
   return postJson<InvitationDelivery, Record<string, never>>(`/platform-admin/businesses/${businessId}/owner-invitation`, {}, {
     accessToken: getAuthAccessToken(),
+  });
+}
+
+export function listPlatformBusinessEmployees(businessId: number) {
+  return getJson<Pick<Employee, "id" | "name" | "email" | "role" | "canRemove">[]>(
+    `/platform-admin/businesses/${businessId}/employees`,
+    { accessToken: getAuthAccessToken() },
+  );
+}
+
+export function removePlatformBusinessEmployee(businessId: number, employeeId: string) {
+  return deleteJson<void>(`/platform-admin/businesses/${businessId}/employees/${employeeId}`, {
+    accessToken: getAuthAccessToken(),
+    suppressWriteErrorNotification: true,
   });
 }

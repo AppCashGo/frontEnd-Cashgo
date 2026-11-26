@@ -39,14 +39,7 @@
   color: #f2df00;
 }
 
-.cashRegisterMenu {
-  position: relative;
-  display: inline-flex;
-  min-width: 12.5rem;
-}
-
 .cashRegisterStatusButton {
-  width: 100%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -66,42 +59,6 @@
   width: 1.15rem;
   height: 1.15rem;
   color: #1f2a37;
-}
-
-.cashRegisterStatusButton span {
-  font-size: 1.1rem;
-  line-height: 1;
-}
-
-.cashRegisterMenuList {
-  position: absolute;
-  top: calc(100% + 0.45rem);
-  left: 0;
-  z-index: 20;
-  display: grid;
-  min-width: 100%;
-  overflow: hidden;
-  border: 1px solid #1f2a37;
-  border-radius: 1rem;
-  background: #ffffff;
-  box-shadow: 0 1rem 2rem rgba(15, 23, 42, 0.14);
-}
-
-.cashRegisterMenuItem {
-  min-height: 3.15rem;
-  padding: 0 1rem;
-  border: 0;
-  background: #ffffff;
-  color: #1f2a37;
-  font: inherit;
-  font-weight: 700;
-  text-align: left;
-  cursor: pointer;
-}
-
-.cashRegisterMenuItem:hover,
-.cashRegisterMenuItem:focus-visible {
-  background: #f3f6fa;
 }
 
 .headerActionDivider {
@@ -2608,8 +2565,7 @@
 }
 
 .cashRegisterStatusButton {
-  min-width: 11rem;
-  border: 1px solid rgba(15, 23, 42, 0.86);
+  border: 1px solid var(--ui-border);
   background: #ffffff;
   color: var(--sales-tertiary, #0f172a);
   box-shadow: 0 0.75rem 1.5rem rgba(15, 23, 42, 0.06);
@@ -2620,28 +2576,6 @@
   border-color: var(--sales-primary, #2563eb);
   color: var(--sales-primary, #2563eb);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
-}
-
-.cashRegisterMenuList {
-  top: calc(100% + 0.45rem);
-  min-width: 13rem;
-  overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.42);
-  border-radius: 1rem;
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 1.35rem 2.7rem rgba(15, 23, 42, 0.18);
-}
-
-.cashRegisterMenuItem {
-  min-height: 3rem;
-  color: #334155;
-  font-size: 0.92rem;
-  font-weight: 700;
-}
-
-.cashRegisterMenuItem:hover {
-  background: #eef5ff;
-  color: var(--sales-primary, #2563eb);
 }
 
 .headerActionDivider {

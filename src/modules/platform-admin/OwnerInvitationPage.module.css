@@ -1,0 +1,261 @@
+.page {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 3rem);
+  background:
+    radial-gradient(ellipse at 50% 0%, #e1edff 0%, transparent 65%),
+    #f4f7fc;
+  color: #17243b;
+}
+
+.layout {
+  width: min(100%, 34rem);
+  min-width: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.brand {
+  justify-self: center;
+}
+
+.card {
+  --invitation-accent: #2057ab;
+  --invitation-tint: #eaf1ff;
+  --invitation-border: #ccddf6;
+  --invitation-wash: #f1f6ff;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid #dbe4f2;
+  border-radius: 1.35rem;
+  background: #fff;
+  box-shadow: 0 1.3rem 3.5rem rgba(36, 61, 103, 0.12);
+}
+
+.card[data-tone="success"] {
+  --invitation-accent: #08754e;
+  --invitation-tint: #dff5e9;
+  --invitation-border: #b7e7cf;
+  --invitation-wash: #edf9f3;
+}
+
+.card[data-tone="error"] {
+  --invitation-accent: #a03d22;
+  --invitation-tint: #fbece5;
+  --invitation-border: #f3d0c2;
+  --invitation-wash: #fff6f1;
+}
+
+.hero {
+  display: grid;
+  justify-items: center;
+  gap: 0.65rem;
+  padding: clamp(1.5rem, 5vw, 2.6rem) clamp(1rem, 5vw, 2rem) 1.5rem;
+  border-bottom: 1px solid #e7edf6;
+  background: linear-gradient(155deg, var(--invitation-wash), #fff 92%);
+  text-align: center;
+}
+
+.heroIcon {
+  width: 4.15rem;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  margin-bottom: 0.35rem;
+  border: 1px solid var(--invitation-border);
+  border-radius: 1.25rem;
+  background: var(--invitation-tint);
+  color: var(--invitation-accent);
+}
+
+.heroIcon svg {
+  width: 1.95rem;
+  height: 1.95rem;
+  stroke-width: 2.2;
+}
+
+.hero h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.hero h1:focus { outline: none; }
+
+.hero p,
+.hint,
+.fieldHint {
+  color: #54627a;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.hero p { max-width: 39ch; }
+
+.content {
+  display: grid;
+  gap: 1rem;
+  padding: clamp(1rem, 4.5vw, 1.65rem);
+}
+
+.business {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid #dce6f4;
+  border-radius: 0.9rem;
+  background: #f7f9fd;
+}
+
+.businessIcon {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.66rem;
+  background: #e8effb;
+  color: #235592;
+}
+
+.businessIcon svg,
+.primaryLink svg,
+.secondaryLink svg {
+  width: 1.12rem;
+  height: 1.12rem;
+  flex-shrink: 0;
+}
+
+.businessIdentity {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.businessIdentity strong { font-size: 1rem; }
+.businessIdentity span { color: #54627a; font-size: 0.82rem; }
+
+.role {
+  width: fit-content;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--invitation-border);
+  border-radius: 100vmax;
+  background: var(--invitation-tint);
+  color: var(--invitation-accent);
+  font-size: 0.73rem;
+  font-weight: 750;
+}
+
+.primaryLink,
+.secondaryLink {
+  display: flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  border: 1px solid transparent;
+  border-radius: 0.72rem;
+  padding: 0.65rem 0.9rem;
+  text-align: center;
+  text-decoration: none;
+  font-weight: 750;
+}
+
+.primaryLink { background: #205bac; color: #fff; }
+.primaryLink:hover { background: #184a90; color: #fff; }
+.secondaryLink { border-color: #d3def0; background: #f7faff; color: #204e90; }
+.secondaryLink:hover { background: #eaf2ff; }
+
+.hint { text-align: center; }
+
+.form,
+.fields {
+  display: grid;
+  min-width: 0;
+}
+
+.form { gap: 1rem; }
+
+.fields {
+  gap: 0.42rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.fields label { font-size: 0.9rem; font-weight: 750; }
+.fields label:not(:first-child) { margin-top: 0.5rem; }
+
+.fields input {
+  width: 100%;
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0.65rem 0.8rem;
+  border: 1px solid #cbd7e9;
+  border-radius: 0.68rem;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+}
+
+.fields input:disabled { background: #f4f6fa; }
+.passwordField { position: relative; min-width: 0; }
+.passwordField input { padding-inline-end: 3.1rem; }
+
+.passwordField button {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: grid;
+  width: 2.8rem;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0.68rem;
+  background: transparent;
+  color: #435978;
+  cursor: pointer;
+}
+
+.passwordField button:hover { background: #edf3fd; }
+.passwordField button svg { width: 1.15rem; height: 1.15rem; }
+.fieldHint { font-size: 0.8rem; }
+
+.fields input:focus-visible,
+.passwordField button:focus-visible,
+.primaryLink:focus-visible,
+.secondaryLink:focus-visible {
+  outline: 2px solid #205bac;
+  outline-offset: 2px;
+}
+
+.error {
+  margin: 0;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #f2ccc6;
+  border-radius: 0.7rem;
+  background: #fff1ee;
+  color: #8d2e22;
+  font-size: 0.87rem;
+}
+
+.spinner { animation: invitation-spin 950ms linear infinite; }
+
+@keyframes invitation-spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 400px) {
+  .business { grid-template-columns: auto minmax(0, 1fr); }
+  .role { grid-column: 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+}

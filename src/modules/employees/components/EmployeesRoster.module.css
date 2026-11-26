@@ -159,7 +159,6 @@
   border-radius: 1.15rem;
   background: rgba(255, 255, 255, 0.92);
   text-align: left;
-  cursor: pointer;
   transition:
     transform 160ms ease,
     border-color 160ms ease,
@@ -274,4 +273,17 @@
   .actionsCell {
     justify-items: end;
   }
+}
+
+.employeeNameButton {
+  justify-self: start;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--color-ink);
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  text-decoration: underline;
+  cursor: pointer;
 }

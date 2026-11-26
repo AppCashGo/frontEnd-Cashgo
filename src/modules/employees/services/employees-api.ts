@@ -61,6 +61,7 @@ export function uploadEmployeeAvatar(employeeId: string, file: File) {
 export function deleteEmployee(employeeId: string) {
   return deleteJson<void>(`/employees/${employeeId}`, {
     accessToken: getAuthAccessToken(),
+    suppressWriteErrorNotification: true,
   });
 }
 

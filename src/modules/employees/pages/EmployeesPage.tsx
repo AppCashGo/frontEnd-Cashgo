@@ -1,6 +1,6 @@
 import { useToast } from "@/shared/hooks/use-toast"
 import { useDeferredValue, useEffect, useState } from 'react'
-import { CheckCircle, Pencil } from 'lucide-react'
+import { CheckCircle, Pencil, Trash2 } from 'lucide-react'
 import { EmployeeFormDrawer } from '@/modules/employees/components/EmployeeFormDrawer'
 import { EmployeesRoster } from '@/modules/employees/components/EmployeesRoster'
 import { RetailEmployeeDrawer } from '@/modules/employees/components/RetailEmployeeDrawer'
@@ -199,10 +199,16 @@ export function EmployeesPage() {
     }
   }
 
+  function canRemoveEmployee(employee: Employee) {
+    return employee.canRemove && String(employee.id) !== String(currentUser?.id)
+  }
+
   async function handleDeleteEmployee(employee: Employee) {
+    if (!canRemoveEmployee(employee) || deleteEmployeeMutation.isPending) return
+
     const confirmed = await confirm({
       title: 'Eliminar empleado',
-      description: `¿Quieres eliminar a ${employee.name} de este negocio? Esta acción revocará su acceso al equipo.`,
+      description: `¿Quieres eliminar a ${employee.name} de este negocio? Se revocará su acceso a este equipo y se conservará su historial.`,
       confirmLabel: 'Eliminar',
       tone: 'danger',
     })
@@ -211,10 +217,15 @@ export function EmployeesPage() {
       return
     }
 
-    await deleteEmployeeMutation.mutateAsync(employee.id)
-
-    if (selectedEmployeeId === employee.id) {
-      setSelectedEmployeeId(null)
+    try {
+      await deleteEmployeeMutation.mutateAsync(employee.id)
+      toast.showSuccess('Se retiró el acceso del empleado.')
+      if (selectedEmployeeId === employee.id) {
+        setSelectedEmployeeId(null)
+        setRetailEmployeeDrawerOpen(false)
+      }
+    } catch (error) {
+      toast.showError(error, 'No se pudo eliminar al empleado.')
     }
   }
 
@@ -379,6 +390,18 @@ export function EmployeesPage() {
                                   <span aria-hidden="true">›</span>
                                 </button>
                               ) : null}
+                              {canRemoveEmployee(employee) ? (
+                                <button
+                                  aria-label={`Eliminar a ${employee.name}`}
+                                  className={`${styles.retailEditButton} ${styles.retailDeleteButton}`}
+                                  disabled={deleteEmployeeMutation.isPending}
+                                  type="button"
+                                  onClick={() => void handleDeleteEmployee(employee)}
+                                >
+                                  <Trash2 aria-hidden="true" />
+                                  Eliminar
+                                </button>
+                              ) : null}
                             </td>
                           </tr>
                         )
@@ -482,6 +505,8 @@ export function EmployeesPage() {
         <div className={styles.workspace}>
           <EmployeesRoster
             activeEmployeeId={selectedEmployeeId}
+            canRemoveEmployee={canRemoveEmployee}
+            isRemoving={deleteEmployeeMutation.isPending}
             employees={visibleEmployees}
             errorMessage={
               employeesQuery.isError
@@ -511,7 +536,7 @@ export function EmployeesPage() {
           <div className={styles.drawerColumn}>
             <EmployeeFormDrawer
               employee={selectedEmployee}
-                  isSubmitting={isSubmitting}
+              isSubmitting={isSubmitting}
               presets={presets}
               roles={roles}
               onStartCreate={startCreateEmployee}

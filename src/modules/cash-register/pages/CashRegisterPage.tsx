@@ -5,8 +5,8 @@ import {
   ArrowRight,
   BarChart3,
   Calendar,
-  ChevronDown,
-  ChevronUp,
+  History,
+  LockKeyhole,
   CircleDollarSign,
   CreditCard,
   Download,
@@ -61,9 +61,13 @@ import type {
 import {
   formatCashRegisterCurrency,
   formatCashRegisterDate,
+  formatCashRegisterDateTime,
   getPaymentMethodLabel,
 } from "@/modules/cash-register/utils/format-cash-register";
 import { useCustomersQuery } from "@/modules/customers/hooks/use-customers-query";
+import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
+import { getActiveBusinessRole } from "@/modules/auth/utils/get-active-business";
+import { isTeamManagementRole } from "@/shared/constants/user-roles";
 import { useEmployeesQuery } from "@/modules/employees/hooks/use-employees-query";
 import { useCreateExpenseMutation } from "@/modules/expenses/hooks/use-expenses-query";
 import { SalesHistoryDrawer } from "@/modules/sales/components/SalesHistoryDrawer";
@@ -95,7 +99,6 @@ import { joinClassNames } from "@/shared/utils/join-class-names";
 import { routePaths } from "@/routes/route-paths";
 import styles from "./CashRegisterRetailPage.module.css";
 
-type CashRegisterTab = "transactions" | "closures";
 type LedgerTab =
   | "income"
   | "expenses"
@@ -715,18 +718,26 @@ function ReportsDrawer({
   );
 }
 
-export function CashRegisterPage() {
+export function CashRegisterPage({
+  view = "movements",
+}: {
+  view?: "movements" | "cash-register";
+}) {
+  const isCashRegister = view === "cash-register";
+  const role = useAuthSessionStore((state) => getActiveBusinessRole(state.user));
+  const canAssignShift = isTeamManagementRole(role);
+  const canManageShift = canAssignShift || role === "CASHIER";
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<CashRegisterTab>("transactions");
-  const [activeLedgerTab, setActiveLedgerTab] = useState<LedgerTab>("income");
+  const activeLedgerTab =
+    ledgerTabs.find((tab) => tab.id === searchParams.get("tab"))?.id ?? "income";
   const [periodOption, setPeriodOption] = useState<PeriodOption>("daily");
   const [selectedDate, setSelectedDate] = useState(() => toDateInputValue(new Date()));
   const [searchValue, setSearchValue] = useState("");
   const [isSessionDrawerOpen, setSessionDrawerOpen] = useState(false);
   const [sessionDrawerMode, setSessionDrawerMode] =
     useState<CashRegisterDrawerMode>("manage");
-  const [isCashRegisterMenuOpen, setCashRegisterMenuOpen] = useState(false);
+  const [closureReportError, setClosureReportError] = useState<string | null>(null);
   const [isFilterDrawerOpen, setFilterDrawerOpen] = useState(false);
   const [selectionDrawerType, setSelectionDrawerType] =
     useState<SelectionDrawerType | null>(null);
@@ -748,18 +759,21 @@ export function CashRegisterPage() {
   const selectedType = getServerType(activeLedgerTab);
   const currentSessionQuery = useCurrentCashRegisterQuery();
   const historyQuery = useCashRegisterHistoryQuery();
-  const assigneesQuery = useCashRegisterAssigneesQuery();
+  const assigneesQuery = useCashRegisterAssigneesQuery(isCashRegister && canAssignShift);
   const employeesQuery = useEmployeesQuery();
   const customersQuery = useCustomersQuery();
   const suppliersQuery = useSuppliersQuery();
   const businessSettingsQuery = useBusinessSettingsQuery();
   const salesQuery = useSalesQuery();
-  const movementsOverviewQuery = useMovementsOverviewQuery({
-    from: dateRange.from,
-    to: dateRange.to,
-    search: deferredSearchValue || undefined,
-    type: selectedType,
-  });
+  const movementsOverviewQuery = useMovementsOverviewQuery(
+    {
+      from: dateRange.from,
+      to: dateRange.to,
+      search: deferredSearchValue || undefined,
+      type: selectedType,
+    },
+    !isCashRegister,
+  );
   const openMutation = useOpenCashRegisterMutation();
   const closeMutation = useCloseCashRegisterMutation();
   const manualEntryMutation = useCreateCashRegisterManualEntryMutation();
@@ -1022,15 +1036,12 @@ export function CashRegisterPage() {
     createSaleMutation.isPending;
   const isLoading =
     currentSessionQuery.isLoading ||
-    assigneesQuery.isLoading ||
     movementsOverviewQuery.isLoading;
   const hasError =
     currentSessionQuery.isError ||
-    assigneesQuery.isError ||
     movementsOverviewQuery.isError;
   const error =
     currentSessionQuery.error ??
-    assigneesQuery.error ??
     movementsOverviewQuery.error;
   const hasClosuresError = historyQuery.isError;
   const closuresError = historyQuery.error;
@@ -1059,44 +1070,56 @@ export function CashRegisterPage() {
       return;
     }
 
-    setSessionDrawerMode("manage");
-    setSessionDrawerOpen(true);
+    if (!isCashRegister) {
+      navigate(`${routePaths.cashRegister}?session=open`, { replace: true });
+      return;
+    }
+
+    if (canManageShift) {
+      setSessionDrawerMode("manage");
+      setSessionDrawerOpen(true);
+    }
 
     const nextSearchParams = new URLSearchParams(searchParams);
     nextSearchParams.delete("session");
     setSearchParams(nextSearchParams, { replace: true });
-  }, [searchParams, setSearchParams]);
-
-  useEffect(() => {
-    if (!currentSession) {
-      setCashRegisterMenuOpen(false);
-    }
-  }, [currentSession]);
+  }, [canManageShift, isCashRegister, navigate, searchParams, setSearchParams]);
 
   function openSessionDrawer(mode: CashRegisterDrawerMode) {
     setSessionDrawerMode(mode);
     setSessionDrawerOpen(true);
-    setCashRegisterMenuOpen(false);
   }
 
   async function handleRefresh() {
     await Promise.allSettled([
       currentSessionQuery.refetch(),
       historyQuery.refetch(),
-      assigneesQuery.refetch(),
-      movementsOverviewQuery.refetch(),
+      ...(isCashRegister ? [] : [movementsOverviewQuery.refetch()]),
       reserveSummaryQuery.refetch(),
     ]);
   }
 
   async function handleOpen(input: OpenCashRegisterInput) {
     await openMutation.mutateAsync(input);
-    setActiveTab("transactions");
   }
 
   async function handleClose(input: CloseCashRegisterInput) {
     await closeMutation.mutateAsync(input);
-    setActiveTab("closures");
+    setPeriodOption("daily");
+    setSelectedDate(toDateInputValue(new Date()));
+  }
+
+  async function downloadClosures() {
+    setClosureReportError(null);
+    try {
+      await handleDownloadReport({
+        view: "closures",
+        from: new Date(`${dateRange.from}T00:00:00.000`).toISOString(),
+        to: new Date(`${dateRange.to}T23:59:59.999`).toISOString(),
+      });
+    } catch (error) {
+      setClosureReportError(getErrorMessage(error, "No pudimos descargar el reporte de cierres."));
+    }
   }
 
   async function handleDownloadReport(input: CashRegisterReportDownloadInput) {
@@ -1190,97 +1213,75 @@ export function CashRegisterPage() {
         bodyVariant="flush"
         className={styles.page}
         headerClassName={styles.topBar}
-        title="Movimientos"
+        title={isCashRegister ? "Caja" : "Movimientos"}
         actions={
-          <>
-          {currentSession ? (
-            <div className={styles.cashRegisterMenu}>
-              <button
-                aria-expanded={isCashRegisterMenuOpen}
-                className={joinClassNames(
-                  styles.cashButton,
-                  styles.cashButtonOpen,
-                  styles.cashRegisterToggle,
-                )}
-                type="button"
-                onClick={() => setCashRegisterMenuOpen((isOpen) => !isOpen)}
-              >
-                <Store />
-                Caja abierta
-                {isCashRegisterMenuOpen ? <ChevronUp /> : <ChevronDown />}
-              </button>
-
-              {isCashRegisterMenuOpen ? (
-                <div className={styles.cashRegisterMenuList} role="menu">
-                  <button
-                    className={styles.cashRegisterMenuItem}
-                    role="menuitem"
-                    type="button"
-                    onClick={() => openSessionDrawer("manage")}
-                  >
-                    Gestionar caja
-                  </button>
-                  <button
-                    className={styles.cashRegisterMenuItem}
-                    role="menuitem"
-                    type="button"
-                    onClick={() => openSessionDrawer("close")}
-                  >
-                    Cerrar caja
-                  </button>
-                  <button
-                    className={styles.cashRegisterMenuItem}
-                    role="menuitem"
-                    type="button"
-                    onClick={() => openSessionDrawer("summary")}
-                  >
-                    Ver Resumen de Caja
-                  </button>
-                </div>
-              ) : null}
-            </div>
-          ) : (
+          !isCashRegister ? (
             <button
-              className={styles.cashButton}
+              className={styles.topReportButton}
               type="button"
-              onClick={() => openSessionDrawer("manage")}
+              onClick={openReportsDrawer}
             >
-              <Store />
-              Abrir caja
+              <Download aria-hidden="true" />
+              Descargar reporte
             </button>
-          )}
-
-          <button
-            className={styles.topReportButton}
-            type="button"
-            onClick={openReportsDrawer}
-          >
-            <Download />
-            Descargar reporte
-          </button>
-          </>
+          ) : undefined
         }
       >
 
       <section className={styles.workspace}>
-        <div className={styles.segmentedTabs}>
-          <button
-            className={activeTab === "transactions" ? styles.segmentActive : styles.segment}
-            type="button"
-            onClick={() => setActiveTab("transactions")}
-          >
-            Transacciones
-          </button>
-          <button
-            className={activeTab === "closures" ? styles.segmentActive : styles.segment}
-            type="button"
-            onClick={() => setActiveTab("closures")}
-          >
-            Cierres de caja
-          </button>
-        </div>
-
-        {activeTab === "transactions" ? (
+        {isCashRegister ? (
+          <section className={styles.shiftCard} aria-labelledby="cash-shift-title">
+            <div className={styles.shiftHeader}>
+              <span className={styles.shiftIcon}><Store aria-hidden="true" /></span>
+              <div>
+                <h2 id="cash-shift-title">Turno de caja</h2>
+                {currentSessionQuery.isError ? (
+                  <p role="alert">No pudimos consultar el turno actual.</p>
+                ) : currentSessionQuery.isLoading ? (
+                  <p>Consultando estado de caja…</p>
+                ) : currentSession ? (
+                  <p>Abierta desde {formatCashRegisterDateTime(currentSession.openedAt)}
+                    {currentSession.responsibleUserName ? ` · ${currentSession.responsibleUserName}` : ""}
+                  </p>
+                ) : (
+                  <p>No hay un turno abierto.</p>
+                )}
+              </div>
+              {currentSessionQuery.isError ? (
+                <button className={styles.topReportButton} type="button" onClick={() => void currentSessionQuery.refetch()}>
+                  Reintentar
+                </button>
+              ) : !currentSessionQuery.isLoading && canManageShift ? (
+                <div className={styles.shiftActions}>
+                  <button className={styles.cashButton} type="button" onClick={() => openSessionDrawer("manage")}>
+                    <Store aria-hidden="true" />
+                    {currentSession ? "Gestionar caja" : "Abrir caja"}
+                  </button>
+                  {currentSession ? (
+                    <button className={styles.topReportButton} type="button" onClick={() => openSessionDrawer("close")}>
+                      <LockKeyhole aria-hidden="true" /> Cerrar caja
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+            {currentSession ? (
+              <>
+                <dl className={styles.shiftBalances}>
+                  {currentSession.paymentMethods.map((method) => (
+                    <div key={method.method}>
+                      <dt>{getPaymentMethodLabel(method.method)}</dt>
+                      <dd>{formatCashRegisterCurrency(method.expectedAmount)}</dd>
+                    </div>
+                  ))}
+                </dl>
+                <button className={styles.topReportButton} type="button" onClick={() => openSessionDrawer("summary")}>
+                  <BarChart3 aria-hidden="true" /> Ver resumen del turno
+                </button>
+              </>
+            ) : null}
+          </section>
+        ) : (
           <div className={styles.summaryGrid}>
             <SummaryCard
               label="Balance"
@@ -1298,15 +1299,32 @@ export function CashRegisterPage() {
               value={formatCashRegisterCurrency(movementsOverview?.expensesTotal ?? 0)}
             />
           </div>
+        )}
+
+        {isCashRegister ? (
+          <div className={styles.closureHeader}>
+            <h2><History aria-hidden="true" /> Cierres de caja</h2>
+            <button
+              className={styles.topReportButton}
+              disabled={downloadReportMutation.isPending}
+              type="button"
+              onClick={() => void downloadClosures()}
+            >
+              <Download aria-hidden="true" />
+              {downloadReportMutation.isPending ? "Descargando…" : "Descargar cierres"}
+            </button>
+          </div>
         ) : null}
+        {isCashRegister && closureReportError ? <p role="alert">{closureReportError}</p> : null}
 
         <div
           className={joinClassNames(
             styles.filtersBar,
-            activeTab === "closures" && styles.filtersBarClosures,
+            isCashRegister && styles.filtersBarClosures,
+            !isCashRegister && activeLedgerTab === "transfers" && styles.filtersBarWithoutButton,
           )}
         >
-          {activeTab === "transactions" && activeLedgerTab !== "transfers" ? (
+          {!isCashRegister && activeLedgerTab !== "transfers" ? (
             <button
               className={styles.filterButton}
               type="button"
@@ -1320,21 +1338,20 @@ export function CashRegisterPage() {
             </button>
           ) : null}
 
-          <label className={styles.selectShell}>
-            <SearchableSelect
-              aria-label="Periodo"
-              value={periodOption}
-              onChange={(event) => setPeriodOption(event.target.value as PeriodOption)}
-            >
-              <option value="daily">Diario</option>
-              <option value="weekly">Semanal</option>
-              <option value="monthly">Mensual</option>
-            </SearchableSelect>
-          </label>
+          <SearchableSelect
+            aria-label="Periodo"
+            className={styles.periodSelect}
+            value={periodOption}
+            onChange={(event) => setPeriodOption(event.target.value as PeriodOption)}
+          >
+            <option value="daily">Diario</option>
+            <option value="weekly">Semanal</option>
+            <option value="monthly">Mensual</option>
+          </SearchableSelect>
 
           <label className={styles.dateShell}>
             <input
-              aria-label={formatPeriodLabel(dateRange.from, dateRange.to, periodOption)}
+              aria-label={`Fecha del periodo: ${formatPeriodLabel(dateRange.from, dateRange.to, periodOption)}`}
               type="date"
               value={selectedDate}
               onChange={(event) => setSelectedDate(event.target.value)}
@@ -1342,7 +1359,7 @@ export function CashRegisterPage() {
             <Calendar />
           </label>
 
-          {activeTab === "transactions" ? (
+          {!isCashRegister ? (
             <label className={styles.searchShell}>
               <Search />
               <input
@@ -1356,15 +1373,16 @@ export function CashRegisterPage() {
           ) : null}
         </div>
 
-        {activeTab === "transactions" ? (
+        {!isCashRegister ? (
           <section className={styles.ledgerCard}>
             <div className={styles.ledgerTabs}>
               {ledgerTabs.map((tab) => (
                 <button
                   className={activeLedgerTab === tab.id ? styles.ledgerTabActive : styles.ledgerTab}
                   key={tab.id}
+                  aria-pressed={activeLedgerTab === tab.id}
                   type="button"
-                  onClick={() => setActiveLedgerTab(tab.id)}
+                  onClick={() => setSearchParams({ tab: tab.id }, { replace: true })}
                 >
                   {tab.label}
                 </button>
@@ -1522,9 +1540,8 @@ export function CashRegisterPage() {
           await reserveAdjustmentMutation.mutateAsync(input);
         }}
         onViewTransferHistory={() => {
-          setActiveTab("transactions");
-          setActiveLedgerTab("transfers");
           setSessionDrawerOpen(false);
+          navigate(`${routePaths.movements}?tab=transfers`);
         }}
       />
 

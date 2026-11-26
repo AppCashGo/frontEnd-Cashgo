@@ -95,22 +95,27 @@ export function useCashRegisterHistoryQuery() {
   });
 }
 
-export function useCashRegisterAssigneesQuery() {
+export function useCashRegisterAssigneesQuery(enabled = true) {
   return useQuery({
     queryKey: cashRegisterAssigneesQueryKey,
     queryFn: getCashRegisterAssignees,
+    enabled,
   });
 }
 
-export function useMovementsOverviewQuery(input: {
-  from?: string;
-  to?: string;
-  search?: string;
-  type?: "ALL" | "INCOME" | "EXPENSE";
-}) {
+export function useMovementsOverviewQuery(
+  input: {
+    from?: string;
+    to?: string;
+    search?: string;
+    type?: "ALL" | "INCOME" | "EXPENSE";
+  },
+  enabled = true,
+) {
   return useQuery({
     queryKey: [...movementsOverviewQueryKey, input],
     queryFn: () => getMovementsOverview(input),
+    enabled,
   });
 }
 

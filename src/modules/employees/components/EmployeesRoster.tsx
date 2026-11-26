@@ -11,6 +11,8 @@ import styles from './EmployeesRoster.module.css'
 
 type EmployeesRosterProps = {
   activeEmployeeId: string | null
+  canRemoveEmployee: (employee: Employee) => boolean
+  isRemoving: boolean
   employees: Employee[]
   errorMessage: string | null
   isLoading: boolean
@@ -33,6 +35,8 @@ function findPresetLabel(
 
 export function EmployeesRoster({
   activeEmployeeId,
+  canRemoveEmployee,
+  isRemoving,
   employees,
   errorMessage,
   isLoading,
@@ -127,17 +131,17 @@ export function EmployeesRoster({
             const statusMeta = getEmployeeStatusMeta(employee.activationStatus)
 
             return (
-              <button
+              <div
                 key={employee.id}
                 className={joinClassNames(
                   styles.employeeRow,
                   activeEmployeeId === employee.id && styles.employeeRowActive,
                 )}
-                type="button"
-                onClick={() => onSelectEmployee(employee.id)}
               >
                 <div className={styles.primaryCell}>
-                  <p className={styles.employeeName}>{employee.name}</p>
+                  <button className={styles.employeeNameButton} type="button" onClick={() => onSelectEmployee(employee.id)}>
+                    {employee.name}
+                  </button>
                   <p className={styles.employeeMeta}>
                     {employee.email} • Creado {formatDate(employee.createdAt)}
                   </p>
@@ -177,18 +181,19 @@ export function EmployeesRoster({
                 </div>
 
                 <div className={styles.actionsCell}>
-                  <button
-                    className={styles.deleteButton}
-                    type="button"
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      onDeleteEmployee(employee)
-                    }}
-                  >
-                    Eliminar
-                  </button>
+                  {canRemoveEmployee(employee) ? (
+                    <button
+                      aria-label={`Eliminar a ${employee.name}`}
+                      className={styles.deleteButton}
+                      disabled={isRemoving}
+                      type="button"
+                      onClick={() => onDeleteEmployee(employee)}
+                    >
+                      Eliminar
+                    </button>
+                  ) : null}
                 </div>
-              </button>
+              </div>
             )
           })}
         </div>

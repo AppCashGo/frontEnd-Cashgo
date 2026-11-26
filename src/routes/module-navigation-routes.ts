@@ -38,6 +38,12 @@ const baseModuleNavigationRoutes: BaseRoute[] = [
     group: "business",
   },
   {
+    shortLabel: "CA",
+    path: routePaths.cashRegister,
+    segment: routeSegments.cashRegister,
+    group: "business",
+  },
+  {
     shortLabel: "FC",
     path: routePaths.billing,
     segment: routeSegments.billing,
@@ -291,7 +297,7 @@ const routeOverridesByPreset: Partial<
       },
       [routeSegments.movements]: {
         label: "Movimientos",
-        description: "Caja diaria, ingresos, egresos y cierres.",
+        description: "Ingresos, egresos y cuentas del negocio.",
         shortLabel: "MV",
       },
       [routeSegments.billing]: {
@@ -348,7 +354,7 @@ const routeOverridesByPreset: Partial<
       },
       [routeSegments.movements]: {
         label: "Movements",
-        description: "Daily cash register, income, expenses and closures.",
+        description: "Income, expenses and business accounts.",
         shortLabel: "MV",
       },
       [routeSegments.billing]: {
@@ -460,14 +466,18 @@ export function getModuleNavigationRoutes(
     ? new Set(visibleSegmentsByRole[role])
     : undefined;
 
-  return baseModuleNavigationRoutes.map((route) => ({
-    ...route,
-    ...getRouteCopy(route, languageCode, preset),
-    children: getRouteChildren(route, languageCode, preset),
-    isVisible:
-      visibleSegments.has(route.segment) &&
-      (roleVisibleSegments ? roleVisibleSegments.has(route.segment) : true),
-  }));
+  return baseModuleNavigationRoutes.map((route) => {
+    const accessSegment =
+      route.segment === routeSegments.cashRegister ? routeSegments.movements : route.segment;
+
+    return {
+      ...route,
+      ...getRouteCopy(route, languageCode, preset),
+      children: getRouteChildren(route, languageCode, preset),
+      isVisible: visibleSegments.has(accessSegment) &&
+        (!roleVisibleSegments || roleVisibleSegments.has(accessSegment)),
+    };
+  });
 }
 
 export function getModuleLandingPath(

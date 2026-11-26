@@ -111,6 +111,7 @@ const routePreloaders = new Map<string, RoutePageLoader>([
   [routePaths.salesNew, routePageLoaders.salesRegister],
   [routePaths.deliveries, routePageLoaders.deliveries],
   [routePaths.movements, routePageLoaders.movements],
+  [routePaths.cashRegister, routePageLoaders.movements],
   [routePaths.billing, routePageLoaders.billing],
   [routePaths.expenses, routePageLoaders.expenses],
   [routePaths.customers, routePageLoaders.customers],

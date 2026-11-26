@@ -21,10 +21,8 @@ export function CashRegisterHistoryList({
         <span className={styles.emptyIcon} aria-hidden="true">
           <Search />
         </span>
-        <p className={styles.emptyTitle}>
-          <strong>No se encontraron cierres de caja con estos filtros</strong>{" "}
-          Intenta buscar usando otros criterios
-        </p>
+        <p className={styles.emptyTitle}>No hay cierres en este periodo</p>
+        <p className={styles.emptyDescription}>Cambia la fecha o selecciona un periodo más amplio.</p>
       </div>
     );
   }
@@ -48,7 +46,7 @@ export function CashRegisterHistoryList({
                   {session.responsibleUserName ?? "Responsable no asignado"}
                 </p>
                 <p className={styles.cardDate}>
-                  {formatCashRegisterDate(session.openedAt)}
+                  {formatCashRegisterDate(session.closedAt ?? session.openedAt)}
                 </p>
               </div>
 

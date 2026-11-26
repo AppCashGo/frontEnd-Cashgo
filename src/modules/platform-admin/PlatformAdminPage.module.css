@@ -247,8 +247,6 @@
   font: inherit;
 }
 
-.invitationPage { max-width: 33rem; margin: 2rem auto; }
-.invitationPage .heading { margin-top: 0; }
 
 .history {
   padding-top: 1rem;
@@ -279,4 +277,19 @@
 @media (max-width: 420px) {
   .fields { grid-template-columns: minmax(0, 1fr); }
   .actions button { width: 100%; }
+}
+
+.history .employeeItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.employeeItem > div {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }

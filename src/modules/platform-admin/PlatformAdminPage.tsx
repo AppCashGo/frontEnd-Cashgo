@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, History, Plus, Search, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Building2, History, Plus, Search, ShieldCheck, Trash2, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
 import { appDictionary } from "@/shared/i18n/app-dictionary";
+import { userRoleLabels } from "@/shared/constants/user-roles";
 import { businessCategoryOptions } from "@/shared/constants/business-categories";
 import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { AppButton } from "@/shared/components/ui/AppButton";
@@ -11,6 +12,8 @@ import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import {
   listPlatformBusinessChanges,
+  listPlatformBusinessEmployees,
+  removePlatformBusinessEmployee,
   listPlatformBusinesses,
   createPlatformBusiness,
   planModules,
@@ -131,6 +134,67 @@ function CreateBusinessForm({ onCreated, onCancel }: {
   );
 }
 
+function BusinessEmployees({ business, userId }: { business: PlatformBusiness; userId: string }) {
+  const queryClient = useQueryClient();
+  const { confirm, confirmationDialog } = useConfirmDialog();
+  const queryKey = ["platform-business-employees", userId, business.id];
+  const employees = useQuery({
+    queryKey,
+    queryFn: () => listPlatformBusinessEmployees(business.id),
+  });
+  const removal = useMutation({
+    mutationFn: (employeeId: string) => removePlatformBusinessEmployee(business.id, employeeId),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey }),
+        queryClient.invalidateQueries({ queryKey: ["platform-businesses", userId] }),
+        queryClient.invalidateQueries({ queryKey: ["employees"] }),
+      ]);
+    },
+  });
+
+  async function remove(employee: { id: string; name: string }) {
+    const confirmed = await confirm({
+      title: "Eliminar empleado",
+      description: `Se retirará el acceso de ${employee.name} a ${business.businessName}. Su historial se conservará.`,
+      confirmLabel: "Eliminar",
+      tone: "danger",
+    });
+    if (confirmed) removal.mutate(employee.id);
+  }
+
+  return (
+    <section className={styles.history} aria-label="Equipo de la empresa">
+      {confirmationDialog}
+      <h3><Users aria-hidden="true" /> Equipo de la empresa</h3>
+      {employees.isError ? (
+        <AppButton size="sm" variant="secondary" onClick={() => void employees.refetch()}>Reintentar cargar equipo</AppButton>
+      ) : employees.isLoading ? (
+        <p className={styles.secondary} role="status">Cargando equipo…</p>
+      ) : employees.data?.length ? (
+        <ul>
+          {employees.data.map((employee) => (
+            <li key={employee.id} className={styles.employeeItem}>
+              <div>
+                <strong>{employee.name}</strong>
+                <span>{userRoleLabels[employee.role]} · {employee.email}</span>
+              </div>
+              {employee.canRemove && String(employee.id) !== String(userId) ? (
+                <AppButton aria-label={`Eliminar a ${employee.name}`} disabled={removal.isPending}
+                  size="sm" variant="danger" startIcon={<Trash2 aria-hidden="true" />} onClick={() => void remove(employee)}>
+                  Eliminar
+                </AppButton>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+      ) : <p className={styles.secondary}>Esta empresa aún no tiene usuarios vinculados.</p>}
+      {removal.isError ? <p className={styles.error} role="alert">{getErrorMessage(removal.error, "No se pudo eliminar al empleado.")}</p> : null}
+      {removal.isSuccess ? <p className={styles.success} role="status">Se retiró el acceso del empleado.</p> : null}
+    </section>
+  );
+}
+
 function BusinessEditor({ business, userId }: { business: PlatformBusiness; userId: string }) {
   const queryClient = useQueryClient();
   const businessesKey = ["platform-businesses", userId];
@@ -242,6 +306,8 @@ function BusinessEditor({ business, userId }: { business: PlatformBusiness; user
           {renew.data ? <InvitationResult key={renew.data.path} invitation={renew.data} /> : null}
         </div>
       ) : null}
+
+      <BusinessEmployees business={business} userId={userId} />
 
       <div className={styles.history}>
         <h3><History aria-hidden="true" /> Historial comercial</h3>

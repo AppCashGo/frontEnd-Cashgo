@@ -88,6 +88,8 @@ function getRouteIconName(segment: string): SidebarIconName {
       return "deliveries";
     case routeSegments.movements:
       return "movements";
+    case routeSegments.cashRegister:
+      return "money";
     case routeSegments.billing:
       return "billing";
     case routeSegments.reports:

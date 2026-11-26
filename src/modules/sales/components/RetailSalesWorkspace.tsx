@@ -24,7 +24,7 @@ import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-c
 import { QuickCreateCustomerDrawer } from '@/modules/customers/components/QuickCreateCustomerDrawer'
 import { useCustomersQuery } from '@/modules/customers/hooks/use-customers-query'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
-import { getActiveBusiness, getActiveBusinessRole } from '@/modules/auth/utils/get-active-business'
+import { getActiveBusiness, getActiveBusinessCategory, getActiveBusinessRole } from '@/modules/auth/utils/get-active-business'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
 import {
   useCreateExpenseMutation,
@@ -81,6 +81,7 @@ import { createSaleIdempotencyKey } from '@/modules/sales/services/sales-api'
 import { queueOfflineSale } from '@/modules/sales/services/offline-sales-queue'
 import { useBusinessSettingsQuery } from '@/modules/settings/hooks/use-settings-query'
 import { routePaths } from '@/routes/route-paths'
+import { getModuleNavigationRoutes } from '@/routes/module-navigation-routes'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
@@ -1131,7 +1132,11 @@ export function RetailSalesWorkspace() {
   const navigate = useNavigate()
   const authUser = useAuthSessionStore((state) => state.user)
   const activeBusiness = getActiveBusiness(authUser)
-  const canRegisterInventoryShortages = isTeamManagementRole(getActiveBusinessRole(authUser))
+  const activeRole = getActiveBusinessRole(authUser)
+  const canRegisterInventoryShortages = isTeamManagementRole(activeRole)
+  const hasCashRegisterPage = getModuleNavigationRoutes(
+    'es', getActiveBusinessCategory(authUser), activeRole,
+  ).some((route) => route.path === routePaths.cashRegister && route.isVisible)
   const isOnline = useNetworkStatus()
   const offlineSales = useOfflineSales(activeBusiness?.id, authUser?.id)
   const cartPersistenceKey =
@@ -1185,7 +1190,6 @@ export function RetailSalesWorkspace() {
   const [isCashRegisterDrawerOpen, setCashRegisterDrawerOpen] = useState(false)
   const [cashRegisterDrawerMode, setCashRegisterDrawerMode] =
     useState<CashRegisterDrawerMode>('manage')
-  const [isCashRegisterMenuOpen, setCashRegisterMenuOpen] = useState(false)
   const [isSortDrawerOpen, setSortDrawerOpen] = useState(false)
   const [isChangeModalOpen, setChangeModalOpen] = useState(false)
   const [pendingCashIntent, setPendingCashIntent] =
@@ -1294,12 +1298,6 @@ export function RetailSalesWorkspace() {
     () => inventoryCategoriesQuery.data ?? [],
     [inventoryCategoriesQuery.data],
   )
-
-  useEffect(() => {
-    if (!currentCashRegister) {
-      setCashRegisterMenuOpen(false)
-    }
-  }, [currentCashRegister])
 
   useEffect(() => {
     if (
@@ -2568,7 +2566,6 @@ export function RetailSalesWorkspace() {
     setChangeModalOpen(false)
     setCashRegisterDrawerMode(mode)
     setCashRegisterDrawerOpen(true)
-    setCashRegisterMenuOpen(false)
   }
 
   function openSalesHistory() {
@@ -2644,51 +2641,20 @@ export function RetailSalesWorkspace() {
         actions={
           <>
             {currentCashRegister ? (
-              <div className={styles.cashRegisterMenu}>
-                <button
-                  aria-expanded={isCashRegisterMenuOpen}
-                  className={styles.cashRegisterStatusButton}
-                  type="button"
-                  onClick={() =>
-                    setCashRegisterMenuOpen((isOpen) => !isOpen)
+              <button
+                className={styles.cashRegisterStatusButton}
+                type="button"
+                onClick={() => {
+                  if (hasCashRegisterPage) {
+                    navigate(routePaths.cashRegister)
+                  } else {
+                    openCashRegisterDrawer('manage')
                   }
-                >
-                  <Crown />
-                  Caja abierta
-                  <span aria-hidden="true">
-                    {isCashRegisterMenuOpen ? '⌃' : '⌄'}
-                  </span>
-                </button>
-
-                {isCashRegisterMenuOpen ? (
-                  <div className={styles.cashRegisterMenuList} role="menu">
-                    <button
-                      className={styles.cashRegisterMenuItem}
-                      role="menuitem"
-                      type="button"
-                      onClick={() => openCashRegisterDrawer('manage')}
-                    >
-                      Gestionar caja
-                    </button>
-                    <button
-                      className={styles.cashRegisterMenuItem}
-                      role="menuitem"
-                      type="button"
-                      onClick={() => openCashRegisterDrawer('close')}
-                    >
-                      Cerrar caja
-                    </button>
-                    <button
-                      className={styles.cashRegisterMenuItem}
-                      role="menuitem"
-                      type="button"
-                      onClick={() => openCashRegisterDrawer('summary')}
-                    >
-                      Ver Resumen de Caja
-                    </button>
-                  </div>
-                ) : null}
-              </div>
+                }}
+              >
+                <Crown aria-hidden="true" />
+                Caja abierta
+              </button>
             ) : (
               <button
                 className={`${retailStyles.buttonDark} ${styles.headerCashButton}`}

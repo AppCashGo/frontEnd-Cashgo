@@ -127,13 +127,6 @@
   box-shadow: 0 0.45rem 1.1rem rgba(23, 32, 51, 0.16);
 }
 
-.cashButtonOpen {
-  border: 1px solid #d7deea;
-  background: #ffffff;
-  color: #172033;
-  box-shadow: none;
-}
-
 .cashButton svg,
 .topReportButton svg,
 .saleMenuIcon svg,
@@ -163,53 +156,6 @@
   background: #ffffff;
   color: #172033;
   box-shadow: none;
-}
-
-.cashRegisterMenu {
-  position: relative;
-  display: inline-flex;
-  min-width: 12.2rem;
-}
-
-.cashRegisterToggle {
-  width: 100%;
-  box-shadow: none;
-}
-
-.cashRegisterToggle svg:last-child {
-  margin-left: auto;
-}
-
-.cashRegisterMenuList {
-  position: absolute;
-  top: calc(100% + 0.45rem);
-  left: 0;
-  z-index: 28;
-  display: grid;
-  width: min(18rem, 86vw);
-  overflow: hidden;
-  border: 1px solid #172033;
-  border-radius: 0.85rem;
-  background: #ffffff;
-  box-shadow: 0 1.1rem 2rem rgba(15, 23, 42, 0.16);
-}
-
-.cashRegisterMenuItem {
-  min-height: 3.35rem;
-  padding: 0 1rem;
-  border: 0;
-  background: #ffffff;
-  color: #172033;
-  font: inherit;
-  font-size: 1rem;
-  font-weight: 700;
-  text-align: left;
-  cursor: pointer;
-}
-
-.cashRegisterMenuItem:hover,
-.cashRegisterMenuItem:focus-visible {
-  background: #f3f6fa;
 }
 
 .topReportButton svg { color: #5967d9; }
@@ -286,33 +232,92 @@
   padding: 0 clamp(1rem, 2.4vw, 2rem) 2rem;
 }
 
-.segmentedTabs {
+.shiftCard {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  width: min(100%, 32rem);
-  padding: 0.25rem;
-  border: 0;
-  border-radius: 0.55rem;
-  background: #eef1fb;
+  gap: 1rem;
+  justify-items: start;
+  padding: clamp(1rem, 2.4vw, 1.65rem);
+  border: 1px solid #d7deea;
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 0.2rem 0.75rem rgba(31, 42, 55, 0.05);
 }
 
-.segment,
-.segmentActive {
-  min-height: 2.65rem;
-  border: 0;
-  border-radius: 0.3rem;
-  background: transparent;
-  color: #768397;
-  font: inherit;
-  font-size: 0.86rem;
+.shiftHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+}
+
+.shiftHeader h2,
+.closureHeader h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.shiftHeader p {
+  margin: 0.25rem 0 0;
+  color: #586880;
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.shiftIcon {
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border-radius: 0.8rem;
+  background: #e8efff;
+  color: #3659b8;
+}
+
+.shiftIcon svg,
+.closureHeader h2 svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.shiftActions,
+.closureHeader,
+.closureHeader h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.closureHeader {
+  justify-content: space-between;
+}
+
+.shiftBalances {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+  gap: 0.65rem;
+  width: 100%;
+  margin: 0;
+}
+
+.shiftBalances > div {
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.65rem;
+  background: #f3f6fb;
+  overflow-wrap: anywhere;
+}
+
+.shiftBalances dt {
+  color: #586880;
+  font-size: 0.82rem;
+}
+
+.shiftBalances dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.1rem;
   font-weight: 800;
-  cursor: pointer;
-}
-
-.segmentActive {
-  background: #172033;
-  color: #ffffff;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 .filtersBar {
@@ -327,7 +332,6 @@
 }
 
 .filterButton,
-.selectShell,
 .dateShell,
 .searchShell,
 .reportButton {
@@ -370,7 +374,6 @@
   font-size: 0.72rem;
 }
 
-.selectShell,
 .dateShell,
 .searchShell {
   position: relative;
@@ -380,16 +383,18 @@
   padding: 0 1rem;
 }
 
-.selectShell:focus-within {
-  border-color: #4f63df;
-  box-shadow: 0 0 0 3px rgba(79, 99, 223, 0.12);
+.filtersBar .periodSelect {
+  min-height: 3rem;
+  border-radius: 0.55rem;
+  font-weight: 700;
 }
 
-.selectShell button:focus-visible {
-  outline: none;
+.dateShell:focus-within,
+.searchShell:focus-within {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
 }
 
-.selectShell > span,
 .dateShell > span,
 .searchShell > span {
   color: #66758a;
@@ -397,7 +402,6 @@
   font-weight: 800;
 }
 
-.selectShell select,
 .dateShell input,
 .searchShell input {
   width: 100%;
@@ -411,17 +415,20 @@
 }
 
 .dateShell input {
-  padding-right: 1.8rem;
+  color-scheme: light;
 }
 
 .dateShell input::-webkit-calendar-picker-indicator {
   position: absolute;
-  inset: 0.75rem 0.85rem auto auto;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
   opacity: 0;
   cursor: pointer;
 }
 
-.selectShell select:focus,
 .dateShell input:focus,
 .searchShell input:focus {
   outline: none;
@@ -920,6 +927,10 @@
     grid-template-columns: minmax(8rem, 10rem) minmax(10rem, 13rem);
   }
 
+  .filtersBarWithoutButton {
+    grid-template-columns: minmax(8rem, 9.5rem) minmax(10rem, 12rem) minmax(0, 1fr);
+  }
+
   .reportButton {
     justify-self: end;
   }
@@ -946,8 +957,18 @@
     width: 100%;
   }
 
-  .segmentedTabs {
-    grid-template-columns: 1fr;
+  .shiftHeader {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .shiftHeader > button,
+  .shiftActions {
+    grid-column: 1 / -1;
+  }
+
+  .shiftActions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .drawerActions {
