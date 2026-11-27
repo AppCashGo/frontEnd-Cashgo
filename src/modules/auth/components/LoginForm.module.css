@@ -96,17 +96,59 @@
   gap: 0.9rem;
 }
 
-.confirmEmail {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.55rem;
-  color: #314360;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  cursor: pointer;
+.identifierHint,
+.requestedIdentifier {
+  margin: 0;
+  color: #50607d;
+  font-size: 0.835rem;
+  line-height: 1.5;
 }
 
-.confirmEmail input { flex: none; accent-color: #205bac; margin-top: 0.15rem; }
+.requestedIdentifier {
+  overflow-wrap: anywhere;
+}
+
+.requestedIdentifier strong {
+  color: #263651;
+}
+
+.emailCodeHelp {
+  display: grid;
+  justify-items: start;
+  gap: 0.6rem;
+  padding: 0.9rem;
+  border: 1px solid #dce7f6;
+  border-radius: 0.85rem;
+  background: #f5f8fe;
+  color: #435574;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.emailCodeHelp h3,
+.emailCodeHelp p {
+  margin: 0;
+}
+
+.emailCodeHelp h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #1d3558;
+  font-size: 0.95rem;
+}
+
+.emailCodeHelp svg {
+  flex: 0 0 auto;
+  width: 1rem;
+  height: 1rem;
+}
+
+.emailCodeHelp .inlineAction {
+  justify-self: start;
+  min-height: 2rem;
+  text-align: left;
+}
 
 .googleButton,
 .primaryButton,
