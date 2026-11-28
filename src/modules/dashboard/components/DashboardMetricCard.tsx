@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { ArrowUpRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { joinClassNames } from '@/shared/utils/join-class-names'
 import styles from './DashboardMetricCard.module.css'
 
@@ -7,6 +9,7 @@ type DashboardMetricCardProps = {
   value: string
   hint?: string
   icon: ReactNode
+  action?: { label: string; to: string }
   tone?: 'primary' | 'secondary' | 'success' | 'warning' | 'danger'
 }
 
@@ -15,6 +18,7 @@ export function DashboardMetricCard({
   value,
   hint,
   icon,
+  action,
   tone = 'primary',
 }: DashboardMetricCardProps) {
   return (
@@ -34,6 +38,11 @@ export function DashboardMetricCard({
         <p className={styles.value}>{value}</p>
         {hint ? <p className={styles.hint}>{hint}</p> : null}
       </div>
+      {action ? (
+        <Link className={styles.action} to={action.to}>
+          {action.label} <ArrowUpRight aria-hidden="true" size={14} />
+        </Link>
+      ) : null}
     </article>
   )
 }

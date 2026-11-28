@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
 import type { Employee } from "@/modules/employees/types/employee";
+import type { BusinessSetupProgress } from "@/shared/types/business-setup-progress";
 import { deleteJson, getJson, postJson, putJson } from "@/shared/services/api-client";
 import { getAuthAccessToken } from "@/shared/services/auth-session";
 
@@ -27,6 +28,7 @@ export type PlatformBusiness = {
   id: number;
   businessName: string;
   businessCategory: string | null;
+  setupProgress?: BusinessSetupProgress;
   _count: { memberships: number };
   platformSettings: (CommercialSettings & { managed: boolean }) | null;
   ownerInvitations: Array<{ email: string; expiresAt: string; acceptedAt: string | null }>;

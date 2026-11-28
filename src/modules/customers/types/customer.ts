@@ -10,6 +10,7 @@ export type CustomerSummary = {
   notes: string | null
   balance: number
   overdueBalance: number
+  oldestOverdueDays?: number
   currentBalance: number
   overdue1To30Balance: number
   overdue31To60Balance: number
@@ -190,6 +191,10 @@ export type CustomerPaymentInput = {
   cashRegisterId?: string
   reference?: string
   notes?: string
+}
+
+export type CustomerOldestPaymentInput = CustomerPaymentInput & {
+  expectedOutstandingBalance?: number
 }
 
 export type CustomerPaymentMethodCorrectionInput = {

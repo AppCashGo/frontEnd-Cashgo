@@ -418,11 +418,6 @@
     box-shadow 0.2s ease;
 }
 
-.inlineEditBox:focus-within {
-  border-color: #1e74d8;
-  box-shadow: 0 0 0 3px rgba(30, 116, 216, 0.14);
-}
-
 .inlineCurrencyPrefix {
   flex: 0 0 auto;
   color: #223040;
@@ -432,6 +427,8 @@
 .inlineEditInput {
   width: 100%;
   min-width: 0;
+  min-height: 0;
+  padding: 0;
   border: 0;
   background: transparent;
   color: #223040;
@@ -440,7 +437,7 @@
 }
 
 .inlineEditInput:focus {
-  outline: none;
+  box-shadow: none !important;
 }
 
 .inlineEditInput:disabled {
@@ -1179,6 +1176,10 @@
   box-shadow: 0 0 0 3px #3168ae24;
 }
 
+.tableSearch input:focus {
+  box-shadow: none !important;
+}
+
 .inventoryScanButton {
   display: inline-flex;
   align-items: center;
@@ -1272,10 +1273,15 @@
   background: transparent;
 }
 
-.inlineEditBox:hover,
-.inlineEditBox:focus-within {
+.inlineEditBox:hover {
   border-color: #c4cede;
   background: #ffffff;
+}
+
+.inlineEditBox:focus-within {
+  border-color: #1e74d8;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(30, 116, 216, 0.14);
 }
 
 .stockCell {
@@ -1681,6 +1687,74 @@
   text-align: end;
 }
 
+.purchaseMarginWarning,
+.purchasePriceEditor {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.6rem;
+}
+
+.purchaseMarginWarning {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  border-color: #efd39c;
+  background: #fff7e5;
+  color: #714306;
+}
+
+.purchaseMarginWarning > div,
+.purchaseMarginPreview {
+  display: grid;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.purchasePriceEditor {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.55rem;
+  background: var(--ui-surface-subtle);
+}
+
+.purchaseMarginPreview {
+  margin: 0;
+  align-self: center;
+  color: var(--ui-text-secondary);
+  font-size: 0.75rem;
+}
+
+.purchaseMarginPreview strong {
+  color: var(--ui-text);
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.purchasePriceAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--ui-border);
+  border-radius: 0.5rem;
+  background: var(--ui-surface);
+  color: var(--ui-primary-strong);
+  font-size: 0.78rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.purchasePriceAction svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
 .purchaseItemCardInvalid {
   border-color: #e56d64;
   background: #fff8f7;
@@ -1728,6 +1802,24 @@
   .purchaseLineAmount {
     margin-inline-start: auto;
     width: auto;
+  }
+
+  .purchasePriceEditor {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .purchasePriceEditor > button {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .purchasePriceAction,
+  .purchaseLineField input[type="text"] {
+    min-height: 2.75rem;
+  }
+
+  .purchaseLineField input[type="text"] {
+    font-size: 1rem;
   }
 }
 
@@ -2358,9 +2450,14 @@
     width: 100%;
     max-width: none;
     min-width: 0;
+    min-height: 2.75rem;
     border-color: #d5deea;
     background: #ffffff;
     padding-left: 0.65rem;
+  }
+
+  .inlineEditInput {
+    font-size: 1rem;
   }
 
   .drawer {

@@ -1,5 +1,7 @@
 import { useDeferredValue, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
+  Banknote,
   BellRing,
   CalendarCheck,
   CalendarClock,
@@ -22,6 +24,7 @@ import {
 } from 'lucide-react'
 import { CustomerDetailPanel } from '@/modules/customers/components/CustomerDetailPanel'
 import { CustomerMetricCard } from '@/modules/customers/components/CustomerMetricCard'
+import { CustomerQuickPaymentDrawer } from '@/modules/customers/components/CustomerQuickPaymentDrawer'
 import { CustomerPurchaseHistoryPanel } from '@/modules/customers/components/CustomerPurchaseHistoryPanel'
 import { CustomersListPanel } from '@/modules/customers/components/CustomersListPanel'
 import {
@@ -52,6 +55,9 @@ import type {
   CustomerReceivableTermsInput,
   CustomerSummary,
 } from '@/modules/customers/types/customer'
+import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
+import { getActiveBusinessRole } from '@/modules/auth/utils/get-active-business'
+import { isTeamManagementRole } from '@/shared/constants/user-roles'
 import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
 import { CashRegisterFlowDrawer } from '@/modules/cash-register/components/CashRegisterFlowDrawer'
 import { SalesHistoryDrawer } from '@/modules/sales/components/SalesHistoryDrawer'
@@ -169,6 +175,12 @@ function getCollectionPriority(customer: CustomerSummary) {
 export function CustomersPage() {
   const navigationPreset = useBusinessNavigationPreset()
   const isRetailPreset = navigationPreset === 'retail'
+  const user = useAuthSessionStore((state) => state.user)
+  const role = getActiveBusinessRole(user)
+  const canOpenCash = isTeamManagementRole(role) || role === 'CASHIER'
+  const canRegisterPayment = canOpenCash || role === 'ACCOUNTANT'
+  const [quickPaymentCustomerId, setQuickPaymentCustomerId] = useState<string | null>(null)
+  const [quickPaymentFeedback, setQuickPaymentFeedback] = useState<string | null>(null)
   const [searchValue, setSearchValue] = useState('')
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null)
   const [retailDrawerMode, setRetailDrawerMode] = useState<RetailCustomerDrawerMode>('detail')
@@ -178,7 +190,11 @@ export function CustomersPage() {
   const [resumeManagedSaleId, setResumeManagedSaleId] = useState<string | null>(null)
   const customerListRef = useRef<HTMLDivElement>(null)
   const [isPremiumModalOpen, setPremiumModalOpen] = useState(false)
-  const [portfolioFilter, setPortfolioFilter] = useState<CustomerPortfolioFilter>('ALL')
+  const [searchParams] = useSearchParams()
+  const requestedPortfolio = searchParams.get('portfolio')
+  const [portfolioFilter, setPortfolioFilter] = useState<CustomerPortfolioFilter>(
+    () => requestedPortfolio === 'overdue' ? 'OVERDUE' : 'ALL',
+  )
   const [customerPage, setCustomerPage] = useState(1)
   const [isExporting, setIsExporting] = useState(false)
   const [agendaFilter, setAgendaFilter] = useState<CollectionAgendaFilter>('UPCOMING')
@@ -227,7 +243,17 @@ export function CustomersPage() {
     }
 
     return true
+  }).sort((left, right) => {
+    const leftOverdue = left.overdueReceivablesCount > 0
+    const rightOverdue = right.overdueReceivablesCount > 0
+    if (leftOverdue !== rightOverdue) return leftOverdue ? -1 : 1
+    if (!leftOverdue) return 0
+    return (right.oldestOverdueDays ?? 0) - (left.oldestOverdueDays ?? 0) ||
+      right.overdueBalance - left.overdueBalance
   })
+  const quickPaymentCustomer = canRegisterPayment
+    ? customers.find((customer) => customer.id === quickPaymentCustomerId)
+    : undefined
   const customerPageCount = Math.max(1, Math.ceil(visibleCustomers.length / CUSTOMER_PAGE_SIZE))
   const resolvedCustomerPage = Math.min(customerPage, customerPageCount)
   const paginatedCustomers = visibleCustomers.slice(
@@ -302,6 +328,19 @@ export function CustomersPage() {
       setSelectedCustomerId(availableCustomers[0]?.id ?? null)
     }
   }, [customerRecords, selectedCustomerId])
+
+  useEffect(() => {
+    if (requestedPortfolio === 'overdue') {
+      setPortfolioFilter('OVERDUE')
+    }
+  }, [requestedPortfolio])
+
+  useEffect(() => {
+    if (requestedPortfolio === 'overdue' && !customersQuery.isLoading) {
+      customerListRef.current?.scrollIntoView({ block: 'start' })
+      customerListRef.current?.focus({ preventScroll: true })
+    }
+  }, [customersQuery.isLoading, requestedPortfolio])
 
   useEffect(() => {
     setCustomerPage(1)
@@ -488,6 +527,33 @@ export function CustomersPage() {
 
     await Promise.allSettled([collectionAgendaQuery.refetch(), customerDetailQuery.refetch()])
   }
+
+  function openQuickPayment(customer: CustomerSummary) {
+    setQuickPaymentFeedback(null)
+    setQuickPaymentCustomerId(customer.id)
+  }
+
+  const quickPaymentDrawer = quickPaymentCustomer ? (
+    <CustomerQuickPaymentDrawer
+      key={quickPaymentCustomer.id}
+      customer={quickPaymentCustomer}
+      cashRegisterId={currentCashRegisterQuery.data?.id ?? null}
+      cashRegisterLoading={currentCashRegisterQuery.isFetching}
+      cashRegisterError={currentCashRegisterQuery.isError}
+      isSuspended={isCashRegisterFlowOpen}
+      onClose={() => setQuickPaymentCustomerId(null)}
+      onOpenCash={canOpenCash ? () => setCashRegisterFlowOpen(true) : undefined}
+      onRefreshCash={currentCashRegisterQuery.refetch}
+      onRecorded={(name, amount, remaining) => {
+        setQuickPaymentCustomerId(null)
+        setQuickPaymentFeedback(`Abono registrado para ${name} por ${amount}. Saldo de facturas: ${remaining}.`)
+      }}
+    />
+  ) : null
+
+  const paymentStatus = quickPaymentFeedback ? (
+    <p className={styles.quickPaymentFeedback} role="status">{quickPaymentFeedback}</p>
+  ) : null
 
   if (isRetailPreset) {
     return (
@@ -747,6 +813,7 @@ export function CustomersPage() {
               </p>
             ) : null}
 
+            {paymentStatus}
             <RetailTableShell
               footer={
                 !customersQuery.isLoading && !customersQuery.isError ? (
@@ -894,12 +961,22 @@ export function CustomersPage() {
                                   : listPageStyles.statusPositive
                               }
                             >
-                              {formatCurrency(customer.balance)}
+                              <span className={styles.overdueInfo}>
+                                {formatCurrency(customer.balance)}
+                                {customer.overdueBalance > 0 ? (
+                                  <small>{formatCurrency(customer.overdueBalance)} vencido</small>
+                                ) : null}
+                              </span>
                             </td>
                             <td data-label="Vencimiento">
-                              {customer.overdueReceivablesCount > 0
-                                ? `${customer.overdueReceivablesCount} vencida${customer.overdueReceivablesCount === 1 ? '' : 's'}`
-                                : formatPortfolioDate(customer.nextDueDate)}
+                              {customer.overdueReceivablesCount > 0 ? (
+                                <span className={styles.overdueInfo}>
+                                  {customer.oldestOverdueDays ? (
+                                    <strong>{customer.oldestOverdueDays} {customer.oldestOverdueDays === 1 ? 'día' : 'días'} de atraso</strong>
+                                  ) : null}
+                                  <small>{customer.overdueReceivablesCount} {customer.overdueReceivablesCount === 1 ? 'cuenta vencida' : 'cuentas vencidas'}</small>
+                                </span>
+                              ) : formatPortfolioDate(customer.nextDueDate)}
                             </td>
                             <td data-label="Compras">{customer.purchaseCount.toString()}</td>
                             <td data-label="Prioridad">
@@ -909,6 +986,16 @@ export function CustomersPage() {
                             </td>
                             <td data-label="Acciones">
                               <div className={styles.rowActions}>
+                                {canRegisterPayment && customer.openReceivablesCount > 0 ? (
+                                  <button
+                                    aria-label={`Registrar abono a ${customer.name}`}
+                                    className={`${styles.customerRowAction} ${styles.quickPaymentAction}`}
+                                    type="button"
+                                    onClick={() => openQuickPayment(customer)}
+                                  >
+                                    <Banknote aria-hidden="true" /> Registrar abono
+                                  </button>
+                                ) : null}
                                 <button
                                   className={styles.customerRowAction}
                                   type="button"
@@ -1022,6 +1109,8 @@ export function CustomersPage() {
           onCashSessionRequired={() => setCashRegisterFlowOpen(true)}
         />
 
+        {quickPaymentDrawer}
+
         <SalesHistoryDrawer
           initialSaleId={managedSaleId}
           isOpen={Boolean(managedSaleId)}
@@ -1113,7 +1202,8 @@ export function CustomersPage() {
         />
       </div>
 
-      <div className={styles.workspace}>
+      {paymentStatus}
+      <div className={styles.workspace} ref={customerListRef} tabIndex={-1}>
         <CustomersListPanel
           customers={visibleCustomers}
           errorMessage={
@@ -1134,6 +1224,7 @@ export function CustomersPage() {
           }}
           onSearchChange={setSearchValue}
           onSelectCustomer={setSelectedCustomerId}
+          onRegisterPayment={canRegisterPayment ? openQuickPayment : undefined}
         />
 
         <div className={styles.secondaryColumn}>
@@ -1161,6 +1252,14 @@ export function CustomersPage() {
           />
         </div>
       </div>
+      {quickPaymentDrawer}
+      {isCashRegisterFlowOpen && quickPaymentCustomer ? (
+        <CashRegisterFlowDrawer
+          isOpen
+          onClose={() => setCashRegisterFlowOpen(false)}
+          onOpened={() => setCashRegisterFlowOpen(false)}
+        />
+      ) : null}
     </div>
   )
 }

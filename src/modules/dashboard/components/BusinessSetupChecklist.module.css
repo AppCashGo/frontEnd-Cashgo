@@ -1,188 +1,165 @@
 .card {
   display: grid;
-  gap: 1rem;
-  padding: 1.25rem;
-  border: 1px solid #dbeafe;
-  border-radius: 1.25rem;
-  background: linear-gradient(135deg, #f8fbff 0%, #ffffff 62%);
-  box-shadow: 0 0.85rem 2.2rem rgba(37, 99, 235, 0.07);
+  gap: 0.85rem;
+  padding: 1.2rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: linear-gradient(135deg, #edf4ff, #f8fbff 58%, var(--ui-surface));
 }
 
 .header {
   display: flex;
-  align-items: flex-start;
+  flex-wrap: wrap;
+  align-items: baseline;
   justify-content: space-between;
-  gap: 1rem;
-}
-
-.header > div:first-child {
-  min-width: 0;
-}
-
-.eyebrow {
-  color: #2563eb;
-  font-size: 0.7rem;
-  font-weight: 950;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  gap: 0.45rem 1rem;
 }
 
 .header h2 {
-  margin: 0.25rem 0 0;
-  color: #172033;
+  margin: 0;
+  color: var(--ui-text);
   font-size: 1.25rem;
-  font-weight: 950;
-}
-
-.header p {
-  margin: 0.35rem 0 0;
-  color: #64748b;
-  font-size: 0.88rem;
+  font-weight: 850;
 }
 
 .progressSummary {
-  display: grid;
-  flex: 0 0 auto;
-  justify-items: end;
-}
-
-.progressSummary strong {
-  color: #1d4ed8;
-  font-size: 1.35rem;
-  font-weight: 950;
-}
-
-.progressSummary span {
-  color: #94a3b8;
-  font-size: 0.72rem;
-  font-weight: 800;
+  color: var(--ui-primary-strong);
+  font-size: 0.82rem;
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
 }
 
 .progressTrack {
   overflow: hidden;
-  height: 0.42rem;
-  border-radius: 999px;
-  background: #dbeafe;
+  height: 0.4rem;
+  border-radius: var(--ui-radius-pill);
+  background: #d6e5fb;
 }
 
 .progressTrack span {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: #2563eb;
-  transition: width 300ms ease;
+  background: var(--ui-primary);
+  transition: width 250ms ease;
 }
 
 .tasks {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.65rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.task,
-.taskComplete {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 0.65rem;
+.task {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   min-width: 0;
-  padding: 0.8rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.9rem;
-  background: #ffffff;
-  color: inherit;
-  text-decoration: none;
-  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  min-height: 100%;
+  padding: 0.85rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
 }
 
-.task:hover {
-  border-color: #93c5fd;
-  box-shadow: 0 0.55rem 1.2rem rgba(37, 99, 235, 0.08);
-  transform: translateY(-1px);
+.task[data-complete] {
+  border-color: #bce7d4;
+  background: #f4fcf8;
 }
 
-.taskComplete {
-  border-color: #d1fae5;
-  background: #f7fefb;
+.taskHeader {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.6rem;
+}
+
+.taskHeader h3,
+.taskHeader p {
+  margin: 0;
+}
+
+.taskHeader h3 {
+  color: var(--ui-text);
+  font-size: 0.94rem;
+}
+
+.taskHeader p {
+  margin-top: 0.22rem;
+  color: var(--ui-text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.4;
 }
 
 .taskIcon {
-  display: inline-grid;
+  display: grid;
+  place-items: center;
   width: 2.25rem;
   height: 2.25rem;
-  place-items: center;
-  border-radius: 0.7rem;
-  background: #eff6ff;
-  color: #2563eb;
-}
-
-.taskComplete .taskIcon {
-  background: #d1fae5;
-  color: #059669;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-primary-soft);
+  color: var(--ui-primary-strong);
 }
 
 .taskIcon svg,
-.taskState svg {
+.taskStatus svg,
+.action svg {
   width: 1rem;
   height: 1rem;
+  flex-shrink: 0;
 }
 
-.taskCopy {
-  display: grid;
-  gap: 0.15rem;
-  min-width: 0;
+.task[data-complete] .taskIcon {
+  background: #dcf5e8;
+  color: #116344;
 }
 
-.taskCopy strong {
-  overflow: hidden;
-  color: #334155;
-  font-size: 0.82rem;
-  font-weight: 900;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.taskActions,
+.taskStatus {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: auto;
 }
 
-.taskCopy small {
-  display: -webkit-box;
-  overflow: hidden;
-  color: #94a3b8;
-  font-size: 0.7rem;
-  line-height: 1.35;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+.taskStatus {
+  min-height: 2.75rem;
+  color: #116344;
+  font-size: 0.81rem;
+  font-weight: 750;
 }
 
-.taskState {
-  color: #cbd5e1;
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0.4rem 0.65rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  color: var(--ui-primary-strong);
+  font-size: 0.8rem;
+  font-weight: 750;
+  text-decoration: none;
 }
 
-.taskComplete .taskState {
-  color: #059669;
+.action:hover {
+  border-color: var(--ui-primary);
+  background: var(--ui-primary-soft);
 }
 
-@media (max-width: 1100px) {
-  .tasks {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 640px) {
-  .card {
-    padding: 1rem;
-  }
-
-  .header {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .progressSummary {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-  }
-
+@media (max-width: 900px) {
   .tasks {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .card {
+    padding: 0.85rem;
   }
 }

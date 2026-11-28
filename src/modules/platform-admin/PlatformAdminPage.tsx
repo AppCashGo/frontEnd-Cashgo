@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Building2, History, Plus, Search, ShieldCheck, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Building2, Check, Circle, History, Plus, RefreshCw, Search, ShieldCheck, Trash2, Users } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
 import { appDictionary } from "@/shared/i18n/app-dictionary";
@@ -40,6 +40,50 @@ const emptySettings: CommercialSettings = {
   validUntil: null,
   revision: 0,
 };
+
+const activationSteps = [
+  { key: "hasAddedProduct", label: "Cargar productos", pendingAction: "cargar productos" },
+  { key: "hasOpenedCashRegister", label: "Abrir caja", pendingAction: "abrir caja" },
+  { key: "hasRecordedSale", label: "Registrar la primera venta", pendingAction: "registrar la primera venta" },
+] as const;
+
+const activationFilters = [
+  { value: "all", label: "Todas" },
+  { value: "pending", label: "Pendientes" },
+  { value: "complete", label: "Completadas" },
+] as const;
+
+function getActivationPendingSteps(progress: NonNullable<PlatformBusiness["setupProgress"]>) {
+  return activationSteps.filter(({ key }) => !progress[key]);
+}
+
+function formatActivationProgress(pending: ReturnType<typeof getActivationPendingSteps>) {
+  const completed = activationSteps.length - pending.length;
+  const count = `${completed} de ${activationSteps.length} pasos`;
+  if (pending.length === 0) return `${count} · Completado`;
+  if (completed === 0) return `${count} · Sin iniciar`;
+  return `${count} · Falta ${pending.map(({ pendingAction }) => pendingAction).join(" y ")}`;
+}
+
+function BusinessActivation({ progress }: { progress: PlatformBusiness["setupProgress"] }) {
+  if (!progress) return null;
+
+  return (
+    <section className={styles.activation} aria-labelledby="platform-business-activation">
+      <h3 id="platform-business-activation">Activación del negocio</h3>
+      <p>{formatActivationProgress(getActivationPendingSteps(progress))}</p>
+      <ul role="list" className={styles.activationSteps}>
+        {activationSteps.map(({ key, label }) => (
+          <li key={key} data-complete={progress[key] || undefined}>
+            {progress[key] ? <Check aria-hidden="true" /> : <Circle aria-hidden="true" />}
+            <span>{label}</span>
+            <small>{progress[key] ? "Completado" : "Pendiente"}</small>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 function PlanModuleFields({ modules = [], onChange }: { modules?: PlanModule[]; onChange: (modules: PlanModule[]) => void }) {
   return (
@@ -257,6 +301,7 @@ function BusinessEditor({ business, userId }: { business: PlatformBusiness; user
       {confirmationDialog}
       <h2 id="platform-business-heading">{business.businessName}</h2>
       <p className={styles.secondary}>Empresa #{business.id} · {business._count.memberships} usuarios vinculados</p>
+      <BusinessActivation progress={business.setupProgress} />
       <form className={styles.form} onSubmit={(event) => void submit(event)}>
         <fieldset disabled={save.isPending} className={styles.fields}>
           <label>
@@ -333,6 +378,7 @@ export function PlatformAdminPage() {
   const access = usePlatformAccess();
   const userId = useAuthSessionStore((state) => state.user?.id ?? "");
   const [search, setSearch] = useState("");
+  const [activationFilter, setActivationFilter] = useState<(typeof activationFilters)[number]["value"]>("all");
   const [businessId, setBusinessId] = useState<number>();
   const [creating, setCreating] = useState(false);
   const [invitation, setInvitation] = useState<InvitationDelivery>();
@@ -340,11 +386,18 @@ export function PlatformAdminPage() {
     queryKey: ["platform-businesses", userId],
     queryFn: listPlatformBusinesses,
     enabled: Boolean(access.data?.allowed),
+    refetchOnWindowFocus: true,
   });
   const query = search.trim().toLocaleLowerCase("es-CO");
-  const visibleBusinesses = businesses.data?.filter((business) =>
-    !query || business.businessName.toLocaleLowerCase("es-CO").includes(query) || String(business.id) === query,
-  );
+  const visibleBusinesses = businesses.data
+    ?.filter((business) => !query || business.businessName.toLocaleLowerCase("es-CO").includes(query) || String(business.id) === query)
+    .map((business) => ({
+      business,
+      pending: business.setupProgress ? getActivationPendingSteps(business.setupProgress) : null,
+    }))
+    .filter(({ pending }) => activationFilter === "all" || (
+      pending !== null && (activationFilter === "pending" ? pending.length > 0 : pending.length === 0)
+    ));
   const selected = businesses.data?.find((business) => business.id === businessId);
 
   return (
@@ -364,36 +417,46 @@ export function PlatformAdminPage() {
         <div className={styles.workspace}>
           <section className={styles.card} aria-labelledby="platform-companies-heading">
             <h2 id="platform-companies-heading">Empresas</h2>
-            <div className={styles.actions}>
+            <div className={styles.companyActions}>
+              <AppButton disabled={businesses.isFetching} size="sm" variant="secondary" startIcon={<RefreshCw aria-hidden="true" />} onClick={() => void businesses.refetch()}>Actualizar</AppButton>
               <AppButton startIcon={<Plus aria-hidden="true" />} onClick={() => { setCreating(true); setInvitation(undefined); }}>Nueva empresa</AppButton>
             </div>
             <label className={styles.search}>
               <Search aria-hidden="true" />
               <input type="search" aria-label="Buscar empresa" placeholder="Buscar por nombre o ID" value={search} onChange={(event) => setSearch(event.target.value)} />
             </label>
+            <div className={styles.activationFilters} role="group" aria-label="Filtrar por activación">
+              {activationFilters.map(({ value, label }) => (
+                <button key={value} type="button" aria-pressed={activationFilter === value} onClick={() => setActivationFilter(value)}>{label}</button>
+              ))}
+            </div>
             {businesses.isError ? (
               <AppButton variant="secondary" onClick={() => void businesses.refetch()}>Reintentar cargar empresas</AppButton>
             ) : businesses.isLoading ? <p role="status">Cargando empresas…</p> : visibleBusinesses?.length ? (
               <ul className={styles.companies}>
-                {visibleBusinesses.map((business) => (
+                {visibleBusinesses.map(({ business, pending }) => (
                   <li key={business.id}>
                     <button type="button" aria-pressed={business.id === businessId && !creating} onClick={() => { setBusinessId(business.id); setCreating(false); setInvitation(undefined); }}>
                       <Building2 aria-hidden="true" />
                       <span>
                         <strong>{business.businessName}</strong>
                         <small>{business.platformSettings?.planName ?? "Sin ficha comercial"}</small>
+                        <small className={styles.activationSummary} data-complete={pending?.length === 0 || undefined}>
+                          {pending ? formatActivationProgress(pending) : "Sin información de activación"}
+                        </small>
                       </span>
                     </button>
                   </li>
                 ))}
               </ul>
-            ) : <p className={styles.secondary}>No hay empresas para mostrar.</p>}
+            ) : <p className={styles.secondary} role="status">{query || activationFilter !== "all" ? "Ninguna empresa coincide con los filtros." : "No hay empresas para mostrar."}</p>}
           </section>
           <div className={styles.detail}>
           {invitation ? <InvitationResult key={invitation.path} invitation={invitation} /> : null}
           {creating ? <CreateBusinessForm onCancel={() => setCreating(false)} onCreated={(result) => {
             setCreating(false);
             setSearch("");
+            setActivationFilter("all");
             setBusinessId(result.businessId);
             setInvitation(result);
             void businesses.refetch();

@@ -1,3 +1,5 @@
+import { Banknote } from 'lucide-react'
+import { AppButton } from '@/shared/components/ui/AppButton'
 import type { CustomerSummary } from '@/modules/customers/types/customer'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -16,6 +18,7 @@ type CustomersListPanelProps = {
   onRetry: () => void
   onSearchChange: (value: string) => void
   onSelectCustomer: (customerId: string) => void
+  onRegisterPayment?: (customer: CustomerSummary) => void
 }
 
 export function CustomersListPanel({
@@ -29,6 +32,7 @@ export function CustomersListPanel({
   onRetry,
   onSearchChange,
   onSelectCustomer,
+  onRegisterPayment,
 }: CustomersListPanelProps) {
   return (
     <SurfaceCard className={styles.card}>
@@ -93,47 +97,62 @@ export function CustomersListPanel({
       {!isLoading && !errorMessage && customers.length > 0 ? (
         <div className={styles.list}>
           {customers.map((customer) => (
-            <button
-              key={customer.id}
-              className={joinClassNames(
-                styles.customerButton,
-                customer.id === selectedCustomerId && styles.customerButtonActive,
-              )}
-              type="button"
-              onClick={() => onSelectCustomer(customer.id)}
-            >
-              <div className={styles.customerTopRow}>
-                <div>
-                  <p className={styles.customerName}>{customer.name}</p>
-                  <p className={styles.customerMeta}>
-                    {customer.email ?? customer.phone ?? 'No contact information yet'}
-                  </p>
+            <div className={styles.customerEntry} key={customer.id}>
+              <button
+                className={joinClassNames(
+                  styles.customerButton,
+                  customer.id === selectedCustomerId && styles.customerButtonActive,
+                )}
+                type="button"
+                onClick={() => onSelectCustomer(customer.id)}
+              >
+                <div className={styles.customerTopRow}>
+                  <div>
+                    <p className={styles.customerName}>{customer.name}</p>
+                    <p className={styles.customerMeta}>
+                      {customer.email ?? customer.phone ?? 'No contact information yet'}
+                    </p>
+                  </div>
+
+                  <span
+                    className={joinClassNames(
+                      styles.balancePill,
+                      customer.balance > 0 && styles.balancePillAlert,
+                    )}
+                  >
+                    {formatCurrency(customer.balance)}
+                  </span>
                 </div>
 
-                <span
-                  className={joinClassNames(
-                    styles.balancePill,
-                    customer.balance > 0 && styles.balancePillAlert,
-                  )}
+                <div className={styles.customerStats}>
+                  {customer.oldestOverdueDays ? (
+                    <span><strong>{customer.oldestOverdueDays}</strong> {customer.oldestOverdueDays === 1 ? 'día' : 'días'} de atraso · {formatCurrency(customer.overdueBalance)} vencido</span>
+                  ) : null}
+                  <span>
+                    Purchases: <strong>{customer.purchaseCount.toString()}</strong>
+                  </span>
+                  <span>
+                    Last purchase:{' '}
+                    <strong>
+                      {customer.lastPurchaseAt
+                        ? formatDate(customer.lastPurchaseAt)
+                        : 'No purchases yet'}
+                    </strong>
+                  </span>
+                </div>
+              </button>
+              {onRegisterPayment && customer.openReceivablesCount > 0 ? (
+                <AppButton
+                  aria-label={`Registrar abono a ${customer.name}`}
+                  size="sm"
+                  startIcon={<Banknote aria-hidden="true" />}
+                  variant="secondary"
+                  onClick={() => onRegisterPayment(customer)}
                 >
-                  {formatCurrency(customer.balance)}
-                </span>
-              </div>
-
-              <div className={styles.customerStats}>
-                <span>
-                  Purchases: <strong>{customer.purchaseCount.toString()}</strong>
-                </span>
-                <span>
-                  Last purchase:{' '}
-                  <strong>
-                    {customer.lastPurchaseAt
-                      ? formatDate(customer.lastPurchaseAt)
-                      : 'No purchases yet'}
-                  </strong>
-                </span>
-              </div>
-            </button>
+                  Registrar abono
+                </AppButton>
+              ) : null}
+            </div>
           ))}
         </div>
       ) : null}

@@ -39,8 +39,7 @@
 }
 
 .searchIcon,
-.topbarActions svg,
-.heroActions svg {
+.topbarActions svg {
   flex: 0 0 auto;
   width: 1rem;
   height: 1rem;
@@ -70,8 +69,7 @@
   font-size: 0.7rem;
 }
 
-.topbarActions,
-.heroActions {
+.topbarActions {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
@@ -79,9 +77,6 @@
 }
 
 .iconButton,
-.saleButton,
-.primaryAction,
-.secondaryAction,
 .feedbackButton {
   display: inline-flex;
   align-items: center;
@@ -110,29 +105,21 @@
   background: #eaf2ff;
 }
 
-.saleButton,
 .feedbackButton {
   background: var(--home-blue);
   color: #fff;
 }
 
-.saleButton:hover,
 .feedbackButton:hover {
   background: #174e8b;
-}
-
-.heroGrid {
-  display: grid;
-  gap: 0.85rem;
-  min-width: 0;
 }
 
 .hero {
   display: grid;
   align-content: space-between;
   min-width: 0;
-  gap: 1.6rem;
-  padding: clamp(1rem, 3vw, 2.2rem);
+  gap: 1rem;
+  padding: clamp(0.9rem, 2.6vw, 1.6rem);
   border: 1px solid #2c4d74;
   border-radius: 1.15rem;
   overflow: hidden;
@@ -198,34 +185,6 @@
   flex: 0 0 auto;
   width: 1.05rem;
   height: 1.05rem;
-}
-
-.heroActions {
-  margin-top: 1.05rem;
-}
-
-.primaryAction {
-  border-color: #ffffff45;
-  background: #143054;
-  color: #fff;
-}
-
-.primaryAction:hover {
-  background: #254a76;
-}
-
-.primaryAction:disabled {
-  opacity: 0.75;
-  cursor: wait;
-}
-
-.secondaryAction {
-  background: #fff;
-  color: #163f70;
-}
-
-.secondaryAction:hover {
-  background: #ebf3ff;
 }
 
 .heroStats {
@@ -328,15 +287,93 @@
   color: var(--home-blue);
 }
 
+.financialGrid,
 .metricsGrid,
+.shortcuts,
 .panelsGrid {
   display: grid;
   gap: 0.85rem;
   min-width: 0;
 }
 
-.metricsGrid {
+.financialGrid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.metricsGrid,
+.shortcuts {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+}
+
+.shortcut {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 3.4rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #d3dfec;
+  border-radius: 0.85rem;
+  background: #fff;
+  color: #174475;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.shortcut:hover {
+  border-color: #5891ca;
+  background: #f2f7ff;
+}
+
+.shortcut:focus-visible {
+  outline: 2px solid #2369b1;
+  outline-offset: 3px;
+}
+
+.shortcutPrimary,
+.shortcutPrimary:hover {
+  border-color: #185491;
+  background: #185491;
+  color: #fff;
+}
+
+.shortcut > span {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.6rem;
+  background: #e8f1fc;
+  color: #1a5b9d;
+}
+
+.shortcut svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shortcut > span svg {
+    animation: shortcut-motion 700ms ease-in-out 2;
+  }
+
+  .shortcut:nth-child(2) > span svg {
+    animation-delay: 150ms;
+  }
+
+  .shortcut:nth-child(3) > span svg {
+    animation-delay: 300ms;
+  }
+
+  @keyframes shortcut-motion {
+    40% { transform: translateY(-3px); }
+    70% { transform: translateY(1px); }
+  }
+}
+
+.iconButton:disabled {
+  cursor: wait;
+  opacity: 0.6;
 }
 
 .feedbackCard {
@@ -378,19 +415,44 @@
 }
 
 @media (min-width: 960px) {
-  .heroGrid {
-    grid-template-columns: minmax(0, 1fr) minmax(14rem, 30%);
-  }
-
   .hero {
-    min-height: 21rem;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    min-height: 9rem;
   }
 
   .panelsGrid {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  }
+}
+
+@media (max-width: 440px) {
+  .page {
+    gap: 0.75rem;
+  }
+
+  .financialGrid,
+  .metricsGrid,
+  .shortcuts {
+    gap: 0.55rem;
+  }
+
+  .metricsGrid,
+  .shortcuts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .metricsGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .metricsGrid > :last-child:nth-child(odd),
+  .shortcutPrimary {
+    grid-column: 1 / -1;
+  }
+
+  .shortcut {
+    grid-template-columns: auto minmax(0, 1fr);
+    font-size: 0.8rem;
+  }
+
+  .shortcut > svg {
+    display: none;
   }
 }

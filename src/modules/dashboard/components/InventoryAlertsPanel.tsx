@@ -24,8 +24,8 @@ export function InventoryAlertsPanel({
           </span>
           <h2>Alertas de inventario</h2>
         </div>
-        <Link className={styles.headerLink} to={routePaths.inventory}>
-          Ver inventario <ArrowRight aria-hidden="true" />
+        <Link className={styles.headerLink} to={`${routePaths.inventory}?stock=low`}>
+          Ver stock bajo <ArrowRight aria-hidden="true" />
         </Link>
       </header>
 

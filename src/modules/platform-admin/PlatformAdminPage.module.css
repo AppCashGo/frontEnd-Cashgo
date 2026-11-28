@@ -173,6 +173,105 @@
   color: #516078;
 }
 
+.companyActions,
+.activationFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.companyActions {
+  align-items: center;
+  margin-top: 0.65rem;
+}
+
+.activationFilters {
+  margin-bottom: 0.75rem;
+}
+
+.activationFilters button {
+  min-height: 2.75rem;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-pill);
+  background: var(--ui-surface);
+  color: #334663;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.activationFilters button:hover,
+.activationFilters button[aria-pressed="true"] {
+  border-color: #a6bafa;
+  background: #edf3ff;
+  color: #1f408c;
+}
+
+.companies .activationSummary {
+  margin-top: 0.3rem;
+  color: #69501e;
+  font-weight: 650;
+}
+
+.companies .activationSummary[data-complete] {
+  color: #14623d;
+}
+
+.activation {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: #f7faff;
+}
+
+.activation h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.activation p {
+  margin: 0.25rem 0 0.7rem;
+  color: #516078;
+  font-size: 0.85rem;
+}
+
+.activationSteps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activationSteps li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.2rem 0.4rem;
+  padding: 0.55rem;
+  border-radius: 0.55rem;
+  background: var(--ui-surface);
+  color: #52627a;
+  font-size: 0.8rem;
+}
+
+.activationSteps li[data-complete] {
+  background: #e5f7ee;
+  color: #14623d;
+}
+
+.activationSteps svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.activationSteps small {
+  grid-column: 2;
+}
+
 .form,
 .history {
   margin-top: 1.25rem;
@@ -276,6 +375,9 @@
 
 @media (max-width: 420px) {
   .fields { grid-template-columns: minmax(0, 1fr); }
+  .activationSteps { grid-template-columns: minmax(0, 1fr); }
+  .activationFilters button { padding-inline: 0.48rem; }
+  .companyActions > button { min-height: 2.75rem; padding-inline: 0.65rem; font-size: 0.8rem; }
   .actions button { width: 100%; }
 }
 

@@ -219,3 +219,14 @@
     padding: 1.25rem;
   }
 }
+
+.customerEntry {
+  display: grid;
+  justify-items: start;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.customerEntry > :first-child {
+  width: 100%;
+}

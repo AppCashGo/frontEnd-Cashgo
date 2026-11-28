@@ -1158,3 +1158,39 @@
     font-size: clamp(1.05rem, 5.5cqi, 1.4rem);
   }
 }
+
+.overdueInfo {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.overdueInfo strong {
+  color: var(--ui-danger);
+}
+
+.overdueInfo small {
+  color: var(--ui-text-secondary);
+}
+
+.customerRowAction.quickPaymentAction {
+  border-color: #b5dec9;
+  background: #eaf7f0;
+  color: #12623c;
+}
+
+.customerRowAction.quickPaymentAction:hover {
+  background: #d8f3e4;
+}
+
+.quickPaymentFeedback {
+  margin: 0 0 0.65rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--ui-radius-md);
+  background: #eaf7f0;
+  color: #12623c;
+  font-weight: 700;
+}
+
+@container customer-workspace (max-width: 37rem) {
+  .customerRowAction.quickPaymentAction { min-height: 2.75rem; }
+}

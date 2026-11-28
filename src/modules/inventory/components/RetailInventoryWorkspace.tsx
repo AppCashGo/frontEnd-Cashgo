@@ -6,8 +6,10 @@ import {
 import type { PaymentFundSource } from '@/modules/cash-register/types/cash-register'
 import type { KeyboardEvent, ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
+  AlertTriangle,
   ArrowDownUp,
   ArrowRight,
   Camera,
@@ -100,6 +102,7 @@ import { FormValidationAlert } from '@/shared/components/ui/FormValidationAlert'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import { downloadBlobFile } from '@/shared/utils/download-blob-file'
 import { formatCurrency } from '@/shared/utils/format-currency'
+import { ApiError } from '@/shared/services/api-client'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { BarcodeScannerModal } from '@/shared/barcode/BarcodeScannerModal'
 import { normalizeBarcode } from '@/shared/barcode/normalize-barcode'
@@ -156,6 +159,7 @@ type PurchaseLineState = {
   quantity: string
   unitCost: string
   isGift: boolean
+  salePrice?: string
 }
 
 type AdjustmentFormState = {
@@ -274,49 +278,46 @@ function formatEditableNumber(value: number) {
 }
 
 function parseEditableDecimal(value: string) {
-  const cleanedValue = value.trim().replace(/\$/g, '').replace(/\s/g, '')
+  const cleanedValue = value.replace(/\s/g, '').replace(/^\$/, '')
+  let normalizedValue = cleanedValue.replace(',', '.')
 
-  if (cleanedValue.length === 0) {
-    return Number.NaN
+  if (/^[1-9]\d{0,2}(?:\.\d{3})+(?:,\d+)?$/.test(cleanedValue)) {
+    normalizedValue = cleanedValue.replace(/\./g, '').replace(',', '.')
+  } else if (/^[1-9]\d{0,2}(?:,\d{3})+(?:\.\d+)?$/.test(cleanedValue)) {
+    normalizedValue = cleanedValue.replace(/,/g, '')
   }
 
-  const hasComma = cleanedValue.includes(',')
-  const hasDot = cleanedValue.includes('.')
-  const lastCommaIndex = cleanedValue.lastIndexOf(',')
-  const lastDotIndex = cleanedValue.lastIndexOf('.')
-  let normalizedValue = cleanedValue
+  if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalizedValue)) return Number.NaN
 
-  if (hasComma && hasDot) {
-    normalizedValue =
-      lastCommaIndex > lastDotIndex
-        ? cleanedValue.replace(/\./g, '').replace(',', '.')
-        : cleanedValue.replace(/,/g, '')
-  } else if (hasComma) {
-    normalizedValue = cleanedValue.replace(',', '.')
-  } else if (hasDot) {
-    const decimalSegment = cleanedValue.slice(lastDotIndex + 1)
-    const dotSegments = cleanedValue.split('.')
-    const looksLikeThousands =
-      dotSegments.length > 1 &&
-      decimalSegment.length === 3 &&
-      dotSegments.slice(1).every((segment) => segment.length === 3)
-
-    normalizedValue = looksLikeThousands
-      ? cleanedValue.replace(/\./g, '')
-      : cleanedValue
-  }
-
-  const parsedValue = Number(normalizedValue)
-
-  return Number.isFinite(parsedValue) && parsedValue >= 0
-    ? parsedValue
-    : Number.NaN
+  return Number(normalizedValue)
 }
 
-function parseEditableStock(value: string) {
-  const parsedValue = parseEditableDecimal(value)
+function getPurchaseUnitCost(item: PurchaseLineState) {
+  return item.isGift ? 0 : roundMonetaryAmount(parseEditableDecimal(item.unitCost))
+}
 
-  return Number.isFinite(parsedValue) ? Math.floor(parsedValue) : Number.NaN
+function parsePurchaseSalePrice(value?: string) {
+  if (!value?.trim()) return undefined
+
+  const price = roundMonetaryAmount(parseEditableDecimal(value))
+  return price <= 99_999_999.99 ? price : Number.NaN
+}
+
+function getPurchaseMargin(price: number, cost: number) {
+  return price > 0 ? (price - cost) / price : null
+}
+
+function getProjectedPurchaseCost(
+  product: Product,
+  quantity: number,
+  unitCost: number,
+  useWeightedAverageCost: boolean,
+) {
+  if (!useWeightedAverageCost || product.stock <= 0) return unitCost
+
+  return roundMonetaryAmount(
+    (product.stock * product.cost + quantity * unitCost) / (product.stock + quantity),
+  )
 }
 
 function createInlineProductDraft(product: Product): InlineProductDraft {
@@ -482,6 +483,10 @@ function SearchIcon() {
 export function RetailInventoryWorkspace() {
   const { languageCode } = useAppTranslation()
   const copy = getInventoryCopy(languageCode)
+  const marginFormatter = useMemo(() => new Intl.NumberFormat(languageCode, {
+    style: 'percent',
+    maximumFractionDigits: 2,
+  }), [languageCode])
   const { confirm, confirmationDialog } = useConfirmDialog()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -578,8 +583,16 @@ export function RetailInventoryWorkspace() {
   const [isAdjustmentDrawerOpen, setAdjustmentDrawerOpen] = useState(false)
   const [isInventoryCountOpen, setInventoryCountOpen] = useState(false)
   const [shareCatalogPhone, setShareCatalogPhone] = useState('')
+  const requestedStockFilter = searchParams.get('stock')
   const [activeInventoryFilter, setActiveInventoryFilter] =
-    useState<InventoryFilter>('ALL')
+    useState<InventoryFilter>(() => requestedStockFilter === 'low' ? 'LOW' : 'ALL')
+
+  useEffect(() => {
+    if (requestedStockFilter === 'low') {
+      setActiveInventoryFilter('LOW')
+      tableSectionRef.current?.scrollIntoView({ block: 'start' })
+    }
+  }, [requestedStockFilter])
   const [inventorySort, setInventorySort] = useState<InventorySort>('STOCK_ASC')
   const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
   const [taxPickerCategoryId, setTaxPickerCategoryId] = useState<string | null>(
@@ -710,13 +723,10 @@ export function RetailInventoryWorkspace() {
     (product) => product.id === adjustmentFormState.productId,
   )
   const estimatedPurchaseTotal = roundMonetaryAmount(
-    purchaseFormState.items.reduce(
-      (total, item) =>
-        total +
-        parsePositiveNumber(item.quantity) *
-          roundMonetaryAmount(parsePositiveNumber(item.unitCost)),
-      0,
-    ),
+    purchaseFormState.items.reduce((total, item) => {
+      const unitCost = getPurchaseUnitCost(item)
+      return total + parsePositiveNumber(item.quantity) * (Number.isFinite(unitCost) ? unitCost : 0)
+    }, 0),
   )
   const purchaseProductIds = purchaseFormState.items
     .map((item) => item.productId)
@@ -761,9 +771,13 @@ export function RetailInventoryWorkspace() {
   )
   const invalidPurchaseItemIndex = purchaseFormState.items.findIndex((item) => {
     const quantity = parsePositiveNumber(item.quantity)
+    const unitCost = getPurchaseUnitCost(item)
     return !purchasableById.has(item.productId) || !Number.isSafeInteger(quantity) ||
-      quantity <= 0 || (!item.isGift && roundMonetaryAmount(parsePositiveNumber(item.unitCost)) <= 0)
+      quantity <= 0 || !Number.isFinite(unitCost) || (!item.isGift && unitCost <= 0)
   })
+  const invalidPurchasePriceIndex = purchaseFormState.items.findIndex((item) =>
+    Number.isNaN(parsePurchaseSalePrice(item.salePrice)),
+  )
   const purchaseValidationError = !purchaseFormState.supplierId
     ? languageCode === 'en'
       ? 'Select a supplier.'
@@ -1142,24 +1156,23 @@ export function RetailInventoryWorkspace() {
   ) {
     const currentDraft =
       productDrafts[product.id] ?? createInlineProductDraft(product)
-    const parsedValue =
-      field === 'stock'
-        ? parseEditableStock(currentDraft[field])
-        : parseEditableDecimal(currentDraft[field])
+    const parsedValue = parseEditableDecimal(currentDraft[field])
 
-    if (!Number.isFinite(parsedValue)) {
+    if (!Number.isFinite(parsedValue) || (field === 'stock' && !Number.isInteger(parsedValue))) {
       resetProductDraftField(product, field)
       setFeedbackMessage({
         tone: 'error',
-        text: 'Ingresa un valor válido para actualizar el producto.',
+        text: field === 'stock'
+          ? 'Ingresa una cantidad entera para actualizar las existencias.'
+          : 'Ingresa un valor válido para actualizar el producto.',
       })
       return
     }
 
     const normalizedValue =
       field === 'stock'
-        ? Math.max(0, Math.floor(parsedValue))
-        : Math.round((parsedValue + Number.EPSILON) * 100) / 100
+        ? parsedValue
+        : roundMonetaryAmount(parsedValue)
     const currentValue = product[field]
 
     setProductDrafts((currentDrafts) => ({
@@ -1389,20 +1402,19 @@ export function RetailInventoryWorkspace() {
   async function handleRegisterPurchase() {
     resetFeedback()
 
-    const purchaseItems = purchaseFormState.items.map((item) => ({
-      productId: item.productId,
-      quantity: parsePositiveNumber(item.quantity),
-      unitCost: item.isGift
-        ? 0
-        : roundMonetaryAmount(parsePositiveNumber(item.unitCost)),
-    }))
-    const hasInvalidItem = purchaseItems.some(
-      (item, index) =>
-        !item.productId ||
-        !Number.isSafeInteger(item.quantity) ||
-        item.quantity <= 0 ||
-        (!purchaseFormState.items[index]?.isGift && item.unitCost <= 0),
-    )
+    const purchaseItems = purchaseFormState.items.map((item) => {
+      const product = purchasableById.get(item.productId)
+      const salePrice = parsePurchaseSalePrice(item.salePrice)
+
+      return {
+        productId: item.productId,
+        quantity: parsePositiveNumber(item.quantity),
+        unitCost: getPurchaseUnitCost(item),
+        ...(product && salePrice !== undefined && salePrice !== product.price
+          ? { salePrice, expectedProductUpdatedAt: product.updatedAt }
+          : {}),
+      }
+    })
     const hasDuplicateProduct = hasDuplicatePurchaseProducts
     const amountPaid = roundMonetaryAmount(
       purchaseFormState.status === 'PAID'
@@ -1414,12 +1426,12 @@ export function RetailInventoryWorkspace() {
 
     if (
       purchaseValidationError ||
-      hasInvalidItem ||
+      invalidPurchasePriceIndex >= 0 ||
       amountPaid > estimatedPurchaseTotal
     ) {
       setPurchaseFormError(
         purchaseValidationError ??
-          (languageCode === 'en'
+          (invalidPurchasePriceIndex >= 0 ? copy.purchaseInvalidPrice : languageCode === 'en'
             ? 'Review the products, quantities, costs, and amount paid.'
             : 'Revisa los productos, las cantidades, los costos y el valor pagado.'),
       )
@@ -1434,7 +1446,9 @@ export function RetailInventoryWorkspace() {
             ? `purchase-line-${purchaseFormState.items[duplicateItemIndex]?.id}`
             : !purchaseFormState.purchaseDate
               ? 'purchase-date'
-              : 'purchase-validation-alert'
+              : invalidPurchasePriceIndex >= 0
+                ? `purchase-sale-price-${purchaseFormState.items[invalidPurchasePriceIndex].id}`
+                : 'purchase-validation-alert'
 
       window.requestAnimationFrame(() => {
         document.getElementById(targetId)?.scrollIntoView({
@@ -1509,6 +1523,11 @@ export function RetailInventoryWorkspace() {
         text: copy.purchaseSuccess,
       })
     } catch (error) {
+      if (error instanceof ApiError && error.code === 'PURCHASE_PRODUCT_CHANGED') {
+        setPurchaseFormError(copy.purchaseProductChanged)
+        await Promise.all([productsQuery.refetch(), businessSettingsQuery.refetch()])
+        return
+      }
       setPurchaseFormError(
         getErrorMessage(error, 'No fue posible registrar la compra.'),
       )
@@ -2080,11 +2099,13 @@ export function RetailInventoryWorkspace() {
                         <span className={styles.inlineCurrencyPrefix}>$</span>
                         <input
                           aria-label={`Precio de ${product.name}`}
+                          autoComplete="off"
+                          autoCorrect="off"
                           className={styles.inlineEditInput}
                           disabled={
                             savingProductField === `${product.id}:price`
                           }
-                          inputMode="decimal"
+                          spellCheck={false}
                           type="text"
                           value={productDraft.price}
                           onBlur={() => {
@@ -2112,9 +2133,11 @@ export function RetailInventoryWorkspace() {
                         <span className={styles.inlineCurrencyPrefix}>$</span>
                         <input
                           aria-label={`Costo de ${product.name}`}
+                          autoComplete="off"
+                          autoCorrect="off"
                           className={styles.inlineEditInput}
                           disabled={savingProductField === `${product.id}:cost`}
-                          inputMode="decimal"
+                          spellCheck={false}
                           type="text"
                           value={productDraft.cost}
                           onBlur={() => {
@@ -2147,13 +2170,13 @@ export function RetailInventoryWorkspace() {
                           >
                             <input
                               aria-label={`Cantidad disponible de ${product.name}`}
+                              autoComplete="off"
+                              autoCorrect="off"
                               className={styles.inlineEditInput}
                               disabled={
                                 savingProductField === `${product.id}:stock`
                               }
-                              inputMode="numeric"
-                              min="0"
-                              step="1"
+                              spellCheck={false}
                               type="text"
                               value={productDraft.stock}
                               onBlur={() => {
@@ -2829,7 +2852,7 @@ export function RetailInventoryWorkspace() {
         </DrawerShell>
       ) : null}
 
-      {isPurchaseDrawerOpen ? (
+      {isPurchaseDrawerOpen ? createPortal(
         <DrawerShell
           panelClassName={`${styles.drawer} ${styles.purchaseDrawer}`}
           titleAccessory={
@@ -2865,6 +2888,7 @@ export function RetailInventoryWorkspace() {
                   className={retailStyles.buttonDark}
                   disabled={
                     isPurchasePickerOpen ||
+                    productsQuery.isFetching ||
                     registerPurchaseMutation.isPending ||
                     uploadPurchaseInvoiceMutation.isPending
                   }
@@ -3022,9 +3046,36 @@ export function RetailInventoryWorkspace() {
                   product?.name ?? copy.purchaseLine.replace('{number}', String(index + 1))
                 const isInvalid =
                   Boolean(purchaseFormError) && index === invalidPurchaseItemIndex
-                const lineTotal = item.isGift
-                  ? 0
-                  : parsePositiveNumber(item.quantity) * parsePositiveNumber(item.unitCost)
+                const quantity = parsePositiveNumber(item.quantity)
+                const unitCost = getPurchaseUnitCost(item)
+                const lineTotal = quantity * (Number.isFinite(unitCost) ? unitCost : 0)
+                const isEditingPrice = item.salePrice !== undefined
+                const adjustedPrice = parsePurchaseSalePrice(item.salePrice)
+                const isInvalidPrice = Number.isNaN(adjustedPrice)
+                const projectedCost = product && Number.isSafeInteger(quantity) && quantity > 0 &&
+                  Number.isFinite(unitCost) && (item.isGift || unitCost > 0)
+                  ? getProjectedPurchaseCost(product, quantity, unitCost, businessSettings?.useWeightedAverageCost ?? true)
+                  : null
+                const currentMargin = product ? getPurchaseMargin(product.price, product.cost) : null
+                const unchangedPriceMargin = product && projectedCost !== null
+                  ? getPurchaseMargin(product.price, projectedCost)
+                  : null
+                const marginDrops = currentMargin !== null && unchangedPriceMargin !== null &&
+                  unchangedPriceMargin < currentMargin &&
+                  marginFormatter.format(unchangedPriceMargin) !== marginFormatter.format(currentMargin)
+                const adjustedMargin = product && projectedCost !== null && !isInvalidPrice
+                  ? getPurchaseMargin(adjustedPrice ?? product.price, projectedCost)
+                  : null
+                const adjustPriceAction = product && !isEditingPrice ? (
+                  <button
+                    aria-label={`${copy.purchaseAdjustPrice}: ${name}`}
+                    className={styles.purchasePriceAction}
+                    type="button"
+                    onClick={() => updatePurchaseLine(item.id, { salePrice: '' })}
+                  >
+                    <Pencil aria-hidden="true" /> {copy.purchaseAdjustPrice}
+                  </button>
+                ) : null
                 return (
                   <article
                     className={`${styles.purchaseLine} ${isInvalid ? styles.purchaseItemCardInvalid : ''}`}
@@ -3056,13 +3107,13 @@ export function RetailInventoryWorkspace() {
                       <span>{copy.purchaseUnitCost}</span>
                       <input
                         aria-label={`${copy.purchaseUnitCost}: ${name}`}
+                        autoComplete="off"
+                        autoCorrect="off"
                         className={styles.textInput}
                         disabled={item.isGift}
-                        inputMode="decimal"
-                        min="0.01"
                         placeholder="0.00"
-                        step="0.01"
-                        type="number"
+                        spellCheck={false}
+                        type="text"
                         value={item.isGift ? '0' : item.unitCost}
                         onChange={(event) =>
                           updatePurchaseLine(item.id, { unitCost: event.target.value })
@@ -3098,7 +3149,53 @@ export function RetailInventoryWorkspace() {
                       <strong className={styles.purchaseLineAmount}>
                         {formatCurrency(lineTotal)}
                       </strong>
+                      {marginDrops ? null : adjustPriceAction}
                     </div>
+                    {marginDrops && currentMargin !== null && unchangedPriceMargin !== null ? (
+                      <div className={styles.purchaseMarginWarning}>
+                        <AlertTriangle aria-hidden="true" size={17} />
+                        <div>
+                          <strong>{copy.purchaseMarginDrop}</strong>
+                          <span>{marginFormatter.format(currentMargin)} → {marginFormatter.format(unchangedPriceMargin)}</span>
+                        </div>
+                        {adjustPriceAction}
+                      </div>
+                    ) : null}
+                    {isEditingPrice ? (
+                      <div className={styles.purchasePriceEditor}>
+                        <label className={styles.purchaseLineField}>
+                          <span>{copy.purchaseSalePrice}</span>
+                          <input
+                            aria-describedby={isInvalidPrice ? `purchase-price-error-${item.id}` : undefined}
+                            aria-invalid={isInvalidPrice}
+                            aria-label={`${copy.purchaseSalePrice}: ${name}`}
+                            autoComplete="off"
+                            autoCorrect="off"
+                            className={styles.textInput}
+                            id={`purchase-sale-price-${item.id}`}
+                            placeholder={product ? formatEditableNumber(product.price) : undefined}
+                            spellCheck={false}
+                            type="text"
+                            value={item.salePrice}
+                            onChange={(event) => updatePurchaseLine(item.id, { salePrice: event.target.value })}
+                          />
+                        </label>
+                        <p className={styles.purchaseMarginPreview} aria-live="polite">
+                          <span>{copy.purchaseNewMargin}</span>
+                          <strong>{adjustedMargin === null ? '—' : marginFormatter.format(adjustedMargin)}</strong>
+                        </p>
+                        <button
+                          className={styles.purchasePriceAction}
+                          type="button"
+                          onClick={() => updatePurchaseLine(item.id, { salePrice: undefined })}
+                        >
+                          {copy.purchaseKeepPrice}
+                        </button>
+                        {isInvalidPrice ? (
+                          <p className={styles.purchaseItemError} id={`purchase-price-error-${item.id}`}>{copy.purchaseInvalidPrice}</p>
+                        ) : null}
+                      </div>
+                    ) : null}
                     {isInvalid ? (
                       <p className={styles.purchaseItemError}>{purchaseValidationError}</p>
                     ) : null}
@@ -3388,10 +3485,11 @@ export function RetailInventoryWorkspace() {
               />
             </label>
           </div>
-        </DrawerShell>
+        </DrawerShell>,
+        document.body,
       ) : null}
 
-      <QuickCreateSupplierDrawer
+      {createPortal(<QuickCreateSupplierDrawer
         description={
           languageCode === 'en'
             ? 'Create it without leaving the purchase and it will be selected automatically.'
@@ -3414,7 +3512,7 @@ export function RetailInventoryWorkspace() {
                 : `${supplier.name} fue creado y seleccionado para esta compra.`,
           })
         }}
-      />
+      />, document.body)}
 
       <InventoryCountDrawer
         categories={categories}
@@ -3434,7 +3532,7 @@ export function RetailInventoryWorkspace() {
         onClose={() => setInventoryCountOpen(false)}
       />
 
-      <BarcodeScannerModal
+      {createPortal(<BarcodeScannerModal
         isOpen={isBarcodeScannerOpen}
         title={
           barcodeScannerPurpose === 'PURCHASE'
@@ -3447,7 +3545,7 @@ export function RetailInventoryWorkspace() {
             ? handlePurchaseBarcodeScan
             : handleInventoryBarcodeScan
         }
-      />
+      />, document.body)}
 
       {confirmationDialog}
     </RetailPageLayout>

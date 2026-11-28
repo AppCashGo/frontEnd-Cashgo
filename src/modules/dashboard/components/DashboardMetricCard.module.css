@@ -74,3 +74,13 @@
   color: #506480;
   font-size: 0.7rem;
 }
+
+.action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  justify-self: start;
+  color: #205c9c;
+  font-size: 0.8rem;
+  font-weight: 750;
+}

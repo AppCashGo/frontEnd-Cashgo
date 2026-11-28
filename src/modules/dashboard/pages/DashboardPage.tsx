@@ -3,16 +3,17 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
   ArrowUpRight,
-  Bell,
+  Banknote,
   CalendarDays,
   CircleHelp,
+  CircleDollarSign,
   Coins,
   Package,
-  Plus,
+  PackagePlus,
   RefreshCw,
   Search,
   ShoppingCart,
-  Ticket,
+  Store,
   Trophy,
   Users,
   TriangleAlert,
@@ -24,8 +25,11 @@ import { DashboardMetricCard } from '@/modules/dashboard/components/DashboardMet
 import { InventoryAlertsPanel } from '@/modules/dashboard/components/InventoryAlertsPanel'
 import { BakeryOperationsDashboard } from '@/modules/dashboard/components/BakeryOperationsDashboard'
 import { useDashboardSummaryQuery } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
-import { routePaths } from '@/routes/route-paths'
+import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-cash-register-query'
+import { getModuleNavigationRoutes } from '@/routes/module-navigation-routes'
+import { routePaths, routeSegments } from '@/routes/route-paths'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { isTeamManagementRole } from '@/shared/constants/user-roles'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
@@ -34,10 +38,12 @@ import { resolveApiAssetUrl } from '@/shared/services/api-client'
 import {
   getActiveBusiness,
   getActiveBusinessCategory,
+  getActiveBusinessRole,
 } from '@/modules/auth/utils/get-active-business'
 import styles from './DashboardPage.module.css'
 
 const dateFormatter = new Intl.DateTimeFormat('es-CO', {
+  timeZone: 'UTC',
   weekday: 'long',
   day: 'numeric',
   month: 'long',
@@ -51,7 +57,19 @@ export function DashboardPage() {
     business?.businessName || user?.businessName || 'Mi negocio'
   const logoUrl = resolveApiAssetUrl(business?.logoUrl ?? user?.logoUrl)
   const [failedLogoUrl, setFailedLogoUrl] = useState<string | null>(null)
-  const isBakery = getActiveBusinessCategory(user) === 'bakery_pastry'
+  const businessCategory = getActiveBusinessCategory(user)
+  const isBakery = businessCategory === 'bakery_pastry'
+  const role = getActiveBusinessRole(user)
+  const routes = getModuleNavigationRoutes('es', businessCategory, role)
+  const canOpen = (segment: string) => routes.some((route) => route.segment === segment && route.isVisible)
+  const canSell = canOpen(routeSegments.sales)
+  const canSeeInventory = canOpen(routeSegments.inventory)
+  const canSeeCustomers = canOpen(routeSegments.customers)
+  const canSeeCash = canOpen(routeSegments.cashRegister)
+  const canSetUpBusiness = isTeamManagementRole(role) && canSell && canSeeCash && canOpen(routeSegments.products)
+  const cashQuery = useCurrentCashRegisterQuery(canSeeCash)
+  const isCashOpen = Boolean(cashQuery.data)
+  const canShowCashStatus = cashQuery.isSuccess && !cashQuery.isError
   const [globalSearch, setGlobalSearch] = useState('')
   const globalSearchRef = useRef<HTMLInputElement>(null)
   const dashboardSummaryQuery = useDashboardSummaryQuery()
@@ -61,7 +79,18 @@ export function DashboardPage() {
   const topSeller = bestSellingProducts[0]
   const salesToday = summary?.salesToday ?? 0
   const revenueToday = summary?.revenueToday ?? 0
-  const averageSale = salesToday > 0 ? revenueToday / salesToday : 0
+  const collectionsToday = summary?.collectionsToday
+  const overdue = summary?.overdueReceivables
+  const lowStockCount = summary?.lowStockCount ?? lowStockAlerts.length
+  const canReplenish = isTeamManagementRole(role)
+  const replenishmentPath = canReplenish ? routePaths.inventoryPurchaseOrders : `${routePaths.inventory}?stock=low`
+  const overduePath = `${routePaths.customers}?portfolio=overdue`
+  const isRefreshing = dashboardSummaryQuery.isFetching || (canSeeCash && cashQuery.isFetching)
+
+  function refreshDashboard() {
+    void dashboardSummaryQuery.refetch()
+    if (canSeeCash) void cashQuery.refetch()
+  }
   const registeredCustomers = summary?.customersCount ?? 0
   const activeProducts = summary?.activeProductsCount ?? 0
   const featuredStock = topSeller
@@ -70,6 +99,8 @@ export function DashboardPage() {
     : undefined
 
   useEffect(() => {
+    if (!canSell) return
+
     function focusGlobalSearch(event: KeyboardEvent) {
       if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== 'k')
         return
@@ -79,7 +110,7 @@ export function DashboardPage() {
 
     window.addEventListener('keydown', focusGlobalSearch)
     return () => window.removeEventListener('keydown', focusGlobalSearch)
-  }, [])
+  }, [canSell])
 
   function handleGlobalSearchSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -94,58 +125,37 @@ export function DashboardPage() {
   return (
     <div className={styles.page}>
       <header className={styles.topbar}>
-        <form className={styles.searchBox} onSubmit={handleGlobalSearchSubmit}>
-          <Search aria-hidden="true" className={styles.searchIcon} />
-          <input
-            aria-label="Buscar productos y ventas"
-            placeholder="Buscar productos, ventas..."
-            ref={globalSearchRef}
-            type="search"
-            value={globalSearch}
-            onChange={(event) => setGlobalSearch(event.target.value)}
-          />
-          <kbd>CMD + K</kbd>
-        </form>
-
+        {canSell ? (
+          <form className={styles.searchBox} onSubmit={handleGlobalSearchSubmit}>
+            <Search aria-hidden="true" className={styles.searchIcon} />
+            <input
+              aria-label="Buscar productos para vender"
+              placeholder="Buscar productos para vender…"
+              ref={globalSearchRef}
+              type="search"
+              value={globalSearch}
+              onChange={(event) => setGlobalSearch(event.target.value)}
+            />
+            <kbd>CMD + K</kbd>
+          </form>
+        ) : null}
         <div className={styles.topbarActions}>
-          <Link
-            aria-label="Alertas de inventario"
+          <button
+            aria-label="Actualizar inicio"
             className={styles.iconButton}
-            to={routePaths.inventory}
+            disabled={isRefreshing}
+            type="button"
+            onClick={refreshDashboard}
           >
-            <Bell aria-hidden="true" />
-          </Link>
-          <Link
-            aria-label="Ayuda"
-            className={styles.iconButton}
-            to={routePaths.help}
-          >
+            <RefreshCw aria-hidden="true" />
+          </button>
+          <Link aria-label="Ayuda" className={styles.iconButton} to={routePaths.help}>
             <CircleHelp aria-hidden="true" />
-          </Link>
-          <Link className={styles.saleButton} to={routePaths.salesNew}>
-            <Plus aria-hidden="true" />
-            Nueva venta
           </Link>
         </div>
       </header>
 
-      <BusinessSetupChecklist
-        businessCategory={business?.businessCategory ?? user?.businessCategory}
-        businessName={business?.businessName ?? user?.businessName}
-        summary={summary}
-      />
-
-      {isBakery ? (
-        <BakeryOperationsDashboard
-          businessId={user?.businessId}
-          lowStockCount={lowStockAlerts.length}
-          revenueToday={revenueToday}
-          salesToday={salesToday}
-          userId={user?.id}
-        />
-      ) : null}
-
-      <section className={styles.heroGrid} aria-label="Resumen del negocio">
+      <section aria-label="Resumen del negocio">
         <div className={styles.hero}>
           <div className={styles.heroCopy}>
             <div className={styles.businessIdentity}>
@@ -168,25 +178,8 @@ export function DashboardPage() {
             <h1 className={styles.title}>Tu negocio hoy</h1>
             <p className={styles.heroDate}>
               <CalendarDays aria-hidden="true" />{' '}
-              {dateFormatter.format(new Date())}
+              {dateFormatter.format(summary?.businessDate ? new Date(`${summary.businessDate}T12:00:00Z`) : new Date())}
             </p>
-
-            <div className={styles.heroActions}>
-              <Link className={styles.secondaryAction} to={routePaths.products}>
-                <Package aria-hidden="true" /> Ver catálogo
-              </Link>
-              <button
-                className={styles.primaryAction}
-                disabled={dashboardSummaryQuery.isFetching}
-                type="button"
-                onClick={() => void dashboardSummaryQuery.refetch()}
-              >
-                <RefreshCw aria-hidden="true" />
-                {dashboardSummaryQuery.isFetching
-                  ? 'Actualizando…'
-                  : 'Actualizar resumen'}
-              </button>
-            </div>
           </div>
 
           <dl className={styles.heroStats}>
@@ -202,83 +195,94 @@ export function DashboardPage() {
             </div>
           </dl>
         </div>
-
-        <aside
-          className={styles.spotlightCard}
-          aria-labelledby="dashboard-featured"
-        >
-          <h2 className={styles.spotlightLabel} id="dashboard-featured">
-            <span>
-              <Trophy aria-hidden="true" />
-            </span>{' '}
-            Más vendido hoy
-          </h2>
-          <DashboardProductPhoto imageUrl={topSeller?.imageUrl} featured />
-          {topSeller ? (
-            <Link
-              className={styles.spotlightProduct}
-              to={`${routePaths.products}?productId=${encodeURIComponent(topSeller.productId)}`}
-            >
-              <div>
-                <h3>{topSeller.name}</h3>
-                <p>
-                  {topSeller.quantitySold}{' '}
-                  {topSeller.quantitySold === 1
-                    ? 'unidad vendida'
-                    : 'unidades vendidas'}
-                </p>
-                {featuredStock !== undefined ? (
-                  <p className={styles.spotlightStock}>
-                    {featuredStock === 0
-                      ? 'Sin stock'
-                      : `${featuredStock} en existencias`}
-                  </p>
-                ) : null}
-              </div>
-              <ArrowUpRight aria-hidden="true" />
-            </Link>
-          ) : (
-            <p className={styles.spotlightEmpty}>
-              {dashboardSummaryQuery.isLoading
-                ? 'Cargando ventas…'
-                : dashboardSummaryQuery.isError
-                  ? 'No pudimos consultar el producto más vendido.'
-                  : 'Todavía no hay ventas de productos hoy.'}
-            </p>
-          )}
-        </aside>
       </section>
 
-      <div
-        className={styles.metricsGrid}
+      {canSetUpBusiness ? <BusinessSetupChecklist progress={summary?.setupProgress} /> : null}
+
+      <section
+        aria-label="Ventas y cobros de hoy"
         aria-busy={dashboardSummaryQuery.isLoading}
+        className={styles.financialGrid}
       >
         <DashboardMetricCard
+          hint={summary ? `${salesToday} ${salesToday === 1 ? 'venta registrada' : 'ventas registradas'} · incluye ventas a crédito` : 'Incluye ventas a crédito'}
           icon={<ShoppingCart aria-hidden="true" />}
-          label="Ventas de hoy"
-          tone="primary"
-          value={summary ? String(salesToday) : '—'}
-        />
-        <DashboardMetricCard
-          hint="Incluye ventas a crédito"
-          icon={<Coins aria-hidden="true" />}
-          label="Valor vendido hoy"
-          tone="secondary"
+          label="Vendido hoy"
           value={summary ? formatCurrency(revenueToday) : '—'}
         />
         <DashboardMetricCard
-          icon={<Ticket aria-hidden="true" />}
-          label="Ticket promedio"
-          tone="warning"
-          value={summary ? formatCurrency(averageSale) : '—'}
+          hint="Pagos y abonos menos reembolsos del día"
+          icon={<Banknote aria-hidden="true" />}
+          label="Cobrado hoy"
+          tone="success"
+          value={collectionsToday === undefined ? '—' : formatCurrency(collectionsToday)}
         />
-        <DashboardMetricCard
-          icon={<TriangleAlert aria-hidden="true" />}
-          label="Alertas de stock"
-          tone={lowStockAlerts.length > 0 ? 'danger' : 'success'}
-          value={summary ? String(lowStockAlerts.length) : '—'}
+      </section>
+
+      <section aria-label="Estado del negocio" className={styles.metricsGrid}>
+        {canSeeCash ? (
+          <DashboardMetricCard
+            action={{ label: 'Ir a Caja', to: routePaths.cashRegister }}
+            hint={canShowCashStatus ? (isCashOpen ? 'Hay un turno en curso' : 'Sin turno abierto') : cashQuery.isError ? 'No se pudo consultar el turno' : 'Consultando el turno…'}
+            icon={<Store aria-hidden="true" />}
+            label="Estado de caja"
+            tone={canShowCashStatus && isCashOpen ? 'success' : 'warning'}
+            value={canShowCashStatus ? (isCashOpen ? 'Abierta' : 'Cerrada') : '—'}
+          />
+        ) : null}
+        {canSeeInventory ? (
+          <DashboardMetricCard
+            hint={summary?.lowStockAlertsEnabled === false ? 'Alertas desactivadas en Configuraciones' : 'Productos en el mínimo o por debajo'}
+            icon={<TriangleAlert aria-hidden="true" />}
+            label="Stock bajo"
+            tone={lowStockCount > 0 ? 'danger' : 'primary'}
+            value={summary && summary.lowStockAlertsEnabled !== false ? String(lowStockCount) : '—'}
+          />
+        ) : null}
+        {canSeeCustomers ? (
+          <DashboardMetricCard
+            hint={overdue ? `${overdue.count} ${overdue.count === 1 ? 'cuenta vencida' : 'cuentas vencidas'}` : 'Saldo pendiente después del vencimiento'}
+            icon={<CircleDollarSign aria-hidden="true" />}
+            label="Cartera vencida"
+            tone={overdue && overdue.count > 0 ? 'danger' : 'primary'}
+            value={overdue ? formatCurrency(overdue.balance) : '—'}
+          />
+        ) : null}
+      </section>
+
+      <nav aria-label="Accesos directos" className={styles.shortcuts}>
+        {canSell ? (
+          <Link className={`${styles.shortcut} ${styles.shortcutPrimary}`} to={routePaths.salesNew}>
+            <span><ShoppingCart aria-hidden="true" /></span>
+            Registrar venta
+            <ArrowUpRight aria-hidden="true" />
+          </Link>
+        ) : null}
+        {canSeeInventory ? (
+          <Link className={styles.shortcut} to={replenishmentPath}>
+            <span><PackagePlus aria-hidden="true" /></span>
+            {canReplenish ? 'Reponer inventario' : 'Ver stock bajo'}
+            <ArrowUpRight aria-hidden="true" />
+          </Link>
+        ) : null}
+        {canSeeCustomers ? (
+          <Link className={styles.shortcut} to={overduePath}>
+            <span><Coins aria-hidden="true" /></span>
+            Cobrar pendientes
+            <ArrowUpRight aria-hidden="true" />
+          </Link>
+        ) : null}
+      </nav>
+
+      {isBakery ? (
+        <BakeryOperationsDashboard
+          businessId={user?.businessId}
+          lowStockCount={lowStockCount}
+          revenueToday={revenueToday}
+          salesToday={salesToday}
+          userId={user?.id}
         />
-      </div>
+      ) : null}
 
       {dashboardSummaryQuery.isError ? (
         <SurfaceCard className={styles.feedbackCard}>
@@ -293,7 +297,7 @@ export function DashboardPage() {
             className={styles.feedbackButton}
             type="button"
             onClick={() => {
-              void dashboardSummaryQuery.refetch()
+              refreshDashboard()
             }}
           >
             Reintentar
@@ -303,14 +307,60 @@ export function DashboardPage() {
 
       {!dashboardSummaryQuery.isError || summary ? (
         <div className={styles.panelsGrid}>
+          <aside
+            className={styles.spotlightCard}
+            aria-labelledby="dashboard-featured"
+          >
+            <h2 className={styles.spotlightLabel} id="dashboard-featured">
+              <span>
+                <Trophy aria-hidden="true" />
+              </span>{' '}
+              Más vendido hoy
+            </h2>
+            <DashboardProductPhoto imageUrl={topSeller?.imageUrl} featured />
+            {topSeller ? (
+              <Link
+                className={styles.spotlightProduct}
+                to={`${routePaths.products}?productId=${encodeURIComponent(topSeller.productId)}`}
+              >
+                <div>
+                  <h3>{topSeller.name}</h3>
+                  <p>
+                    {topSeller.quantitySold}{' '}
+                    {topSeller.quantitySold === 1
+                      ? 'unidad vendida'
+                      : 'unidades vendidas'}
+                  </p>
+                  {featuredStock !== undefined ? (
+                    <p className={styles.spotlightStock}>
+                      {featuredStock === 0
+                        ? 'Sin stock'
+                        : `${featuredStock} en existencias`}
+                    </p>
+                  ) : null}
+                </div>
+                <ArrowUpRight aria-hidden="true" />
+              </Link>
+            ) : (
+              <p className={styles.spotlightEmpty}>
+                {dashboardSummaryQuery.isLoading
+                  ? 'Cargando ventas…'
+                  : dashboardSummaryQuery.isError
+                    ? 'No pudimos consultar el producto más vendido.'
+                    : 'Todavía no hay ventas de productos hoy.'}
+              </p>
+            )}
+          </aside>
           <BestSellingProductsPanel
             isLoading={dashboardSummaryQuery.isLoading}
             products={bestSellingProducts}
           />
-          <InventoryAlertsPanel
-            alerts={lowStockAlerts}
-            isLoading={dashboardSummaryQuery.isLoading}
-          />
+          {canSeeInventory && summary?.lowStockAlertsEnabled !== false ? (
+            <InventoryAlertsPanel
+              alerts={lowStockAlerts}
+              isLoading={dashboardSummaryQuery.isLoading}
+            />
+          ) : null}
         </div>
       ) : null}
     </div>

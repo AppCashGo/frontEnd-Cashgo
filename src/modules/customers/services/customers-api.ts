@@ -9,6 +9,7 @@ import {
 import type {
   CustomerDetail,
   CustomerMutationInput,
+  CustomerOldestPaymentInput,
   CustomerPaymentInput,
   CustomerPaymentMethodCorrectionInput,
   CustomerOldestPaymentResult,
@@ -344,12 +345,14 @@ export async function updateCustomerPaymentMethod(
 
 export async function registerCustomerOldestPayment(
   customerId: string,
-  input: CustomerPaymentInput,
+  input: CustomerOldestPaymentInput,
 ): Promise<CustomerOldestPaymentResult> {
   const result = await postJson<
     CustomerOldestPaymentResultApiRecord,
-    CustomerPaymentInput
-  >(`/accounts-receivable/customers/${customerId}/payments`, input)
+    CustomerOldestPaymentInput
+  >(`/accounts-receivable/customers/${customerId}/payments`, input, {
+    suppressWriteErrorNotification: input.expectedOutstandingBalance !== undefined,
+  })
 
   return {
     customerId: String(result.customerId),

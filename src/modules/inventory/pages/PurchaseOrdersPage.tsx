@@ -29,7 +29,7 @@ export function PurchaseOrdersPage() {
     <RetailPageLayout
       bodyClassName={styles.body}
       title="Abastecimiento"
-      meta={<span>Planifica pedidos, controla recepciones y evita quedarte sin mercancía.</span>}
+      meta={<span>Gestiona pedidos y recepciones.</span>}
       actions={(
         <Link className={`${retailStyles.buttonOutline} ${styles.backButton}`} to={routePaths.inventory}>
           <ArrowLeft aria-hidden="true" />

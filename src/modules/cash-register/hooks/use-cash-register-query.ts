@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
+import { dashboardSummaryQueryKey } from "@/modules/dashboard/hooks/use-dashboard-summary-query";
 import { readOfflineSnapshot, writeOfflineSnapshot } from "@/shared/services/offline-snapshot";
 import type { CashRegisterSession } from "@/modules/cash-register/types/cash-register";
 import {
@@ -60,11 +61,12 @@ export function invalidateCashRegisterQueries(
   ]);
 }
 
-export function useCurrentCashRegisterQuery() {
+export function useCurrentCashRegisterQuery(enabled = true) {
   const businessId = useAuthSessionStore((state) => state.user?.businessId);
   const query = useQuery({
     queryKey: cashRegisterCurrentQueryKey,
     queryFn: getCurrentCashRegisterSession,
+    enabled,
     initialData: () =>
       readOfflineSnapshot<CashRegisterSession | null>(
         businessId,
@@ -73,10 +75,10 @@ export function useCurrentCashRegisterQuery() {
   });
 
   useEffect(() => {
-    if (query.data !== undefined) {
+    if (enabled && query.data !== undefined) {
       writeOfflineSnapshot(businessId, "cash-register-current", query.data);
     }
-  }, [businessId, query.data]);
+  }, [businessId, enabled, query.data]);
 
   return query;
 }
@@ -125,7 +127,10 @@ export function useOpenCashRegisterMutation() {
   return useMutation({
     mutationFn: (input: OpenCashRegisterInput) => openCashRegister(input),
     onSuccess: async () => {
-      await invalidateCashRegisterQueries(queryClient);
+      await Promise.all([
+        invalidateCashRegisterQueries(queryClient),
+        queryClient.invalidateQueries({ queryKey: dashboardSummaryQueryKey }),
+      ]);
     },
   });
 }

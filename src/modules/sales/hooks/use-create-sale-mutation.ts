@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { invalidateCashRegisterQueries } from '@/modules/cash-register/hooks/use-cash-register-query'
+import { dashboardSummaryQueryKey } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
 import { productsQueryKey } from '@/modules/products/hooks/use-products-query'
 import { customersQueryKey } from '@/modules/customers/hooks/use-customers-query'
 import { heldSalesQueryKey } from '@/modules/sales/hooks/use-held-sales-query'
@@ -22,6 +23,7 @@ export const salesQueryKey = ['sales'] as const
 function invalidateSaleFlowQueries(queryClient: ReturnType<typeof useQueryClient>) {
   return Promise.all([
     invalidateCashRegisterQueries(queryClient),
+    queryClient.invalidateQueries({ queryKey: dashboardSummaryQueryKey }),
     queryClient.invalidateQueries({
       queryKey: productsQueryKey,
     }),

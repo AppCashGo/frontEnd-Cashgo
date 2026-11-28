@@ -291,6 +291,8 @@ export type InventoryPurchaseInput = {
     productId: string;
     quantity: number;
     unitCost: number;
+    salePrice?: number;
+    expectedProductUpdatedAt?: string;
   }>;
   reference?: string;
   paymentMethod?: ExpensePaymentMethod;

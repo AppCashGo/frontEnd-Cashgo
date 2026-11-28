@@ -1,3 +1,4 @@
+import { dashboardSummaryQueryKey } from '@/modules/dashboard/hooks/use-dashboard-summary-query'
 import { useEffect } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
@@ -22,6 +23,7 @@ import type {
   CustomerDetail,
   CustomerCollectionActivityInput,
   CustomerMutationInput,
+  CustomerOldestPaymentInput,
   CustomerPaymentInput,
   CustomerPaymentMethodCorrectionInput,
   CustomerReceivableTermsInput,
@@ -52,6 +54,7 @@ function toCustomerSummary(customer: CustomerDetail): CustomerSummary {
     notes: customer.notes,
     balance: customer.balance,
     overdueBalance: customer.overdueBalance,
+    oldestOverdueDays: customer.oldestOverdueDays,
     currentBalance: customer.currentBalance,
     overdue1To30Balance: customer.overdue1To30Balance,
     overdue31To60Balance: customer.overdue31To60Balance,
@@ -89,11 +92,12 @@ export function useCustomerCollectionAgendaQuery() {
   })
 }
 
-export function useCustomerDetailQuery(customerId: string | null) {
+export function useCustomerDetailQuery(customerId: string | null, refetchOnMount?: 'always') {
   return useQuery({
     queryKey: [...customersQueryKey, 'detail', customerId],
     queryFn: () => getCustomerDetail(customerId as string),
     enabled: customerId !== null,
+    refetchOnMount,
   })
 }
 
@@ -181,6 +185,7 @@ export function useDeleteCustomerMutation() {
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({ queryKey: dashboardSummaryQueryKey }),
         queryClient.invalidateQueries({
           queryKey: customerCollectionAgendaQueryKey,
         }),
@@ -237,6 +242,7 @@ export function useRegisterCustomerPaymentMutation() {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({ queryKey: dashboardSummaryQueryKey }),
         queryClient.invalidateQueries({
           queryKey: cashRegisterCurrentQueryKey,
         }),
@@ -279,11 +285,12 @@ export function useRegisterCustomerOldestPaymentMutation() {
       input,
     }: {
       customerId: string
-      input: CustomerPaymentInput
+      input: CustomerOldestPaymentInput
     }) => registerCustomerOldestPayment(customerId, input),
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({ queryKey: dashboardSummaryQueryKey }),
         queryClient.invalidateQueries({
           queryKey: cashRegisterCurrentQueryKey,
         }),
@@ -310,6 +317,7 @@ export function useUpdateCustomerReceivableTermsMutation() {
     onSuccess: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: customersQueryKey }),
+        queryClient.invalidateQueries({ queryKey: dashboardSummaryQueryKey }),
         queryClient.invalidateQueries({
           queryKey: customerCollectionAgendaQueryKey,
         }),

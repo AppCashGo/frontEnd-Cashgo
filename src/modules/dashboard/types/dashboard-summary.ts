@@ -1,3 +1,5 @@
+import type { BusinessSetupProgress } from '@/shared/types/business-setup-progress'
+
 export type BestSellingProduct = {
   productId: string
   name: string
@@ -37,6 +39,12 @@ export type QaEvidenceSummary = {
 }
 
 export type DashboardSummary = {
+  businessDate?: string
+  setupProgress?: BusinessSetupProgress
+  collectionsToday?: number
+  overdueReceivables?: { balance: number; count: number }
+  lowStockCount?: number
+  lowStockAlertsEnabled?: boolean
   salesToday: number
   revenueToday: number
   totalRevenue: number
