@@ -14,6 +14,7 @@ import {
 import type { PhoneLoginStartResponse } from "@/modules/auth/types/auth-session";
 import { getModuleLandingPath } from "@/routes/module-navigation-routes";
 import { BrandLogo } from "@/shared/components/brand/BrandLogo";
+import { PageLoadingState } from "@/shared/components/states/PageLoadingState";
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { ApiError } from "@/shared/services/api-client";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
@@ -90,7 +91,7 @@ function GoogleIcon() {
 export function LoginForm({ initialMethod, onBack, onGoToRegister }: LoginFormProps) {
   const navigate = useNavigate();
   const loginMutation = useLoginMutation();
-  const { mutateAsync: signInWithGoogle } = useGoogleLoginMutation();
+  const { isPending: isGoogleSigningIn, mutateAsync: signInWithGoogle } = useGoogleLoginMutation();
   const startPhoneLoginMutation = useStartPhoneLoginMutation();
   const verifyPhoneLoginMutation = useVerifyPhoneLoginMutation();
   const { dictionary, languageCode } = useAppTranslation();
@@ -458,6 +459,9 @@ export function LoginForm({ initialMethod, onBack, onGoToRegister }: LoginFormPr
 
   return (
     <div className={styles.shell}>
+      {loginMutation.isPending || isGoogleSigningIn || verifyPhoneLoginMutation.isPending ? (
+        <PageLoadingState layout="overlay" title={languageCode === "es" ? "Ingresando…" : "Signing in…"} />
+      ) : null}
       <div className={styles.card}>
         {stage !== "choice" && stage !== "email" ? (
           <button

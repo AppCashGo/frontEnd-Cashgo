@@ -62,9 +62,17 @@ function withRouteSuspense(
   element: ReactElement,
   title: string,
   description: string,
+  insideWorkspace = false,
 ) {
   return (
-    <Suspense fallback={<PageLoadingState title={title} description={description} />}>
+    <Suspense fallback={(
+      <PageLoadingState
+        brand={insideWorkspace ? 'business' : 'cashgo'}
+        description={description}
+        layout={insideWorkspace ? 'workspace' : 'screen'}
+        title={title}
+      />
+    )}>
       {element}
     </Suspense>
   );
@@ -80,6 +88,7 @@ function withModuleRouteSuspense(
     <ModuleAccessRoute segment={segment}>{element}</ModuleAccessRoute>,
     title,
     description,
+    true,
   );
 }
 
@@ -347,6 +356,7 @@ export const appRouter = createBrowserRouter([
               <HelpCenterPage />,
               "Cargando centro de ayuda",
               "Preparando videos y guías de uso de Cashgo.",
+              true,
             ),
           },
           {
@@ -355,6 +365,7 @@ export const appRouter = createBrowserRouter([
               <TermsAndConditionsPage />,
               "Cargando términos y condiciones",
               "Preparando la información legal de Cashgo.",
+              true,
             ),
           },
           {
@@ -363,6 +374,7 @@ export const appRouter = createBrowserRouter([
               <PrivacyPolicyPage />,
               "Cargando política de privacidad",
               "Preparando la información sobre datos y privacidad de Cashgo.",
+              true,
             ),
           },
         ],

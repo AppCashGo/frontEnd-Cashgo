@@ -1,5 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { PropsWithChildren, useEffect, useState } from 'react'
+import { SignInWelcome } from '@/modules/auth/components/SignInWelcome'
 import { appRouter } from '@/routes/app-router'
 import { routePaths } from '@/routes/route-paths'
 import { ToastProvider } from '@/shared/components/ui/ToastProvider'
@@ -27,7 +28,10 @@ export function AppProviders({ children }: PropsWithChildren) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ToastProvider>{children}</ToastProvider>
+      <ToastProvider>
+        {children}
+        <SignInWelcome />
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

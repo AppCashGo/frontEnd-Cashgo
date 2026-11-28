@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Volume2, VolumeX } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 import { LoginForm } from "@/modules/auth/components/LoginForm";
 import { RegistrationWizard } from "@/modules/auth/components/RegistrationWizard";
-import operationsIllustrationUrl from "@/shared/assets/images/cashgo-operations-illustration.svg";
+import devicesMotion from "@/shared/assets/animations/cashgo-devices.webp";
+import devicesStill from "@/shared/assets/animations/cashgo-devices-still.webp";
+import posMotion from "@/shared/assets/animations/cashgo-pos-login.webp";
+import posStill from "@/shared/assets/animations/cashgo-pos-login-still.webp";
 import { BrandLogo } from "@/shared/components/brand/BrandLogo";
 import { LanguageSelect } from "@/shared/components/ui/LanguageSelect";
 import { useTranslationsQuery } from "@/shared/hooks/use-translations-query";
+import { prepareWorkspaceSound, useWorkspaceSound } from "@/shared/hooks/use-workspace-sound";
 import { useAppTranslation } from "@/shared/i18n/use-app-translation";
 import type { TranslationRecord } from "@/shared/types/translation";
 import styles from "./AuthPage.module.css";
@@ -22,6 +27,7 @@ export function AuthPage() {
   const initialMethod = searchParams.get("method") === "password" ? "password" : undefined;
   const [mode, setMode] = useState<AuthMode>(initialMethod ? "login" : "landing");
   const [registerStep, setRegisterStep] = useState(0);
+  const { soundEnabled, toggleSound } = useWorkspaceSound();
 
   const activeTranslation = useMemo(() => {
     return (
@@ -53,6 +59,7 @@ export function AuthPage() {
           landingDescription: "Usa Cashgo en tu celular o en tu PC",
           registerBenefitsTitle: "Al registrarte en Cashgo podrás:",
           helpCta: "¿Tienes problemas al ingresar a Cashgo?",
+          interfaceSound: "Sonido de la interfaz",
         }
       : {
           brandTagline: "POS + ERP to sell, collect and grow",
@@ -60,11 +67,15 @@ export function AuthPage() {
           landingDescription: "Use Cashgo on your phone or on your computer",
           registerBenefitsTitle: "When you sign up in Cashgo you can:",
           helpCta: "Do you need help getting into Cashgo?",
+          interfaceSound: "Interface sound",
         };
 
-  const languageControl =
-    !isTranslationsLoading && activeTranslation ? (
-      <div className={styles.languageWrap}>
+  const accessControls = (
+    <div className={styles.accessControls}>
+      <button aria-label={authCopy.interfaceSound} aria-pressed={soundEnabled} className={styles.soundControl} onClick={toggleSound} title={authCopy.interfaceSound} type="button">
+        {soundEnabled ? <Volume2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
+      </button>
+      {!isTranslationsLoading && activeTranslation ? (
         <LanguageSelect
           id="auth-language"
           label={dictionary.common.language}
@@ -77,11 +88,14 @@ export function AuthPage() {
             })
           }
         />
-      </div>
-    ) : null;
+      ) : null}
+    </div>
+  );
 
   return (
     <main
+      onClickCapture={prepareWorkspaceSound}
+      onSubmitCapture={prepareWorkspaceSound}
       className={
         mode === "login"
           ? `${styles.page} ${styles.pageLogin}`
@@ -91,13 +105,10 @@ export function AuthPage() {
       {mode === "landing" ? (
         <div className={styles.landingLayout}>
           <aside className={styles.showcasePanel}>
-            <div className={styles.showcaseFrame}>
-              <img
-                alt=""
-                className={styles.showcaseImage}
-                src={operationsIllustrationUrl}
-              />
-            </div>
+            <picture className={styles.showcaseFrame}>
+              <source media="(prefers-reduced-motion: no-preference)" srcSet={devicesMotion} />
+              <img alt="" className={styles.showcaseImage} decoding="async" src={devicesStill} />
+            </picture>
 
             <div className={styles.showcaseCopy}>
               <h1 className={styles.heroTitle}>{authCopy.landingTitle}</h1>
@@ -106,15 +117,10 @@ export function AuthPage() {
               </p>
             </div>
 
-            <div className={styles.dots}>
-              <span />
-              <span />
-              <span className={styles.dotActive} />
-            </div>
           </aside>
 
           <section className={styles.landingContent}>
-            {languageControl}
+            {accessControls}
 
             <div className={styles.centeredPanel}>
               <BrandLogo
@@ -133,6 +139,7 @@ export function AuthPage() {
                   onClick={() => setMode("login")}
                 >
                   {dictionary.auth.landing.signInCta}
+                  <ArrowRight aria-hidden="true" />
                 </button>
               </div>
 
@@ -157,12 +164,18 @@ export function AuthPage() {
 
       {mode === "login" ? (
         <div className={styles.loginLayout}>
-          {languageControl}
-          <LoginForm
-            initialMethod={initialMethod}
-            onBack={() => setMode("landing")}
-            onGoToRegister={registrationEnabled ? () => setMode("register") : undefined}
-          />
+          {accessControls}
+          <div className={styles.loginStage}>
+            <picture aria-hidden="true" className={styles.loginArtwork}>
+              <source media="(min-width: 901px) and (prefers-reduced-motion: no-preference)" srcSet={posMotion} />
+              <img alt="" decoding="async" loading="lazy" src={posStill} />
+            </picture>
+            <LoginForm
+              initialMethod={initialMethod}
+              onBack={() => setMode("landing")}
+              onGoToRegister={registrationEnabled ? () => setMode("register") : undefined}
+            />
+          </div>
         </div>
       ) : null}
 
@@ -244,7 +257,7 @@ export function AuthPage() {
           </aside>
 
           <section className={styles.registerContent}>
-            {languageControl}
+            {accessControls}
             <div className={styles.registerContentInner}>
               <RegistrationWizard
                 selectedTranslationId={activeTranslation?.id ?? null}

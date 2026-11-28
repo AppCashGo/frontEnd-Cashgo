@@ -5,7 +5,8 @@
 
 .pageLogin {
   background:
-    linear-gradient(135deg, rgba(20, 184, 166, 0.12) 0%, transparent 34%),
+    radial-gradient(ellipse at 18% 22%, #8de9da66, transparent 46%),
+    radial-gradient(ellipse at 86% 70%, #7eaaff45, transparent 44%),
     linear-gradient(180deg, #f8fafc 0%, #e0f2fe 100%);
 }
 
@@ -27,6 +28,43 @@
   padding: 2rem;
 }
 
+.loginStage {
+  display: grid;
+  justify-items: center;
+  width: 100%;
+}
+
+.loginArtwork {
+  display: none;
+}
+
+@media (min-width: 901px) {
+  .loginStage {
+    width: min(100%, 60rem);
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: center;
+    gap: clamp(1.5rem, 4vw, 3rem);
+  }
+
+  .loginArtwork {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    aspect-ratio: 410 / 414;
+    border: 1px solid #174664;
+    border-radius: 1.45rem;
+    background: #061522;
+    box-shadow: 0 1.25rem 2.75rem #16365b3b;
+  }
+
+  .loginArtwork img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
 .registerLayout {
   grid-template-columns: minmax(22rem, 33%) minmax(26rem, 1fr);
 }
@@ -45,6 +83,10 @@
   align-content: center;
   justify-items: center;
   gap: 1.6rem;
+  background:
+    radial-gradient(ellipse at 24% 25%, #86f3d955, transparent 57%),
+    radial-gradient(ellipse at 90% 78%, #80b4ff55, transparent 52%),
+    linear-gradient(145deg, #e9fffc, #e9f2ff);
 }
 
 .showcaseFrame {
@@ -86,22 +128,6 @@
   font-size: 1.05rem;
 }
 
-.dots {
-  display: flex;
-  gap: 0.45rem;
-}
-
-.dots span {
-  width: 0.85rem;
-  height: 0.26rem;
-  border-radius: 999px;
-  background: rgba(185, 152, 12, 0.28);
-}
-
-.dotActive {
-  background: #0f766e !important;
-}
-
 .landingContent,
 .registerContent {
   position: relative;
@@ -140,10 +166,25 @@
 }
 
 .primaryButton {
+  position: relative;
+  padding-inline: 2.65rem;
   border: 0;
   background: linear-gradient(135deg, #0f766e 0%, #2563eb 100%);
   color: #fff;
   box-shadow: 0 18px 30px rgba(37, 99, 235, 0.18);
+}
+
+.primaryButton svg {
+  position: absolute;
+  top: calc(50% - 0.55rem);
+  right: 1.2rem;
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.primaryButton:hover,
+.primaryButton:focus-visible {
+  box-shadow: 0 14px 34px #2563eb55;
 }
 
 .secondaryButton {
@@ -152,12 +193,58 @@
   color: #0f766e;
 }
 
-.languageWrap {
+.accessControls {
   position: absolute;
   top: 1.25rem;
   right: 1.25rem;
   z-index: 2;
-  width: min(11rem, calc(100% - 2rem));
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  max-width: calc(100% - 2rem);
+}
+
+.accessControls > label {
+  width: 11rem;
+  min-width: 0;
+}
+
+.soundControl {
+  display: grid;
+  flex: 0 0 2.75rem;
+  min-height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-md);
+  background: #fff;
+  color: #205d9f;
+  cursor: pointer;
+}
+
+.soundControl:hover { background: #eaf2ff; }
+.soundControl svg { width: 1.15rem; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .showcaseFrame {
+    animation: showcase-float 1.5s ease-in-out 3;
+    transition: box-shadow 220ms ease;
+  }
+
+  .showcaseFrame:hover { box-shadow: 0 24px 60px #2468bd45; }
+  .showcaseCopy, .centeredPanel, .loginStage { animation: access-enter 550ms ease-out both; }
+
+  .primaryButton svg { transition: transform 200ms ease; }
+  .primaryButton:hover svg, .primaryButton:focus-visible svg { transform: translateX(4px); }
+}
+
+@keyframes showcase-float {
+  50% { transform: translateY(-7px); }
+}
+
+@keyframes access-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .helpButton {
@@ -376,17 +463,20 @@
   }
 
   .showcaseFrame {
-    width: 100%;
+    width: min(100%, 18rem);
   }
+
+  .landingContent { grid-row: 1; padding-bottom: 1.65rem; }
 
   .centeredPanel,
   .registerContentInner {
     width: 100%;
   }
 
-  .languageWrap {
+  .accessControls {
     position: static;
     width: 100%;
+    max-width: 100%;
     margin-bottom: 1rem;
   }
 

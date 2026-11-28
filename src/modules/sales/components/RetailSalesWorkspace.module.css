@@ -1639,6 +1639,9 @@
 }
 
 .modalBackdrop {
+  inset: var(--payment-viewport-top, 0px) 0 auto;
+  height: var(--payment-viewport-height, 100dvh);
+  grid-template-rows: minmax(0, 1fr);
   padding: 1.5rem;
   background: rgba(15, 23, 42, 0.48);
 }
@@ -1804,8 +1807,8 @@
 .changeModalCard {
   position: relative;
   display: flex;
-  width: min(36rem, calc(100vw - 2rem));
-  max-height: calc(100dvh - 2rem);
+  width: min(36rem, 100%);
+  max-height: 100%;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid rgba(192, 204, 218, 0.9);
@@ -1857,6 +1860,7 @@
 
 .changeModalBody {
   display: grid;
+  align-content: start;
   min-height: 0;
   gap: 1.45rem;
   overflow-y: auto;
@@ -1914,7 +1918,7 @@
 
 .changeInputBox {
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.55rem;
   min-height: 4rem;
@@ -1922,6 +1926,11 @@
   border: 2px solid rgba(148, 163, 184, 0.48);
   border-radius: 0.75rem;
   background: #ffffff;
+}
+
+.changeInputBox:focus-within {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
 }
 
 .changeCurrencyPrefix {
@@ -1933,6 +1942,7 @@
 .changeInput {
   width: 100%;
   min-width: 0;
+  padding-inline: 0.35rem;
   border: 0;
   outline: 0;
   background: transparent;
@@ -1940,6 +1950,10 @@
   font: inherit;
   font-size: 1.15rem;
   font-weight: 900;
+}
+
+.changeInput:focus {
+  box-shadow: none !important;
 }
 
 .changeExactButton {
@@ -2001,7 +2015,10 @@
 
 .saleSuccessModal {
   position: relative;
-  width: min(38rem, calc(100vw - 2rem));
+  display: flex;
+  flex-direction: column;
+  width: min(38rem, 100%);
+  max-height: 100%;
   overflow: hidden;
   border: 1px solid rgba(192, 204, 218, 0.88);
   border-radius: 0.95rem;
@@ -2028,22 +2045,25 @@
   cursor: pointer;
 }
 
-.saleSuccessModalBody {
+.saleSuccessSummary {
   display: grid;
-  gap: 1.35rem;
-  padding: 2.35rem 2.35rem 2rem;
+  gap: 1rem;
   text-align: center;
 }
 
-.saleSuccessIcon {
-  display: grid;
-  width: 5.25rem;
-  height: 5.25rem;
-  place-items: center;
+.saleSuccessIllustration {
+  display: block;
+  width: 7rem;
+  aspect-ratio: 1;
   justify-self: center;
-  border-radius: 999px;
-  background: #dcfce7;
-  color: #16a34a;
+  background: radial-gradient(ellipse at 50% 65%, #dff6e7, transparent 70%);
+}
+
+.saleSuccessIllustration img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .saleSuccessTitle {
@@ -2051,14 +2071,6 @@
   color: #0f172a;
   font-size: 1.8rem;
   font-weight: 900;
-}
-
-.saleSuccessDescription {
-  max-width: 30rem;
-  margin: 0 auto;
-  color: #64748b;
-  font-size: 1rem;
-  line-height: 1.45;
 }
 
 .saleSuccessValueCard {
@@ -2172,10 +2184,6 @@
 }
 
 @media (max-height: 760px) {
-  .changeModalCard {
-    max-height: calc(100dvh - 1rem);
-  }
-
   .changeModalHeader {
     padding: 1.35rem 1.8rem 1rem;
   }
@@ -2238,22 +2246,65 @@
 }
 
 @media (max-width: 560px) {
-  .changeModalCard,
-  .saleSuccessModal {
-    width: calc(100vw - 1rem);
+  .modalBackdrop {
+    padding-top: max(0.45rem, env(safe-area-inset-top));
+    padding-right: max(0.45rem, env(safe-area-inset-right));
+    padding-bottom: max(0.45rem, env(safe-area-inset-bottom));
+    padding-left: max(0.45rem, env(safe-area-inset-left));
   }
 
   .changeModalHeader,
   .changeModalBody,
-  .changeModalActions,
-  .saleSuccessModalBody {
-    padding-right: 1.1rem;
-    padding-left: 1.1rem;
+  .changeModalActions {
+    padding-inline: 0.85rem;
   }
 
-  .changeModalActions,
-  .saleSuccessActionsRow {
-    grid-template-columns: 1fr;
+  .changeModalHeader {
+    padding-top: 0.8rem;
+    padding-bottom: 0.7rem;
+  }
+
+  .changeModalTitle {
+    font-size: 1.2rem;
+  }
+
+  .changeModalClose,
+  .saleSuccessCloseButton {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+
+  .changeModalActions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr);
+    gap: 0.45rem;
+    padding-block: 0.6rem;
+  }
+
+  .changeModalActions button {
+    min-height: 44px;
+    padding-inline: 0.45rem;
+    font-size: 0.85rem;
+  }
+
+  .saleSuccessSummary {
+    gap: 0.65rem;
+  }
+
+  .saleSuccessTitle {
+    font-size: 1.35rem;
+  }
+
+  .saleSuccessValueCard {
+    padding: 0.85rem;
+  }
+
+  .saleSuccessIdRow {
+    flex-wrap: wrap;
+    gap: 0.45rem;
+  }
+
+  .saleSuccessIllustration {
+    width: 5.25rem;
   }
 
   .changeQuickAmounts {
@@ -2261,8 +2312,8 @@
   }
 
   .saleSuccessAmountRow {
-    align-items: flex-start;
-    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 0.35rem;
   }
 }
 

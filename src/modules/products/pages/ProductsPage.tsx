@@ -17,6 +17,7 @@ import { WorkspaceBusinessTitle } from '@/shared/components/retail/WorkspaceBusi
 import workspaceVisual from '@/shared/components/retail/WorkspaceVisual.module.css'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
+import { PageLoadingState } from '@/shared/components/states/PageLoadingState'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
@@ -180,7 +181,7 @@ export function ProductsPage() {
             </p>
           ) : null}
 
-          {productsQuery.isLoading ? <div className={styles.state} role="status">Cargando productos...</div> : productsQuery.isError ? (
+          {productsQuery.isLoading ? <PageLoadingState brand="business" layout="inline" title="Cargando productos…" /> : productsQuery.isError ? (
             <div className={styles.state} role="alert"><strong>No pudimos cargar los productos.</strong><span>{getErrorMessage(productsQuery.error, 'Intenta nuevamente.')}</span><button className={retailStyles.buttonOutline} type="button" onClick={() => void productsQuery.refetch()}>Reintentar</button></div>
           ) : paginatedProducts.length === 0 ? (
             <div className={styles.state}><strong>No encontramos productos</strong><span>Ajusta los filtros o crea un producto nuevo.</span><button className={retailStyles.buttonDark} type="button" onClick={() => updateWorkspaceParams({ mode: 'create', tab: 'basic' })}>Crear producto</button></div>
@@ -251,9 +252,7 @@ export function ProductsPage() {
         {isImportOpen ? (
           <Suspense
             fallback={(
-              <div className={styles.state} role="status">
-                Preparando el importador...
-              </div>
+              <PageLoadingState brand="business" layout="inline" title="Preparando el importador…" />
             )}
           >
             <ProductImportPanel

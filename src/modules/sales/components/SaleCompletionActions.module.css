@@ -1,1 +1,102 @@
-.wrapper{display:grid;gap:12px;width:100%}.secondary,.primary{display:flex;flex-wrap:wrap;gap:9px}.secondary>*{flex:1}.primary>*{flex:1}.primary a{display:inline-flex;align-items:center;justify-content:center;min-height:var(--ui-control-height);padding:0 13px;border:1px solid var(--ui-border-strong);border-radius:var(--ui-radius-md);background:var(--ui-surface);color:var(--ui-text);font-weight:800;text-decoration:none}.wrapper p{margin:0;padding:10px;border-radius:var(--ui-radius-md);background:var(--ui-danger-soft);color:var(--ui-danger-hover)}@media(max-width:560px){.secondary,.primary{display:grid;grid-template-columns:1fr}.secondary>*{width:100%}}
+.wrapper,
+.body {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.wrapper {
+  width: 100%;
+}
+
+.secondary,
+.primary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.secondary > *,
+.primary > * {
+  flex: 1;
+}
+
+.primary a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--ui-control-height);
+  padding: 0 13px;
+  border: 1px solid var(--ui-border-strong);
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-surface);
+  color: var(--ui-text);
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+
+.wrapper [role="alert"] {
+  margin: 0;
+  padding: 10px;
+  border-radius: var(--ui-radius-md);
+  background: var(--ui-danger-soft);
+  color: var(--ui-danger-hover);
+}
+
+.wrapper[data-modal] {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 0;
+}
+
+.wrapper[data-modal] .body {
+  min-height: 0;
+  align-content: start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1.6rem 2.15rem 1rem;
+}
+
+.wrapper[data-modal] .primary {
+  padding: 0.85rem 2.15rem;
+  border-top: 1px solid var(--ui-border);
+  background: var(--ui-surface);
+}
+
+@media (max-width: 560px) {
+  .secondary,
+  .primary {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .secondary > * {
+    width: 100%;
+  }
+
+  .wrapper[data-modal] .body {
+    padding: 1rem 0.85rem 0.75rem;
+  }
+
+  .wrapper[data-modal] .secondary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wrapper[data-modal] .secondary button {
+    min-height: 44px;
+    padding-inline: 0.35rem;
+    font-size: 0.8rem;
+  }
+
+  .wrapper[data-modal] .primary {
+    gap: 0.45rem;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.82rem;
+  }
+
+  .wrapper[data-modal] .primary > * {
+    min-height: 44px;
+  }
+}

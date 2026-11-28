@@ -8,6 +8,7 @@ import { userRoleLabels } from "@/shared/constants/user-roles";
 import { businessCategoryOptions } from "@/shared/constants/business-categories";
 import { useConfirmDialog } from "@/shared/hooks/use-confirm-dialog";
 import { AppButton } from "@/shared/components/ui/AppButton";
+import { PageLoadingState } from "@/shared/components/states/PageLoadingState";
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { getErrorMessage } from "@/shared/utils/get-error-message";
 import {
@@ -214,7 +215,7 @@ function BusinessEmployees({ business, userId }: { business: PlatformBusiness; u
       {employees.isError ? (
         <AppButton size="sm" variant="secondary" onClick={() => void employees.refetch()}>Reintentar cargar equipo</AppButton>
       ) : employees.isLoading ? (
-        <p className={styles.secondary} role="status">Cargando equipo…</p>
+        <PageLoadingState layout="inline" title="Cargando equipo…" />
       ) : employees.data?.length ? (
         <ul>
           {employees.data.map((employee) => (
@@ -358,7 +359,7 @@ function BusinessEditor({ business, userId }: { business: PlatformBusiness; user
         <h3><History aria-hidden="true" /> Historial comercial</h3>
         {changes.isError ? (
           <AppButton size="sm" variant="secondary" onClick={() => void changes.refetch()}>Reintentar cargar historial</AppButton>
-        ) : changes.isLoading ? <p className={styles.secondary}>Cargando historial…</p> : changes.data?.length ? (
+        ) : changes.isLoading ? <PageLoadingState layout="inline" title="Cargando historial…" /> : changes.data?.length ? (
           <ul>
             {changes.data.map((change) => (
               <li key={change.id}>
@@ -400,6 +401,10 @@ export function PlatformAdminPage() {
     ));
   const selected = businesses.data?.find((business) => business.id === businessId);
 
+  if (access.isLoading || (access.data?.allowed && businesses.isLoading)) {
+    return <PageLoadingState title={access.isLoading ? "Verificando acceso…" : "Cargando empresas…"} />;
+  }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -411,7 +416,7 @@ export function PlatformAdminPage() {
       </header>
       {access.isError ? (
         <AppButton variant="secondary" onClick={() => void access.refetch()}>Reintentar verificar acceso</AppButton>
-      ) : access.isLoading ? <p role="status">Verificando acceso…</p> : !access.data?.allowed ? (
+      ) : !access.data?.allowed ? (
         <p role="alert">Esta sección es exclusiva de administración de CashGo.</p>
       ) : (
         <div className={styles.workspace}>
@@ -432,7 +437,7 @@ export function PlatformAdminPage() {
             </div>
             {businesses.isError ? (
               <AppButton variant="secondary" onClick={() => void businesses.refetch()}>Reintentar cargar empresas</AppButton>
-            ) : businesses.isLoading ? <p role="status">Cargando empresas…</p> : visibleBusinesses?.length ? (
+            ) : visibleBusinesses?.length ? (
               <ul className={styles.companies}>
                 {visibleBusinesses.map(({ business, pending }) => (
                   <li key={business.id}>

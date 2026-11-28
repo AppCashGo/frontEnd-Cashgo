@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
+import { PageLoadingState } from "@/shared/components/states/PageLoadingState";
 import { ArrowLeft, CircleHelp, KeyRound, Mail, RefreshCw, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuthSessionStore } from "@/modules/auth/hooks/use-auth-session-store";
@@ -183,6 +184,7 @@ export function EmailCodeLogin({ onBack }: { onBack: () => void }) {
 
   return (
     <>
+      {verify.isPending ? <PageLoadingState layout="overlay" title={languageCode === "es" ? "Ingresando…" : "Signing in…"} /> : null}
       <button
         className={styles.backButton}
         type="button"

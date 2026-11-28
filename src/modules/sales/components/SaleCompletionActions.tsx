@@ -1,5 +1,5 @@
 import { Download, MessageCircle, Printer, RotateCcw, Undo2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { createCustomerCollectionActivity } from '@/modules/customers/services/customers-api'
 import { useAuthSessionStore } from '@/modules/auth/hooks/use-auth-session-store'
@@ -22,10 +22,12 @@ export function SaleCompletionActions({
   sale,
   onRegisterAnother,
   onCorrectSale,
+  summary,
 }: {
   sale: SaleReceipt
   onRegisterAnother: () => void
   onCorrectSale?: () => void
+  summary?: ReactNode
 }) {
   const businessName = useAuthSessionStore((state) => state.user?.businessName ?? 'CashGo')
   const [activeAction, setActiveAction] = useState<string | null>(null)
@@ -67,18 +69,22 @@ export function SaleCompletionActions({
   }
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.secondary}>
+    <div className={styles.wrapper} data-modal={Boolean(summary) || undefined}>
+      <div className={styles.body}>
+        {summary}
+        <div className={styles.secondary}>
         <AppButton disabled={activeAction !== null && activeAction !== 'print'} isLoading={activeAction === 'print'} loadingLabel="Preparando…" startIcon={<Printer aria-hidden="true" />} variant="secondary" onClick={() => void run('print')}>Imprimir</AppButton>
         <AppButton disabled={activeAction !== null && activeAction !== 'download'} isLoading={activeAction === 'download'} loadingLabel="Descargando…" startIcon={<Download aria-hidden="true" />} variant="secondary" onClick={() => void run('download')}>Descargar</AppButton>
         {sale.customer ? <AppButton disabled={activeAction !== null && activeAction !== 'share'} isLoading={activeAction === 'share'} loadingLabel="Compartiendo…" startIcon={<MessageCircle aria-hidden="true" />} variant="secondary" onClick={() => void run('share')}>Compartir</AppButton> : null}
         {onCorrectSale ? <AppButton startIcon={<Undo2 aria-hidden="true" />} variant="warning" onClick={onCorrectSale}>Corregir o devolver</AppButton> : null}
+        </div>
+        {summary && feedback ? <p role="alert">{feedback}</p> : null}
       </div>
       <div className={styles.primary}>
         <AppButton startIcon={<RotateCcw aria-hidden="true" />} onClick={onRegisterAnother}>Registrar otra venta</AppButton>
         <Link to={routePaths.sales}>Volver al resumen de ventas</Link>
       </div>
-      {feedback ? <p role="alert">{feedback}</p> : null}
+      {!summary && feedback ? <p role="alert">{feedback}</p> : null}
     </div>
   )
 }

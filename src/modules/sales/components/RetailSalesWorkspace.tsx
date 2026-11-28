@@ -1,14 +1,14 @@
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
 import { FormValidationAlert } from "@/shared/components/ui/FormValidationAlert";
-import type { ReactNode } from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import {
   ArrowDownUp,
   ArrowLeft,
   ArrowRight,
   Banknote,
   CheckCircle,
-  CheckCircle2,
   Camera,
   CreditCard,
   History,
@@ -94,6 +94,9 @@ import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { ModalShell } from '@/shared/components/ui/ModalShell'
+import { PageLoadingState } from '@/shared/components/states/PageLoadingState'
+import saleConfirmedMotion from '@/shared/assets/animations/cashgo-sale-confirmed.webp'
+import saleConfirmedStill from '@/shared/assets/animations/cashgo-sale-confirmed-still.webp'
 import { AppButton } from '@/shared/components/ui/AppButton'
 import { SideDrawer } from '@/shared/components/ui/SideDrawer'
 import {
@@ -835,6 +838,36 @@ type ChangeCalculatorModalProps = {
   onConfirm: () => void
 }
 
+function SalePaymentModal(props: Omit<ComponentProps<typeof ModalShell>, 'isOpen' | 'className'>) {
+  const layerRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    const layer = layerRef.current
+    const viewport = window.visualViewport
+    if (!viewport || !layer) return
+
+    const syncViewport = () => {
+      layer.style.setProperty('--payment-viewport-height', `${viewport.height}px`)
+      layer.style.setProperty('--payment-viewport-top', `${viewport.offsetTop}px`)
+    }
+
+    syncViewport()
+    viewport.addEventListener('resize', syncViewport)
+    viewport.addEventListener('scroll', syncViewport)
+    return () => {
+      viewport.removeEventListener('resize', syncViewport)
+      viewport.removeEventListener('scroll', syncViewport)
+    }
+  }, [])
+
+  return createPortal(
+    <div ref={layerRef}>
+      <ModalShell {...props} className={styles.modalBackdrop} isOpen />
+    </div>,
+    document.body,
+  )
+}
+
 function ChangeCalculatorModal({
   saleTotal,
   amountTenderedInput,
@@ -856,12 +889,10 @@ function ChangeCalculatorModal({
   }
 
   return (
-    <ModalShell
+    <SalePaymentModal
       ariaLabel="Calcula el cambio de tu venta"
-      className={styles.modalBackdrop}
       closeButtonClassName={styles.changeModalClose}
       closeLabel="Cerrar"
-      isOpen
       panelClassName={styles.changeModalCard}
       onClose={onClose}
     >
@@ -943,7 +974,7 @@ function ChangeCalculatorModal({
           Confirmar pago
         </AppButton>
       </div>
-    </ModalShell>
+    </SalePaymentModal>
   )
 }
 
@@ -1052,45 +1083,40 @@ type SaleSuccessModalProps = {
 
 function SaleSuccessModal({ sale, onClose, onCorrectSale }: SaleSuccessModalProps) {
   return (
-    <ModalShell
+    <SalePaymentModal
       ariaLabel="Venta creada con éxito"
-      className={styles.modalBackdrop}
       closeButtonClassName={styles.saleSuccessCloseButton}
       closeLabel="Cerrar"
-      isOpen
       panelClassName={styles.saleSuccessModal}
       onClose={onClose}
     >
-      <div className={styles.saleSuccessModalBody}>
-        <div className={styles.saleSuccessIcon}>
-          <CheckCircle2 size={52} aria-hidden="true" />
-        </div>
-        <h3 className={styles.saleSuccessTitle}>¡Creaste una venta!</h3>
-        <p className={styles.saleSuccessDescription}>
-          La transacción se ha procesado correctamente y ha sido registrada en
-          el inventario.
-        </p>
+      <SaleCompletionActions
+        sale={sale}
+        onCorrectSale={onCorrectSale}
+        onRegisterAnother={onClose}
+        summary={(
+          <div className={styles.saleSuccessSummary}>
+            <picture className={styles.saleSuccessIllustration}>
+              <source media="(prefers-reduced-motion: no-preference)" srcSet={saleConfirmedMotion} />
+              <img alt="" decoding="async" src={saleConfirmedStill} />
+            </picture>
+            <h3 className={styles.saleSuccessTitle}>¡Creaste una venta!</h3>
 
-        <div className={styles.saleSuccessValueCard}>
-          <div className={styles.saleSuccessIdRow}>
-            <span>ID DE VENTA</span>
-            <strong>{sale.saleNumber}</strong>
+            <div className={styles.saleSuccessValueCard}>
+              <div className={styles.saleSuccessIdRow}>
+                <span>ID DE VENTA</span>
+                <strong>{sale.saleNumber}</strong>
+              </div>
+              <div className={styles.saleSuccessDivider} />
+              <div className={styles.saleSuccessAmountRow}>
+                <span>Valor Total</span>
+                <strong>{formatCurrency(sale.total)}</strong>
+              </div>
+            </div>
           </div>
-          <div className={styles.saleSuccessDivider} />
-          <div className={styles.saleSuccessAmountRow}>
-            <span>Valor Total</span>
-            <strong>{formatCurrency(sale.total)}</strong>
-          </div>
-        </div>
-
-        <SaleCompletionActions
-          sale={sale}
-          onCorrectSale={onCorrectSale}
-          onRegisterAnother={onClose}
-        />
-      </div>
-
-    </ModalShell>
+        )}
+      />
+    </SalePaymentModal>
   )
 }
 
@@ -2603,6 +2629,10 @@ export function RetailSalesWorkspace() {
     if (intent === 'SALES_HISTORY') {
       setSalesHistoryOpen(true)
     }
+  }
+
+  if (productsQuery.isLoading) {
+    return <PageLoadingState brand="business" layout="workspace" title="Cargando ventas…" />
   }
 
   return (

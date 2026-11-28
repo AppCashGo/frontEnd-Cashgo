@@ -1,4 +1,5 @@
 import {
+  ChevronLeft,
   ChevronRight,
   CircleCheck,
   Clock3,
@@ -19,7 +20,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { resolveProductImageUrl } from "@/modules/products/utils/resolve-product-image-url";
 import {
@@ -27,6 +28,7 @@ import {
   type CatalogBusinessHour,
 } from "@/modules/settings/types/settings";
 import { SearchableSelect } from "@/shared/components/ui/SearchableSelect";
+import { PageLoadingState } from "@/shared/components/states/PageLoadingState";
 import { formatTime12Hour } from "@/shared/utils/time";
 import { CustomerAuthModal } from "../components/CustomerAuthModal";
 import { CheckoutDeliveryPanel } from "../components/CheckoutDeliveryPanel";
@@ -65,6 +67,8 @@ import type {
 import styles from "./PublicCatalogPage.module.css";
 
 const allCategoriesId = "all";
+const catalogPageSize = 12;
+const catalogNumberFormatter = new Intl.NumberFormat("es-CO");
 const emptyCartItems: PublicCartItem[] = [];
 
 const currencyFormatter = new Intl.NumberFormat("es-CO", {
@@ -89,6 +93,8 @@ export function PublicCatalogPage() {
   const catalogQuery = usePublicCatalogQuery(normalizedSlug);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState(allCategoriesId);
+  const [page, setPage] = useState(1);
+  const resultsRef = useRef<HTMLParagraphElement>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCustomerAuthOpen, setIsCustomerAuthOpen] = useState(false);
   const [checkoutNotice, setCheckoutNotice] = useState<string | null>(null);
@@ -115,16 +121,51 @@ export function PublicCatalogPage() {
       ),
     [catalog?.categories, catalog?.products],
   );
+  const categoryId = categories.some((category) => category.id === selectedCategoryId)
+    ? selectedCategoryId
+    : allCategoriesId;
   const filteredProducts = useMemo(
     () =>
       filterProducts(
         catalog?.products ?? [],
         categories,
-        selectedCategoryId,
+        categoryId,
         searchTerm,
       ),
-    [catalog?.products, categories, selectedCategoryId, searchTerm],
+    [catalog?.products, categories, categoryId, searchTerm],
   );
+  const resultCount = filteredProducts.length;
+  const pageCount = Math.max(1, Math.ceil(resultCount / catalogPageSize));
+  const currentPage = Math.min(page, pageCount);
+  const startIndex = (currentPage - 1) * catalogPageSize;
+  const pageProducts = filteredProducts.slice(startIndex, startIndex + catalogPageSize);
+  const hasFilters = categoryId !== allCategoriesId || searchTerm.length > 0;
+  const firstResult = catalogNumberFormatter.format(startIndex + 1);
+  const resultRange = pageProducts.length > 1
+    ? `${firstResult}–${catalogNumberFormatter.format(startIndex + pageProducts.length)}`
+    : firstResult;
+
+  function updateFilters(search: string, category: string) {
+    setSearchTerm(search);
+    setSelectedCategoryId(category);
+    setPage(1);
+  }
+
+  function changePage(nextPage: number) {
+    setPage(nextPage);
+    resultsRef.current?.focus({ preventScroll: true });
+    resultsRef.current?.scrollIntoView({ block: "start" });
+  }
+
+  useEffect(() => {
+    setSearchTerm("");
+    setSelectedCategoryId(allCategoriesId);
+    setPage(1);
+  }, [normalizedSlug]);
+
+  useEffect(() => {
+    setPage((previous) => Math.min(previous, pageCount));
+  }, [pageCount]);
   const groupedHours = useMemo(
     () => groupBusinessHours(catalog?.settings.businessHours),
     [catalog?.settings.businessHours],
@@ -372,15 +413,7 @@ export function PublicCatalogPage() {
   }, [customerSession]);
 
   if (catalogQuery.isLoading) {
-    return (
-      <main className={styles.page}>
-        <section className={styles.statePanel}>
-          <Store aria-hidden="true" />
-          <h1>Cargando catálogo</h1>
-          <p>Estamos preparando los productos del negocio.</p>
-        </section>
-      </main>
-    );
+    return <PageLoadingState title="Cargando catálogo…" />;
   }
 
   if (catalogQuery.isError || !catalog) {
@@ -579,64 +612,56 @@ export function PublicCatalogPage() {
         </section>
       </section>
 
-      <section className={styles.catalogShell}>
+      <section
+        aria-label="Productos del catálogo"
+        className={styles.catalogShell}
+        data-cart-bar={(catalog.settings.shoppingEnabled && cartItemCount > 0) || undefined}
+      >
         <div className={styles.toolbar}>
           <label className={styles.searchBox}>
             <Search aria-hidden="true" />
             <input
-              onChange={(event) => setSearchTerm(event.target.value)}
+              aria-label="Buscar productos"
+              onChange={(event) => updateFilters(event.target.value, categoryId)}
               placeholder="Buscar productos"
               type="search"
               value={searchTerm}
             />
           </label>
-          <div className={styles.categoryFilters}>
-            <button
-              className={
-                selectedCategoryId === allCategoriesId
-                  ? styles.activeFilter
-                  : ""
-              }
-              onClick={() => setSelectedCategoryId(allCategoriesId)}
-              type="button"
-            >
-              Todos
-            </button>
-            {categories.map((category) => (
-              <button
-                className={
-                  selectedCategoryId === category.id ? styles.activeFilter : ""
-                }
-                key={category.id}
-                onClick={() => setSelectedCategoryId(category.id)}
-                type="button"
-              >
-                {category.name}
-              </button>
-            ))}
-          </div>
-          <div className={styles.mobileCategoryFilter}>
+          {categories.length > 0 ? (
             <SearchableSelect
               aria-label="Filtrar productos por categoría"
-              className={styles.mobileCategorySelect}
+              className={styles.categorySelect}
               emptyMessage="No hay categorías coincidentes"
               searchPlaceholder="Buscar categoría..."
-              value={selectedCategoryId}
-              onChange={(event) => setSelectedCategoryId(event.target.value)}
+              value={categoryId}
+              onChange={(event) => updateFilters(searchTerm, event.target.value)}
             >
-              <option value={allCategoriesId}>Todos los productos</option>
+              <option value={allCategoriesId}>Todas las categorías</option>
               {categories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
                 </option>
               ))}
             </SearchableSelect>
-          </div>
+          ) : null}
+        </div>
+        <div className={styles.resultsBar}>
+          <p aria-live="polite" className={styles.resultsCount} ref={resultsRef} tabIndex={-1}>
+            {resultCount > 0
+              ? `${resultRange} de ${catalogNumberFormatter.format(resultCount)} ${resultCount === 1 ? "producto" : "productos"}`
+              : "0 productos"}
+          </p>
+          {hasFilters ? (
+            <button className={styles.clearFilters} onClick={() => updateFilters("", allCategoriesId)} type="button">
+              <X aria-hidden="true" /> Limpiar filtros
+            </button>
+          ) : null}
         </div>
 
-        {filteredProducts.length > 0 ? (
+        {resultCount > 0 ? (
           <div className={styles.productGrid}>
-            {filteredProducts.map((product) => (
+            {pageProducts.map((product) => (
               <ProductCard
                 cartItem={cartItems.find(
                   (item) => item.productId === product.id,
@@ -690,9 +715,12 @@ export function PublicCatalogPage() {
           <section className={styles.statePanel}>
             <PackageSearch aria-hidden="true" />
             <h2>No hay productos para mostrar</h2>
-            <p>Prueba con otra búsqueda o categoría.</p>
+            <p>{hasFilters ? "Prueba con otra búsqueda o categoría." : "Este catálogo todavía no tiene productos."}</p>
           </section>
         )}
+        {pageCount > 1 ? (
+          <CatalogPagination currentPage={currentPage} pageCount={pageCount} onChange={changePage} />
+        ) : null}
       </section>
 
       {catalog.settings.shoppingEnabled && cartItemCount > 0 ? (
@@ -827,6 +855,45 @@ export function PublicCatalogPage() {
         />
       ) : null}
     </main>
+  );
+}
+
+function CatalogPagination({ currentPage, pageCount, onChange }: {
+  currentPage: number;
+  pageCount: number;
+  onChange: (page: number) => void;
+}) {
+  const pageNumbers = [...new Set([1, currentPage - 1, currentPage, currentPage + 1, pageCount])]
+    .filter((number) => number >= 1 && number <= pageCount)
+    .sort((left, right) => left - right);
+
+  return (
+    <nav aria-label="Paginación de productos" className={styles.pagination}>
+      <button disabled={currentPage === 1} onClick={() => onChange(currentPage - 1)} type="button">
+        <ChevronLeft aria-hidden="true" /> Anterior
+      </button>
+      <div className={styles.pageNumbers}>
+        {pageNumbers.map((number, index) => (
+          <span key={number}>
+            {index > 0 && number - pageNumbers[index - 1] > 1 ? <span aria-hidden="true">…</span> : null}
+            <button
+              aria-current={number === currentPage ? "page" : undefined}
+              aria-label={`Página ${number}`}
+              onClick={() => {
+                if (number !== currentPage) onChange(number);
+              }}
+              type="button"
+            >
+              {number}
+            </button>
+          </span>
+        ))}
+      </div>
+      <span className={styles.pagePosition}>Página {currentPage} de {pageCount}</span>
+      <button disabled={currentPage === pageCount} onClick={() => onChange(currentPage + 1)} type="button">
+        Siguiente <ChevronRight aria-hidden="true" />
+      </button>
+    </nav>
   );
 }
 

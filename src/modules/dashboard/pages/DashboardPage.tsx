@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import type { FormEvent, PointerEvent } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
@@ -17,6 +17,8 @@ import {
   Trophy,
   Users,
   TriangleAlert,
+  Volume2,
+  VolumeX,
 } from 'lucide-react'
 import { BestSellingProductsPanel } from '@/modules/dashboard/components/BestSellingProductsPanel'
 import { BusinessSetupChecklist } from '@/modules/dashboard/components/BusinessSetupChecklist'
@@ -29,6 +31,8 @@ import { useCurrentCashRegisterQuery } from '@/modules/cash-register/hooks/use-c
 import { getModuleNavigationRoutes } from '@/routes/module-navigation-routes'
 import { routePaths, routeSegments } from '@/routes/route-paths'
 import { SurfaceCard } from '@/shared/components/ui/SurfaceCard'
+import { PageLoadingState } from '@/shared/components/states/PageLoadingState'
+import { useWorkspaceSound } from '@/shared/hooks/use-workspace-sound'
 import { isTeamManagementRole } from '@/shared/constants/user-roles'
 import { formatCurrency } from '@/shared/utils/format-currency'
 import { getErrorMessage } from '@/shared/utils/get-error-message'
@@ -51,6 +55,7 @@ const dateFormatter = new Intl.DateTimeFormat('es-CO', {
 
 export function DashboardPage() {
   const navigate = useNavigate()
+  const { soundEnabled, playSound, toggleSound } = useWorkspaceSound()
   const user = useAuthSessionStore((state) => state.user)
   const business = getActiveBusiness(user)
   const businessName =
@@ -122,6 +127,19 @@ export function DashboardPage() {
     )
   }
 
+  function moveHeroLight(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== 'mouse') return
+
+    const hero = event.currentTarget
+    const bounds = hero.getBoundingClientRect()
+    hero.style.setProperty('--hero-light-x', `${event.clientX - bounds.left}px`)
+    hero.style.setProperty('--hero-light-y', `${event.clientY - bounds.top}px`)
+  }
+
+  if (dashboardSummaryQuery.isLoading) {
+    return <PageLoadingState brand="business" layout="workspace" title="Cargando Inicio…" />
+  }
+
   return (
     <div className={styles.page}>
       <header className={styles.topbar}>
@@ -142,12 +160,19 @@ export function DashboardPage() {
         <div className={styles.topbarActions}>
           <button
             aria-label="Actualizar inicio"
+            aria-busy={isRefreshing}
             className={styles.iconButton}
             disabled={isRefreshing}
             type="button"
-            onClick={refreshDashboard}
+            onClick={() => {
+              playSound()
+              refreshDashboard()
+            }}
           >
             <RefreshCw aria-hidden="true" />
+          </button>
+          <button aria-label="Sonido de la interfaz" aria-pressed={soundEnabled} className={styles.iconButton} title="Sonido de la interfaz" type="button" onClick={toggleSound}>
+            {soundEnabled ? <Volume2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
           </button>
           <Link aria-label="Ayuda" className={styles.iconButton} to={routePaths.help}>
             <CircleHelp aria-hidden="true" />
@@ -156,7 +181,7 @@ export function DashboardPage() {
       </header>
 
       <section aria-label="Resumen del negocio">
-        <div className={styles.hero}>
+        <div className={styles.hero} onPointerMove={moveHeroLight}>
           <div className={styles.heroCopy}>
             <div className={styles.businessIdentity}>
               {logoUrl && logoUrl !== failedLogoUrl ? (

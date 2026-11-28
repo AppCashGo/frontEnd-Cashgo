@@ -93,6 +93,7 @@ import { useAppTranslation } from '@/shared/i18n/use-app-translation'
 import { useConfirmDialog } from '@/shared/hooks/use-confirm-dialog'
 import retailStyles from '@/shared/components/retail/RetailUI.module.css'
 import { RetailEmptyState } from '@/shared/components/retail/RetailEmptyState'
+import { PageLoadingState } from '@/shared/components/states/PageLoadingState'
 import { RetailPageLayout } from '@/shared/components/retail/RetailPageLayout'
 import { WorkspaceBusinessTitle } from '@/shared/components/retail/WorkspaceBusinessTitle'
 import workspaceVisual from '@/shared/components/retail/WorkspaceVisual.module.css'
@@ -1693,6 +1694,10 @@ export function RetailInventoryWorkspace() {
         onTabChange={handleProductWorkspaceTabChange}
       />
     )
+  }
+
+  if (productsQuery.isLoading) {
+    return <PageLoadingState brand="business" layout="workspace" title="Cargando inventario…" />
   }
 
   return (

@@ -1,0 +1,51 @@
+.welcome {
+  position: fixed;
+  z-index: 600;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  overscroll-behavior: contain;
+  background:
+    radial-gradient(ellipse at 48% 42%, #1e5390, #102a4b 52%, #081626 90%);
+}
+
+.welcome::before {
+  position: absolute;
+  z-index: -1;
+  width: min(90vw, 85dvh, 52rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #7adcf458, #49b9e21a 48%, transparent 70%);
+  content: '';
+}
+
+.logo {
+  display: block;
+  width: min(76vmin, 42rem);
+  height: auto;
+  filter: drop-shadow(0 1.6rem 3rem #0006);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .welcome {
+    animation-name: welcome-fade;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: both;
+  }
+
+  .logo {
+    animation: welcome-mark 520ms cubic-bezier(0.18, 0.8, 0.3, 1) both;
+  }
+}
+
+@keyframes welcome-mark {
+  from { transform: scale(0.82); }
+  to { transform: scale(1); }
+}
+
+@keyframes welcome-fade {
+  0%, 67% { opacity: 1; }
+  100% { opacity: 0; }
+}
