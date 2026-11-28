@@ -5,8 +5,19 @@
 .explainer strong, .explainer p { margin: 0; }
 .explainer p { margin-top: .2rem; color: var(--ui-text-secondary); font-size: .84rem; line-height: 1.45; }
 .field { display: grid; gap: .45rem; color: var(--ui-text); font-size: .85rem; font-weight: 800; }
-.yieldControl { display: grid; grid-template-columns: 7rem 1fr; align-items: center; gap: .7rem; padding: .6rem; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface-subtle); }
+.yieldControl {
+  composes: ui-field-group from global;
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  align-items: center;
+  gap: .7rem;
+  padding: .6rem;
+  border: 1px solid var(--ui-border);
+  border-radius: var(--ui-radius-lg);
+  background: var(--ui-surface-subtle);
+}
 .yieldControl input, .quantityControl input { min-width: 0; width: 100%; box-sizing: border-box; }
+.yieldControl input { border: 0; background: transparent; }
 .yieldControl span { color: var(--ui-text-secondary); font-weight: 600; }
 .sectionHeading { display: flex; align-items: center; justify-content: space-between; gap: .8rem; margin-top: .25rem; }
 .sectionHeading > div { display: grid; gap: .12rem; }

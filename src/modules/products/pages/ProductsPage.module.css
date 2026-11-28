@@ -26,6 +26,10 @@
 .metricIcon svg { width: 1.35rem; height: 1.35rem; }
 .catalogCard { min-width: 0; overflow: visible; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-lg); background: var(--ui-surface); box-shadow: var(--ui-shadow-sm); }
 .filters { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,13rem) minmax(0,11rem); gap: .85rem; padding: 1rem 1.1rem; border-bottom: 1px solid #e3e8ef; }
+.searchField {
+  composes: ui-field-group from global;
+}
+
 .searchField,.selectField { min-height: var(--ui-control-height); display: flex; align-items: center; gap: .6rem; padding: 0 .85rem; border: 1px solid var(--ui-border); border-radius: var(--ui-radius-md); background: var(--ui-surface); color: var(--ui-text-secondary); transition: border-color var(--ui-transition),box-shadow var(--ui-transition); }
 .searchField:focus-within,.selectField:focus-within { border-color: var(--ui-primary); box-shadow: var(--ui-focus-ring); }
 .selectField { padding: 0; border: 0; background: transparent; }

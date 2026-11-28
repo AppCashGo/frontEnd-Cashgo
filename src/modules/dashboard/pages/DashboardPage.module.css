@@ -19,6 +19,7 @@
 }
 
 .searchBox {
+  composes: ui-field-group from global;
   display: flex;
   flex: 1 1 14rem;
   align-items: center;

@@ -54,6 +54,7 @@
 }
 
 .searchInput {
+  composes: ui-field-group from global;
   min-height: 3rem;
   display: flex;
   align-items: center;

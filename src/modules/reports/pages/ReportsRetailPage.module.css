@@ -74,10 +74,12 @@
 }
 
 .selectField {
+  composes: ui-field-group from global;
   min-width: min(100%, 17.5rem);
 }
 
 .dateField {
+  composes: ui-field-group from global;
   min-width: min(100%, 21rem);
 }
 

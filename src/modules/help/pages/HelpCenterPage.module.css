@@ -116,6 +116,7 @@
 }
 
 .searchField {
+  composes: ui-field-group from global;
   display: flex;
   align-items: center;
   gap: 0.65rem;

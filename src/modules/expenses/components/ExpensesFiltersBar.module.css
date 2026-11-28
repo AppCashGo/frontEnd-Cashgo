@@ -28,6 +28,7 @@
 }
 
 .inputWithIcon {
+  composes: ui-field-group from global;
   min-height: 2.65rem;
   display: flex;
   align-items: center;

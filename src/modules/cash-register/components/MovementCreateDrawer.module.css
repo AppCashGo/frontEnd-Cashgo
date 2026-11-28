@@ -136,6 +136,14 @@
   font-size: 0.8rem;
   font-weight: 800;
 }
+.moneyInput {
+  composes: ui-field-group from global;
+}
+
+.inputWithIcon {
+  composes: ui-field-group from global;
+}
+
 .field > input,
 .field > select,
 .moneyInput,

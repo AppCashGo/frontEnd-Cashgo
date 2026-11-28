@@ -125,6 +125,7 @@
 }
 
 .customerSearch {
+  composes: ui-field-group from global;
   display: flex;
   align-items: center;
   flex: 1 1 16rem;

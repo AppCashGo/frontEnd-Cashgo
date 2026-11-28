@@ -844,6 +844,7 @@
 }
 
 .creditAmountInput {
+  composes: ui-field-group from global;
   display: flex;
   align-items: center;
   min-height: 2.7rem;
@@ -1210,6 +1211,7 @@
 }
 
 .splitAmountInputWrapper {
+  composes: ui-field-group from global;
   display: flex;
   align-items: center;
   gap: 0.25rem;
@@ -1234,12 +1236,6 @@
   width: 100%;
   padding: 0 0.85rem;
   appearance: auto;
-}
-
-.splitAmountInputWrapper:focus-within,
-.splitSelect:focus {
-  outline: 2px solid rgba(31, 36, 51, 0.16);
-  outline-offset: 0;
 }
 
 .paymentSplitStatus,
@@ -1609,6 +1605,7 @@
 }
 
 .amountCard {
+  composes: ui-field-group from global;
   overflow: hidden;
 }
 
@@ -1917,6 +1914,7 @@
 }
 
 .changeInputBox {
+  composes: ui-field-group from global;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;

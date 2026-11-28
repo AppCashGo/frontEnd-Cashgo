@@ -103,6 +103,7 @@
 }
 
 .phoneControl {
+  composes: ui-field-group from global;
   position: relative;
   display: flex;
   align-items: stretch;

@@ -11,6 +11,7 @@
   align-items: center;
 }
 .searchField {
+  composes: ui-field-group from global;
   gap: 0.7rem;
   border: 1px solid #d5deeb;
   border-radius: 14px;

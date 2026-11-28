@@ -85,6 +85,7 @@
 }
 
 .searchField {
+  composes: ui-field-group from global;
   min-height: 2.85rem;
   display: flex;
   align-items: center;

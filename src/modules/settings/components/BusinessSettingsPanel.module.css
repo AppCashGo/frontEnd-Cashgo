@@ -187,6 +187,7 @@
 }
 
 .phoneField {
+  composes: ui-field-group from global;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   overflow: hidden;

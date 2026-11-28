@@ -101,6 +101,14 @@
   gap: 0.75rem;
 }
 
+.selectField {
+  composes: ui-field-group from global;
+}
+
+.dateField {
+  composes: ui-field-group from global;
+}
+
 .searchField,
 .selectField,
 .dateField {
@@ -133,6 +141,7 @@
 }
 
 .searchField {
+  composes: ui-field-group from global;
   min-width: min(100%, 21rem);
 }
 

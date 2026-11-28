@@ -528,6 +528,10 @@
   box-shadow: 0 1.1rem 2rem rgba(15, 23, 42, 0.14);
 }
 
+.categorySearch {
+  composes: ui-field-group from global;
+}
+
 .categorySearch,
 .categoryProductSearch {
   display: flex;
@@ -920,6 +924,7 @@
 }
 
 .categoryProductSearch {
+  composes: ui-field-group from global;
   min-height: 3.3rem;
   border: 1px solid #b9c7d8;
   border-radius: 0.9rem;

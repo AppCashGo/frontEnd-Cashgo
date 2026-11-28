@@ -231,6 +231,7 @@
   color: #223b5e;
 }
 .searchField {
+  composes: ui-field-group from global;
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -246,7 +247,7 @@
   font: inherit;
 }
 .searchField:focus-within {
-  outline: 2px solid #83b1e6;
+  box-shadow: 0 0 0 2px #83b1e6;
 }
 
 .table {

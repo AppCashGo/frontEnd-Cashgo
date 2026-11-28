@@ -368,6 +368,14 @@
   min-width: 0;
 }
 
+.dateShell {
+  composes: ui-field-group from global;
+}
+
+.searchShell {
+  composes: ui-field-group from global;
+}
+
 .filterButton,
 .dateShell,
 .searchShell,

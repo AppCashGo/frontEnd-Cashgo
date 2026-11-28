@@ -205,6 +205,27 @@ button {
   box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1) !important;
 }
 
+/* A framed field with an icon, prefix or suffix owns the focus indicator. */
+:where(.ui-field-group):focus-within {
+  border-color: var(--ui-primary);
+  box-shadow: var(--ui-focus-ring);
+}
+
+.ui-field-group > :where(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  textarea,
+  select
+):is(:focus, [aria-invalid="true"]) {
+  border-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.ui-field-group:has(> :where(input, textarea, select)[aria-invalid="true"]) {
+  border-color: var(--ui-danger);
+  box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
+}
+
 :where(input, textarea, select):disabled {
   cursor: not-allowed;
   background-color: var(--ui-surface-muted);
